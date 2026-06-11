@@ -4,6 +4,9 @@ let lastWinKey = null, winDockTimer = null;
 let playerKey = localStorage.cc_playerKey || ('p_' + Math.random().toString(36).slice(2) + Date.now().toString(36));
 localStorage.cc_playerKey = playerKey;
 let myId = playerKey;
+function adminStorageKey(roomId){ return `cc_adminToken_${String(roomId||'').toUpperCase()}`; }
+function getAdminToken(roomId){ return localStorage.getItem(adminStorageKey(roomId)) || ''; }
+function storeAdminToken(roomId, token){ if(roomId && token) localStorage.setItem(adminStorageKey(roomId), token); }
 
 const $ = id => document.getElementById(id);
 const landing = $('landing'), game = $('game'), board = $('board');
@@ -14,6 +17,7 @@ const inviteRoom = (params.get('room') || params.get('r') || '').trim().toUpperC
 if(inviteRoom) roomInput.value = inviteRoom;
 let selectedTeamChoice = '';
 let selectedRoleChoice = '';
+let pendingAdminRequest = null;
 
 function inviteUrl(roomId){ return `${location.origin}${location.pathname}?room=${String(roomId||'').toUpperCase()}`; }
 function updateInviteFields(roomId){
@@ -62,6 +66,19 @@ function sound(kind){
 }
 function flash(cls){ const d=document.createElement('div'); d.className=cls; document.body.appendChild(d); setTimeout(()=>d.remove(),850); }
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function showAdminRequestPopup(req){
+  pendingAdminRequest = req;
+  const modal = $('adminRequestModal');
+  const text = $('adminRequestText');
+  if(text) text.textContent = `${req.fromName || 'A player'} requests: ${req.label || 'Admin action'}. Apply it now?`;
+  if(modal) modal.classList.remove('hidden');
+}
+function closeAdminRequestPopup(){
+  pendingAdminRequest = null;
+  const modal = $('adminRequestModal');
+  if(modal) modal.classList.add('hidden');
+}
+
 function fmt(ms){ let s=Math.floor(ms/1000); const m=String(Math.floor(s/60)).padStart(2,'0'); s=String(s%60).padStart(2,'0'); return `${m}:${s}`; }
 
 function charEmoji(id){ const c=state?.characters?.find(x=>x.id===id); return c?.emoji || '🕵️'; }
@@ -141,11 +158,12 @@ setupJoinFlow();
 
 function joinPayload(){
   localStorage.cc_name = nameInput.value.trim() || 'Agent';
-  return { name:nameInput.value, team:$('team').value, role:$('role').value, character:selectedCharacter, playerKey };
+  return { name:nameInput.value, team:$('team').value, role:$('role').value, character:selectedCharacter, playerKey, adminToken:getAdminToken(roomInput.value.trim().toUpperCase()) };
 }
 function acceptJoinResponse(res){
   if(!res.ok) return toast(res.error);
   if(res.roomId){ roomInput.value = res.roomId; updateInviteFields(res.roomId); }
+  if(res.roomId && res.adminToken) storeAdminToken(res.roomId, res.adminToken);
   if(res.playerKey){
     playerKey = res.playerKey;
     myId = res.playerKey;
@@ -165,6 +183,20 @@ $('joinBtn').onclick=()=> socket.emit('joinRoom', { ...joinPayload(), roomId:roo
 
 socket.on('connect',()=>{ myId = playerKey; });
 socket.on('toast', toast);
+socket.on('adminRequest', req=>{
+  const current = me();
+  if(!current?.isAdmin || !req) return;
+  showAdminRequestPopup(req);
+});
+socket.on('kicked', ({ roomId, message }={})=>{
+  toast(message || 'You were kicked from the room. You can join back if you want.');
+  state = null; targetIds.clear(); lastRevealed.clear();
+  playerKey = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  myId = playerKey; localStorage.cc_playerKey = playerKey;
+  if(roomId) roomInput.value = roomId;
+  game.classList.add('hidden'); landing.classList.remove('hidden');
+  requestLobbyInfo(); setJoinButtonsReady();
+});
 socket.on('state', s=>{
   const before = state;
   const clueAccepted = before?.status === 'waiting-clue' && s.status === 'guessing' && before?.clue?.at !== s.clue?.at && s.clue;
@@ -300,7 +332,7 @@ function render(){
   const gp=$('goldPanel'), bp=$('blackPanel');
   if(gp) gp.classList.toggle('winnerPanel', state.winner === 'blue');
   if(bp) bp.classList.toggle('winnerPanel', state.winner === 'red');
-  renderMe(); renderPlayers(); renderBoard(); renderPanels(); renderVoteConfirm(); renderLog(); renderWinModal();
+  renderMe(); renderPlayers(); renderSeatControls(); renderBoard(); renderPanels(); renderVoteConfirm(); renderLog(); renderWinModal();
 }
 function renderSeatCharacters(){ /* seat editing removed from in-game UI */ }
 function renderMe(){
@@ -308,6 +340,8 @@ function renderMe(){
   $('meCard').innerHTML = `<div class="player ${p.team}"><div class="avatar" style="background:${charAccent(p.character)}33">${charEmoji(p.character)}</div><div><b>${p.name}</b><span class="roleTag">${teamName(p.team)} · ${p.role}</span></div></div>`;
 }
 function renderPlayers(){
+  const current = me();
+  const adminMode = !!current?.isAdmin;
   const teams = { blue:{operative:[], spymaster:[]}, red:{operative:[], spymaster:[]}, spectator:{spectator:[]} };
   Object.values(state.players).forEach(p=>{
     const t = p.team || 'spectator';
@@ -315,9 +349,15 @@ function renderPlayers(){
     else if(p.role === 'spymaster') teams[t].spymaster.push(p);
     else teams[t].operative.push(p);
   });
+  function adminTools(p){
+    if(!adminMode || p.id === myId || p.isAdmin) return '';
+    return `<div class="adminActions"><button data-admin-kick="${p.id}">Kick</button></div>`;
+  }
   function playerHtml(p){
     const offline = p.online === false;
-    return `<div class="player ${p.team} ${offline?'offline':''}"><div class="avatar" style="background:${charAccent(p.character)}33">${charEmoji(p.character)}</div><div><b>${p.name} ${offline?'<span class="offlineIcon" title="Offline">📡</span>':''}</b><span class="roleTag">${p.role}${offline?' · offline':''}</span></div></div>`;
+    const adminBadge = p.isAdmin ? '<span class="adminBadge">Admin</span>' : '';
+    const canDrag = adminMode && (!p.isAdmin || p.id === myId);
+    return `<div class="player ${p.team} ${offline?'offline':''} ${canDrag?'draggablePlayer':''} ${p.isAdmin?'adminPlayer':''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}"><div class="avatar" style="background:${charAccent(p.character)}33">${charEmoji(p.character)}</div><div class="playerBody"><b>${p.name} ${adminBadge} ${offline?'<span class="offlineIcon" title="Offline">📡</span>':''}</b><span class="roleTag">${p.role}${offline?' · offline':''}</span>${adminTools(p)}</div></div>`;
   }
   function empty(text){ return `<div class="emptyTeamSlot">${text}</div>`; }
   $('goldOperatives').innerHTML = teams.blue.operative.map(playerHtml).join('') || empty('No operatives yet');
@@ -325,11 +365,46 @@ function renderPlayers(){
   $('blackOperatives').innerHTML = teams.red.operative.map(playerHtml).join('') || empty('No operatives yet');
   $('blackSpymasters').innerHTML = teams.red.spymaster.map(playerHtml).join('') || empty('No spymaster yet');
   $('spectators').innerHTML = teams.spectator.spectator.map(playerHtml).join('') || empty('No spectators');
+  document.querySelectorAll('[data-admin-kick]').forEach(btn=>{
+    btn.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); const target=btn.dataset.adminKick; if(confirm('Kick this player from the room?')) socket.emit('adminUpdatePlayer', { playerId:target, action:'kick' }); };
+  });
+  setupAdminDragAndDrop(adminMode);
   const goldCount = teams.blue.operative.length + teams.blue.spymaster.length;
   const blackCount = teams.red.operative.length + teams.red.spymaster.length;
   const gc=$('goldPlayerCount'), bc=$('blackPlayerCount');
   if(gc) gc.textContent = `${goldCount} player${goldCount===1?'':'s'}`;
   if(bc) bc.textContent = `${blackCount} player${blackCount===1?'':'s'}`;
+}
+function renderSeatControls(){
+  const p=me();
+  const bar=$('adminControlBar');
+  if(bar){
+    bar.classList.remove('hidden');
+    bar.classList.toggle('nonAdminControls', !p?.isAdmin);
+    bar.title = p?.isAdmin ? 'Admin controls' : 'Request these actions from the room admin';
+  }
+}
+function setupSectionJoinButtons(){ /* in-game self switching removed; admin moves players only */ }
+function setupAdminDragAndDrop(adminMode){
+  document.querySelectorAll('.draggablePlayer').forEach(el=>{
+    el.ondragstart=(ev)=>{
+      if(!adminMode) return ev.preventDefault();
+      ev.dataTransfer.setData('text/plain', el.dataset.playerId);
+      ev.dataTransfer.effectAllowed = 'move';
+      el.classList.add('dragging');
+    };
+    el.ondragend=()=>el.classList.remove('dragging');
+  });
+  document.querySelectorAll('[data-drop-team]').forEach(zone=>{
+    zone.ondragover=(ev)=>{ if(adminMode){ ev.preventDefault(); zone.classList.add('dropReady'); } };
+    zone.ondragleave=()=>zone.classList.remove('dropReady');
+    zone.ondrop=(ev)=>{
+      if(!adminMode) return;
+      ev.preventDefault(); zone.classList.remove('dropReady');
+      const playerId = ev.dataTransfer.getData('text/plain');
+      if(playerId) socket.emit('adminUpdatePlayer', { playerId, action:'move', team:zone.dataset.dropTeam, role:zone.dataset.dropRole });
+    };
+  });
 }
 function syncClueCount(){
   const n = targetIds.size;
@@ -494,8 +569,33 @@ function renderLog(){
   }
 }
 
+const adminRequestYes = $('adminRequestYes');
+if(adminRequestYes) adminRequestYes.onclick=()=>{
+  if(!pendingAdminRequest) return closeAdminRequestPopup();
+  const req = pendingAdminRequest;
+  closeAdminRequestPopup();
+  socket.emit('adminRequestDecision', { requestId:req.requestId, approved:true });
+};
+const adminRequestNo = $('adminRequestNo');
+if(adminRequestNo) adminRequestNo.onclick=()=>{
+  if(!pendingAdminRequest) return closeAdminRequestPopup();
+  const req = pendingAdminRequest;
+  closeAdminRequestPopup();
+  socket.emit('adminRequestDecision', { requestId:req.requestId, approved:false });
+};
 const switchBtn = $('switchBtn'); if(switchBtn) switchBtn.onclick=()=> socket.emit('switchSeat', { team:$('seatTeam')?.value, role:$('seatRole')?.value, character:$('seatCharacter')?.value });
 const randomBtn = $('randomBtn'); if(randomBtn) randomBtn.onclick=()=> socket.emit('randomizeTeams');
+function runOrRequestAdminAction(action, label, confirmText){
+  const current = me();
+  if(current?.isAdmin){
+    if(confirm(confirmText)){ targetIds.clear(); socket.emit(action); }
+    return;
+  }
+  if(confirm(`Request ${label} to admin?`)) socket.emit('adminActionRequest', { action });
+}
+const resetTableBtn = $('resetTableBtn'); if(resetTableBtn) resetTableBtn.onclick=()=>runOrRequestAdminAction('resetTable','Reset Table','Reset the table with a fresh board but keep the same room and players?');
+const shuffleTeamsBtn = $('shuffleTeamsBtn'); if(shuffleTeamsBtn) shuffleTeamsBtn.onclick=()=>runOrRequestAdminAction('shuffleTeams','Shuffle Teams','Shuffle online players between Gold and Black teams?');
+const changeWordListBtn = $('changeWordListBtn'); if(changeWordListBtn) changeWordListBtn.onclick=()=>runOrRequestAdminAction('changeWordList','Change Word List','Change the word list / deal a fresh board in this same room?');
 const newGameBtn = $('newGameBtn'); if(newGameBtn) newGameBtn.onclick=()=> { if(confirm('Start a new board in this room?')) { targetIds.clear(); socket.emit('newGame'); } };
 $('giveClueBtn').onclick=()=>{
   const targets = [...targetIds];

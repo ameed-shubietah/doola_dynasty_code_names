@@ -1006,3 +1006,132 @@ html,body,#app{min-height:100%;}
 .backLobbyBtn:hover{filter:brightness(1.18);box-shadow:0 0 18px rgba(255,215,108,.22),0 8px 18px rgba(0,0,0,.34)}
 .brandInviteRow{align-items:center;}
 @media(max-width:720px){.backLobbyBtn{width:100%;}.brandInviteRow{display:grid;grid-template-columns:1fr 1fr;}.brandInviteRow input{grid-column:1/-1;}}
+
+/* Admin + flexible seat controls */
+.seatControlBar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:8px;
+  padding:8px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,215,108,.22);
+  background:linear-gradient(180deg,rgba(255,215,108,.1),rgba(0,0,0,.2));
+  box-shadow:0 10px 22px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.seatControlBar.hidden{display:none!important;}
+.seatControlBar span{font-size:12px;color:#ffe7a5;font-weight:900;text-transform:uppercase;letter-spacing:.3px;}
+.seatControlBar select{
+  height:32px;
+  min-width:96px;
+  padding:0 30px 0 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,215,108,.35);
+  background:linear-gradient(180deg,rgba(30,22,8,.98),rgba(0,0,0,.95));
+  color:#fff4ca;
+  font-weight:800;
+  outline:none;
+}
+.seatControlBar button{
+  height:32px;
+  padding:0 13px;
+  border-radius:999px;
+  font-size:12px;
+}
+.seatControlBar #resetTableBtn{
+  box-shadow:0 0 20px rgba(255,215,108,.22),0 8px 20px rgba(0,0,0,.3);
+}
+.playerBody{min-width:0;flex:1;}
+.adminBadge{
+  display:inline-block;
+  margin-left:5px;
+  padding:2px 6px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#ffe88a,#bd870e);
+  color:#130b00;
+  font-size:9px;
+  text-transform:uppercase;
+  vertical-align:middle;
+  box-shadow:0 0 12px rgba(255,215,108,.25);
+}
+.adminActions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  margin-top:6px;
+}
+.adminActions button{
+  border-radius:8px;
+  padding:4px 6px;
+  font-size:10px;
+  min-height:22px;
+  border:1px solid rgba(255,215,108,.22);
+  background:rgba(0,0,0,.35);
+  color:#ffefbb;
+  box-shadow:none;
+}
+.adminActions button:first-child{
+  background:linear-gradient(180deg,rgba(255,89,89,.3),rgba(60,0,0,.5));
+  color:#ffd3d3;
+  border-color:rgba(255,90,90,.35);
+}
+.adminActions button:hover{filter:brightness(1.16);transform:translateY(-1px);}
+@media(max-width:980px){
+  .seatControlBar{border-radius:16px;justify-content:flex-start;}
+  .seatControlBar select,.seatControlBar button{flex:1 1 110px;}
+  .adminActions button{flex:1 1 54px;}
+}
+
+
+/* Admin + self-join controls added on latest merge */
+.teamPanel h3{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sectionJoin{padding:5px 10px;border-radius:999px;font-size:11px;line-height:1;background:linear-gradient(180deg,#ffe285,#9b6500);color:#1b1000;box-shadow:0 0 12px rgba(255,215,108,.22)}
+.sectionJoin:hover{transform:translateY(-1px) scale(1.03)}
+.adminControlBar{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.adminControlBar button{padding:9px 12px;font-size:12px;border-radius:999px}
+.adminActions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.adminActions button{padding:5px 8px;font-size:11px;border-radius:999px;background:linear-gradient(180deg,#5a1f1f,#231010);color:#ffd9d9}
+.adminBadge{display:inline-block;margin-left:4px;padding:2px 6px;border-radius:999px;background:linear-gradient(180deg,#ffe285,#9b6500);color:#1b1000;font-size:10px;text-transform:uppercase}
+.draggablePlayer{cursor:grab}
+.draggablePlayer:active{cursor:grabbing}
+.player.dragging{opacity:.45;transform:scale(.98)}
+.teamList.dropReady{outline:2px dashed #29cfff;outline-offset:4px;border-radius:14px;background:rgba(41,207,255,.08)}
+.hiddenUtility{display:none!important}
+@media(max-width:720px){.sectionJoin{padding:6px 9px}.adminControlBar{width:100%}.adminControlBar button{flex:1;min-width:120px}}
+
+/* Admin request controls: visible to everyone, active for admin, request-only for others */
+.adminControlBar.nonAdminControls button{
+  opacity:.92;
+  border:1px solid rgba(255,215,108,.25);
+  background:linear-gradient(180deg,#3b321c,#15110a);
+  color:#ffeab0;
+}
+.adminControlBar.nonAdminControls:before{
+  content:'Request admin:';
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+  margin-right:2px;
+}
+.player.adminPlayer{
+  box-shadow:inset 0 0 0 1px rgba(255,215,108,.25),0 0 16px rgba(255,215,108,.10);
+}
+.player.adminPlayer.draggablePlayer{
+  cursor:grab;
+}
+
+
+/* Final admin request modal + removed in-game self-join buttons */
+.sectionJoin{display:none!important}
+.adminRequestModal{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(0,0,0,.45);backdrop-filter:blur(8px)}
+.adminRequestModal.hidden{display:none!important}
+.adminRequestCard{width:min(440px,calc(100vw - 28px));border-radius:24px;padding:24px;text-align:center;animation:adminPop .22s ease both}
+.adminRequestIcon{font-size:42px;filter:drop-shadow(0 0 14px rgba(255,215,108,.55));margin-bottom:8px}
+.adminRequestCard h2{margin:0 0 8px;text-transform:uppercase;color:#ffe285;font-family:"Segoe UI Black","Arial Black",system-ui,sans-serif}
+.adminRequestCard p{margin:0 0 18px;color:#fff2c3;line-height:1.45}
+.adminRequestActions{display:flex;gap:12px;justify-content:center}
+.adminRequestActions button{min-width:130px}
+@keyframes adminPop{from{opacity:0;transform:translateY(12px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:520px){.adminRequestActions{flex-direction:column}.adminRequestActions button{width:100%}}

@@ -46,6 +46,9 @@ function safePlayerKey(k) {
   const cleaned = String(k || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
   return cleaned || ('p_' + Math.random().toString(36).slice(2) + Date.now().toString(36));
 }
+function makeAdminToken() { return 'adm_' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
+function isAdminPlayer(room, p) { return !!(p && p.isAdmin === true); }
+function canAdmin(room, socketId) { const p = getPlayerBySocket(room, socketId); return isAdminPlayer(room, p); }
 function freshPlayerKey(room) {
   let key;
   do { key = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
@@ -54,6 +57,16 @@ function freshPlayerKey(room) {
 }
 function findPlayerBySocket(room, socketId) {
   return Object.values(room.players).find(p => p.socketId === socketId) || null;
+}
+function publicPlayers(players) {
+  const out = {};
+  for (const [id, p] of Object.entries(players || {})) {
+    out[id] = {
+      id:p.id, name:p.name, team:p.team, role:p.role, character:p.character,
+      joinedAt:p.joinedAt, lastSeenAt:p.lastSeenAt, online:p.online, isAdmin:!!p.isAdmin
+    };
+  }
+  return out;
 }
 
 function makeBoard(startingTeam='red') {
@@ -93,6 +106,8 @@ function newRoom(id) {
     hintUsed: { blue:false, red:false },
     hintRequested: null,
     votes: {},
+    adminToken: makeAdminToken(),
+    adminRequests: [],
     log: [`Game created. ${startingTeam === 'blue' ? 'GOLD' : 'BLACK'} starts.`]
   };
 }
@@ -126,9 +141,9 @@ function publicRoom(room, forPlayerKey=null) {
   const isSpy = player && player.role === 'spymaster';
   return {
     id:room.id, createdAt:room.createdAt, gameStartedAt:room.gameStartedAt, roundStartedAt:room.roundStartedAt,
-    round:room.round, status:room.status, turn:room.turn, winner:room.winner, clue:room.clue, points:counts(room),
+    round:room.round, status:room.status, turn:room.turn, winner:room.winner, clue:room.clue, points:counts(room), adminOnline:Object.values(room.players).some(p=>p.online!==false&&p.isAdmin),
     guessesThisTurn:room.guessesThisTurn, allowedGuesses:room.allowedGuesses || 0, voteInfo:voteInfo(room), hintUsed:room.hintUsed, hintRequested:room.hintRequested,
-    players:room.players, characters:CHARACTERS, log:room.log.slice(-30),
+    players:publicPlayers(room.players), characters:CHARACTERS, log:room.log.slice(-30),
     board: room.board.map(c => ({ id:c.id, word:c.word, revealed:c.revealed, revealedBy:c.revealedBy, revealedById:c.revealedById, clueTarget:(isSpy ? c.clueTarget : false), color: (isSpy || c.revealed || room.status === 'finished') ? c.color : null }))
   };
 }
@@ -161,6 +176,23 @@ function emitRoom(room) {
 function counts(room) {
   return { blue: room.board.filter(c=>c.color==='blue'&&!c.revealed).length, red: room.board.filter(c=>c.color==='red'&&!c.revealed).length };
 }
+function resetRoomTable(room, message='Table reset with a fresh board.') {
+  const startingTeam = Math.random() > 0.5 ? 'blue' : 'red';
+  room.round += 1;
+  room.status = 'waiting-clue';
+  room.turn = startingTeam;
+  room.winner = null;
+  room.board = makeBoard(startingTeam);
+  room.clue = null;
+  room.guessesThisTurn = 0;
+  room.allowedGuesses = 0;
+  room.hintUsed = { blue:false, red:false };
+  room.hintRequested = null;
+  room.votes = {};
+  room.roundStartedAt = Date.now();
+  room.gameStartedAt = Date.now();
+  room.log.push(`${message} ${startingTeam === 'blue' ? 'GOLD' : 'BLACK'} starts.`);
+}
 function removeVoteForCard(room, cardId) {
   room.votes = room.votes || {};
   for (const [pid, value] of Object.entries(room.votes)) {
@@ -188,6 +220,36 @@ function finish(room, winner, reason) {
 function hasTeamSpymaster(room, team) { return Object.values(room.players).some(p => p.online !== false && p.team === team && p.role === 'spymaster'); }
 function playerCanAct(room, p) { return p && p.team === room.turn && room.status !== 'finished'; }
 
+function adminActionLabel(action) {
+  return action === 'resetTable' ? 'Reset Table'
+    : action === 'shuffleTeams' ? 'Shuffle Teams'
+    : action === 'changeWordList' ? 'Change Word List'
+    : 'Admin Action';
+}
+function runAdminTableAction(room, action, actorName='Admin') {
+  if (action === 'resetTable') {
+    resetRoomTable(room, `${actorName} reset the table.`);
+    return true;
+  }
+  if (action === 'changeWordList') {
+    resetRoomTable(room, `${actorName} changed the word list.`);
+    return true;
+  }
+  if (action === 'shuffleTeams') {
+    const players = shuffle(Object.values(room.players).filter(p=>p.online !== false && p.team!=='spectator'));
+    players.forEach((p,i)=>{ p.team = i % 2 ? 'red' : 'blue'; });
+    room.votes = {};
+    room.log.push(`${actorName} shuffled online players between GOLD and BLACK.`);
+    return true;
+  }
+  return false;
+}
+function emitAdminRequest(room, request) {
+  Object.values(room.players).forEach(p => {
+    if (p.online !== false && p.socketId && p.isAdmin) io.to(p.socketId).emit('adminRequest', request);
+  });
+}
+
 io.on('connection', socket => {
   socket.on('getRoomInfo', ({ roomId }={}, cb=()=>{}) => {
     const room = rooms.get(String(roomId||'').toUpperCase());
@@ -199,18 +261,18 @@ io.on('connection', socket => {
     const roomId = code();
     const room = newRoom(roomId);
     rooms.set(roomId, room);
-    joinRoom(socket, room, { name, team, role, character, playerKey });
-    cb({ ok:true, roomId, playerKey: socket.data.playerKey });
+    joinRoom(socket, room, { name, team, role, character, playerKey, forceAdmin:true, adminToken:room.adminToken });
+    cb({ ok:true, roomId, playerKey: socket.data.playerKey, adminToken: room.adminToken });
   });
 
-  socket.on('joinRoom', ({ roomId, name, team='spectator', role='operative', character='raiden', playerKey }={}, cb=()=>{}) => {
+  socket.on('joinRoom', ({ roomId, name, team='spectator', role='operative', character='raiden', playerKey, adminToken }={}, cb=()=>{}) => {
     const room = rooms.get(String(roomId||'').toUpperCase());
     if (!room) return cb({ ok:false, error:'Room not found.' });
-    joinRoom(socket, room, { name, team, role, character, playerKey });
-    cb({ ok:true, roomId:room.id, playerKey: socket.data.playerKey });
+    joinRoom(socket, room, { name, team, role, character, playerKey, adminToken });
+    cb({ ok:true, roomId:room.id, playerKey: socket.data.playerKey, adminToken: (adminToken && adminToken === room.adminToken) ? room.adminToken : undefined });
   });
 
-  function joinRoom(socket, room, { name, team, role, character, playerKey }) {
+  function joinRoom(socket, room, { name, team, role, character, playerKey, adminToken, forceAdmin=false }) {
     socket.join(room.id);
     let key = safePlayerKey(playerKey);
     let existing = room.players[key];
@@ -243,14 +305,16 @@ io.on('connection', socket => {
       existing.lastSeenAt = Date.now();
       existing.name = incomingName;
       if (CHARACTERS.find(c=>c.id===character)) existing.character = character;
+      if (adminToken && adminToken === room.adminToken) { existing.isAdmin = true; existing.adminToken = room.adminToken; }
       // Keep same-name seats allowed. Only this exact playerKey seat is restored.
       room.log.push(`${existing.name} rejoined the room and restored their seat.`);
       emitRoom(room);
       return;
     }
 
-    if (role === 'spymaster' && team !== 'spectator' && hasTeamSpymaster(room, team)) role = 'operative';
-    room.players[key] = { id:key, socketId:socket.id, name:incomingName, team, role, character:char, joinedAt:Date.now(), lastSeenAt:Date.now(), online:true };
+    // Only the original room creator/admin-token holder becomes admin. Becoming spymaster never gives admin power.
+    const isAdmin = !!forceAdmin || !!(adminToken && adminToken === room.adminToken);
+    room.players[key] = { id:key, socketId:socket.id, name:incomingName, team, role, character:char, joinedAt:Date.now(), lastSeenAt:Date.now(), online:true, isAdmin, adminToken:isAdmin ? room.adminToken : undefined };
     // Same displayed names are allowed for different people/roles.
     room.log.push(`${room.players[key].name} joined as ${team === 'blue' ? 'Gold' : team === 'red' ? 'Black' : 'Spectator'} ${role}.`);
     emitRoom(room);
@@ -259,12 +323,10 @@ io.on('connection', socket => {
   socket.on('switchSeat', ({ team, role, character }={}) => {
     const room = getPlayerRoom(socket.id); if (!room) return;
     const p = getPlayerBySocket(room, socket.id);
+    if (!canAdmin(room, socket.id)) return socket.emit('toast', 'Only the room admin can move players during the game.');
     team = ['blue','red','spectator'].includes(team) ? team : p.team;
     role = ['operative','spymaster','spectator'].includes(role) ? role : p.role;
     if (team === 'spectator') role = 'spectator';
-    if (role === 'spymaster' && p.role !== 'spymaster' && team !== 'spectator' && hasTeamSpymaster(room, team)) {
-      socket.emit('toast', 'That team already has an online spymaster. You can only claim spymaster if that spymaster is offline.'); return;
-    }
     p.team = team; p.role = role;
     if (CHARACTERS.find(c=>c.id===character)) p.character = character;
     room.log.push(`${p.name} switched to ${team === 'blue' ? 'Gold' : team === 'red' ? 'Black' : 'Spectator'} ${role}.`);
@@ -273,19 +335,101 @@ io.on('connection', socket => {
 
   socket.on('randomizeTeams', () => {
     const room = getPlayerRoom(socket.id); if (!room) return;
-    const players = Object.values(room.players).filter(p=>p.team!=='spectator');
-    shuffle(players).forEach((p,i)=>{ p.team = i%2 ? 'red':'blue'; if(p.role==='spymaster') p.role='operative'; });
-    room.log.push('Teams randomized. Choose spymasters again.');
-    emitRoom(room);
+    const p = getPlayerBySocket(room, socket.id);
+    if (!canAdmin(room, socket.id)) return socket.emit('toast', 'Only the room admin can shuffle teams.');
+    if (runAdminTableAction(room, 'shuffleTeams', p?.name || 'Admin')) emitRoom(room);
+  });
+
+  socket.on('shuffleTeams', () => {
+    const room = getPlayerRoom(socket.id); if (!room) return;
+    const p = getPlayerBySocket(room, socket.id);
+    if (!canAdmin(room, socket.id)) return socket.emit('toast', 'Only the room admin can shuffle teams.');
+    if (runAdminTableAction(room, 'shuffleTeams', p?.name || 'Admin')) emitRoom(room);
   });
 
   socket.on('newGame', () => {
     const room = getPlayerRoom(socket.id); if (!room) return;
     const players = room.players;
+    const adminToken = room.adminToken;
     const fresh = newRoom(room.id);
     fresh.players = players;
+    fresh.adminToken = adminToken;
     rooms.set(room.id, fresh);
     emitRoom(fresh);
+  });
+
+  socket.on('resetTable', () => {
+    const room = getPlayerRoom(socket.id); if (!room) return;
+    const p = getPlayerBySocket(room, socket.id);
+    if (!canAdmin(room, socket.id)) return socket.emit('toast', 'Only the room admin can reset the table.');
+    if (runAdminTableAction(room, 'resetTable', p?.name || 'Admin')) emitRoom(room);
+  });
+
+  socket.on('changeWordList', () => {
+    const room = getPlayerRoom(socket.id); if (!room) return;
+    const p = getPlayerBySocket(room, socket.id);
+    if (!canAdmin(room, socket.id)) return socket.emit('toast', 'Only the room admin can change the word list.');
+    if (runAdminTableAction(room, 'changeWordList', p?.name || 'Admin')) emitRoom(room);
+  });
+
+  socket.on('adminActionRequest', ({ action }={}) => {
+    const room = getPlayerRoom(socket.id); if (!room) return;
+    const p = getPlayerBySocket(room, socket.id); if (!p) return;
+    action = ['resetTable','shuffleTeams','changeWordList'].includes(action) ? action : '';
+    if (!action) return;
+    if (canAdmin(room, socket.id)) { if (runAdminTableAction(room, action, p.name || 'Admin')) emitRoom(room); return; }
+    const admins = Object.values(room.players).filter(x => x.online !== false && x.isAdmin && x.socketId);
+    if (!admins.length) return socket.emit('toast', 'No admin is online right now.');
+    const request = { requestId:'req_' + Math.random().toString(36).slice(2) + Date.now().toString(36), action, label:adminActionLabel(action), fromId:p.id, fromName:p.name, at:Date.now() };
+    room.adminRequests = (room.adminRequests || []).filter(r => Date.now() - r.at < 5 * 60 * 1000);
+    room.adminRequests.push(request);
+    emitAdminRequest(room, request);
+    socket.emit('toast', `${request.label} request sent to admin.`);
+  });
+
+  socket.on('adminRequestDecision', ({ requestId, approved }={}) => {
+    const room = getPlayerRoom(socket.id); if (!room || !canAdmin(room, socket.id)) return;
+    const admin = getPlayerBySocket(room, socket.id);
+    const idx = (room.adminRequests || []).findIndex(r => r.requestId === requestId);
+    if (idx < 0) return socket.emit('toast', 'That admin request is no longer available.');
+    const request = room.adminRequests.splice(idx, 1)[0];
+    const requester = room.players[request.fromId];
+    if (!approved) {
+      if (requester?.socketId) io.to(requester.socketId).emit('toast', `Admin declined ${request.label}.`);
+      return;
+    }
+    if (runAdminTableAction(room, request.action, admin?.name || 'Admin')) {
+      room.log.push(`${admin?.name || 'Admin'} approved ${request.label} requested by ${request.fromName}.`);
+      if (requester?.socketId) io.to(requester.socketId).emit('toast', `Admin approved ${request.label}.`);
+      emitRoom(room);
+    }
+  });
+
+  socket.on('adminUpdatePlayer', ({ playerId, action, team, role }={}) => {
+    const room = getPlayerRoom(socket.id); if (!room || !canAdmin(room, socket.id)) return;
+    const actor = getPlayerBySocket(room, socket.id);
+    const target = room.players[String(playerId || '')];
+    if (!target) return;
+    if (target.isAdmin && target.id !== actor?.id) return socket.emit('toast', 'The room admin cannot be moved or kicked by anyone else.');
+    if (action === 'kick') {
+      if (target.isAdmin) return socket.emit('toast', 'The room admin cannot be kicked.');
+      if (target.socketId) io.to(target.socketId).emit('kicked', { roomId: room.id, message: 'You were kicked from the room by the admin. You can join back if you want.' });
+      room.log.push(`Admin kicked ${target.name}.`);
+      delete room.votes?.[target.id];
+      delete room.players[target.id];
+      emitRoom(room);
+      return;
+    }
+    if (action === 'move') {
+      team = ['blue','red','spectator'].includes(team) ? team : target.team;
+      role = ['operative','spymaster','spectator'].includes(role) ? role : target.role;
+      if (team === 'spectator') role = 'spectator';
+      target.team = team;
+      target.role = role;
+      delete room.votes?.[target.id];
+      room.log.push(`Admin moved ${target.name} to ${team === 'blue' ? 'Gold' : team === 'red' ? 'Black' : 'Spectator'} ${role}.`);
+      emitRoom(room);
+    }
   });
 
   socket.on('requestHint', () => {

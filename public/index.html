@@ -69,6 +69,11 @@
             <button id="requestHintBtn" class="primary">Ask One-Time Hint</button>
             <button id="endTurnBtn">Pass / End Turn</button>
           </div>
+          <div id="adminControlBar" class="adminControlBar hidden">
+            <button id="resetTableBtn" class="primary" type="button">Reset Table</button>
+            <button id="shuffleTeamsBtn" type="button">Shuffle Teams</button>
+            <button id="changeWordListBtn" type="button">Change Word List</button>
+          </div>
           <button id="newRoundBtn" class="primary hidden">Create New Game</button>
         </div>
         <div class="timers"><span>Round <b id="roundTime">00:00</b></span><span>Game <b id="gameTime">00:00</b></span></div>
@@ -76,8 +81,8 @@
 
       <aside id="goldPanel" class="teamPanel teamPanelGold glass">
         <div class="teamHeader"><div><b>GOLD TEAM</b><span id="goldPlayerCount">0 players</span></div><div class="miniScoreCard goldMini"><strong id="goldSideScore">9</strong></div></div>
-        <section><h3>Operatives</h3><div id="goldOperatives" class="teamList"></div></section>
-        <section><h3>Spymasters</h3><div id="goldSpymasters" class="teamList"></div></section>
+        <section><h3>Operatives</h3><div id="goldOperatives" class="teamList" data-drop-team="blue" data-drop-role="operative"></div></section>
+        <section><h3>Spymasters</h3><div id="goldSpymasters" class="teamList" data-drop-team="blue" data-drop-role="spymaster"></div></section>
       </aside>
 
       <section class="boardWrap">
@@ -86,9 +91,9 @@
 
       <aside id="blackPanel" class="teamPanel teamPanelBlack glass">
         <div class="teamHeader"><div><b>BLACK TEAM</b><span id="blackPlayerCount">0 players</span></div><div class="miniScoreCard blackMini"><strong id="blackSideScore">9</strong></div></div>
-        <section><h3>Operatives</h3><div id="blackOperatives" class="teamList"></div></section>
-        <section><h3>Spymasters</h3><div id="blackSpymasters" class="teamList"></div></section>
-        <section><h3>Spectators</h3><div id="spectators" class="teamList compact"></div></section>
+        <section><h3>Operatives</h3><div id="blackOperatives" class="teamList" data-drop-team="red" data-drop-role="operative"></div></section>
+        <section><h3>Spymasters</h3><div id="blackSpymasters" class="teamList" data-drop-team="red" data-drop-role="spymaster"></div></section>
+        <section><h3>Spectators</h3><div id="spectators" class="teamList compact" data-drop-team="spectator" data-drop-role="spectator"></div></section>
         <section class="sideClueSection"><h3>Current Clue</h3><div id="clueStatus" class="clueStatus"></div></section>
         <section class="sideLogSection"><h3>Game Log</h3><div id="log" class="log"></div></section>
       </aside>
@@ -117,6 +122,18 @@
       <h2 id="winModalTitle">TEAM WON THE GAME!</h2>
       <p id="winModalText">Congratulations!</p>
           </div>
+  </div>
+
+  <div id="adminRequestModal" class="adminRequestModal hidden" aria-live="polite">
+    <div class="adminRequestCard glass">
+      <div class="adminRequestIcon">⚙️</div>
+      <h2>Admin Request</h2>
+      <p id="adminRequestText">A player requested an admin action.</p>
+      <div class="adminRequestActions">
+        <button id="adminRequestNo" type="button">No</button>
+        <button id="adminRequestYes" class="primary" type="button">Yes, apply now</button>
+      </div>
+    </div>
   </div>
   <div id="toast"></div>
   <script src="/socket.io/socket.io.js"></script>
