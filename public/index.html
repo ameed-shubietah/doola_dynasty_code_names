@@ -1,142 +1,204 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Doola's Dynasty Code Names</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Doola's Dynasty Code Names</title>
+    <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <div id="app">
+<div id="app">
     <section id="landing" class="landing panel glass">
-      <div class="homeTitleSplit" aria-label="Doola's Dynasty Code Names">
-        <h1 class="homeDynasty">Doola's Dynasty</h1>
-        <h1 class="homeCode">Code Names</h1>
-      </div>
-      <div class="joinBasics nameOnlyJoin">
-        <label>Name<input id="name" maxlength="18" placeholder="Name/Nickname" /></label>
-        <input id="roomCode" type="hidden" maxlength="5" />
-      </div>
-      <div class="teamChooseTitle">Choose your team</div>
-      <div id="teamChoice" class="teamChoice">
-        <button type="button" class="teamPick goldPick" data-team="blue"><span>Gold Team</span><small>Join the golden side</small></button>
-        <button type="button" class="teamPick blackPick" data-team="red"><span>Black Team</span><small>Join the shadow side</small></button>
-        <button type="button" class="teamPick spectatorPick" data-team="spectator"><span>Spectator</span><small>Watch only</small></button>
-      </div>
-      <div id="joinSummary" class="joinSummary hidden"></div>
-      <div class="hidden">
-        <select id="team"><option value="blue">Gold Team</option><option value="red">Black Team</option><option value="spectator">Spectator</option></select>
-        <select id="role"><option value="operative">Operative</option><option value="spymaster">Spymaster</option><option value="spectator">Spectator</option></select>
-      </div>
-      <div id="lobbyPreview" class="lobbyPreview hidden"></div>
-      <div id="characterPick" class="characters"></div>
-      <div class="actions"><button id="createBtn" class="primary" disabled>Create Room</button><button id="joinBtn" disabled>Join Room</button></div>
-      <div id="roleOverlay" class="roleOverlay hidden" aria-live="polite">
-        <div class="rolePopup glass">
-          <button id="closeRolePopup" class="roleClose" type="button">×</button>
-          <h2 id="rolePopupTitle">Choose your role</h2>
-          <p id="rolePopupText">Pick how you want to play on this team.</p>
-          <div class="roleChoices">
-            <button type="button" class="rolePick" data-role="operative"><b>Operative</b><span>Guess cards with your team.</span></button>
-            <button type="button" class="rolePick" data-role="spymaster"><b>Spymaster</b><span>Give clues and see hidden colors.</span></button>
-            <button type="button" class="rolePick spectatorRole" data-role="spectator"><b>Spectator</b><span>Watch the room only.</span></button>
-          </div>
+        <div class="homeTitleSplit" aria-label="Doola's Dynasty Code Names">
+            <h1 class="homeDynasty">Doola's Dynasty</h1>
+            <h1 class="homeCode">Code Names</h1>
         </div>
-      </div>
-      <p class="hintText">Spymasters see hidden colors; operatives only see revealed cards.</p>
+        <div class="joinBasics">
+            <label>
+                Name
+                <input id="name" maxlength="18" placeholder="Name/Nickname"/>
+            </label>
+
+            <label>
+                Room Code
+                <input id="roomCode" maxlength="5" placeholder="ABCDE"/>
+            </label>
+        </div>
+        <div class="teamChooseTitle">Choose your team</div>
+        <div id="teamChoice" class="teamChoice">
+            <button type="button" class="teamPick goldPick" data-team="blue"><span>Gold Team</span><small>Join the
+                golden side</small></button>
+            <button type="button" class="teamPick blackPick" data-team="red"><span>Black Team</span><small>Join the
+                shadow side</small></button>
+            <button type="button" class="teamPick spectatorPick" data-team="spectator"><span>Spectator</span><small>Watch
+                only</small></button>
+        </div>
+        <div id="joinSummary" class="joinSummary hidden"></div>
+        <div class="hidden">
+            <select id="team">
+                <option value="blue">Gold Team</option>
+                <option value="red">Black Team</option>
+                <option value="spectator">Spectator</option>
+            </select>
+            <select id="role">
+                <option value="operative">Operative</option>
+                <option value="spymaster">Spymaster</option>
+                <option value="spectator">Spectator</option>
+            </select>
+        </div>
+        <div id="lobbyPreview" class="lobbyPreview hidden"></div>
+        <div id="characterPick" class="characters"></div>
+        <div class="actions">
+            <button id="createBtn" class="primary" disabled>Create Room</button>
+            <button id="joinBtn" disabled>Join Room</button>
+        </div>
+        <div id="roleOverlay" class="roleOverlay hidden" aria-live="polite">
+            <div class="rolePopup glass">
+                <button id="closeRolePopup" class="roleClose" type="button">×</button>
+                <h2 id="rolePopupTitle">Choose your role</h2>
+                <p id="rolePopupText">Pick how you want to play on this team.</p>
+                <div class="roleChoices">
+                    <button type="button" class="rolePick" data-role="operative"><b>Operative</b><span>Guess cards with your team.</span>
+                    </button>
+                    <button type="button" class="rolePick" data-role="spymaster"><b>Spymaster</b><span>Give clues and see hidden colors.</span>
+                    </button>
+                    <button type="button" class="rolePick spectatorRole" data-role="spectator"><b>Spectator</b><span>Watch the room only.</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <p class="hintText">Spymasters see hidden colors; operatives only see revealed cards.</p>
     </section>
 
     <main id="game" class="hidden gameV9">
-      <header class="topbar glass">
-        <div class="brandSide">
-          <div class="brandInviteRow">
-            <button id="backToLobbyBtn" class="backLobbyBtn" type="button">← Back</button>
-            <button id="topInviteBtn" class="primary" type="button">Invite</button>
-            <input id="topInviteLink" readonly placeholder="Invite link" />
-          </div>
-          <h2 class="topLogo"><span>Doola's</span> Dynasty <em>Code Names</em></h2><span id="roomLabel"></span>
-        </div>
-        <div class="topCenter">
-          <div class="status">
-            <span id="goldScoreBadge" class="scoreBadge scoreGold"><b>GOLD</b> <strong id="goldScoreNum">9</strong></span>
-            <span id="turnBadge"></span>
-            <span id="clueBadge"></span>
-            <span id="blackScoreBadge" class="scoreBadge scoreBlack"><b>BLACK</b> <strong id="blackScoreNum">9</strong></span>
-            <button id="confirmVoteBtn" class="confirmVote hidden" title="Confirm agreed card">✓ Confirm</button><span id="winnerBadge"></span>
-          </div>
-          <div class="topGameTools hidden" aria-hidden="true"></div>
-          <div id="topOperativeActions" class="topActionBar hidden">
-            <button id="requestHintBtn" class="primary">Ask One-Time Hint</button>
-            <button id="endTurnBtn">Pass / End Turn</button>
-          </div>
-          <div id="adminControlBar" class="adminControlBar hidden">
-            <button id="resetTableBtn" class="primary" type="button">Reset Table</button>
-            <button id="shuffleTeamsBtn" type="button">Shuffle Teams</button>
-            <button id="changeWordListBtn" type="button">Change Word List</button>
-          </div>
-          <button id="newRoundBtn" class="primary hidden">Create New Game</button>
-        </div>
-        <div class="timers"><span>Round <b id="roundTime">00:00</b></span><span>Game <b id="gameTime">00:00</b></span></div>
-      </header>
+        <header class="topbar glass">
+            <div class="brandSide">
+                <div class="brandInviteRow">
+                    <button id="backToLobbyBtn" class="backLobbyBtn" type="button">← Back</button>
+                    <button id="topInviteBtn" class="primary" type="button">Invite</button>
+                    <input id="topInviteLink" readonly placeholder="Invite link"/>
+                </div>
+                <h2 class="topLogo"><span>Doola's</span> Dynasty <em>Code Names</em></h2><span id="roomLabel"></span>
+            </div>
+            <div class="topCenter">
+                <div class="status">
+                    <span id="goldScoreBadge" class="scoreBadge scoreGold"><b>GOLD</b> <strong
+                            id="goldScoreNum">9</strong></span>
+                    <span id="turnBadge"></span>
+                    <span id="clueBadge"></span>
+                    <span id="blackScoreBadge" class="scoreBadge scoreBlack"><b>BLACK</b> <strong
+                            id="blackScoreNum">9</strong></span>
+                    <button id="confirmVoteBtn" class="confirmVote hidden" title="Confirm agreed card">✓ Confirm
+                    </button>
+                    <span id="winnerBadge"></span>
+                </div>
+                <div class="topGameTools hidden" aria-hidden="true"></div>
+                <div id="topOperativeActions" class="topActionBar hidden">
+                    <button id="requestHintBtn" class="primary">Ask One-Time Hint</button>
+                    <button id="endTurnBtn">Pass / End Turn</button>
+                </div>
+                <div id="adminControlBar" class="adminControlBar hidden">
+                    <button id="resetTableBtn" class="primary" type="button">Reset Table</button>
+                    <button id="shuffleTeamsBtn" type="button">Shuffle Teams</button>
+                    <button id="changeWordListBtn" type="button">Change Word List</button>
+                </div>
+                <button id="newRoundBtn" class="primary hidden">Create New Game</button>
+            </div>
+            <div class="timers"><span>Round <b id="roundTime">00:00</b></span><span>Game <b
+                    id="gameTime">00:00</b></span></div>
+        </header>
 
-      <aside id="goldPanel" class="teamPanel teamPanelGold glass">
-        <div class="teamHeader"><div><b>GOLD TEAM</b><span id="goldPlayerCount">0 players</span></div><div class="miniScoreCard goldMini"><strong id="goldSideScore">9</strong></div></div>
-        <section><h3>Operatives</h3><div id="goldOperatives" class="teamList" data-drop-team="blue" data-drop-role="operative"></div></section>
-        <section><h3>Spymasters</h3><div id="goldSpymasters" class="teamList" data-drop-team="blue" data-drop-role="spymaster"></div></section>
-      </aside>
+        <aside id="goldPanel" class="teamPanel teamPanelGold glass">
+            <div class="teamHeader">
+                <div><b>GOLD TEAM</b><span id="goldPlayerCount">0 players</span></div>
+                <div class="miniScoreCard goldMini"><strong id="goldSideScore">9</strong></div>
+            </div>
+            <section><h3>Operatives</h3>
+                <div id="goldOperatives" class="teamList" data-drop-team="blue" data-drop-role="operative"></div>
+            </section>
+            <section><h3>Spymasters</h3>
+                <div id="goldSpymasters" class="teamList" data-drop-team="blue" data-drop-role="spymaster"></div>
+            </section>
+        </aside>
 
-      <section class="boardWrap">
-        <div id="board" class="board"></div>
-      </section>
+        <section class="boardWrap">
+            <div id="board" class="board"></div>
+        </section>
 
-      <aside id="blackPanel" class="teamPanel teamPanelBlack glass">
-        <div class="teamHeader"><div><b>BLACK TEAM</b><span id="blackPlayerCount">0 players</span></div><div class="miniScoreCard blackMini"><strong id="blackSideScore">9</strong></div></div>
-        <section><h3>Operatives</h3><div id="blackOperatives" class="teamList" data-drop-team="red" data-drop-role="operative"></div></section>
-        <section><h3>Spymasters</h3><div id="blackSpymasters" class="teamList" data-drop-team="red" data-drop-role="spymaster"></div></section>
-        <section><h3>Spectators</h3><div id="spectators" class="teamList compact" data-drop-team="spectator" data-drop-role="spectator"></div></section>
-        <section class="sideClueSection"><h3>Current Clue</h3><div id="clueStatus" class="clueStatus"></div></section>
-        <section class="sideLogSection"><h3>Game Log</h3><div id="log" class="log"></div></section>
-      </aside>
+        <aside id="blackPanel" class="teamPanel teamPanelBlack glass">
+            <div class="teamHeader">
+                <div><b>BLACK TEAM</b><span id="blackPlayerCount">0 players</span></div>
+                <div class="miniScoreCard blackMini"><strong id="blackSideScore">9</strong></div>
+            </div>
+            <section><h3>Operatives</h3>
+                <div id="blackOperatives" class="teamList" data-drop-team="red" data-drop-role="operative"></div>
+            </section>
+            <section><h3>Spymasters</h3>
+                <div id="blackSpymasters" class="teamList" data-drop-team="red" data-drop-role="spymaster"></div>
+            </section>
+            <section><h3>Spectators</h3>
+                <div id="spectators" class="teamList compact" data-drop-team="spectator"
+                     data-drop-role="spectator"></div>
+            </section>
+            <section class="sideClueSection"><h3>Current Clue</h3>
+                <div id="clueStatus" class="clueStatus"></div>
+            </section>
+            <section class="sideLogSection"><h3>Game Log</h3>
+                <div id="log" class="log"></div>
+            </section>
+        </aside>
 
-      <section class="lowerPanels hiddenUtility" aria-hidden="true">
-        <div class="seatBox glass"><h3>Your Seat</h3><div id="meCard" class="meCard"></div></div>
-        <div class="inviteBox glass"><button id="inviteBtn" class="primary">Generate Invite</button><input id="inviteLinkGame" readonly placeholder="Invite link will appear here" /></div>
-        <div class="clueBoxSide glass"><h3>Clue Control</h3><div id="clueStatusHidden" class="clueStatus"></div><div id="spymasterPanel" class="cluePanel hidden"></div><div id="operativePanel" class="cluePanel hidden"><p class="hintText">Each team can ask for only one extra hint during the whole game.</p></div></div>
-        <div class="logBox glass"><h3>Game Log</h3><div id="logHidden" class="log"></div></div>
-      </section>
+        <section class="lowerPanels hiddenUtility" aria-hidden="true">
+            <div class="seatBox glass"><h3>Your Seat</h3>
+                <div id="meCard" class="meCard"></div>
+            </div>
+            <div class="inviteBox glass">
+                <button id="inviteBtn" class="primary">Generate Invite</button>
+                <input id="inviteLinkGame" readonly placeholder="Invite link will appear here"/></div>
+            <div class="clueBoxSide glass"><h3>Clue Control</h3>
+                <div id="clueStatusHidden" class="clueStatus"></div>
+                <div id="spymasterPanel" class="cluePanel hidden"></div>
+                <div id="operativePanel" class="cluePanel hidden"><p class="hintText">Each team can ask for only one
+                    extra hint during the whole game.</p></div>
+            </div>
+            <div class="logBox glass"><h3>Game Log</h3>
+                <div id="logHidden" class="log"></div>
+            </div>
+        </section>
 
-      <section id="bottomClueDock" class="bottomClueDock glass hidden">
-        <div class="dockText">
-          <b id="dockTitle">Give your clue</b>
-          <span id="dockHelp">Click your team cards; the number updates automatically.</span>
-        </div>
-        <label>Clue word<input id="clueWord" placeholder="Hint" /></label>
-        <label class="numberLabel">Number<input id="clueNumber" type="number" min="0" max="9" value="0" readonly /></label>
-        <button id="giveClueBtn" class="primary">Give Clue</button>
-      </section>
+        <section id="bottomClueDock" class="bottomClueDock glass hidden">
+            <div class="dockText">
+                <b id="dockTitle">Give your clue</b>
+                <span id="dockHelp">Click your team cards; the number updates automatically.</span>
+            </div>
+            <label>Clue word<input id="clueWord" placeholder="Hint"/></label>
+            <label class="numberLabel">Number<input id="clueNumber" type="number" min="0" max="9" value="0"
+                                                    readonly/></label>
+            <button id="giveClueBtn" class="primary">Give Clue</button>
+        </section>
     </main>
-  </div>
-  <div id="winModal" class="winModal hidden" aria-live="polite">
+</div>
+<div id="winModal" class="winModal hidden" aria-live="polite">
     <div class="winModalCard">
-      <div class="winBurst">🎉</div>
-      <h2 id="winModalTitle">TEAM WON THE GAME!</h2>
-      <p id="winModalText">Congratulations!</p>
-          </div>
-  </div>
-
-  <div id="adminRequestModal" class="adminRequestModal hidden" aria-live="polite">
-    <div class="adminRequestCard glass">
-      <div class="adminRequestIcon">⚙️</div>
-      <h2>Admin Request</h2>
-      <p id="adminRequestText">A player requested an admin action.</p>
-      <div class="adminRequestActions">
-        <button id="adminRequestNo" type="button">No</button>
-        <button id="adminRequestYes" class="primary" type="button">Yes, apply now</button>
-      </div>
+        <div class="winBurst">🎉</div>
+        <h2 id="winModalTitle">TEAM WON THE GAME!</h2>
+        <p id="winModalText">Congratulations!</p>
     </div>
-  </div>
-  <div id="toast"></div>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js"></script>
+</div>
+
+<div id="adminRequestModal" class="adminRequestModal hidden" aria-live="polite">
+    <div class="adminRequestCard glass">
+        <div class="adminRequestIcon">⚙️</div>
+        <h2>Admin Request</h2>
+        <p id="adminRequestText">A player requested an admin action.</p>
+        <div class="adminRequestActions">
+            <button id="adminRequestNo" type="button">No</button>
+            <button id="adminRequestYes" class="primary" type="button">Yes, apply now</button>
+        </div>
+    </div>
+</div>
+<div id="toast"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

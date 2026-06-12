@@ -1135,3 +1135,30 @@ html,body,#app{min-height:100%;}
 .adminRequestActions button{min-width:130px}
 @keyframes adminPop{from{opacity:0;transform:translateY(12px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:520px){.adminRequestActions{flex-direction:column}.adminRequestActions button{width:100%}}
+
+
+.joinBasics {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 12px;
+  align-items: end;
+  margin: 18px auto 14px;
+  max-width: 620px;
+}
+
+.joinBasics label {
+  display: block;
+}
+
+#roomCode {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 900;
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .joinBasics {
+    grid-template-columns: 1fr;
+  }
+}
