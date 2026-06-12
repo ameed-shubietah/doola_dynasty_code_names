@@ -272,6 +272,22 @@ io.on('connection', socket => {
     cb({ ok:true, roomId:room.id, playerKey: socket.data.playerKey, adminToken: (adminToken && adminToken === room.adminToken) ? room.adminToken : undefined });
   });
 
+  socket.on('joinOrCreateActivityRoom', ({ roomId, activityId, name, team='spectator', role='operative', character='raiden', playerKey, adminToken }={}, cb=()=>{}) => {
+    let id = String(roomId || activityId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+    if (!id) id = code();
+    if (id.length > 5) id = id.slice(0, 5);
+    let room = rooms.get(id);
+    let created = false;
+    if (!room) {
+      room = newRoom(id);
+      rooms.set(id, room);
+      created = true;
+    }
+    const forceAdmin = created;
+    joinRoom(socket, room, { name, team, role, character, playerKey, adminToken: forceAdmin ? room.adminToken : adminToken, forceAdmin });
+    cb({ ok:true, roomId:room.id, playerKey:socket.data.playerKey, adminToken: forceAdmin ? room.adminToken : ((adminToken && adminToken === room.adminToken) ? room.adminToken : undefined) });
+  });
+
   function joinRoom(socket, room, { name, team, role, character, playerKey, adminToken, forceAdmin=false }) {
     socket.join(room.id);
     let key = safePlayerKey(playerKey);

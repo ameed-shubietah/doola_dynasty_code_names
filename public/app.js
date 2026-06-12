@@ -13,8 +13,20 @@ const landing = $('landing'), game = $('game'), board = $('board');
 const nameInput = $('name'), roomInput = $('roomCode');
 nameInput.value = localStorage.cc_name || '';
 const params = new URLSearchParams(location.search);
+function roomCodeFromSeed(seed){
+  const s = String(seed || '');
+  let h = 2166136261;
+  for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return Math.abs(h >>> 0).toString(36).toUpperCase().padStart(5,'0').slice(0,5);
+}
+const localDiscordSeed = params.get('instance_id') || params.get('instanceId') || params.get('activity_instance_id') || params.get('activityInstanceId');
+let discordActivityInfo = null;
+let isDiscordActivity = Boolean(params.get('discord') || localDiscordSeed || location.hostname.includes('discordsays.com'));
+let discordActivityRoomCode = localDiscordSeed ? roomCodeFromSeed(localDiscordSeed) : '';
+if(isDiscordActivity) document.body.classList.add('discordActivity');
 const inviteRoom = (params.get('room') || params.get('r') || '').trim().toUpperCase();
 if(inviteRoom) roomInput.value = inviteRoom;
+else if(discordActivityRoomCode) roomInput.value = discordActivityRoomCode;
 let selectedTeamChoice = '';
 let selectedRoleChoice = '';
 let pendingAdminRequest = null;
@@ -102,6 +114,12 @@ renderCharacters();
 function setJoinButtonsReady(){
   const ready = !!(selectedTeamChoice && selectedRoleChoice && nameInput.value.trim());
   const cb = $('createBtn'), jb = $('joinBtn');
+  if(isDiscordActivity){
+    if(cb) cb.disabled = true;
+    if(jb) jb.disabled = true;
+    document.querySelectorAll('.discordRoleJoin').forEach(b => b.disabled = !nameInput.value.trim());
+    return;
+  }
   if(cb) cb.disabled = !ready;
   if(jb) jb.disabled = !ready || !roomInput.value.trim();
 }
@@ -129,6 +147,71 @@ function openRolePopup(team){
   overlay.classList.remove('hidden');
 }
 function closeRolePopup(){ const o=$('roleOverlay'); if(o) o.classList.add('hidden'); }
+function syncDiscordLanding(){
+  document.body.classList.toggle('discordActivity', !!isDiscordActivity);
+  const dl = $('discordLobby');
+  if(dl) dl.classList.toggle('hidden', !isDiscordActivity);
+  const teamChoice = $('teamChoice');
+  if(teamChoice) teamChoice.classList.toggle('hidden', !!isDiscordActivity);
+  const actions = document.querySelector('.actions');
+  if(actions) actions.classList.toggle('hidden', !!isDiscordActivity);
+  const roleOverlay = $('roleOverlay');
+  if(roleOverlay && isDiscordActivity) roleOverlay.classList.add('hidden');
+  const roomField = document.querySelector('.websiteRoomField');
+  if(roomField) roomField.classList.toggle('hidden', !!isDiscordActivity);
+  const title = document.querySelector('.teamChooseTitle');
+  if(title) title.textContent = isDiscordActivity ? 'Choose your role' : 'Choose your team';
+  setJoinButtonsReady();
+}
+function getDiscordActivityRoomCode(){
+  const seed = window.DD_DISCORD?.instanceId || localDiscordSeed || discordActivityRoomCode || 'local-discord-test';
+  return roomCodeFromSeed(seed);
+}
+function discordJoinPayload(team, role){
+  localStorage.cc_name = nameInput.value.trim() || 'Agent';
+  const roomCode = getDiscordActivityRoomCode();
+  roomInput.value = roomCode;
+  discordActivityRoomCode = roomCode;
+  return {
+    activityId: window.DD_DISCORD?.instanceId || localDiscordSeed || roomCode,
+    roomId: roomCode,
+    name: nameInput.value,
+    team,
+    role,
+    character: selectedCharacter,
+    playerKey,
+    adminToken: getAdminToken(roomCode)
+  };
+}
+function joinDiscordActivity(team, role){
+  if(!nameInput.value.trim()){ toast('Write your name first.'); nameInput.focus(); return; }
+  selectedTeamChoice = team;
+  selectedRoleChoice = role;
+  const teamSel = $('team'), roleSel = $('role');
+  if(teamSel) teamSel.value = team;
+  if(roleSel) roleSel.value = role;
+  updateJoinSummary(); setJoinButtonsReady();
+  socket.emit('joinOrCreateActivityRoom', discordJoinPayload(team, role), acceptJoinResponse);
+}
+async function openDiscordInvite(){
+  if(window.DD_openInviteDialog){
+    const res = await window.DD_openInviteDialog();
+    if(res?.ok) return;
+    toast(res?.error || 'Could not open Discord invite dialog.');
+    return;
+  }
+  toast('Discord invite is available inside the Discord Activity.');
+}
+window.addEventListener('discordActivityReady', (event)=>{
+  discordActivityInfo = event.detail;
+  if(discordActivityInfo?.enabled){
+    isDiscordActivity = true;
+    discordActivityRoomCode = getDiscordActivityRoomCode();
+    roomInput.value = discordActivityRoomCode;
+  }
+  syncDiscordLanding();
+});
+
 function setupJoinFlow(){
   const teamSel = $('team'), roleSel = $('role');
   document.querySelectorAll('.teamPick').forEach(btn=>{
@@ -151,14 +234,21 @@ function setupJoinFlow(){
   });
   const close=$('closeRolePopup'); if(close) close.onclick=closeRolePopup;
   const overlay=$('roleOverlay'); if(overlay) overlay.onclick=e=>{ if(e.target===overlay) closeRolePopup(); };
+  document.querySelectorAll('.discordRoleJoin').forEach(btn=>{
+    btn.onclick=()=>joinDiscordActivity(btn.dataset.team, btn.dataset.role);
+  });
+  const di=$('discordInviteBtn'); if(di) di.onclick=openDiscordInvite;
   nameInput.addEventListener('input', setJoinButtonsReady);
   roomInput.addEventListener('input', setJoinButtonsReady);
+  syncDiscordLanding();
 }
 setupJoinFlow();
 
 function joinPayload(){
   localStorage.cc_name = nameInput.value.trim() || 'Agent';
-  return { name:nameInput.value, team:$('team').value, role:$('role').value, character:selectedCharacter, playerKey, adminToken:getAdminToken(roomInput.value.trim().toUpperCase()) };
+  const code = isDiscordActivity ? getDiscordActivityRoomCode() : roomInput.value.trim().toUpperCase();
+  if(isDiscordActivity) roomInput.value = code;
+  return { name:nameInput.value, team:$('team').value, role:$('role').value, character:selectedCharacter, playerKey, adminToken:getAdminToken(code) };
 }
 function acceptJoinResponse(res){
   if(!res.ok) return toast(res.error);
@@ -178,8 +268,14 @@ function acceptJoinResponse(res){
     render();
   }
 }
-$('createBtn').onclick=()=> socket.emit('createRoom', joinPayload(), acceptJoinResponse);
-$('joinBtn').onclick=()=> socket.emit('joinRoom', { ...joinPayload(), roomId:roomInput.value.trim().toUpperCase() }, acceptJoinResponse);
+$('createBtn').onclick=()=> {
+  if(isDiscordActivity) return socket.emit('joinOrCreateActivityRoom', discordJoinPayload($('team').value || 'spectator', $('role').value || 'spectator'), acceptJoinResponse);
+  socket.emit('createRoom', joinPayload(), acceptJoinResponse);
+};
+$('joinBtn').onclick=()=> {
+  if(isDiscordActivity) return socket.emit('joinOrCreateActivityRoom', discordJoinPayload($('team').value || 'spectator', $('role').value || 'spectator'), acceptJoinResponse);
+  socket.emit('joinRoom', { ...joinPayload(), roomId:roomInput.value.trim().toUpperCase() }, acceptJoinResponse);
+};
 
 socket.on('connect',()=>{ myId = playerKey; });
 socket.on('toast', toast);
@@ -611,7 +707,7 @@ $('requestHintBtn').onclick=()=> socket.emit('requestHint');
 $('endTurnBtn').onclick=()=> socket.emit('endTurn');
 const confirmVoteBtn = $('confirmVoteBtn'); if(confirmVoteBtn) confirmVoteBtn.onclick=()=> socket.emit('confirmVote', { id: myMarkedIds()[0] });
 const inviteBtn = $('inviteBtn'); if(inviteBtn) inviteBtn.onclick=async()=>{ updateInviteFields(state?.id || roomInput.value); const link=$('inviteLinkGame')?.value; if(link && navigator.clipboard){ try{ await navigator.clipboard.writeText(link); toast('Invite link copied.'); }catch{ toast('Invite link ready.'); } } else toast('Invite link ready.'); };
-const topInviteBtn = $('topInviteBtn'); if(topInviteBtn) topInviteBtn.onclick=async()=>{ updateInviteFields(state?.id || roomInput.value); const link=$('topInviteLink')?.value; if(link && navigator.clipboard){ try{ await navigator.clipboard.writeText(link); toast('Invite link copied.'); }catch{ toast('Invite link ready.'); } } else toast('Invite link ready.'); };
+const topInviteBtn = $('topInviteBtn'); if(topInviteBtn) topInviteBtn.onclick=async()=>{ if(isDiscordActivity) return openDiscordInvite(); updateInviteFields(state?.id || roomInput.value); const link=$('topInviteLink')?.value; if(link && navigator.clipboard){ try{ await navigator.clipboard.writeText(link); toast('Invite link copied.'); }catch{ toast('Invite link ready.'); } } else toast('Invite link ready.'); };
 const backToLobbyBtn = $('backToLobbyBtn');
 if(backToLobbyBtn) backToLobbyBtn.onclick=()=>{
   const currentRoom = state?.id || roomInput.value.trim().toUpperCase();

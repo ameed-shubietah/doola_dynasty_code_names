@@ -1162,3 +1162,91 @@ html,body,#app{min-height:100%;}
     grid-template-columns: 1fr;
   }
 }
+/* Discord Activity lobby: role board instead of create/join room form */
+.discordLobby{margin:18px auto 8px;max-width:1120px;animation:fadeIn .25s ease both;}
+.discordLobbyTop{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.discordInviteBtn{border-radius:999px;padding:10px 16px;background:linear-gradient(180deg,#fff4b7,#139b00 0%,#089000);color:#fff;border:1px solid rgba(255,255,255,.55);box-shadow:0 0 18px rgba(23,213,0,.25),0 8px 20px rgba(0,0,0,.35);}
+.discordAutoRoom{font-size:12px;color:#e8d49a;background:rgba(0,0,0,.25);border:1px solid rgba(255,215,108,.18);padding:8px 12px;border-radius:999px;}
+.discordRoleGrid{display:grid;grid-template-columns:1fr minmax(220px,.72fr) 1fr;gap:14px;align-items:stretch;}
+.discordTeamCard,.discordSpectatorCard{border-radius:24px;padding:18px;border:1px solid rgba(255,215,108,.32);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.34));box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 18px 45px rgba(0,0,0,.35);}
+.discordTeamCard h2,.discordSpectatorCard h2{margin:0 0 14px;text-transform:uppercase;font-family:"Segoe UI Black","Arial Black",system-ui,sans-serif;font-size:clamp(21px,2vw,34px);letter-spacing:.5px;}
+.discordGoldCard{background:linear-gradient(145deg,rgba(255,215,108,.34),rgba(71,45,0,.45));}
+.discordBlackCard{background:linear-gradient(145deg,rgba(255,215,108,.07),rgba(0,0,0,.72));}
+.discordSpectatorCard{text-align:center;display:flex;flex-direction:column;justify-content:center;gap:10px;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(0,0,0,.42));}
+.discordSpectatorCard p{margin:0;color:var(--muted);font-size:13px;line-height:1.35;}
+.discordRoleBox{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:18px;padding:14px;margin-top:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,215,108,.18);}
+.discordRoleBox b{display:block;font-size:18px;text-transform:uppercase;color:#fff8df;}
+.discordRoleBox small{display:block;color:#d9c68e;margin-top:4px;}
+.discordRoleJoin{min-width:96px;border-radius:999px;background:linear-gradient(180deg,#16d600,#0a8900);color:#fff;border:1px solid rgba(255,255,255,.42);box-shadow:0 0 18px rgba(12,200,0,.25),0 8px 18px rgba(0,0,0,.32);}
+.discordRoleJoin:disabled{opacity:.42;filter:grayscale(.4);cursor:not-allowed;}
+.discordHelpText{margin-top:auto!important;font-size:12px!important;}
+body.discordActivity .websiteRoomField,
+body.discordActivity #teamChoice,
+body.discordActivity .actions,
+body.discordActivity #roleOverlay,
+body.discordActivity #lobbyPreview{display:none!important;}
+body.discordActivity .discordLobby{display:block!important;}
+body.discordActivity .landing{width:min(1160px,calc(100vw - 24px));margin:2.5vh auto;padding:20px;}
+body.discordActivity .homeTitleSplit{grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;}
+body.discordActivity .homeDynasty{font-size:clamp(38px,5.8vw,76px);}
+body.discordActivity .homeCode{font-size:clamp(40px,6.2vw,84px);}
+body.discordActivity .joinBasics{grid-template-columns:minmax(260px,560px);max-width:560px;margin:10px auto 12px;}
+body.discordActivity .teamChooseTitle{font-size:18px;text-transform:uppercase;color:#fff3be;font-weight:1000;margin-top:6px;}
+body.discordActivity .hintText{margin-top:10px;}
+
+/* Discord iframe compact game overrides */
+body.discordActivity{background:radial-gradient(circle at 20% 5%,#2a1a05 0,#0b0905 45%,#020202 100%);overflow:hidden;}
+body.discordActivity #app{height:100vh;overflow:hidden;}
+body.discordActivity #game.gameV9{height:100vh;min-height:0;padding:8px;gap:8px;grid-template-columns:210px minmax(520px,1fr) 220px;grid-template-rows:78px minmax(0,1fr);overflow:hidden;}
+body.discordActivity .gameV9 .topbar{min-height:0;height:78px;padding:7px 10px;grid-template-columns:minmax(265px,.9fr) minmax(460px,1.2fr) 150px;gap:8px;}
+body.discordActivity .brandInviteRow{width:min(360px,100%);gap:5px;}
+body.discordActivity .brandInviteRow button{height:26px;padding:5px 9px;font-size:11px;}
+body.discordActivity .brandInviteRow input{display:none;}
+body.discordActivity #topInviteBtn::before{content:'👥 + ';}
+body.discordActivity .topLogo{font-size:clamp(18px,2vw,28px)!important;}
+body.discordActivity #roomLabel{font-size:11px;}
+body.discordActivity .topCenter .status{gap:6px;}
+body.discordActivity #turnBadge,body.discordActivity #clueBadge{min-width:112px!important;padding:8px 12px!important;font-size:12px!important;}
+body.discordActivity #clueBadge{min-width:142px!important;}
+body.discordActivity .scoreBadge{min-width:78px;padding:6px 8px;}
+body.discordActivity .scoreBadge b{font-size:10px}.scoreBadge strong{font-size:15px;min-width:24px;height:23px;}
+body.discordActivity .topActionBar{right:150px;top:48px;gap:6px;}
+body.discordActivity .topActionBar button{padding:6px 9px;font-size:11px;}
+body.discordActivity .timers span{padding:6px 8px;font-size:12px;}
+body.discordActivity .teamPanel{padding:9px;border-radius:16px;min-height:0;height:100%;overflow:hidden;}
+body.discordActivity .teamHeader{margin-bottom:6px;}
+body.discordActivity .teamHeader b{font-size:16px;}
+body.discordActivity .miniScoreCard{width:52px;height:66px;}
+body.discordActivity .miniScoreCard strong{font-size:28px;}
+body.discordActivity .teamPanel h3{font-size:12px;margin:8px 0 5px;}
+body.discordActivity .player{padding:7px;margin:5px 0;border-radius:11px;gap:7px;}
+body.discordActivity .avatar{width:30px;height:30px;border-radius:10px;font-size:18px;}
+body.discordActivity .roleTag{font-size:9px;}
+body.discordActivity .teamList{max-height:calc((100vh - 150px) / 2);}
+body.discordActivity .teamPanelBlack .log{max-height:120px;}
+body.discordActivity .sideClueSection,body.discordActivity .sideLogSection{margin-top:8px;}
+body.discordActivity .teamPanelBlack .clueStatus{min-height:50px;font-size:11px;padding:8px;}
+body.discordActivity .gameV9 .boardWrap{padding-bottom:76px;height:100%;overflow:hidden;}
+body.discordActivity .board{height:100%;gap:6px;grid-template-rows:repeat(5,minmax(48px,1fr));}
+body.discordActivity .card{border-radius:12px;padding:6px;}
+body.discordActivity .card:before{inset:6px;border-radius:8px;}
+body.discordActivity .word{min-height:38px;padding:5px 4px;font-size:clamp(12px,1.15vw,20px);letter-spacing:.4px;}
+body.discordActivity .word.longWord{font-size:clamp(10px,.82vw,15px);}
+body.discordActivity .bottomClueDock{left:226px;right:236px;bottom:6px;padding:7px 9px;grid-template-columns:1fr minmax(140px,.9fr) 86px auto;gap:8px;}
+body.discordActivity .bottomClueDock #clueWord,body.discordActivity .bottomClueDock #clueNumber,body.discordActivity .bottomClueDock button{height:34px;font-size:12px;}
+body.discordActivity .dockText b{font-size:12px;} body.discordActivity .dockText span{font-size:10px;}
+
+@media(max-width:900px){
+  .discordRoleGrid{grid-template-columns:1fr;}
+  body.discordActivity .homeTitleSplit{grid-template-columns:1fr;}
+  body.discordActivity .homeDynasty,body.discordActivity .homeCode{text-align:center;}
+  body.discordActivity{overflow:auto;}
+  body.discordActivity #app{height:auto;overflow:visible;}
+}
+@media(max-width:760px){
+  body.discordActivity #game.gameV9{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;height:auto;overflow:visible;}
+  body.discordActivity .gameV9 .topbar{height:auto;display:flex;flex-direction:column;align-items:stretch;}
+  body.discordActivity .gameV9 .boardWrap{padding-bottom:0;}
+  body.discordActivity .bottomClueDock{position:sticky;left:auto;right:auto;bottom:0;grid-template-columns:1fr;}
+  body.discordActivity .topActionBar{position:static;}
+}
