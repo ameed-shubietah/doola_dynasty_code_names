@@ -1,4 +1,4 @@
-import { DiscordSDK, Permissions, PermissionUtils } from "https://cdn.jsdelivr.net/npm/@discord/embedded-app-sdk/+esm";
+import { DiscordSDK } from "https://cdn.jsdelivr.net/npm/@discord/embedded-app-sdk/+esm";
 
 const DISCORD_CLIENT_ID = "1514895948197793893";
 
@@ -7,6 +7,8 @@ async function initDiscordActivity() {
     const discordSdk = new DiscordSDK(DISCORD_CLIENT_ID);
 
     await discordSdk.ready();
+
+    document.body.classList.add("discordActivity");
 
     window.DD_DISCORD = {
       enabled: true,
@@ -19,19 +21,13 @@ async function initDiscordActivity() {
 
     window.DD_openInviteDialog = async function () {
       try {
-        const { permissions } = await discordSdk.commands.getChannelPermissions();
-        if (PermissionUtils.can(Permissions.CREATE_INSTANT_INVITE, permissions)) {
-          await discordSdk.commands.openInviteDialog();
-          return { ok: true };
-        }
-        return { ok: false, error: 'You do not have permission to create Discord invites in this channel.' };
+        await discordSdk.commands.openInviteDialog();
+        return { ok: true };
       } catch (err) {
-        try {
-          await discordSdk.commands.openInviteDialog();
-          return { ok: true };
-        } catch (err2) {
-          return { ok: false, error: err2?.message || err?.message || 'Could not open Discord invite dialog.' };
-        }
+        return {
+          ok: false,
+          error: err?.message || "Could not open Discord invite dialog."
+        };
       }
     };
 
@@ -46,6 +42,7 @@ async function initDiscordActivity() {
     window.DD_DISCORD = {
       enabled: false
     };
+
     window.DD_openInviteDialog = null;
 
     window.dispatchEvent(new CustomEvent("discordActivityReady", {

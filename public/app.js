@@ -274,11 +274,30 @@ async function openDiscordInvite(){
 }
 window.addEventListener('discordActivityReady', (event)=>{
   discordActivityInfo = event.detail;
+
   if(discordActivityInfo?.enabled){
     isDiscordActivity = true;
+    document.body.classList.add('discordActivity');
+
     discordActivityRoomCode = getDiscordActivityRoomCode();
     roomInput.value = discordActivityRoomCode;
+
+    const roomField = document.querySelector('.websiteRoomField');
+    if(roomField) roomField.classList.add('hidden');
+
+    const teamChoice = document.getElementById('teamChoice');
+    if(teamChoice) teamChoice.classList.add('hidden');
+
+    const actions = document.querySelector('.actions');
+    if(actions) actions.classList.add('hidden');
+
+    const discordLobby = document.getElementById('discordLobby');
+    if(discordLobby) discordLobby.classList.remove('hidden');
+
+    const title = document.querySelector('.teamChooseTitle');
+    if(title) title.textContent = 'Choose your role';
   }
+
   syncDiscordLanding();
 });
 
