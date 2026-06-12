@@ -13,25 +13,66 @@ const landing = $('landing'), game = $('game'), board = $('board');
 const nameInput = $('name'), roomInput = $('roomCode');
 nameInput.value = localStorage.cc_name || '';
 const params = new URLSearchParams(location.search);
+
 function safeContains(value, text){
-  try { return String(value || '').toLowerCase().includes(text); } catch { return false; }
+  try {
+    return String(value || '').toLowerCase().includes(String(text || '').toLowerCase());
+  } catch {
+    return false;
+  }
 }
+
 function runningInsideIframe(){
-  try { return window.self !== window.top; } catch { return true; }
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
 }
+
 function hasDiscordAncestor(){
   try {
     return Array.from(window.location.ancestorOrigins || []).some(origin =>
-      safeContains(origin, 'discord.com') || safeContains(origin, 'discordapp.com') || safeContains(origin, 'discordsays.com')
+      safeContains(origin, 'discord.com') ||
+      safeContains(origin, 'discordapp.com') ||
+      safeContains(origin, 'discordsays.com')
     );
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
+
+function hasDiscordQuerySignal(){
+  const discordKeys = [
+    'discord',
+    'instance_id',
+    'instanceId',
+    'activity_instance_id',
+    'activityInstanceId',
+    'frame_id',
+    'frameId',
+    'guild_id',
+    'guildId',
+    'channel_id',
+    'channelId',
+    'platform',
+    'mobile',
+    'referrer_id'
+  ];
+
+  return discordKeys.some(key => params.has(key));
+}
+
 const isInsideIframe = runningInsideIframe();
+const isDiscordPath = location.pathname.toLowerCase().startsWith('/discord');
+
 const isDiscordForced =
+  isDiscordPath ||
   params.get('discord') === '1' ||
   params.get('discord') === 'true' ||
-  safeContains(location.pathname, '/discord') ||
+  hasDiscordQuerySignal() ||
   safeContains(location.hostname, 'discordsays.com') ||
+  safeContains(location.hostname, 'discord.com') ||
   safeContains(document.referrer, 'discord') ||
   safeContains(navigator.userAgent, 'discord') ||
   hasDiscordAncestor() ||
