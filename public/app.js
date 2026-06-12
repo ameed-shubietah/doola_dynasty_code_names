@@ -264,13 +264,21 @@ function joinDiscordActivity(team, role){
   socket.emit('joinOrCreateActivityRoom', discordJoinPayload(team, role), acceptJoinResponse);
 }
 async function openDiscordInvite(){
+  // Give discord-sdk.js a moment to finish loading
+  for(let i = 0; i < 10; i++){
+    if(window.DD_openInviteDialog) break;
+    await new Promise(resolve => setTimeout(resolve, 150));
+  }
+
   if(window.DD_openInviteDialog){
     const res = await window.DD_openInviteDialog();
     if(res?.ok) return;
+
     toast(res?.error || 'Could not open Discord invite dialog.');
     return;
   }
-  toast('Discord invite is available inside the Discord Activity.');
+
+  toast('Discord invite is not ready yet. Use Discord voice channel invite button.');
 }
 window.addEventListener('discordActivityReady', (event)=>{
   discordActivityInfo = event.detail;
