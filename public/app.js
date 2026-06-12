@@ -13,10 +13,28 @@ const landing = $('landing'), game = $('game'), board = $('board');
 const nameInput = $('name'), roomInput = $('roomCode');
 nameInput.value = localStorage.cc_name || '';
 const params = new URLSearchParams(location.search);
-const isInsideIframe = window.self !== window.top;
+function safeContains(value, text){
+  try { return String(value || '').toLowerCase().includes(text); } catch { return false; }
+}
+function runningInsideIframe(){
+  try { return window.self !== window.top; } catch { return true; }
+}
+function hasDiscordAncestor(){
+  try {
+    return Array.from(window.location.ancestorOrigins || []).some(origin =>
+      safeContains(origin, 'discord.com') || safeContains(origin, 'discordapp.com') || safeContains(origin, 'discordsays.com')
+    );
+  } catch { return false; }
+}
+const isInsideIframe = runningInsideIframe();
 const isDiscordForced =
   params.get('discord') === '1' ||
   params.get('discord') === 'true' ||
+  safeContains(location.pathname, '/discord') ||
+  safeContains(location.hostname, 'discordsays.com') ||
+  safeContains(document.referrer, 'discord') ||
+  safeContains(navigator.userAgent, 'discord') ||
+  hasDiscordAncestor() ||
   isInsideIframe;
 
 if (isDiscordForced) {
@@ -30,9 +48,11 @@ function roomCodeFromSeed(seed){
 }
 const localDiscordSeed = params.get('instance_id') || params.get('instanceId') || params.get('activity_instance_id') || params.get('activityInstanceId');
 let discordActivityInfo = null;
-let isDiscordActivity = isDiscordForced || Boolean(localDiscordSeed || location.hostname.includes('discordsays.com'));
+let isDiscordActivity = isDiscordForced || Boolean(localDiscordSeed || safeContains(location.hostname, 'discordsays.com'));
 let discordActivityRoomCode = localDiscordSeed ? roomCodeFromSeed(localDiscordSeed) : '';
 if(isDiscordActivity) document.body.classList.add('discordActivity');
+window.DD_MODE_DIAGNOSTIC = { isDiscordActivity, isDiscordForced, isInsideIframe, path: location.pathname, host: location.hostname, referrer: document.referrer, userAgent: navigator.userAgent };
+console.log('DD mode diagnostic', window.DD_MODE_DIAGNOSTIC);
 const inviteRoom = (params.get('room') || params.get('r') || '').trim().toUpperCase();
 if(inviteRoom) roomInput.value = inviteRoom;
 else if(discordActivityRoomCode) roomInput.value = discordActivityRoomCode;
