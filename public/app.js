@@ -13,6 +13,15 @@ const landing = $('landing'), game = $('game'), board = $('board');
 const nameInput = $('name'), roomInput = $('roomCode');
 nameInput.value = localStorage.cc_name || '';
 const params = new URLSearchParams(location.search);
+const isInsideIframe = window.self !== window.top;
+const isDiscordForced =
+  params.get('discord') === '1' ||
+  params.get('discord') === 'true' ||
+  isInsideIframe;
+
+if (isDiscordForced) {
+  document.body.classList.add('discordActivity');
+}
 function roomCodeFromSeed(seed){
   const s = String(seed || '');
   let h = 2166136261;
@@ -21,7 +30,7 @@ function roomCodeFromSeed(seed){
 }
 const localDiscordSeed = params.get('instance_id') || params.get('instanceId') || params.get('activity_instance_id') || params.get('activityInstanceId');
 let discordActivityInfo = null;
-let isDiscordActivity = Boolean(params.get('discord') || localDiscordSeed || location.hostname.includes('discordsays.com'));
+let isDiscordActivity = isDiscordForced || Boolean(localDiscordSeed || location.hostname.includes('discordsays.com'));
 let discordActivityRoomCode = localDiscordSeed ? roomCodeFromSeed(localDiscordSeed) : '';
 if(isDiscordActivity) document.body.classList.add('discordActivity');
 const inviteRoom = (params.get('room') || params.get('r') || '').trim().toUpperCase();
@@ -453,8 +462,17 @@ function renderPlayers(){
     const offline = p.online === false;
     const adminBadge = p.isAdmin ? '<span class="adminBadge">Admin</span>' : '';
     const canDrag = adminMode && (!p.isAdmin || p.id === myId);
-    return `<div class="player ${p.team} ${offline?'offline':''} ${canDrag?'draggablePlayer':''} ${p.isAdmin?'adminPlayer':''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}"><div class="avatar" style="background:${charAccent(p.character)}33">${charEmoji(p.character)}</div><div class="playerBody"><b>${p.name} ${adminBadge} ${offline?'<span class="offlineIcon" title="Offline">📡</span>':''}</b><span class="roleTag">${p.role}${offline?' · offline':''}</span>${adminTools(p)}</div></div>`;
+    return `<div class="player ${p.team} ${offline?'offline':''} ${canDrag?'draggablePlayer':''} ${p.isAdmin?'adminPlayer':''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}"><div class="avatar" style="background:${hexToRgba(charAccent(p.character), .2)}">${charEmoji(p.character)}</div><div class="playerBody"><b>${p.name} ${adminBadge} ${offline?'<span class="offlineIcon" title="Offline">📡</span>':''}</b><span class="roleTag">${p.role}${offline?' · offline':''}</span>${adminTools(p)}</div></div>`;
   }
+
+  function hexToRgba(hex, alpha = 1) {
+  const clean = String(hex || '#71e2ff').replace('#', '');
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
   function empty(text){ return `<div class="emptyTeamSlot">${text}</div>`; }
   $('goldOperatives').innerHTML = teams.blue.operative.map(playerHtml).join('') || empty('No operatives yet');
   $('goldSpymasters').innerHTML = teams.blue.spymaster.map(playerHtml).join('') || empty('No spymaster yet');
