@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Doola's Dynasty Code Names</title>
-    <link rel="stylesheet" href="/style.css"/>
+    <link rel="stylesheet" href="/style.css?v=12"/>
 </head>
 <body>
 <div id="app">
@@ -83,6 +83,17 @@
                 </section>
             </div>
         </div>
+        <div id="landingAdminBar" class="landingAdminBar hidden">
+            <button id="landingStartGameBtn" class="primary landingStartGameBtn hidden" type="button">Start Game</button>
+            <div id="landingOptionsWrap" class="optionsWrap hidden">
+                <button class="optionsBtn" type="button">Options ▾</button>
+                <div class="optionsMenu">
+                    <button id="landingResetTableBtn" type="button">Reset Table</button>
+                    <button id="landingShuffleTeamsBtn" type="button">Shuffle Teams</button>
+                    <button id="landingChangeWordListBtn" type="button">Change Word List</button>
+                </div>
+            </div>
+        </div>
         <div class="actions">
             <button id="createBtn" class="primary" disabled>Create Room</button>
             <button id="joinBtn" disabled>Join Room</button>
@@ -109,7 +120,6 @@
         <header class="topbar glass">
             <div class="brandSide">
                 <div class="brandInviteRow">
-                    <button id="backToLobbyBtn" class="backLobbyBtn" type="button">← Back</button>
                     <button id="topInviteBtn" class="primary" type="button">Invite</button>
                     <input id="topInviteLink" readonly placeholder="Invite link"/>
                 </div>
@@ -129,13 +139,17 @@
                 </div>
                 <div class="topGameTools hidden" aria-hidden="true"></div>
                 <div id="topOperativeActions" class="topActionBar hidden">
-                    <button id="requestHintBtn" class="primary">Ask One-Time Hint</button>
                     <button id="endTurnBtn">Pass / End Turn</button>
                 </div>
                 <div id="adminControlBar" class="adminControlBar hidden">
-                    <button id="resetTableBtn" class="primary" type="button">Reset Table</button>
-                    <button id="shuffleTeamsBtn" type="button">Shuffle Teams</button>
-                    <button id="changeWordListBtn" type="button">Change Word List</button>
+                    <div class="optionsWrap gameOptionsWrap">
+                        <button class="optionsBtn" type="button">Options ▾</button>
+                        <div class="optionsMenu">
+                            <button id="resetTableBtn" type="button">Reset Table</button>
+                            <button id="shuffleTeamsBtn" type="button">Shuffle Teams</button>
+                            <button id="changeWordListBtn" type="button">Change Word List</button>
+                        </div>
+                    </div>
                 </div>
                 <button id="newRoundBtn" class="primary hidden">Create New Game</button>
             </div>
@@ -174,9 +188,6 @@
             <section><h3>Spectators</h3>
                 <div id="spectators" class="teamList compact" data-drop-team="spectator"
                      data-drop-role="spectator"></div>
-            </section>
-            <section class="sideClueSection"><h3>Current Clue</h3>
-                <div id="clueStatus" class="clueStatus"></div>
             </section>
             <section class="sideLogSection"><h3>Game Log</h3>
                 <div id="log" class="log"></div>
@@ -236,8 +247,8 @@
 <script>
   window.FORCE_DISCORD_ACTIVITY = true;
 </script>
-<script type="module" src="/discord-sdk.js"></script>
+<script type="module" src="/discord-sdk.js?v=22"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js"></script>
+<script src="/app.js?v=22"></script>
 </body>
 </html>

@@ -1250,3 +1250,371 @@ body.discordActivity .dockText b{font-size:12px;} body.discordActivity .dockText
   body.discordActivity .bottomClueDock{position:sticky;left:auto;right:auto;bottom:0;grid-template-columns:1fr;}
   body.discordActivity .topActionBar{position:static;}
 }
+
+
+/* Discord lobby + requested game fixes */
+body.discordActivity #name{pointer-events:none;opacity:.82}
+body.discordActivity #characterPick{display:none!important}
+body.discordActivity .joinBasics{grid-template-columns:1fr!important;max-width:560px;margin:0 auto 18px}
+.discordSeatList{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-start;min-height:36px}
+.discordSeatMini{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);font-size:12px;font-weight:900;color:#fff8e5}
+.discordSeatMini .avatar{width:28px;height:28px;border-radius:999px;font-size:14px;margin:0;position:relative;overflow:visible;animation:none!important}
+.discordSeatMini .avatar img,.avatarPic img{width:100%;height:100%;border-radius:inherit;object-fit:cover;display:block}
+.discordSeatMini em{font-style:normal;color:#ffe27a;font-size:10px;text-transform:uppercase}
+.discordSeatEmpty{font-size:11px;color:rgba(255,248,229,.45);font-weight:900;text-transform:uppercase;letter-spacing:1px}
+.crownMark{position:absolute;right:-8px;top:-10px;font-size:18px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.7));z-index:3}
+.avatar{position:relative;overflow:visible!important;animation:none!important}.avatarPic{padding:0;background:rgba(255,255,255,.1)!important}
+.player{align-items:flex-start}.playerBody{min-width:0}.teamList{display:flex;flex-direction:column;gap:7px;min-height:54px;overflow:visible}.teamPanel section{overflow:visible}.player b{white-space:normal;overflow-wrap:anywhere}.offline{display:none!important}
+
+.waitingBoard{grid-column:1/-1;min-height:360px;display:grid;place-items:center;border:1px solid rgba(255,215,108,.28);border-radius:22px;background:rgba(0,0,0,.28);font-size:28px;font-weight:1000;color:#ffe9a6;text-align:center;padding:30px}
+.spawnCard{animation:cardSpawn .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--spawn,0) * 35ms)}
+@keyframes cardSpawn{0%{opacity:0;transform:translateY(30px) scale(.72) rotateX(65deg);filter:blur(4px)}65%{opacity:1;transform:translateY(-5px) scale(1.04)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+
+.card:before{background-image:url('/crown.png')!important;background-repeat:no-repeat!important;background-position:center!important;background-size:78% auto!important;opacity:.18!important;border:0!important;filter:drop-shadow(0 10px 12px rgba(0,0,0,.45));z-index:1}.card.blue:before{opacity:.23!important}.card.red:before{opacity:.18!important;filter:grayscale(1) brightness(1.4) contrast(1.2) drop-shadow(0 10px 12px rgba(0,0,0,.65))}.revealHero{display:none!important}
+.card.neutral{background:linear-gradient(145deg,#9b9da1,#575a5f 55%,#2c2e33)!important;border-color:rgba(220,225,230,.62)!important}.card.neutral .word{background:rgba(0,0,0,.32)!important;color:#fff!important}.card.assassin{background:linear-gradient(145deg,#9d7044,#5b351b 55%,#2a170b)!important;border-color:rgba(255,210,142,.7)!important}.card.assassin .word{background:rgba(0,0,0,.42)!important;color:#fff0d0!important}
+
+#clueBadge{display:none!important}.clueStatus{font-size:18px;text-align:center}.clueStatus b{font-size:28px;text-transform:uppercase}.bottomClueDock{grid-template-columns:1.25fr minmax(260px,1fr) 110px auto}.dockText b{font-size:26px}.dockText span{font-size:15px}.gameLogTitle{font-size:18px;text-transform:uppercase;letter-spacing:1px;color:#ffe6a2;text-align:center;margin:8px 0}.log{max-height:none!important;overflow:visible!important;display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:8px!important;align-items:center;justify-content:center;padding:10px;background:rgba(0,0,0,.18);border:1px solid rgba(255,215,108,.14);border-radius:16px}.log div{margin:0!important}.gameLogEntry{display:inline-flex!important;align-items:center;gap:8px;border-radius:999px!important;padding:9px 14px!important;font-family:"Segoe UI Black","Arial Black",system-ui,sans-serif;font-size:15px!important;box-shadow:0 6px 16px rgba(0,0,0,.28)}.gameLogEntry b{letter-spacing:.8px}.hintLog.blue,.pickLog.blue,.passLog.blue{background:linear-gradient(180deg,#fff1a8,#b97900)!important;color:#1b1000!important}.hintLog.red,.pickLog.red,.passLog.red{background:linear-gradient(180deg,#3e3e42,#050506)!important;color:#fff2bd!important;border:1px solid rgba(255,215,108,.35)}.pickLog.neutral{background:linear-gradient(180deg,#aeb2b8,#53575f)!important;color:#fff!important}.pickLog.assassin{background:linear-gradient(180deg,#9d7044,#2a170b)!important;color:#fff0d0!important}.hintLog span{display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.25);color:inherit}.gameLogEmpty{opacity:.45;background:transparent!important;box-shadow:none!important}
+
+@media(max-width:1050px){.discordRoleGrid{grid-template-columns:1fr!important}.waitingBoard{min-height:220px}.log{justify-content:flex-start}.gameLogEntry{font-size:13px!important}}
+
+body.discordActivity .joinBasics{display:none!important}.discordIdentityCard{display:inline-flex;align-items:center;gap:10px;margin:0 auto 18px;padding:9px 14px;border-radius:999px;background:rgba(0,0,0,.42);border:1px solid rgba(255,215,108,.28);box-shadow:0 10px 24px rgba(0,0,0,.28)}.discordIdentityCard .avatar{width:44px;height:44px;border-radius:999px}.discordIdentityCard b{display:block;color:#fff4cc;font-weight:1000}.discordIdentityCard span{display:block;color:#d7c390;font-size:12px;font-weight:900}
+
+
+/* v13 requested fixes: lobby start, options dropdown, stable cards, crown cards */
+#backToLobbyBtn,.backLobbyBtn,#roomLabel,.sideClueSection,#requestHintBtn{display:none!important}
+.landingAdminBar{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px auto 4px;position:relative;z-index:20}
+.landingStartGameBtn{font-size:18px;padding:14px 34px;border-radius:999px;box-shadow:0 0 28px rgba(255,215,108,.45)}
+.optionsWrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.optionsBtn{border-radius:999px;background:linear-gradient(180deg,#4b4335,#17130c);border:1px solid rgba(255,215,108,.42);color:#fff8df;min-width:120px}
+.optionsMenu{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);display:none;flex-direction:column;gap:6px;min-width:185px;padding:8px;border-radius:16px;background:rgba(10,8,5,.96);border:1px solid rgba(255,215,108,.35);box-shadow:0 18px 38px rgba(0,0,0,.55);z-index:50}
+.optionsWrap:hover .optionsMenu,.optionsWrap:focus-within .optionsMenu{display:flex}
+.optionsMenu button{width:100%;padding:10px 12px;text-align:left;border-radius:12px;background:rgba(255,255,255,.07);color:#fff3c8;box-shadow:none}
+.adminControlBar{display:flex!important;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:8px}.adminControlBar.hidden{display:none!important}.gameOptionsWrap{z-index:30}
+#turnBadge{font-size:17px!important;padding:12px 22px!important;border-radius:999px!important;animation:turnPulse 1.8s ease-in-out infinite;box-shadow:0 0 26px rgba(255,215,108,.42),inset 0 1px 0 rgba(255,255,255,.35)}
+#turnBadge.blue{background:linear-gradient(180deg,#fff2a8,#d49b13 55%,#7d5200)!important;color:#1b1000!important}
+#turnBadge.red{background:linear-gradient(180deg,#2e2e31,#030303 70%)!important;color:#fff3c6!important;border:1px solid rgba(255,215,108,.55)!important}
+@keyframes turnPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.065)}}
+.miniScoreCard{width:96px!important;height:126px!important;border-radius:22px!important;background-size:82% auto!important;background-image:url('/crown.png')!important;background-repeat:no-repeat!important;background-position:center 55%!important}
+.miniScoreCard strong{font-size:42px!important;position:relative;z-index:2;background:rgba(0,0,0,.34);padding:8px 14px;border-radius:999px;color:inherit}.goldMini{background-color:#d9a118!important}.blackMini{background-color:#070707!important}
+.card{align-items:center!important;justify-content:center!important;border:3px solid rgba(0,0,0,.95)!important;border-radius:14px!important;box-shadow:none!important;background-repeat:no-repeat!important;background-position:center 56%!important;background-size:82% auto!important;background-image:url('/crown.png')!important}.card:before{display:none!important}.card:after{display:none!important}
+.card.blue{background-color:#f9d36a!important;background-image:url('/crown.png'),linear-gradient(90deg,#f8d25f,#ffefb0)!important;color:#111!important}
+.card.red{background-color:#a20b08!important;background-image:url('/crown.png'),linear-gradient(90deg,#6b0503,#c20e0a)!important;color:#fff!important}
+.card.neutral{background-color:#b7b7bd!important;background-image:url('/crown.png'),linear-gradient(90deg,#8f8f95,#dedee2)!important;color:#111!important}
+.card.assassin{background-color:#8b4a22!important;background-image:url('/crown.png'),linear-gradient(90deg,#633015,#b76a36)!important;color:#fff8e5!important}
+.card .word{z-index:3;width:92%;min-height:42px;border:3px solid rgba(0,0,0,.55)!important;border-radius:12px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-family:"Segoe UI Black","Arial Black",system-ui,sans-serif!important;letter-spacing:1px!important;text-shadow:none!important;box-shadow:0 4px 12px rgba(0,0,0,.32)!important}.card.blue .word{background:rgba(248,209,81,.62)!important;color:#050505!important}.card.red .word{background:rgba(190,15,12,.76)!important;color:#fff!important}.card.neutral .word{background:rgba(238,238,241,.62)!important;color:#070707!important}.card.assassin .word{background:rgba(103,49,20,.78)!important;color:#fff8e5!important}
+.log{max-height:none!important;overflow:visible!important;display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;align-items:center!important;justify-content:center!important}.gameLogEntry{display:inline-flex!important;align-items:center!important;gap:9px!important;border-radius:999px!important;padding:8px 14px!important;min-height:46px!important;font-family:"Segoe UI Black","Arial Black",system-ui,sans-serif!important;font-size:15px!important}.hintLog{padding-left:8px!important}.hintLog.blue{background:linear-gradient(180deg,#fff2a8,#d69c14)!important;color:#171000!important}.hintLog.red{background:linear-gradient(180deg,#343436,#050505)!important;color:#fff3c8!important;border:1px solid rgba(255,215,108,.55)!important}.pickLog{border:1px solid rgba(255,215,108,.35)!important}.pickLog.blue{background:linear-gradient(180deg,#fff0a8,#d9a01b)!important;color:#150d00!important}.pickLog.red{background:linear-gradient(180deg,#b10f0b,#660604)!important;color:#fff!important}.pickLog.neutral{background:linear-gradient(180deg,#e0e0e4,#9e9ea4)!important;color:#111!important}.pickLog.assassin{background:linear-gradient(180deg,#aa6130,#693415)!important;color:#fff8e5!important}.passLog{background:#2d2a22!important;border:1px solid rgba(255,215,108,.35)!important}.gameLogEntry span{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.18)}.logSpyAvatar{width:34px!important;height:34px!important;border-radius:999px;object-fit:cover;box-shadow:0 0 0 2px rgba(255,255,255,.22)}.logSpyAvatar.fallback{display:inline-grid;place-items:center;background:rgba(0,0,0,.25)}
+.clueStatus{display:none!important}.topLogo{font-size:30px!important}body.discordActivity .topLogo{font-size:24px!important}
+
+/* v14 final color mapping: black team cards are black, danger cards are red, empty cards are silver */
+.card.red{background-color:#0b0b0d!important;background-image:url('/crown.png'),linear-gradient(90deg,#050506,#2e2e31 58%,#050506)!important;color:#fff!important;border-color:#050505!important}
+.card.red .word{background:rgba(5,5,5,.72)!important;color:#fff!important;border-color:rgba(255,215,108,.42)!important;text-shadow:0 2px 0 rgba(0,0,0,.8)!important}
+.card.assassin{background-color:#9f0907!important;background-image:url('/crown.png'),linear-gradient(90deg,#650402,#bd0d0a 60%,#760403)!important;color:#fff!important;border-color:#0b0b0d!important}
+.card.assassin .word{background:rgba(185,12,9,.78)!important;color:#fff!important;border-color:rgba(0,0,0,.62)!important;text-shadow:0 2px 0 rgba(0,0,0,.55)!important}
+.card.neutral{background-color:#c8c8cc!important;background-image:url('/crown.png'),linear-gradient(90deg,#9a9aa0,#eeeeef 60%,#a9a9af)!important;color:#111!important}
+.card.neutral .word{background:rgba(238,238,241,.68)!important;color:#050505!important}
+.pickLog.red{background:linear-gradient(180deg,#2e2e31,#050505)!important;color:#fff!important;border:1px solid rgba(255,215,108,.5)!important}.pickLog.assassin{background:linear-gradient(180deg,#c70e0a,#6d0503)!important;color:#fff!important}
+
+
+/* v15 fine tuning: no lobby options, better top controls, smaller red/silver crowns, clean side score */
+#landingOptionsWrap{display:none!important;}
+.landingAdminBar .optionsWrap{display:none!important;}
+
+.gameV9 .topbar,
+body.discordActivity .gameV9 .topbar{
+  overflow:visible!important;
+}
+.gameV9 .boardWrap,
+.boardWrap,
+.board{
+  position:relative;
+  z-index:1;
+}
+.gameV9 .topCenter,
+body.discordActivity .gameV9 .topCenter{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:18px!important;
+  transform:none!important;
+  overflow:visible!important;
+  position:relative!important;
+  z-index:3000!important;
+}
+.gameV9 .topCenter .status,
+body.discordActivity .topCenter .status{
+  order:1!important;
+  flex:0 0 auto!important;
+  justify-content:flex-start!important;
+  overflow:visible!important;
+  position:relative!important;
+  z-index:3001!important;
+}
+#turnBadge,
+body.discordActivity #turnBadge{
+  min-width:190px!important;
+  padding:15px 34px!important;
+  font-size:22px!important;
+  letter-spacing:.8px!important;
+  transform-origin:center!important;
+  animation:turnPulseBig 1.45s ease-in-out infinite!important;
+}
+@keyframes turnPulseBig{
+  0%,100%{transform:scale(1);filter:brightness(1)}
+  50%{transform:scale(1.08);filter:brightness(1.18)}
+}
+.adminControlBar,
+body.discordActivity .adminControlBar{
+  order:2!important;
+  margin-top:0!important;
+  position:relative!important;
+  z-index:5000!important;
+  overflow:visible!important;
+}
+.gameOptionsWrap,
+.optionsWrap{
+  position:relative!important;
+  z-index:6000!important;
+}
+.optionsMenu{
+  z-index:9999!important;
+  top:calc(100% + 10px)!important;
+  bottom:auto!important;
+}
+.optionsMenu button{white-space:nowrap!important;}
+
+.card.blue{background-size:70% auto,100% 100%!important;background-position:center 60%,center!important;}
+.card.red{background-size:70% auto,100% 100%!important;background-position:center 60%,center!important;}
+.card.neutral{background-size:70% auto,100% 100%!important;background-position:center 60%,center!important;}
+.card.assassin{background-size:70% auto,100% 100%!important;background-position:center 60%,center!important;}
+.card.neutral .word{background:rgba(238,238,241,.72)!important;}
+.card.assassin .word{background:rgba(190,12,9,.82)!important;}
+
+.miniScoreCard,
+.goldMini,
+.blackMini{
+  width:112px!important;
+  height:148px!important;
+  background-size:78% auto!important;
+  background-position:center 62%!important;
+  background-repeat:no-repeat!important;
+}
+.miniScoreCard strong{
+  background:transparent!important;
+  padding:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  font-size:52px!important;
+  line-height:1!important;
+  color:inherit!important;
+  text-shadow:0 3px 0 rgba(0,0,0,.65),0 0 10px rgba(255,230,150,.75)!important;
+}
+.goldMini strong{color:#160d00!important;text-shadow:0 2px 0 rgba(255,255,255,.45),0 0 10px rgba(255,215,108,.65)!important;}
+.blackMini strong{color:#ffeaa0!important;}
+
+@media(max-width:1250px){
+  #turnBadge,body.discordActivity #turnBadge{min-width:150px!important;font-size:18px!important;padding:12px 22px!important;}
+  .gameV9 .topCenter,body.discordActivity .gameV9 .topCenter{gap:10px!important;}
+}
+
+/* v16 fixes: clean crown scaling, dropdown above board, compact log chips */
+#game.gameV9,
+.gameV9,
+body.discordActivity #game.gameV9{overflow:visible!important;}
+.gameV9 .topbar,
+body.discordActivity .gameV9 .topbar{
+  position:relative!important;
+  z-index:200000!important;
+  overflow:visible!important;
+}
+.gameV9 .boardWrap,
+.gameV9 .board,
+.gameV9 .teamPanel{
+  z-index:1!important;
+}
+.gameOptionsWrap,
+.optionsWrap,
+.adminControlBar,
+body.discordActivity .adminControlBar{
+  position:relative!important;
+  z-index:210000!important;
+  overflow:visible!important;
+}
+.optionsMenu{
+  position:absolute!important;
+  z-index:999999!important;
+  top:calc(100% + 12px)!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  min-width:190px!important;
+  background:rgba(9,7,4,.985)!important;
+  border:1px solid rgba(255,215,108,.7)!important;
+  box-shadow:0 22px 55px rgba(0,0,0,.9),0 0 24px rgba(255,215,108,.15)!important;
+}
+.optionsWrap:hover .optionsMenu,
+.optionsWrap:focus-within .optionsMenu{display:flex!important;}
+
+/* avoid cropped/duplicate crown edges on silver/red cards */
+.card{
+  background-repeat:no-repeat,no-repeat!important;
+  background-clip:border-box!important;
+}
+.card.blue{background-size:62% auto,100% 100%!important;background-position:center 58%,center!important;}
+.card.red{background-size:58% auto,100% 100%!important;background-position:center 58%,center!important;}
+.card.neutral{background-size:58% auto,100% 100%!important;background-position:center 58%,center!important;}
+.card.assassin{background-size:58% auto,100% 100%!important;background-position:center 58%,center!important;}
+.card.red .word,.card.neutral .word,.card.assassin .word{z-index:5!important;}
+
+/* compact game log: color shows team/card color, no color text needed */
+.log{gap:8px!important;justify-content:center!important;align-items:center!important;}
+.gameLogEntry.pickLog{
+  min-height:34px!important;
+  padding:6px 12px!important;
+  border-radius:16px!important;
+  gap:0!important;
+  max-width:100%!important;
+}
+.gameLogEntry.pickLog b{
+  font-size:14px!important;
+  line-height:1!important;
+  letter-spacing:.5px!important;
+  white-space:nowrap!important;
+}
+.gameLogEntry.pickLog span{display:none!important;}
+.gameLogEntry.hintLog{
+  min-height:42px!important;
+  padding:7px 12px!important;
+}
+.gameLogEntry.hintLog b{font-size:15px!important;white-space:nowrap!important;}
+.gameLogEntry.hintLog span{min-width:28px!important;height:28px!important;padding:0 9px!important;}
+.passLog{min-height:34px!important;padding:6px 12px!important;}
+.passLog b{font-size:14px!important;}
+
+@media(max-width:1250px){
+  .card.blue{background-size:56% auto,100% 100%!important;}
+  .card.red,.card.neutral,.card.assassin{background-size:52% auto,100% 100%!important;}
+  .gameLogEntry.pickLog b{font-size:12px!important;}
+}
+
+/* v17 final fixes: render crown as one centered layer and make spymaster selection border always visible */
+.card,
+.card.blue,
+.card.red,
+.card.neutral,
+.card.assassin{
+  background-image:none!important;
+  background-repeat:no-repeat!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+.card.blue{
+  background:linear-gradient(90deg,#f4c84a 0%,#ffe9a6 56%,#f4c84a 100%)!important;
+}
+.card.red{
+  background:linear-gradient(90deg,#050506 0%,#171719 55%,#050506 100%)!important;
+}
+.card.neutral{
+  background:linear-gradient(90deg,#9c9ca2 0%,#eeeeef 56%,#a8a8ae 100%)!important;
+}
+.card.assassin{
+  background:linear-gradient(90deg,#660402 0%,#c10d0a 58%,#760402 100%)!important;
+}
+.card::before,
+.card.blue::before,
+.card.red::before,
+.card.neutral::before,
+.card.assassin::before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:74%!important;
+  height:86%!important;
+  transform:translate(-50%,-46%)!important;
+  background-image:url('/crown.png')!important;
+  background-repeat:no-repeat!important;
+  background-position:center center!important;
+  background-size:contain!important;
+  opacity:.88!important;
+  z-index:1!important;
+  border:0!important;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.36))!important;
+  pointer-events:none!important;
+}
+.card.red::before{
+  width:68%!important;
+  height:80%!important;
+  opacity:.9!important;
+  filter:drop-shadow(0 9px 10px rgba(0,0,0,.6))!important;
+}
+.card.neutral::before{
+  width:68%!important;
+  height:80%!important;
+  opacity:.72!important;
+  filter:saturate(.95) drop-shadow(0 8px 10px rgba(0,0,0,.38))!important;
+}
+.card.assassin::before{
+  width:68%!important;
+  height:80%!important;
+  opacity:.9!important;
+  filter:drop-shadow(0 9px 10px rgba(0,0,0,.55))!important;
+}
+.card .word{
+  position:relative!important;
+  z-index:5!important;
+}
+.card::after,
+.card.blue::after,
+.card.red::after,
+.card.neutral::after,
+.card.assassin::after{
+  display:none!important;
+  content:none!important;
+}
+
+/* Make selected clue targets look the same for gold and black spymasters */
+.card.target,
+.card.blue.target,
+.card.red.target,
+.card.neutral.target,
+.card.assassin.target{
+  border-color:#26d9ff!important;
+  outline:0!important;
+  box-shadow:0 0 0 5px rgba(38,217,255,.95),0 0 32px rgba(38,217,255,.72),0 16px 24px rgba(0,0,0,.48)!important;
+  filter:brightness(1.07)!important;
+}
+.card.target .word,
+.card.blue.target .word,
+.card.red.target .word,
+.card.neutral.target .word,
+.card.assassin.target .word{
+  box-shadow:0 0 0 3px rgba(38,217,255,.82),0 4px 12px rgba(0,0,0,.32)!important;
+}
+.card.target::after,
+.card.blue.target::after,
+.card.red.target::after,
+.card.neutral.target::after,
+.card.assassin.target::after{
+  content:"✓"!important;
+  display:grid!important;
+  position:absolute!important;
+  top:8px!important;
+  right:10px!important;
+  width:30px!important;
+  height:30px!important;
+  place-items:center!important;
+  border-radius:999px!important;
+  background:#26d9ff!important;
+  color:#031015!important;
+  font-size:20px!important;
+  font-weight:1000!important;
+  z-index:10!important;
+  box-shadow:0 0 18px rgba(38,217,255,.8)!important;
+  pointer-events:none!important;
+}
+
+@media(max-width:1250px){
+  .card::before,.card.blue::before{width:70%!important;height:80%!important;}
+  .card.red::before,.card.neutral::before,.card.assassin::before{width:64%!important;height:76%!important;}
+}

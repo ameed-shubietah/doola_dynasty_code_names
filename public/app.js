@@ -1,6 +1,7 @@
 const socket = io();
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
 let lastWinKey = null, winDockTimer = null;
+let lastBoardKey = '', lastBoardSpawnAt = 0;
 let playerKey = localStorage.cc_playerKey || ('p_' + Math.random().toString(36).slice(2) + Date.now().toString(36));
 localStorage.cc_playerKey = playerKey;
 let myId = playerKey;
@@ -67,6 +68,7 @@ const isInsideIframe = runningInsideIframe();
 const isDiscordPath = location.pathname.toLowerCase().startsWith('/discord');
 
 const isDiscordForced =
+  window.FORCE_DISCORD_ACTIVITY === true ||
   isDiscordPath ||
   params.get('discord') === '1' ||
   params.get('discord') === 'true' ||
@@ -166,12 +168,48 @@ function fmt(ms){ let s=Math.floor(ms/1000); const m=String(Math.floor(s/60)).pa
 function charEmoji(id){ const c=state?.characters?.find(x=>x.id===id); return c?.emoji || '🕵️'; }
 function charAccent(id){ const c=state?.characters?.find(x=>x.id===id); return c?.accent || '#71e2ff'; }
 function me(){ return state?.players?.[myId]; }
-function teamName(team){ return team === 'blue' ? 'Gold' : team === 'red' ? 'Black' : team === 'neutral' ? 'Blank' : team === 'assassin' ? 'Grey' : 'Spectator'; }
+function teamName(team){ return team === 'blue' ? 'Gold' : team === 'red' ? 'Black' : team === 'neutral' ? 'Empty' : team === 'assassin' ? 'Danger' : 'Spectator'; }
 function teamUpper(team){ return teamName(team).toUpperCase(); }
 function hasOnlineSpymaster(team){ return Object.values(state?.players || {}).some(p => p.online !== false && p.team === team && p.role === 'spymaster'); }
 function spymasterName(team){ const p = Object.values(state?.players || {}).find(p => p.online !== false && p.team === team && p.role === 'spymaster'); return p?.name || null; }
 
+
+function discordUser(){ return window.DD_CURRENT_USER || window.DD_DISCORD?.currentUser || null; }
+function playerAvatar(p){ return p?.avatar || ''; }
+function playerNameFromDiscord(){ return discordUser()?.name || ''; }
+function ensureDiscordIdentity(){
+  const u = discordUser();
+  if(!isDiscordActivity || !u) return;
+  if(nameInput){ nameInput.value = u.name || 'Discord User'; localStorage.cc_name = nameInput.value; }
+  if(u.id){ playerKey = `d_${u.id}`; myId = playerKey; localStorage.cc_playerKey = playerKey; }
+}
+
+function renderDiscordIdentity(){
+  if(!isDiscordActivity) return;
+  const u = discordUser();
+  let card = document.getElementById('discordIdentityCard');
+  if(!card){
+    card = document.createElement('div');
+    card.id = 'discordIdentityCard';
+    card.className = 'discordIdentityCard';
+    const joinBasics = document.querySelector('.joinBasics');
+    if(joinBasics) joinBasics.insertAdjacentElement('afterend', card);
+  }
+  if(u){
+    card.innerHTML = `${avatarHtml({ name:u.name, avatar:u.avatar, role:'operative' })}<div><b>${u.name || 'Discord User'}</b><span>Discord profile detected</span></div>`;
+  } else {
+    card.innerHTML = `<div class="avatar">?</div><div><b>Discord User</b><span>Waiting for Discord profile...</span></div>`;
+  }
+}
+function avatarHtml(p, extra=''){
+  const crown = p?.role === 'spymaster' ? '<span class="crownMark">👑</span>' : '';
+  const av = playerAvatar(p);
+  if(av) return `<div class="avatar avatarPic ${extra}"><img src="${av}" alt="${p.name || 'player'}"/>${crown}</div>`;
+  return `<div class="avatar ${extra}">${charEmoji(p?.character)}${crown}</div>`;
+}
+
 function renderCharacters(){
+  if(isDiscordActivity){ const box=$('characterPick'); if(box) box.classList.add('hidden'); return; }
   const list = [
     { id:'raiden', name:'Raiden', emoji:'🧙‍♂️', accent:'#71e2ff' },{ id:'viper', name:'Viper', emoji:'🐍', accent:'#9cff8c' },{ id:'nova', name:'Nova', emoji:'🚀', accent:'#ffd36e' },{ id:'phantom', name:'Phantom', emoji:'👻', accent:'#c9a7ff' },{ id:'spark', name:'Spark', emoji:'⚡', accent:'#ffef68' },{ id:'raven', name:'Raven', emoji:'🦅', accent:'#ff8aa8' },{ id:'pixel', name:'Pixel', emoji:'🎮', accent:'#7af7d7' },{ id:'titan', name:'Titan', emoji:'🦾', accent:'#ff9d5c' }
   ];
@@ -231,6 +269,11 @@ function syncDiscordLanding(){
   if(roomField) roomField.classList.toggle('hidden', !!isDiscordActivity);
   const title = document.querySelector('.teamChooseTitle');
   if(title) title.textContent = isDiscordActivity ? 'Choose your role' : 'Choose your team';
+  const chars = $('characterPick');
+  if(chars) chars.classList.toggle('hidden', !!isDiscordActivity);
+  if(isDiscordActivity){ ensureDiscordIdentity(); renderDiscordIdentity(); }
+  refreshDiscordLobbyPreview();
+  refreshLandingAdminControls();
   setJoinButtonsReady();
 }
 function getDiscordActivityRoomCode(){
@@ -238,14 +281,23 @@ function getDiscordActivityRoomCode(){
   return roomCodeFromSeed(seed);
 }
 function discordJoinPayload(team, role){
-  localStorage.cc_name = nameInput.value.trim() || 'Agent';
+  ensureDiscordIdentity();
+  const u = discordUser();
+  const finalName = u?.name || nameInput.value.trim() || 'Discord User';
+  const finalAvatar = u?.avatar || '';
+  const finalDiscordId = u?.id || '';
+  if(finalDiscordId){ playerKey = `d_${finalDiscordId}`; myId = playerKey; localStorage.cc_playerKey = playerKey; }
+  localStorage.cc_name = finalName;
+  nameInput.value = finalName;
   const roomCode = getDiscordActivityRoomCode();
   roomInput.value = roomCode;
   discordActivityRoomCode = roomCode;
   return {
     activityId: window.DD_DISCORD?.instanceId || localDiscordSeed || roomCode,
     roomId: roomCode,
-    name: nameInput.value,
+    name: finalName,
+    avatar: finalAvatar,
+    discordId: finalDiscordId,
     team,
     role,
     character: selectedCharacter,
@@ -254,7 +306,7 @@ function discordJoinPayload(team, role){
   };
 }
 function joinDiscordActivity(team, role){
-  if(!nameInput.value.trim()){ toast('Write your name first.'); nameInput.focus(); return; }
+  if(!isDiscordActivity && !nameInput.value.trim()){ toast('Write your name first.'); nameInput.focus(); return; }
   selectedTeamChoice = team;
   selectedRoleChoice = role;
   const teamSel = $('team'), roleSel = $('role');
@@ -286,6 +338,8 @@ window.addEventListener('discordActivityReady', (event)=>{
   if(discordActivityInfo?.enabled){
     isDiscordActivity = true;
     document.body.classList.add('discordActivity');
+    ensureDiscordIdentity();
+    renderDiscordIdentity();
 
     discordActivityRoomCode = getDiscordActivityRoomCode();
     roomInput.value = discordActivityRoomCode;
@@ -308,6 +362,55 @@ window.addEventListener('discordActivityReady', (event)=>{
 
   syncDiscordLanding();
 });
+window.addEventListener('discordParticipantsChanged', ()=>{ ensureDiscordIdentity(); refreshDiscordLobbyPreview(true); });
+
+
+function roleListHtml(players){
+  if(!players || !players.length) return '<div class="discordSeatEmpty">empty</div>';
+  return players.map(p=>`<div class="discordSeatMini">${avatarHtml(p)}<span>${p.name || 'Player'}</span>${p.isAdmin?'<em>Admin</em>':''}</div>`).join('');
+}
+function paintDiscordLobby(info){
+  if(!info?.ok) return;
+  const map = [
+    ['blue','operative','.discordGoldCard [data-role="operative"]'],
+    ['blue','spymaster','.discordGoldCard [data-role="spymaster"]'],
+    ['red','operative','.discordBlackCard [data-role="operative"]'],
+    ['red','spymaster','.discordBlackCard [data-role="spymaster"]'],
+    ['spectator','spectator','.discordSpectatorCard [data-role="spectator"]']
+  ];
+  for(const [team, role, selector] of map){
+    const btn = document.querySelector(selector);
+    const box = btn?.closest('.discordRoleBox') || btn?.parentElement;
+    if(!box) continue;
+    let list = box.querySelector('.discordSeatList');
+    if(!list){ list = document.createElement('div'); list.className='discordSeatList'; box.appendChild(list); }
+    list.innerHTML = roleListHtml(info.roles?.[team]?.[role] || []);
+  }
+}
+function refreshLandingAdminControls(){
+  const p = me();
+  const bar = document.getElementById('landingAdminBar');
+  const start = document.getElementById('landingStartGameBtn');
+  const opts = document.getElementById('landingOptionsWrap');
+  if(!bar) return;
+  const inLobby = !!(state && state.status === 'lobby');
+  const canStart = !!(p?.isAdmin && inLobby);
+  // Homepage/lobby should only show Start Game. Options belong on the game page only.
+  bar.classList.toggle('hidden', !inLobby);
+  if(start) start.classList.toggle('hidden', !canStart);
+  if(opts) opts.classList.add('hidden');
+}
+
+let lobbyPreviewTimer = null;
+function refreshDiscordLobbyPreview(force=false){
+  if(!isDiscordActivity || !roomInput) return;
+  const code = getDiscordActivityRoomCode();
+  if(code) roomInput.value = code;
+  if(!force && lobbyPreviewTimer) return;
+  lobbyPreviewTimer = setTimeout(()=>{ lobbyPreviewTimer=null; }, 650);
+  socket.emit('getRoomInfo', { roomId: code }, res => { if(res?.ok) paintDiscordLobby(res); });
+}
+setInterval(()=>{ if(isDiscordActivity && !state) refreshDiscordLobbyPreview(true); }, 2500);
 
 function setupJoinFlow(){
   const teamSel = $('team'), roleSel = $('role');
@@ -360,9 +463,16 @@ function acceptJoinResponse(res){
   // Re-render immediately after receiving the real seat key so a new tab shows
   // its own chosen team/role instead of the old tab's saved seat.
   if(state){
-    landing.classList.add('hidden');
-    game.classList.remove('hidden');
-    render();
+    if(isDiscordActivity && state.status === 'lobby'){
+      game.classList.add('hidden');
+      landing.classList.remove('hidden');
+      refreshDiscordLobbyPreview(true);
+      refreshLandingAdminControls();
+    } else {
+      landing.classList.add('hidden');
+      game.classList.remove('hidden');
+      render();
+    }
   }
 }
 $('createBtn').onclick=()=> {
@@ -395,11 +505,20 @@ socket.on('state', s=>{
   const clueAccepted = before?.status === 'waiting-clue' && s.status === 'guessing' && before?.clue?.at !== s.clue?.at && s.clue;
   const turnChanged = before && before.turn !== s.turn;
   const newFinishedGame = before && before.status !== 'finished' && s.status === 'finished';
+  const gameJustStarted = before?.status === 'lobby' && s.status !== 'lobby';
   if(clueAccepted || turnChanged || newFinishedGame){
     targetIds.clear();
     const cw = $('clueWord'); if(cw) cw.value = '';
   }
   state = s; myId = playerKey;
+  if(isDiscordActivity && s.status === 'lobby'){
+    game.classList.add('hidden');
+    landing.classList.remove('hidden');
+    refreshDiscordLobbyPreview(true);
+    refreshLandingAdminControls();
+    return;
+  }
+  if(gameJustStarted) lastBoardKey = '';
   if(landing && !landing.classList.contains('hidden')) { landing.classList.add('hidden'); game.classList.remove('hidden'); }
   if(before?.clue?.at !== s.clue?.at && s.clue) sound('clue');
   if(newFinishedGame) sound('gameWin');
@@ -509,7 +628,7 @@ function renderWinModal(){
 
 function render(){
   const p = me();
-  $('roomLabel').textContent = `Room ${state.id} · Round ${state.round}`;
+  const roomLbl=$('roomLabel'); if(roomLbl) roomLbl.textContent = '';
   updateInviteFields(state.id);
   $('turnBadge').className = `badge ${state.turn}`; $('turnBadge').textContent = `${teamUpper(state.turn)} TURN`;
   $('clueBadge').className = 'badge gold';
@@ -530,7 +649,7 @@ function render(){
 function renderSeatCharacters(){ /* seat editing removed from in-game UI */ }
 function renderMe(){
   const p=me(); if(!p) return;
-  $('meCard').innerHTML = `<div class="player ${p.team}"><div class="avatar" style="background:${charAccent(p.character)}33">${charEmoji(p.character)}</div><div><b>${p.name}</b><span class="roleTag">${teamName(p.team)} · ${p.role}</span></div></div>`;
+  $('meCard').innerHTML = `<div class="player ${p.team}">${avatarHtml(p)}<div><b>${p.name}</b><span class="roleTag">${teamName(p.team)} · ${p.role}</span></div></div>`;
 }
 function renderPlayers(){
   const current = me();
@@ -550,7 +669,7 @@ function renderPlayers(){
     const offline = p.online === false;
     const adminBadge = p.isAdmin ? '<span class="adminBadge">Admin</span>' : '';
     const canDrag = adminMode && (!p.isAdmin || p.id === myId);
-    return `<div class="player ${p.team} ${offline?'offline':''} ${canDrag?'draggablePlayer':''} ${p.isAdmin?'adminPlayer':''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}"><div class="avatar" style="background:${hexToRgba(charAccent(p.character), .2)}">${charEmoji(p.character)}</div><div class="playerBody"><b>${p.name} ${adminBadge} ${offline?'<span class="offlineIcon" title="Offline">📡</span>':''}</b><span class="roleTag">${p.role}${offline?' · offline':''}</span>${adminTools(p)}</div></div>`;
+    return `<div class="player ${p.team} ${offline?'offline':''} ${canDrag?'draggablePlayer':''} ${p.isAdmin?'adminPlayer':''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}">${avatarHtml(p)}<div class="playerBody"><b>${p.name} ${adminBadge} ${offline?'<span class="offlineIcon" title="Offline">📡</span>':''}</b><span class="roleTag">${p.role}${offline?' · offline':''}</span>${adminTools(p)}</div></div>`;
   }
 
   function hexToRgba(hex, alpha = 1) {
@@ -640,29 +759,19 @@ function cardLengthClass(word){
   return 'longWord';
 }
 
-function revealHeroSvg(color){
-  const cls = color === 'blue' ? 'goldHero' : color === 'red' ? 'blackHero' : color === 'neutral' ? 'blankHero' : 'greyHero';
-  return `<div class="revealHero ${cls}" aria-hidden="true">
-    <svg viewBox="0 0 220 140" role="img">
-      <defs>
-        <radialGradient id="heroGlow" cx="50%" cy="32%" r="70%"><stop offset="0%" stop-color="rgba(255,255,255,.65)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>
-      </defs>
-      <ellipse class="heroShadow" cx="110" cy="124" rx="62" ry="10"/>
-      <circle class="heroHead" cx="110" cy="48" r="22"/>
-      <path class="heroBody" d="M61 122c9-34 30-52 49-52s40 18 49 52z"/>
-      <path class="heroCape" d="M68 122c-6-35 9-66 42-74 33 8 48 39 42 74-21-14-63-14-84 0z"/>
-      <path class="heroShine" d="M82 36c24-22 62-15 75 12-25-13-55-10-75-12z"/>
-      <circle class="heroSpark s1" cx="54" cy="36" r="5"/><circle class="heroSpark s2" cx="170" cy="50" r="4"/><circle class="heroSpark s3" cx="148" cy="22" r="3"/>
-      <rect class="heroMask" x="82" y="43" width="56" height="10" rx="5"/>
-      <circle class="heroGlowCircle" cx="110" cy="54" r="70" fill="url(#heroGlow)"/>
-    </svg>
-  </div>`;
-}
+function revealHeroSvg(color){ return ''; }
 
 function renderBoard(){
+  if(state?.status === 'lobby'){
+    board.innerHTML = '<div class="waitingBoard">Waiting for admin to start the game...</div>';
+    return;
+  }
   const p=me(); const spy = p?.role==='spymaster';
   const marked = myMarkedIds();
-  board.innerHTML = state.board.map(c=>{
+  const boardKey = `${state.id}-${state.round}-${state.board.map(c=>c.word+':'+c.color).join(',')}`;
+  const shouldSpawn = boardKey !== lastBoardKey;
+  lastBoardKey = boardKey;
+  board.innerHTML = state.board.map((c,i)=>{
     const showOrigin = state.status === 'finished';
     const colorClass = ((c.revealed || spy || showOrigin) && c.color) ? c.color : '';
     const target = c.clueTarget || targetIds.has(c.id);
@@ -675,7 +784,7 @@ function renderBoard(){
     const voteBadge = voted && !c.revealed ? `<span class="voteBadge ${agreed?'agreed':''}">${voteCount}</span>` : '';
     const confirmMini = canConfirmThis ? `<span class="cardConfirm" data-confirm-id="${c.id}" title="Confirm ${c.word}">✓</span>` : '';
     const revealBadge = c.revealed ? revealHeroSvg(c.color) : '';
-    return `<button class="card ${colorClass} ${c.revealed?'revealed':''} ${showOrigin && !c.revealed?'originShown':''} ${target?'target':''} ${playableSpyTarget?'spyPickable':''} ${voted?'voted':''} ${agreed?'agreed':''} ${myVote?'myVote':''}" data-id="${c.id}" title="${c.word}">${revealBadge}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${confirmMini}</button>`;
+    return `<button class="card ${shouldSpawn?'spawnCard':''} ${colorClass} ${c.revealed?'revealed':''} ${showOrigin && !c.revealed?'originShown':''} ${target?'target':''} ${playableSpyTarget?'spyPickable':''} ${voted?'voted':''} ${agreed?'agreed':''} ${myVote?'myVote':''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${confirmMini}</button>`;
   }).join('');
   board.querySelectorAll('.card').forEach(el=>{
     el.onclick=(ev)=>{
@@ -702,6 +811,16 @@ function renderBoard(){
 }
 function renderPanels(){
   const p=me();
+  const canOptions = !!(p?.isAdmin || p?.role === 'spymaster');
+  const adminBar = $('adminControlBar');
+  if(adminBar){
+    adminBar.classList.remove('nonAdminControls');
+    adminBar.classList.toggle('hidden', false);
+    adminBar.classList.toggle('viewerOptions', !canOptions);
+  }
+  if(state?.status === 'lobby'){
+    const cs=$('clueStatus'); if(cs) cs.innerHTML = '';
+  }
   const turnSpy = spymasterName(state.turn);
   const hintModeForSpy = !!(state?.hintRequested && p?.role==='spymaster' && state.hintRequested.team === p.team && p.team === state.turn);
   const isCurrentSpy=p?.role==='spymaster' && p.team===state.turn && (state.status==='waiting-clue' || hintModeForSpy);
@@ -713,7 +832,7 @@ function renderPanels(){
   const topActions = $('topOperativeActions');
   if(topActions) topActions.classList.toggle('hidden', !opActive);
   $('operativePanel').classList.toggle('hidden', !opActive);
-  $('requestHintBtn').disabled = !(p?.role==='operative' && p.team===state.turn) || state.hintUsed[p?.team];
+  const hintBtn = $('requestHintBtn'); if(hintBtn) hintBtn.classList.add('hidden');
   $('endTurnBtn').disabled = !(p?.role==='operative' && p.team===state.turn && state.status==='guessing');
 
   const dock=$('bottomClueDock');
@@ -724,9 +843,8 @@ function renderPanels(){
     $('clueNumber').disabled = false;
     syncClueCount();
     if(isCurrentSpy){
-      const hintMode = !!(state?.hintRequested && state.hintRequested.team === p.team);
-      $('dockTitle').textContent = hintMode ? 'One-time hint requested' : 'Your turn: write the clue';
-      $('dockHelp').textContent = hintMode ? 'Write only the extra hint. You do not need to select any cards.' : 'Click only your own color cards. The number increases automatically.';
+      $('dockTitle').textContent = 'Your turn: write the clue';
+      $('dockHelp').textContent = 'Click only your own color cards. The number increases automatically.';
     } else if(isAnySpy){
       $('dockTitle').textContent = 'Clue box waiting';
       $('dockHelp').textContent = state.status==='waiting-clue'
@@ -737,38 +855,33 @@ function renderPanels(){
 
   const newRound = $('newRoundBtn');
   if(newRound) newRound.classList.toggle('hidden', state.status !== 'finished');
-  if(state.status === 'finished'){
-    $('clueStatus').innerHTML = `<b>${teamUpper(state.winner)} wins!</b><br>Start a new game in this same room so the same lobby can keep playing.`;
-  } else if(isCurrentSpy){
-    $('clueStatus').innerHTML = `<b>Your clue box is at the bottom.</b><br>Click intended cards, then send the clue from the bottom bar.`;
-  } else if(state.status==='waiting-clue'){
-    if(turnSpy){
-      $('clueStatus').innerHTML = `<b>Waiting for ${teamUpper(state.turn)} spymaster:</b><br>${turnSpy} must write the clue now.`;
-    } else if(canClaim){
-      $('clueStatus').innerHTML = `<b>No ${teamUpper(state.turn)} spymaster online.</b><br>Rejoin as that team's spymaster to claim it.`;
-    } else {
-      $('clueStatus').innerHTML = `<b>Waiting for clue.</b><br>Only the current team's spymaster can write it.`;
-    }
-  } else if(state.clue){
-    const extra = state.status==='guessing' ? `<br><small>Vote on a card, then any active teammate can confirm their selected card. You may pass anytime.</small>` : '';
-    const extraHint = state.clue.extraWord ? `<br><b>Extra hint:</b> ${String(state.clue.extraWord).toUpperCase()}` : '';
-    $('clueStatus').innerHTML = `<b>Current clue:</b><br>${state.clue.word.toUpperCase()} - ${state.clue.number} ${Number(state.clue.number)===1?'CARD':'CARDS'}${extraHint}${extra}`;
-  } else {
-    $('clueStatus').innerHTML = '';
-  }
+  const cs = $('clueStatus');
+  if(cs) cs.innerHTML = '';
 }
+
 function renderLog(){
-  const html = state.log.slice().reverse().map(x=>`<div>${x}</div>`).join('');
+  function entryHtml(x){
+    const parts = String(x || '').split('|');
+    if(parts[0] === 'HINT'){
+      const team = parts[1]; const word = parts[2] || ''; const num = parts[3] || ''; const by = parts[4] || ''; const avatar = parts[5] || '';
+      const img = avatar ? `<img class="logSpyAvatar" src="${avatar}" alt="${by || 'spymaster'}"/>` : `<span class="logSpyAvatar fallback">👑</span>`;
+      return `<div class="gameLogEntry hintLog ${team}">${img}<b>${word}</b><span>${num}</span></div>`;
+    }
+    if(parts[0] === 'PICK'){
+      const team = parts[1]; const color = parts[2]; const word = parts[3] || '';
+      return `<div class="gameLogEntry pickLog ${color}"><b>${word}</b></div>`;
+    }
+    if(parts[0] === 'PASS'){
+      const team = parts[1];
+      return `<div class="gameLogEntry passLog ${team}"><b>PASS</b></div>`;
+    }
+    return '';
+  }
+  const html = state.log.map(entryHtml).filter(Boolean).join('');
   const mainLog = $('log');
-  if(mainLog){
-    mainLog.innerHTML = html;
-    requestAnimationFrame(()=>{ mainLog.scrollTop = 0; });
-  }
+  if(mainLog){ mainLog.innerHTML = html || '<div class="gameLogEmpty">No guesses yet</div>'; }
   const hiddenLog = $('logHidden');
-  if(hiddenLog){
-    hiddenLog.innerHTML = html;
-    requestAnimationFrame(()=>{ hiddenLog.scrollTop = 0; });
-  }
+  if(hiddenLog){ hiddenLog.innerHTML = html || '<div class="gameLogEmpty">No guesses yet</div>'; }
 }
 
 const adminRequestYes = $('adminRequestYes');
@@ -789,15 +902,21 @@ const switchBtn = $('switchBtn'); if(switchBtn) switchBtn.onclick=()=> socket.em
 const randomBtn = $('randomBtn'); if(randomBtn) randomBtn.onclick=()=> socket.emit('randomizeTeams');
 function runOrRequestAdminAction(action, label, confirmText){
   const current = me();
-  if(current?.isAdmin){
+  if(current?.isAdmin || current?.role === 'spymaster'){
     if(confirm(confirmText)){ targetIds.clear(); socket.emit(action); }
     return;
   }
-  if(confirm(`Request ${label} to admin?`)) socket.emit('adminActionRequest', { action });
+  toast('Only the admin and spymasters can use this option.');
 }
-const resetTableBtn = $('resetTableBtn'); if(resetTableBtn) resetTableBtn.onclick=()=>runOrRequestAdminAction('resetTable','Reset Table','Reset the table with a fresh board but keep the same room and players?');
-const shuffleTeamsBtn = $('shuffleTeamsBtn'); if(shuffleTeamsBtn) shuffleTeamsBtn.onclick=()=>runOrRequestAdminAction('shuffleTeams','Shuffle Teams','Shuffle online players between Gold and Black teams?');
-const changeWordListBtn = $('changeWordListBtn'); if(changeWordListBtn) changeWordListBtn.onclick=()=>runOrRequestAdminAction('changeWordList','Change Word List','Change the word list / deal a fresh board in this same room?');
+const startGameBtn = $('startGameBtn'); if(startGameBtn) startGameBtn.onclick=()=> socket.emit('startGame');
+const landingStartGameBtn = $('landingStartGameBtn'); if(landingStartGameBtn) landingStartGameBtn.onclick=()=> socket.emit('startGame');
+function wireOptionButton(id, action, label, text){ const b=$(id); if(b) b.onclick=()=>runOrRequestAdminAction(action,label,text); }
+wireOptionButton('resetTableBtn','resetTable','Reset Table','Reset the table with a fresh board but keep the same room and players?');
+wireOptionButton('shuffleTeamsBtn','shuffleTeams','Shuffle Teams','Shuffle online players between Gold and Black teams?');
+wireOptionButton('changeWordListBtn','changeWordList','Change Word List','Change the word list / deal a fresh board in this same room?');
+wireOptionButton('landingResetTableBtn','resetTable','Reset Table','Reset the table with a fresh board but keep the same room and players?');
+wireOptionButton('landingShuffleTeamsBtn','shuffleTeams','Shuffle Teams','Shuffle online players between Gold and Black teams?');
+wireOptionButton('landingChangeWordListBtn','changeWordList','Change Word List','Change the word list / deal a fresh board in this same room?');
 const newGameBtn = $('newGameBtn'); if(newGameBtn) newGameBtn.onclick=()=> { if(confirm('Start a new board in this room?')) { targetIds.clear(); socket.emit('newGame'); } };
 $('giveClueBtn').onclick=()=>{
   const targets = [...targetIds];
@@ -809,7 +928,7 @@ $('giveClueBtn').onclick=()=>{
   socket.emit('giveClue', { word:clueWord, number:targets.length, targetIds:targets });
 };
 const newRoundBtn = $('newRoundBtn'); if(newRoundBtn) newRoundBtn.onclick=()=> { targetIds.clear(); socket.emit('newGame'); };
-$('requestHintBtn').onclick=()=> socket.emit('requestHint');
+const requestHintBtn = $('requestHintBtn'); if(requestHintBtn) requestHintBtn.onclick=()=>{};
 $('endTurnBtn').onclick=()=> socket.emit('endTurn');
 const confirmVoteBtn = $('confirmVoteBtn'); if(confirmVoteBtn) confirmVoteBtn.onclick=()=> socket.emit('confirmVote', { id: myMarkedIds()[0] });
 const inviteBtn = $('inviteBtn'); if(inviteBtn) inviteBtn.onclick=async()=>{ updateInviteFields(state?.id || roomInput.value); const link=$('inviteLinkGame')?.value; if(link && navigator.clipboard){ try{ await navigator.clipboard.writeText(link); toast('Invite link copied.'); }catch{ toast('Invite link ready.'); } } else toast('Invite link ready.'); };
