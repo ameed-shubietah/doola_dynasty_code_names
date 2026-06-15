@@ -1,102 +1,108 @@
-import { DiscordSDK, Events } from "https://cdn.jsdelivr.net/npm/@discord/embedded-app-sdk/+esm";
+import { DiscordSDK } from "https://cdn.jsdelivr.net/npm/@discord/embedded-app-sdk/+esm";
 
 const DISCORD_CLIENT_ID = "1514895948197793893";
 
-function pick(obj, keys){
-  for(const key of keys){
+function pick(obj, keys) {
+  for (const key of keys) {
     const value = obj?.[key];
-    if(value !== undefined && value !== null && String(value).trim() !== '') return value;
+    if (value !== undefined && value !== null && String(value).trim() !== '') return value;
   }
   return '';
 }
 
-function withTimeout(promise, ms, label='Timed out'){
+function withTimeout(promise, ms, label = 'Timed out') {
   return Promise.race([
     promise,
     new Promise((_, reject) => setTimeout(() => reject(new Error(label)), ms))
   ]);
 }
 
-function avatarUrl(user){
-  if(!user) return '';
-  const direct = pick(user, [
-    'avatar_url','avatarUrl','display_avatar_url','displayAvatarURL','display_avatar','displayAvatar',
-    'image_url','imageUrl','image','icon_url','iconUrl','icon','photo','photoURL','photo_url'
-  ]);
-  if(direct && /^https?:\/\//i.test(String(direct))) return String(direct);
+function avatarUrl(user) {
+  if (!user) return '';
 
-  const id = pick(user, ['id','user_id','userId','discord_id','discordId']);
-  const avatar = pick(user, ['avatar','avatar_hash','avatarHash','avatar_id','avatarId']);
-  if(avatar && /^https?:\/\//i.test(String(avatar))) return String(avatar);
-  if(id && avatar){
+  const direct = pick(user, [
+    'avatar_url', 'avatarUrl', 'display_avatar_url', 'displayAvatarURL',
+    'display_avatar', 'displayAvatar', 'image_url', 'imageUrl', 'image',
+    'icon_url', 'iconUrl', 'icon', 'photo', 'photoURL', 'photo_url'
+  ]);
+  if (direct && /^https?:\/\//i.test(String(direct))) return String(direct);
+
+  const id = pick(user, ['id', 'user_id', 'userId', 'discord_id', 'discordId']);
+  const avatar = pick(user, ['avatar', 'avatar_hash', 'avatarHash', 'avatar_id', 'avatarId']);
+
+  if (avatar && /^https?:\/\//i.test(String(avatar))) return String(avatar);
+
+  if (id && avatar && avatar !== 'null') {
     const ext = String(avatar).startsWith('a_') ? 'gif' : 'png';
     return `https://cdn.discordapp.com/avatars/${id}/${avatar}.${ext}?size=256`;
   }
-  if(id){
-    try{
+
+  const discriminator = pick(user, ['discriminator']);
+  if (discriminator && discriminator !== '0') {
+    return `https://cdn.discordapp.com/embed/avatars/${Number(discriminator) % 5}.png`;
+  }
+
+  if (id) {
+    try {
       const idx = Number((BigInt(id) >> 22n) % 6n);
       return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
-    }catch{}
+    } catch {}
   }
-  const disc = pick(user, ['discriminator']);
-  if(disc && disc !== '0') return `https://cdn.discordapp.com/embed/avatars/${Number(disc) % 5}.png`;
+
   return '';
 }
 
-function displayName(user){
-  if(!user) return 'Discord User';
+function displayName(user) {
+  if (!user) return 'Discord User';
   return pick(user, [
-    'global_name','globalName','display_name','displayName','nick','nickname','username','name'
+    'global_name', 'globalName', 'display_name', 'displayName',
+    'nick', 'nickname', 'username', 'name'
   ]) || 'Discord User';
 }
 
-function normalizeUser(user){
-  const u = user?.user || user?.member?.user || user || {};
-  const member = user?.member || {};
-  const merged = { ...(user || {}), ...(member || {}), ...(u || {}) };
-  const id = pick(merged, ['id','user_id','userId','discord_id','discordId']);
-  return {
-    id,
-    name: displayName(merged),
-    username: pick(merged, ['username','name']),
-    avatar: avatarUrl(merged),
-    raw: user
-  };
-}
+function normalizeAnyUser(input) {
+  const user = input?.user || input?.member?.user || input?.participant?.user || input || {};
+  const member = input?.member || input?.participant?.member || {};
+  const merged = { ...(input || {}), ...(member || {}), ...(user || {}) };
 
-function normalizeParticipant(p){
-  const user = p?.user || p?.member?.user || p;
-  const member = p?.member || {};
-  const merged = { ...(p || {}), ...(member || {}), ...(user || {}) };
   return {
-    id: pick(merged, ['id','user_id','userId','discord_id','discordId']),
+    id: pick(merged, ['id', 'user_id', 'userId', 'discord_id', 'discordId']),
     name: displayName(merged),
-    username: pick(merged, ['username','name']),
+    username: pick(merged, ['username', 'name']),
     avatar: avatarUrl(merged),
     isCurrentUser: Boolean(
-      p?.is_current_user || p?.isCurrentUser || p?.current_user || p?.currentUser ||
-      p?.me || p?.self || p?.is_self || p?.isSelf || p?.local || p?.isLocal
+      input?.is_current_user || input?.isCurrentUser || input?.current_user || input?.currentUser ||
+      input?.me || input?.self || input?.is_self || input?.isSelf || input?.local || input?.isLocal
     ),
-    raw: p
+    raw: input
   };
 }
 
-function setCurrentUser(user, source='unknown'){
-  const normalized = normalizeUser(user);
-  if(normalized?.id || (normalized?.name && normalized.name !== 'Discord User') || normalized?.avatar){
-    normalized.source = source;
-    window.DD_CURRENT_USER = normalized;
-    if(window.DD_DISCORD) window.DD_DISCORD.currentUser = normalized;
-    try { localStorage.setItem('dd_last_discord_id', normalized.id || ''); } catch {}
-    window.dispatchEvent(new CustomEvent('discordIdentityChanged', { detail: normalized }));
-    console.log('DD current user resolved:', normalized);
-    return normalized;
-  }
-  return null;
+function isUsefulUser(user) {
+  return !!(user && (user.id || user.avatar || (user.name && user.name !== 'Discord User')));
 }
 
-function chooseCurrentUserFromParticipants(participants){
-  if(!Array.isArray(participants) || !participants.length) return null;
+function setCurrentUser(input, source = 'unknown') {
+  const normalized = normalizeAnyUser(input);
+  if (!isUsefulUser(normalized)) return null;
+
+  normalized.source = source;
+  window.DD_CURRENT_USER = normalized;
+  if (window.DD_DISCORD) window.DD_DISCORD.currentUser = normalized;
+
+  try {
+    if (normalized.id) localStorage.setItem('dd_last_discord_id', normalized.id);
+    if (normalized.name && normalized.name !== 'Discord User') localStorage.setItem('dd_last_discord_name', normalized.name);
+    if (normalized.avatar) localStorage.setItem('dd_last_discord_avatar', normalized.avatar);
+  } catch {}
+
+  window.dispatchEvent(new CustomEvent('discordIdentityChanged', { detail: normalized }));
+  console.log('DD current user resolved:', normalized);
+  return normalized;
+}
+
+function chooseCurrentUserFromParticipants(participants) {
+  if (!Array.isArray(participants) || !participants.length) return null;
   const lastId = (() => { try { return localStorage.getItem('dd_last_discord_id') || ''; } catch { return ''; } })();
   return participants.find(p => p.isCurrentUser) ||
     (lastId ? participants.find(p => p.id === lastId) : null) ||
@@ -104,18 +110,30 @@ function chooseCurrentUserFromParticipants(participants){
     null;
 }
 
-async function fetchParticipants(discordSdk){
+function setLastKnownFallback() {
+  try {
+    const name = localStorage.getItem('dd_last_discord_name') || localStorage.getItem('cc_name') || '';
+    const avatar = localStorage.getItem('dd_last_discord_avatar') || '';
+    const id = localStorage.getItem('dd_last_discord_id') || '';
+    if (name || avatar || id) return setCurrentUser({ id, name, avatar }, 'last-known-fallback');
+  } catch {}
+  return null;
+}
+
+async function fetchParticipants(discordSdk) {
   try {
     const res = await withTimeout(discordSdk.commands.getInstanceConnectedParticipants(), 2500, 'participants timeout');
     console.log('DD raw participants:', res);
-    return Array.isArray(res?.participants) ? res.participants.map(normalizeParticipant) : (Array.isArray(res) ? res.map(normalizeParticipant) : []);
+    return Array.isArray(res?.participants)
+      ? res.participants.map(normalizeAnyUser)
+      : (Array.isArray(res) ? res.map(normalizeAnyUser) : []);
   } catch (err) {
-    console.warn('Could not fetch Discord participants', err);
+    console.warn('Could not fetch Discord participants:', err);
     return [];
   }
 }
 
-async function getAuthenticatedUser(discordSdk){
+async function getAuthenticatedUser(discordSdk) {
   try {
     const auth = await withTimeout(discordSdk.commands.authorize({
       client_id: DISCORD_CLIENT_ID,
@@ -123,24 +141,29 @@ async function getAuthenticatedUser(discordSdk){
       state: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
       prompt: 'none',
       scope: ['identify']
-    }), 5000, 'Discord authorize timeout');
+    }), 6000, 'Discord authorize timeout');
 
     const code = auth?.code;
-    if(!code) throw new Error('Discord did not return an OAuth code.');
+    if (!code) throw new Error('Discord did not return an OAuth code.');
 
     const tokenRes = await withTimeout(fetch('/api/discord-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code })
-    }), 5000, 'Discord token endpoint timeout');
+    }), 6000, 'Discord token endpoint timeout');
+
     const tokenData = await tokenRes.json().catch(() => ({}));
-    if(!tokenRes.ok || !tokenData?.access_token){
+    if (!tokenRes.ok || !tokenData?.access_token) {
       throw new Error(tokenData?.error || 'Could not exchange Discord OAuth code.');
     }
 
-    const authRes = await withTimeout(discordSdk.commands.authenticate({ access_token: tokenData.access_token }), 5000, 'Discord authenticate timeout');
-    const user = authRes?.user || authRes;
-    return setCurrentUser(user, 'authenticate');
+    const authRes = await withTimeout(
+      discordSdk.commands.authenticate({ access_token: tokenData.access_token }),
+      6000,
+      'Discord authenticate timeout'
+    );
+
+    return setCurrentUser(authRes?.user || authRes, 'authenticate');
   } catch (err) {
     console.warn('Discord profile auth failed:', err);
     window.DD_PROFILE_ERROR = err?.message || String(err);
@@ -177,49 +200,51 @@ async function initDiscordActivity() {
       }
     };
 
-    // Do NOT block the game on OAuth. First use Discord's participant list, then
-    // silently replace it with the authenticated user when/if OAuth succeeds.
+    // Tell app.js the Discord SDK is alive immediately. Do not leave the lobby stuck
+    // while profile/OAuth is still loading.
+    window.dispatchEvent(new CustomEvent('discordActivityReady', { detail: window.DD_DISCORD }));
+
     const participants = await fetchParticipants(discordSdk);
     window.DD_PARTICIPANTS = participants;
     window.DD_DISCORD.participants = participants;
 
     const fallbackCurrentUser = chooseCurrentUserFromParticipants(participants);
-    if(fallbackCurrentUser) setCurrentUser(fallbackCurrentUser, 'participants');
+    if (fallbackCurrentUser) setCurrentUser(fallbackCurrentUser, 'participants');
+    else setLastKnownFallback();
 
     window.dispatchEvent(new CustomEvent('discordActivityReady', { detail: window.DD_DISCORD }));
     console.log('Discord Activity ready:', window.DD_DISCORD);
 
     getAuthenticatedUser(discordSdk).then(user => {
-      if(user){
+      if (user) {
         window.DD_DISCORD.currentUser = user;
         window.dispatchEvent(new CustomEvent('discordActivityReady', { detail: window.DD_DISCORD }));
       }
     });
 
-    async function refreshParticipants(payload){
-      try {
-        const list = Array.isArray(payload?.participants) ? payload.participants : (Array.isArray(payload) ? payload : []);
-        if(list.length){
-          window.DD_PARTICIPANTS = list.map(normalizeParticipant);
-          if(window.DD_DISCORD) window.DD_DISCORD.participants = window.DD_PARTICIPANTS;
-          if(!window.DD_CURRENT_USER){
-            const fallback = chooseCurrentUserFromParticipants(window.DD_PARTICIPANTS);
-            if(fallback) setCurrentUser(fallback, 'participants-update');
+    // Poll participants a few times because Discord can send the real participant list
+    // slightly after ready() on desktop.
+    [1200, 3000, 6000].forEach(delay => {
+      setTimeout(async () => {
+        const list = await fetchParticipants(discordSdk);
+        if (list.length) {
+          window.DD_PARTICIPANTS = list;
+          window.DD_DISCORD.participants = list;
+          if (!window.DD_CURRENT_USER) {
+            const fallback = chooseCurrentUserFromParticipants(list);
+            if (fallback) setCurrentUser(fallback, 'participants-poll');
           }
-          window.dispatchEvent(new CustomEvent('discordParticipantsChanged', { detail: window.DD_PARTICIPANTS }));
+          window.dispatchEvent(new CustomEvent('discordParticipantsChanged', { detail: list }));
         }
-      } catch(err){ console.warn('participants update failed', err); }
-    }
-    try {
-      if(Events?.ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE){
-        discordSdk.subscribe(Events.ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE, refreshParticipants);
-      }
-    } catch(err){ console.warn('participant subscribe failed', err); }
+      }, delay);
+    });
   } catch (err) {
     console.warn('Discord SDK not active. Normal website mode.', err);
     window.DD_DISCORD = { enabled: false };
     window.DD_openInviteDialog = null;
+    window.DD_PROFILE_ERROR = err?.message || String(err);
     window.dispatchEvent(new CustomEvent('discordActivityReady', { detail: window.DD_DISCORD }));
+    window.dispatchEvent(new CustomEvent('discordIdentityError', { detail: window.DD_PROFILE_ERROR }));
   }
 }
 

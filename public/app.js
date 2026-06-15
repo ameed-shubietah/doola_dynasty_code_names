@@ -219,7 +219,7 @@ function renderDiscordIdentity(){
   } else {
     const err = window.DD_PROFILE_ERROR || '';
     card.classList.add('profileWaiting');
-    card.innerHTML = `<div class="avatar identityAvatar">⏳</div><div><b>Loading Discord profile</b><span>${err ? 'Using fallback if needed.' : 'Please wait...'}</span></div>`;
+    card.innerHTML = `<div class="avatar identityAvatar">⏳</div><div><b>Discord profile loading</b><span>${err ? 'Profile not ready yet — you can still join.' : 'You can join while it loads.'}</span></div>`;
   }
 }
 function avatarHtml(p, extra=''){
@@ -247,7 +247,7 @@ function setJoinButtonsReady(){
     const profileReady = discordProfileReady();
     if(cb) cb.disabled = true;
     if(jb) jb.disabled = true;
-    document.querySelectorAll('.discordRoleJoin').forEach(b => b.disabled = !profileReady);
+    document.querySelectorAll('.discordRoleJoin').forEach(b => b.disabled = false);
     return;
   }
   if(cb) cb.disabled = !ready;
