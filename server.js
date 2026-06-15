@@ -547,7 +547,7 @@ io.on('connection', socket => {
 
     const pickerTeamName = team === 'blue' ? 'GOLD' : 'BLACK';
     const cardTeamName = card.color === 'blue' ? 'GOLD' : card.color === 'red' ? 'BLACK' : card.color === 'neutral' ? 'EMPTY' : 'DANGER';
-    room.log.push(`PICK|${team}|${card.color}|${card.word}|${p.name}`);
+    room.log.push(`PICK|${team}|${card.color}|${card.word}|${p.name}|${p.avatar || ''}`);
 
     if (card.color === 'assassin') {
 
@@ -577,7 +577,7 @@ io.on('connection', socket => {
     emitRoom(room);
   });
 
-  socket.on('endTurn', () => { const room = getPlayerRoom(socket.id); if (!room) return; const p=getPlayerBySocket(room, socket.id); if(playerCanAct(room,p) && room.status==='guessing') { room.log.push(`PASS|${p.team}|${p.name}`); switchTurn(room); emitRoom(room); } });
+  socket.on('endTurn', () => { const room = getPlayerRoom(socket.id); if (!room) return; const p=getPlayerBySocket(room, socket.id); if(playerCanAct(room,p) && room.status==='guessing') { room.log.push(`PASS|${p.team}|${p.name}|${p.avatar || ''}`); switchTurn(room); emitRoom(room); } });
 
   socket.on('leaveToLobby', (cb=()=>{}) => {
     const room = getPlayerRoom(socket.id);

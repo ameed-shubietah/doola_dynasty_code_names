@@ -1618,3 +1618,679 @@ body.discordActivity .adminControlBar{
   .card::before,.card.blue::before{width:70%!important;height:80%!important;}
   .card.red::before,.card.neutral::before,.card.assassin::before{width:64%!important;height:76%!important;}
 }
+
+
+/* v20: show operative selections clearly to all players/spymasters without respawning cards */
+.card.voted:not(.revealed),
+.card.agreed:not(.revealed),
+.card.myVote:not(.revealed){
+  outline:0!important;
+  border-color:#2ee7ff!important;
+  box-shadow:0 0 0 4px rgba(46,231,255,.95),0 0 28px rgba(46,231,255,.72),0 14px 28px rgba(0,0,0,.5)!important;
+}
+.voteFaces{
+  position:absolute;
+  left:9px;
+  top:8px;
+  z-index:20;
+  display:flex;
+  align-items:center;
+  gap:0;
+  pointer-events:none;
+}
+.voteFace{
+  width:30px;
+  height:30px;
+  margin-left:-6px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:#111;
+  border:2px solid #2ee7ff;
+  box-shadow:0 0 12px rgba(46,231,255,.75),0 3px 8px rgba(0,0,0,.45);
+  color:#fff;
+  font-size:15px;
+  font-weight:1000;
+}
+.voteFace:first-child{margin-left:0}
+.voteFace img{width:100%;height:100%;object-fit:cover;display:block}
+.voteFace.more{background:linear-gradient(180deg,#ecffff,#28cfff);color:#061115;font-size:12px}
+.voteBadge{right:8px!important;top:8px!important;z-index:21!important}
+
+/* v20: compact game log with player avatars */
+.log{
+  max-height:none!important;
+  overflow:visible!important;
+  align-content:flex-start!important;
+  gap:6px!important;
+  padding:8px!important;
+}
+.gameLogEntry{
+  min-height:34px!important;
+  padding:5px 9px!important;
+  gap:6px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+.gameLogEntry.hintLog{
+  min-height:38px!important;
+  padding:5px 10px 5px 5px!important;
+}
+.gameLogEntry.hintLog b{font-size:13px!important;letter-spacing:.5px!important;}
+.gameLogEntry.hintLog span{min-width:24px!important;height:24px!important;padding:0 7px!important;font-size:12px!important;}
+.gameLogEntry.pickLog b,
+.gameLogEntry.passLog b{font-size:12px!important;letter-spacing:.55px!important;}
+.logSpyAvatar{width:26px!important;height:26px!important;min-width:26px!important;}
+.logUserAvatar{
+  width:22px!important;
+  height:22px!important;
+  min-width:22px!important;
+  border-radius:999px;
+  object-fit:cover;
+  display:inline-grid;
+  place-items:center;
+  overflow:hidden;
+  background:rgba(0,0,0,.35);
+  box-shadow:0 0 0 2px rgba(255,255,255,.20),0 2px 7px rgba(0,0,0,.38);
+  font-size:12px!important;
+}
+.pickLog.blue,.pickLog.red,.pickLog.neutral,.pickLog.assassin,.passLog{padding-right:10px!important;}
+
+/* v20: more resilient Discord iframe resizing when chat/sidebar changes size */
+body.discordActivity #game.gameV9{
+  width:100vw!important;
+  max-width:100vw!important;
+  height:100dvh!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  grid-template-columns:clamp(150px,12vw,210px) minmax(360px,1fr) clamp(160px,13vw,220px)!important;
+  gap:clamp(5px,.55vw,8px)!important;
+}
+body.discordActivity .board{
+  grid-template-columns:repeat(5,minmax(86px,1fr))!important;
+  gap:clamp(5px,.55vw,8px)!important;
+}
+body.discordActivity .card{height:clamp(82px,13.2vh,134px)!important;}
+body.discordActivity .word{font-size:clamp(12px,1.15vw,19px)!important;min-height:34px!important;}
+body.discordActivity .teamPanel{min-width:0!important;overflow:hidden!important;}
+body.discordActivity .player{min-width:0!important;}
+body.discordActivity .playerBody b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;display:block;}
+@media(max-width:1180px){
+  body.discordActivity #game.gameV9{grid-template-columns:145px minmax(320px,1fr) 155px!important;}
+  body.discordActivity .teamHeader b{font-size:15px!important;}
+  body.discordActivity .miniScoreCard{width:56px!important;height:76px!important;}
+  body.discordActivity .card{height:clamp(72px,12vh,110px)!important;}
+  body.discordActivity .word{font-size:clamp(10px,1.25vw,16px)!important;}
+  .voteFace{width:24px;height:24px;font-size:12px}.voteBadge{min-width:28px;height:22px;font-size:11px}
+}
+@media(max-width:900px){
+  body.discordActivity #game.gameV9{height:auto!important;overflow:visible!important;grid-template-columns:1fr!important;}
+  body.discordActivity .teamPanelGold,body.discordActivity .teamPanelBlack,body.discordActivity .gameV9 .boardWrap{grid-column:1!important;}
+  body.discordActivity .board{grid-template-columns:repeat(5,minmax(62px,1fr))!important;}
+}
+
+/* v21: clearer operative confirm and spymaster picked marker */
+.cardConfirm{
+  top:6px!important;
+  right:6px!important;
+  z-index:120!important;
+  width:40px!important;
+  height:40px!important;
+  border:3px solid rgba(255,255,255,.92)!important;
+  background:linear-gradient(180deg,#eaffff,#28ddff 55%,#0795b6)!important;
+  color:#021015!important;
+  font-size:26px!important;
+  line-height:1!important;
+  box-shadow:0 0 0 3px rgba(0,0,0,.42),0 0 24px rgba(40,221,255,.95),0 10px 22px rgba(0,0,0,.55)!important;
+}
+.cardConfirm::before{
+  content:"";
+  position:absolute;
+  inset:-9px;
+  border-radius:999px;
+  background:rgba(40,221,255,.10);
+  z-index:-1;
+}
+.cardConfirm:hover{filter:brightness(1.25)!important;transform:scale(1.12)!important}
+.card.myVote:not(.revealed){
+  outline:4px solid #32dfff!important;
+  outline-offset:-4px!important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.7),0 0 28px rgba(50,223,255,.65),0 16px 24px rgba(0,0,0,.42)!important;
+}
+/* Keep the vote count away from the confirm button. */
+.voteBadge{
+  left:8px!important;
+  right:auto!important;
+  top:8px!important;
+  z-index:45!important;
+}
+.pickedLabel{
+  position:absolute;
+  left:50%;
+  bottom:7px;
+  transform:translateX(-50%);
+  z-index:70;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:22px;
+  padding:0 10px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#eaffff,#42e8ff 65%,#0699b8);
+  color:#041014;
+  border:1px solid rgba(255,255,255,.82);
+  box-shadow:0 0 16px rgba(66,232,255,.75),0 5px 12px rgba(0,0,0,.45);
+  font-family:"Segoe UI Black","Arial Black",system-ui,sans-serif;
+  font-size:11px;
+  letter-spacing:.85px;
+  pointer-events:none;
+}
+.card.voted:not(.revealed){
+  filter:brightness(.96) saturate(1.05);
+}
+@media(max-width:720px){
+  .cardConfirm{width:34px!important;height:34px!important;font-size:22px!important;top:5px!important;right:5px!important;}
+  .pickedLabel{height:19px;font-size:9px;bottom:5px;padding:0 8px;}
+}
+
+/* v22: persistent picked marker, smaller separated game-log lanes, and stronger black-card gold border */
+.card.red{
+  border-color:#ffd76c!important;
+  box-shadow:0 16px 24px rgba(0,0,0,.42),0 0 0 1px rgba(255,215,108,.55),inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+.card.red.revealed,
+.card.red.originShown{
+  border-color:#ffd76c!important;
+}
+.pickedLabel.pickedRevealed{
+  opacity:.96;
+  bottom:6px;
+  background:linear-gradient(180deg,#f4ffff,#63ecff 65%,#0a9ebd)!important;
+  box-shadow:0 0 16px rgba(99,236,255,.82),0 5px 12px rgba(0,0,0,.50)!important;
+}
+
+.log{
+  max-height:none!important;
+  overflow:visible!important;
+  padding:6px!important;
+  background:rgba(0,0,0,.13)!important;
+}
+.logLanes{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  align-items:start;
+}
+.logLane{
+  min-height:38px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  align-items:center;
+  align-content:flex-start;
+  justify-content:center;
+  padding:5px;
+  border-radius:14px;
+  border:1px solid rgba(255,215,108,.16);
+  background:rgba(0,0,0,.18);
+}
+.goldLane{box-shadow:inset 0 0 0 1px rgba(255,215,108,.10)}
+.blackLane{box-shadow:inset 0 0 0 1px rgba(255,215,108,.22)}
+.gameLogEntry{
+  min-height:26px!important;
+  padding:3px 7px!important;
+  gap:4px!important;
+  font-size:10px!important;
+  line-height:1!important;
+  border-radius:999px!important;
+  margin:0!important;
+}
+.gameLogEntry.hintLog{
+  min-height:28px!important;
+  padding:3px 8px 3px 3px!important;
+}
+.gameLogEntry.hintLog b{
+  font-size:11px!important;
+  letter-spacing:.35px!important;
+}
+.gameLogEntry.hintLog span{
+  min-width:20px!important;
+  height:20px!important;
+  padding:0 6px!important;
+  font-size:10px!important;
+}
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog{
+  padding:3px 7px 3px 3px!important;
+}
+.gameLogEntry.pickLog b,
+.gameLogEntry.passLog b,
+.logPickWord{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  font-size:10.5px!important;
+  letter-spacing:.35px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+.logPickWord span{
+  display:inline-block!important;
+  max-width:82px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.logSpyAvatar{
+  width:21px!important;
+  height:21px!important;
+  min-width:21px!important;
+}
+.logUserAvatar{
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.25),0 1px 4px rgba(0,0,0,.35)!important;
+  font-size:10px!important;
+}
+.gameLogEmpty{
+  font-size:10px!important;
+  opacity:.42!important;
+  padding:4px!important;
+}
+@media(max-width:900px){
+  .logLanes{grid-template-columns:1fr;}
+  .logLane{justify-content:flex-start;}
+}
+
+/* v23: unified compact game log, clearer marked/picked state */
+.log,
+.gameLogBox,
+#log{
+  overflow:visible !important;
+  max-height:none !important;
+}
+.logFlow{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  padding:6px;
+  width:100%;
+}
+.logLanes{display:contents !important;}
+.logLane{display:contents !important;}
+.gameLogEntry{
+  min-height:0 !important;
+  padding:4px 6px !important;
+  border-radius:13px !important;
+  gap:4px !important;
+  width:auto !important;
+  max-width:100% !important;
+  flex:0 0 auto;
+}
+.gameLogEntry.hintLog{
+  height:28px !important;
+  padding:3px 7px !important;
+}
+.gameLogEntry.hintLog b{
+  font-size:11px !important;
+  letter-spacing:.45px !important;
+  max-width:90px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.gameLogEntry.hintLog span:not(.fallback){
+  min-width:22px !important;
+  height:22px !important;
+  font-size:10px !important;
+}
+.logSpyAvatar,
+.logUserAvatar{
+  width:20px !important;
+  height:20px !important;
+  min-width:20px !important;
+  border-radius:999px !important;
+  object-fit:cover !important;
+}
+.logPickWord{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:4px !important;
+  height:24px !important;
+  padding:2px 7px 2px 3px !important;
+  border-radius:999px !important;
+  font-size:10px !important;
+  line-height:1 !important;
+  letter-spacing:.35px !important;
+  max-width:125px !important;
+}
+.logPickWord span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.passLog .logPickWord{
+  max-width:84px !important;
+}
+.pickedLabel{
+  z-index:14 !important;
+  bottom:8px !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  font-size:10px !important;
+  letter-spacing:1px !important;
+  padding:4px 10px !important;
+  border-radius:999px !important;
+  min-width:72px !important;
+  text-align:center !important;
+  pointer-events:none !important;
+}
+.pickedLabel.markedLive{
+  color:#061115 !important;
+  background:linear-gradient(180deg,#bdf7ff,#27d6ff) !important;
+  border:1px solid rgba(210,255,255,.95) !important;
+  box-shadow:0 0 18px rgba(39,214,255,.75),0 2px 0 rgba(0,0,0,.28) !important;
+}
+.pickedLabel.pickedRevealed{
+  color:#1d1200 !important;
+  background:linear-gradient(180deg,#fff2b1,#e3ad25) !important;
+  border:1px solid rgba(255,244,185,.95) !important;
+  box-shadow:0 0 15px rgba(255,215,108,.55),0 2px 0 rgba(0,0,0,.28) !important;
+}
+.card.revealed.target{
+  box-shadow:0 16px 24px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.18) !important;
+  border-color:rgba(255,216,119,.26) !important;
+}
+.card.revealed.target::after{display:none !important;}
+
+/* v24: fix game-log picked card names + avatars visibility */
+.gameLogBox,
+#log,
+.log{
+  overflow:visible!important;
+  max-height:none!important;
+}
+.logFlow{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:5px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  padding:5px!important;
+}
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog{
+  min-height:24px!important;
+  height:auto!important;
+  padding:2px 6px 2px 2px!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  max-width:100%!important;
+}
+.gameLogEntry.hintLog{
+  min-height:26px!important;
+  height:26px!important;
+  padding:2px 7px 2px 3px!important;
+  border-radius:999px!important;
+}
+.gameLogEntry.hintLog b{
+  font-size:10px!important;
+  max-width:82px!important;
+}
+.gameLogEntry.hintLog span:not(.fallback){
+  display:inline-grid!important;
+  min-width:19px!important;
+  height:19px!important;
+  padding:0 5px!important;
+  font-size:9px!important;
+}
+.logPickWord{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  height:22px!important;
+  padding:1px 7px 1px 2px!important;
+  border-radius:999px!important;
+  max-width:132px!important;
+  min-width:0!important;
+}
+.gameLogEntry.pickLog b,
+.gameLogEntry.passLog b,
+.logPickWord{
+  font-size:10px!important;
+  line-height:1!important;
+  letter-spacing:.25px!important;
+  white-space:nowrap!important;
+}
+.gameLogEntry.pickLog span,
+.gameLogEntry.passLog span,
+.logPickWord span{
+  display:inline-block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  max-width:88px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.logUserAvatar,
+.logUserAvatar.fallback{
+  display:inline-grid!important;
+  place-items:center!important;
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  border-radius:999px!important;
+  object-fit:cover!important;
+  overflow:hidden!important;
+  font-size:10px!important;
+  background:rgba(0,0,0,.4)!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.25),0 1px 4px rgba(0,0,0,.35)!important;
+}
+.logSpyAvatar,
+.logSpyAvatar.fallback{
+  display:inline-grid!important;
+  place-items:center!important;
+  width:19px!important;
+  height:19px!important;
+  min-width:19px!important;
+  border-radius:999px!important;
+  object-fit:cover!important;
+  font-size:10px!important;
+}
+.passLog .logPickWord{max-width:78px!important;}
+
+/* v25: game log chips fit fully, clue expands, picks show two per row */
+.teamPanelBlack .log,
+#log.log,
+.log{
+  overflow:visible!important;
+  max-height:none!important;
+}
+.logFlow{
+  display:grid!important;
+  grid-template-columns:repeat(2, minmax(0, 1fr))!important;
+  gap:5px!important;
+  align-items:center!important;
+  justify-items:stretch!important;
+  justify-content:stretch!important;
+  width:100%!important;
+  padding:5px!important;
+}
+.gameLogEntry{
+  min-width:0!important;
+  max-width:none!important;
+}
+.gameLogEntry.hintLog{
+  grid-column:1 / -1!important;
+  justify-self:center!important;
+  width:max-content!important;
+  max-width:100%!important;
+  height:25px!important;
+  min-height:25px!important;
+  padding:2px 7px 2px 3px!important;
+  gap:4px!important;
+  overflow:visible!important;
+}
+.gameLogEntry.hintLog b{
+  display:inline-block!important;
+  width:auto!important;
+  max-width:none!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+  font-size:9.5px!important;
+  letter-spacing:.15px!important;
+}
+.gameLogEntry.hintLog span:not(.fallback){
+  width:auto!important;
+  min-width:18px!important;
+  height:18px!important;
+  padding:0 5px!important;
+  font-size:8.5px!important;
+  flex:0 0 auto!important;
+}
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog{
+  width:100%!important;
+  max-width:100%!important;
+  justify-content:center!important;
+  min-height:23px!important;
+  padding:1px 3px!important;
+  overflow:visible!important;
+}
+.logPickWord,
+.gameLogEntry.pickLog b,
+.gameLogEntry.passLog b{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  height:21px!important;
+  padding:1px 4px 1px 1px!important;
+  gap:3px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:visible!important;
+  white-space:nowrap!important;
+  font-size:8.6px!important;
+  letter-spacing:.05px!important;
+  line-height:1!important;
+}
+.gameLogEntry.pickLog span,
+.gameLogEntry.passLog span,
+.logPickWord span{
+  display:inline-block!important;
+  flex:0 1 auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  width:auto!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+.logUserAvatar,
+.logUserAvatar.fallback{
+  width:16px!important;
+  height:16px!important;
+  min-width:16px!important;
+  font-size:8px!important;
+  flex:0 0 16px!important;
+}
+.logSpyAvatar,
+.logSpyAvatar.fallback{
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  flex:0 0 18px!important;
+}
+.passLog .logPickWord{max-width:100%!important;}
+@media(max-width:1350px){
+  .logFlow{gap:4px!important;padding:4px!important;}
+  .logPickWord,.gameLogEntry.pickLog b,.gameLogEntry.passLog b{font-size:7.8px!important;letter-spacing:0!important;}
+  .gameLogEntry.hintLog b{font-size:8.5px!important;}
+  .logUserAvatar,.logUserAvatar.fallback{width:15px!important;height:15px!important;min-width:15px!important;flex-basis:15px!important;}
+}
+
+/* v26: vertically center game-log pick/pass words inside their pill */
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:24px!important;
+  height:24px!important;
+  padding:1px 3px!important;
+  overflow:hidden!important;
+  line-height:1!important;
+}
+.gameLogEntry.pickLog .logPickWord,
+.gameLogEntry.passLog .logPickWord,
+.logPickWord{
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:20px!important;
+  min-height:20px!important;
+  max-height:20px!important;
+  width:100%!important;
+  padding:0 4px 0 1px!important;
+  margin:0!important;
+  gap:3px!important;
+  line-height:20px!important;
+  overflow:hidden!important;
+  vertical-align:middle!important;
+}
+.gameLogEntry.pickLog .logPickWord span,
+.gameLogEntry.passLog .logPickWord span,
+.logPickWord span{
+  display:block!important;
+  height:20px!important;
+  line-height:20px!important;
+  padding:0!important;
+  margin:0!important;
+  transform:translateY(1px)!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+  min-width:0!important;
+}
+.gameLogEntry.pickLog .logUserAvatar,
+.gameLogEntry.passLog .logUserAvatar,
+.gameLogEntry.pickLog .logUserAvatar.fallback,
+.gameLogEntry.passLog .logUserAvatar.fallback{
+  align-self:center!important;
+  width:15px!important;
+  height:15px!important;
+  min-width:15px!important;
+  flex:0 0 15px!important;
+  margin:0!important;
+  transform:none!important;
+}
+.gameLogEntry.hintLog{
+  align-items:center!important;
+  overflow:hidden!important;
+}
+.gameLogEntry.hintLog b{
+  line-height:20px!important;
+  transform:translateY(1px)!important;
+}
+@media(max-width:1350px){
+  .gameLogEntry.pickLog,
+  .gameLogEntry.passLog{height:23px!important;min-height:23px!important;}
+  .gameLogEntry.pickLog .logPickWord,
+  .gameLogEntry.passLog .logPickWord,
+  .logPickWord{height:19px!important;min-height:19px!important;max-height:19px!important;line-height:19px!important;}
+  .gameLogEntry.pickLog .logPickWord span,
+  .gameLogEntry.passLog .logPickWord span,
+  .logPickWord span{height:19px!important;line-height:19px!important;}
+}

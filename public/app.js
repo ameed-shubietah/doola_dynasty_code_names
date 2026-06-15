@@ -745,6 +745,25 @@ function myMarkedIds(){
   const v = state?.voteInfo?.votes?.[myId];
   return Array.isArray(v) ? v : (v !== undefined && v !== null ? [v] : []);
 }
+function votersForCard(cardId){
+  const votes = state?.voteInfo?.votes || {};
+  return Object.entries(votes)
+    .filter(([_, value]) => {
+      const ids = Array.isArray(value) ? value : (value !== undefined && value !== null ? [value] : []);
+      return ids.map(Number).includes(Number(cardId));
+    })
+    .map(([pid]) => state?.players?.[pid])
+    .filter(Boolean);
+}
+function voteFacesHtml(cardId){
+  const voters = votersForCard(cardId);
+  if(!voters.length) return '';
+  return `<div class="voteFaces">${voters.slice(0,4).map(p => {
+    const av = playerAvatar(p);
+    const title = `${p.name || 'Player'} picked this card`;
+    return av ? `<span class="voteFace" title="${title}"><img src="${av}" alt="${p.name || 'player'}"></span>` : `<span class="voteFace fallback" title="${title}">${charEmoji(p.character)}</span>`;
+  }).join('')}${voters.length > 4 ? `<span class="voteFace more">+${voters.length-4}</span>` : ''}</div>`;
+}
 function canConfirmVote(){ return false; }
 function renderVoteConfirm(){
   const btn = $('confirmVoteBtn');
@@ -768,13 +787,16 @@ function renderBoard(){
   }
   const p=me(); const spy = p?.role==='spymaster';
   const marked = myMarkedIds();
-  const boardKey = `${state.id}-${state.round}-${state.board.map(c=>c.word+':'+c.color).join(',')}`;
+  // Spawn animation should happen only for a truly fresh board, not for votes/reveals/turn changes.
+  // Do not include visible colors, revealed state, votes, or round number here because those
+  // change during normal play and would reanimate every card.
+  const boardKey = `${state.id}-${state.board.map(c=>`${c.id}:${c.word}`).join('|')}`;
   const shouldSpawn = boardKey !== lastBoardKey;
   lastBoardKey = boardKey;
   board.innerHTML = state.board.map((c,i)=>{
     const showOrigin = state.status === 'finished';
     const colorClass = ((c.revealed || spy || showOrigin) && c.color) ? c.color : '';
-    const target = c.clueTarget || targetIds.has(c.id);
+    const target = !c.revealed && (c.clueTarget || targetIds.has(c.id));
     const voteCount = state.voteInfo?.counts?.[c.id] || 0;
     const agreed = state.voteInfo?.agreedCardId === c.id;
     const myVote = marked.includes(c.id);
@@ -782,19 +804,33 @@ function renderBoard(){
     const playableSpyTarget = spy && p?.team===state.turn && state.status==='waiting-clue' && c.color===p.team && !c.revealed;
     const canConfirmThis = p?.role==='operative' && p.team===state.turn && state.status==='guessing' && myVote && !c.revealed;
     const voteBadge = voted && !c.revealed ? `<span class="voteBadge ${agreed?'agreed':''}">${voteCount}</span>` : '';
+    const voteFaces = voted && !c.revealed ? voteFacesHtml(c.id) : '';
+    // Spymasters need a clear marker for operative selections.
+    // MARKED = operative selected it but has not confirmed yet.
+    // PICKED = operative confirmed/revealed it, and this stays visible after reveal.
+    const wasPickedByOperative = !!c.revealedById;
+    const markedByOperative = voted && !c.revealed;
+    const pickedText = wasPickedByOperative ? 'PICKED' : (markedByOperative ? 'MARKED' : '');
+    const pickedLabel = spy && pickedText ? `<span class="pickedLabel ${c.revealed ? 'pickedRevealed' : 'markedLive'}">${pickedText}</span>` : '';
     const confirmMini = canConfirmThis ? `<span class="cardConfirm" data-confirm-id="${c.id}" title="Confirm ${c.word}">✓</span>` : '';
     const revealBadge = c.revealed ? revealHeroSvg(c.color) : '';
-    return `<button class="card ${shouldSpawn?'spawnCard':''} ${colorClass} ${c.revealed?'revealed':''} ${showOrigin && !c.revealed?'originShown':''} ${target?'target':''} ${playableSpyTarget?'spyPickable':''} ${voted?'voted':''} ${agreed?'agreed':''} ${myVote?'myVote':''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${confirmMini}</button>`;
+    return `<button class="card ${shouldSpawn?'spawnCard':''} ${colorClass} ${c.revealed?'revealed':''} ${showOrigin && !c.revealed?'originShown':''} ${target?'target':''} ${playableSpyTarget?'spyPickable':''} ${voted?'voted':''} ${agreed?'agreed':''} ${myVote?'myVote':''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${voteFaces}${pickedLabel}${confirmMini}</button>`;
   }).join('');
   board.querySelectorAll('.card').forEach(el=>{
     el.onclick=(ev)=>{
       if(ev.target.closest('.cardConfirm')) return;
       const id = Number(el.dataset.id); const card = state.board.find(c=>c.id===id); const p=me();
       if(!p || !card || card.revealed || state.status==='finished') return;
-      if(p.role==='spymaster' && p.team===state.turn && state.status==='waiting-clue' && !(state?.hintRequested && state.hintRequested.team===p.team)){
+      if(p.role === 'spymaster'){
+        if(state.status !== 'waiting-clue'){ toast('Wait for the clue turn before choosing cards.'); return; }
+        if(p.team !== state.turn){ toast(`It is ${teamName(state.turn)} Team's turn, not your team.`); return; }
+        if(state?.hintRequested && state.hintRequested.team === p.team){ toast('Extra hints do not need card selection.'); return; }
+        if(card.color == null){ toast('Card color is still loading. Try again in a second.'); return; }
         if(card.color !== p.team){ toast('Spymasters can only choose cards from their own team color.'); return; }
         targetIds.has(id) ? targetIds.delete(id) : targetIds.add(id);
-        renderBoard(); syncClueCount(); return;
+        renderBoard();
+        syncClueCount();
+        return;
       }
       if(p.role==='operative' && p.team===state.turn && state.status==='guessing'){
         socket.emit('voteCard', { id });
@@ -860,28 +896,48 @@ function renderPanels(){
 }
 
 function renderLog(){
+  function logAvatar(avatar, by, cls){
+    return avatar
+      ? `<img class="${cls}" src="${avatar}" alt="${by || 'player'}" title="${by || 'player'}"/>`
+      : `<span class="${cls} fallback" title="${by || 'player'}">👤</span>`;
+  }
+
+  function entryTeam(x){
+    const parts = String(x || '').split('|');
+    if(parts[0] === 'HINT') return parts[1] || '';
+    if(parts[0] === 'PICK') return parts[1] || '';
+    if(parts[0] === 'PASS') return parts[1] || '';
+    return '';
+  }
+
   function entryHtml(x){
     const parts = String(x || '').split('|');
     if(parts[0] === 'HINT'){
       const team = parts[1]; const word = parts[2] || ''; const num = parts[3] || ''; const by = parts[4] || ''; const avatar = parts[5] || '';
-      const img = avatar ? `<img class="logSpyAvatar" src="${avatar}" alt="${by || 'spymaster'}"/>` : `<span class="logSpyAvatar fallback">👑</span>`;
+      const img = avatar ? `<img class="logSpyAvatar" src="${avatar}" alt="${by || 'spymaster'}" title="${by || 'spymaster'}"/>` : `<span class="logSpyAvatar fallback" title="${by || 'spymaster'}">👑</span>`;
       return `<div class="gameLogEntry hintLog ${team}">${img}<b>${word}</b><span>${num}</span></div>`;
     }
     if(parts[0] === 'PICK'){
-      const team = parts[1]; const color = parts[2]; const word = parts[3] || '';
-      return `<div class="gameLogEntry pickLog ${color}"><b>${word}</b></div>`;
+      const team = parts[1]; const color = parts[2]; const word = parts[3] || ''; const by = parts[4] || ''; const avatar = parts[5] || '';
+      const face = logAvatar(avatar, by, 'logUserAvatar');
+      return `<div class="gameLogEntry pickLog ${color}" title="${by || 'Player'} chose ${word}"><b class="logPickWord">${face}<span>${word}</span></b></div>`;
     }
     if(parts[0] === 'PASS'){
-      const team = parts[1];
-      return `<div class="gameLogEntry passLog ${team}"><b>PASS</b></div>`;
+      const team = parts[1]; const by = parts[2] || ''; const avatar = parts[3] || '';
+      const face = logAvatar(avatar, by, 'logUserAvatar');
+      return `<div class="gameLogEntry passLog ${team}" title="${by || 'Player'} passed"><b class="logPickWord">${face}<span>PASS</span></b></div>`;
     }
     return '';
   }
-  const html = state.log.map(entryHtml).filter(Boolean).join('');
+
+  const entries = (state.log || []).filter(x => ['blue','red'].includes(entryTeam(x)));
+  const html = entries.length
+    ? `<div class="logFlow">${entries.map(entryHtml).filter(Boolean).join('')}</div>`
+    : '<div class="gameLogEmpty">No guesses yet</div>';
   const mainLog = $('log');
-  if(mainLog){ mainLog.innerHTML = html || '<div class="gameLogEmpty">No guesses yet</div>'; }
+  if(mainLog){ mainLog.innerHTML = html; }
   const hiddenLog = $('logHidden');
-  if(hiddenLog){ hiddenLog.innerHTML = html || '<div class="gameLogEmpty">No guesses yet</div>'; }
+  if(hiddenLog){ hiddenLog.innerHTML = html; }
 }
 
 const adminRequestYes = $('adminRequestYes');

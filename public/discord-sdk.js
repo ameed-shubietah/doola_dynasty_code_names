@@ -4,16 +4,24 @@ const DISCORD_CLIENT_ID = "1514895948197793893";
 
 function avatarUrl(user){
   if(!user) return '';
-  const id = user.id || user.user_id;
-  const avatar = user.avatar || user.avatar_hash;
-  if(id && avatar) return `https://cdn.discordapp.com/avatars/${id}/${avatar}.png?size=256`;
+  const direct = user.avatar_url || user.avatarUrl || user.display_avatar_url || user.displayAvatarURL || user.image_url || user.image || user.icon_url || user.icon;
+  if(direct && /^https?:\/\//i.test(String(direct))) return String(direct);
+  const id = user.id || user.user_id || user.userId;
+  const avatar = user.avatar || user.avatar_hash || user.avatarHash;
+  if(avatar && /^https?:\/\//i.test(String(avatar))) return String(avatar);
+  if(id && avatar){
+    const ext = String(avatar).startsWith('a_') ? 'gif' : 'png';
+    return `https://cdn.discordapp.com/avatars/${id}/${avatar}.${ext}?size=256`;
+  }
   if(id){
     try{
       const idx = Number((BigInt(id) >> 22n) % 6n);
       return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
     }catch{}
   }
-  return '';
+  const disc = user.discriminator;
+  if(disc && disc !== '0') return `https://cdn.discordapp.com/embed/avatars/${Number(disc) % 5}.png`;
+  return 'https://cdn.discordapp.com/embed/avatars/0.png';
 }
 
 function displayName(user){
@@ -25,9 +33,9 @@ function normalizeParticipant(p){
   const user = p?.user || p;
   return {
     id: user?.id || p?.id || p?.user_id || '',
-    name: displayName(user),
-    username: user?.username || '',
-    avatar: avatarUrl(user),
+    name: displayName(user) || displayName(p),
+    username: user?.username || p?.username || '',
+    avatar: avatarUrl(user) || avatarUrl(p),
     raw: p
   };
 }
