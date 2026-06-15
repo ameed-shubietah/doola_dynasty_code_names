@@ -2376,3 +2376,58 @@ body.discordActivity .playerBody b{white-space:nowrap;overflow:hidden;text-overf
 .discordIdentityCard.profileWaiting{opacity:.85;filter:saturate(.8)}
 .discordIdentityCard .identityAvatar{width:50px!important;height:50px!important;border-radius:18px!important;}
 .discordRoleJoin:disabled{opacity:.45;filter:grayscale(.5);cursor:not-allowed;}
+
+/* v32: keep Start Game visible above Discord footer + bigger lobby avatars */
+body.discordActivity #landingAdminBar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:8px auto 12px;
+  min-height:48px;
+  position:relative;
+  z-index:30;
+}
+body.discordActivity #landingAdminBar.hidden{display:none!important;}
+body.discordActivity #landingStartGameBtn{
+  min-width:190px;
+  height:48px;
+  border-radius:999px;
+  font-size:18px;
+  padding:0 24px;
+  box-shadow:0 0 28px rgba(255,215,108,.42),0 12px 26px rgba(0,0,0,.38);
+}
+body.discordActivity .discordLobby{margin-top:8px; padding-bottom:96px;}
+body.discordActivity .discordSeatMini.discordSeatLarge{
+  min-height:58px;
+  padding:8px 12px 8px 8px;
+  border-radius:999px;
+  gap:10px;
+  max-width:100%;
+}
+body.discordActivity .discordSeatMini.discordSeatLarge .avatar.lobbyAvatar{
+  width:50px!important;
+  height:50px!important;
+  min-width:50px!important;
+  border-radius:18px!important;
+  font-size:22px!important;
+  box-shadow:0 0 0 2px rgba(255,215,108,.38),0 8px 18px rgba(0,0,0,.42);
+}
+body.discordActivity .discordSeatMini.discordSeatLarge .avatar.lobbyAvatar img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  border-radius:inherit!important;
+}
+body.discordActivity .discordSeatMini.discordSeatLarge span{
+  font-size:15px;
+  max-width:120px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body.discordActivity .avatarBroken::before{content:'🕵️';}
+@media(max-height:760px){
+  body.discordActivity .landing{margin:1.2vh auto; padding-bottom:16px;}
+  body.discordActivity .discordLobby{padding-bottom:110px;}
+  body.discordActivity #landingStartGameBtn{height:44px;font-size:16px;}
+}
