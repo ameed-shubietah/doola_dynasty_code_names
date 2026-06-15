@@ -181,9 +181,7 @@ function discordUser(){
   if(direct && (direct.id || direct.name || direct.avatar)) return direct;
   return null;
 }
-function playerAvatar(p){
-  return p?.avatar || p?.avatarUrl || p?.avatar_url || p?.display_avatar_url || p?.displayAvatarURL || p?.image_url || p?.imageUrl || '';
-}
+function playerAvatar(p){ return p?.avatar || p?.avatarUrl || p?.avatar_url || ''; }
 function discordProfileReady(){
   const u = discordUser();
   return !!(u && (u.id || (u.name && u.name !== 'Discord User') || u.avatar));
@@ -220,19 +218,14 @@ function renderDiscordIdentity(){
     card.innerHTML = `${avatarHtml({ name:u.name, avatar:u.avatar, role:'operative' }, 'identityAvatar')}<div><b>${u.name || 'Discord User'}</b><span>Discord profile ready</span></div>`;
   } else {
     const err = window.DD_PROFILE_ERROR || '';
-    const fallbackName = (nameInput?.value || localStorage.cc_name || '').trim();
-    card.classList.toggle('profileWaiting', !fallbackName);
-    if(fallbackName){
-      card.innerHTML = `${avatarHtml({ name:fallbackName, role:'operative' }, 'identityAvatar')}<div><b>${fallbackName}</b><span>Discord avatar still loading</span></div>`;
-    } else {
-      card.innerHTML = `<div class="avatar identityAvatar">⏳</div><div><b>Discord profile loading</b><span>${err ? 'Profile not ready yet — you can still join.' : 'You can join while it loads.'}</span></div>`;
-    }
+    card.classList.add('profileWaiting');
+    card.innerHTML = `<div class="avatar identityAvatar">⏳</div><div><b>Discord profile loading</b><span>${err ? 'Profile not ready yet — you can still join.' : 'You can join while it loads.'}</span></div>`;
   }
 }
 function avatarHtml(p, extra=''){
   const crown = p?.role === 'spymaster' ? '<span class="crownMark">👑</span>' : '';
   const av = playerAvatar(p);
-  if(av) return `<div class="avatar avatarPic ${extra}"><img src="${av}" alt="${p.name || 'player'}" referrerpolicy="no-referrer" onerror="this.closest('.avatarPic')?.classList.add('avatarBroken'); this.remove();"/>${crown}</div>`;
+  if(av) return `<div class="avatar avatarPic ${extra}"><img src="${av}" alt="${p.name || 'player'}"/>${crown}</div>`;
   return `<div class="avatar ${extra}">${charEmoji(p?.character)}${crown}</div>`;
 }
 
