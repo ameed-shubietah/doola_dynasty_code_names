@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Doola's Dynasty Code Names</title>
-    <link rel="stylesheet" href="/style.css?v=32"/>
+    <link rel="stylesheet" href="/style.css?v=30"/>
 </head>
 <body>
 <div id="app">
@@ -48,17 +48,6 @@
         </div>
         <div id="lobbyPreview" class="lobbyPreview hidden"></div>
         <div id="characterPick" class="characters"></div>
-        <div id="landingAdminBar" class="landingAdminBar hidden">
-            <button id="landingStartGameBtn" class="primary landingStartGameBtn hidden" type="button">Start Game</button>
-            <div id="landingOptionsWrap" class="optionsWrap hidden">
-                <button class="optionsBtn" type="button">Options ▾</button>
-                <div class="optionsMenu">
-                    <button id="landingResetTableBtn" type="button">Reset Table</button>
-                    <button id="landingShuffleTeamsBtn" type="button">Shuffle Teams</button>
-                    <button id="landingChangeWordListBtn" type="button">Change Word List</button>
-                </div>
-            </div>
-        </div>
         <div id="discordLobby" class="discordLobby hidden" aria-label="Discord Activity lobby">
             <div class="discordLobbyTop">
                 <button id="discordInviteBtn" class="discordInviteBtn" type="button" title="Invite Discord friends">👥 + Invite Friends</button>
@@ -92,6 +81,17 @@
                         <button type="button" class="discordRoleJoin primary" data-team="red" data-role="spymaster">Join</button>
                     </div>
                 </section>
+            </div>
+        </div>
+        <div id="landingAdminBar" class="landingAdminBar hidden">
+            <button id="landingStartGameBtn" class="primary landingStartGameBtn hidden" type="button">Start Game</button>
+            <div id="landingOptionsWrap" class="optionsWrap hidden">
+                <button class="optionsBtn" type="button">Options ▾</button>
+                <div class="optionsMenu">
+                    <button id="landingResetTableBtn" type="button">Reset Table</button>
+                    <button id="landingShuffleTeamsBtn" type="button">Shuffle Teams</button>
+                    <button id="landingChangeWordListBtn" type="button">Change Word List</button>
+                </div>
             </div>
         </div>
         <div class="actions">
@@ -247,8 +247,8 @@
 <script>
   window.FORCE_DISCORD_ACTIVITY = true;
 </script>
-<script type="module" src="/discord-sdk.js?v=32"></script>
+<script type="module" src="/discord-sdk.js?v=30"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js?v=32"></script>
+<script src="/app.js?v=30"></script>
 </body>
 </html>

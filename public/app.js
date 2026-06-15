@@ -181,22 +181,7 @@ function discordUser(){
   if(direct && (direct.id || direct.name || direct.avatar)) return direct;
   return null;
 }
-function proxyDiscordAvatarUrl(url){
-  const raw = String(url || '').trim();
-  if(!raw) return '';
-  if(raw.startsWith('/api/avatar?')) return raw;
-  if(/^https?:\/\//i.test(raw)){
-    try{
-      const u = new URL(raw);
-      const host = u.hostname.toLowerCase();
-      const allowed = host === 'cdn.discordapp.com' || host === 'media.discordapp.net' || host.endsWith('.discordapp.com') || host.endsWith('.discord.com');
-      if(allowed) return `/api/avatar?url=${encodeURIComponent(raw)}`;
-    }catch{}
-    return raw;
-  }
-  return raw;
-}
-function playerAvatar(p){ return proxyDiscordAvatarUrl(p?.avatar || p?.avatarUrl || p?.avatar_url || ''); }
+function playerAvatar(p){ return p?.avatar || p?.avatarUrl || p?.avatar_url || ''; }
 function discordProfileReady(){
   const u = discordUser();
   return !!(u && (u.id || (u.name && u.name !== 'Discord User') || u.avatar));
@@ -240,7 +225,7 @@ function renderDiscordIdentity(){
 function avatarHtml(p, extra=''){
   const crown = p?.role === 'spymaster' ? '<span class="crownMark">👑</span>' : '';
   const av = playerAvatar(p);
-  if(av) return `<div class="avatar avatarPic ${extra}"><img src="${av}" alt="${p.name || 'player'}" onerror="this.remove();this.parentElement.classList.remove('avatarPic');this.parentElement.classList.add('avatarBroken');"/>${crown}</div>`;
+  if(av) return `<div class="avatar avatarPic ${extra}"><img src="${av}" alt="${p.name || 'player'}"/>${crown}</div>`;
   return `<div class="avatar ${extra}">${charEmoji(p?.character)}${crown}</div>`;
 }
 

@@ -10,25 +10,6 @@ function pick(obj, keys) {
   return '';
 }
 
-
-function proxiedAvatar(url) {
-  const raw = String(url || '').trim();
-  if (!raw) return '';
-  if (/^\/api\/avatar\?/i.test(raw)) return raw;
-  // Discord Activity iframes can be picky with external image loads. Proxy Discord/CDN
-  // avatars through our own app domain so <img> always has a same-origin URL.
-  if (/^https?:\/\//i.test(raw)) {
-    try {
-      const u = new URL(raw);
-      const host = u.hostname.toLowerCase();
-      const allowed = host === 'cdn.discordapp.com' || host === 'media.discordapp.net' || host.endsWith('.discordapp.com') || host.endsWith('.discord.com');
-      if (allowed) return `/api/avatar?url=${encodeURIComponent(raw)}`;
-    } catch {}
-    return raw;
-  }
-  return raw;
-}
-
 function withTimeout(promise, ms, label = 'Timed out') {
   return Promise.race([
     promise,
@@ -44,27 +25,27 @@ function avatarUrl(user) {
     'display_avatar', 'displayAvatar', 'image_url', 'imageUrl', 'image',
     'icon_url', 'iconUrl', 'icon', 'photo', 'photoURL', 'photo_url'
   ]);
-  if (direct && /^https?:\/\//i.test(String(direct))) return proxiedAvatar(String(direct));
+  if (direct && /^https?:\/\//i.test(String(direct))) return String(direct);
 
   const id = pick(user, ['id', 'user_id', 'userId', 'discord_id', 'discordId']);
   const avatar = pick(user, ['avatar', 'avatar_hash', 'avatarHash', 'avatar_id', 'avatarId']);
 
-  if (avatar && /^https?:\/\//i.test(String(avatar))) return proxiedAvatar(String(avatar));
+  if (avatar && /^https?:\/\//i.test(String(avatar))) return String(avatar);
 
   if (id && avatar && avatar !== 'null') {
     const ext = String(avatar).startsWith('a_') ? 'gif' : 'png';
-    return proxiedAvatar(`https://cdn.discordapp.com/avatars/${id}/${avatar}.${ext}?size=256`);
+    return `https://cdn.discordapp.com/avatars/${id}/${avatar}.${ext}?size=256`;
   }
 
   const discriminator = pick(user, ['discriminator']);
   if (discriminator && discriminator !== '0') {
-    return proxiedAvatar(`https://cdn.discordapp.com/embed/avatars/${Number(discriminator) % 5}.png`);
+    return `https://cdn.discordapp.com/embed/avatars/${Number(discriminator) % 5}.png`;
   }
 
   if (id) {
     try {
       const idx = Number((BigInt(id) >> 22n) % 6n);
-      return proxiedAvatar(`https://cdn.discordapp.com/embed/avatars/${idx}.png`);
+      return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
     } catch {}
   }
 
@@ -174,23 +155,6 @@ async function getAuthenticatedUser(discordSdk) {
     const tokenData = await tokenRes.json().catch(() => ({}));
     if (!tokenRes.ok || !tokenData?.access_token) {
       throw new Error(tokenData?.error || 'Could not exchange Discord OAuth code.');
-    }
-
-    // Fetch the same authenticated user from Discord's REST API through our server.
-    // This is the most reliable way to get the avatar hash, then we proxy the image.
-    try {
-      const meRes = await withTimeout(fetch('/api/discord-me', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ access_token: tokenData.access_token })
-      }), 6000, 'Discord /users/@me timeout');
-      const meData = await meRes.json().catch(() => ({}));
-      if (meRes.ok && meData?.user) {
-        const fromApi = setCurrentUser(meData.user, 'users-me');
-        if (fromApi?.avatar) return fromApi;
-      }
-    } catch (meErr) {
-      console.warn('Discord /users/@me profile lookup failed:', meErr);
     }
 
     const authRes = await withTimeout(

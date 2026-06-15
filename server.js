@@ -50,52 +50,6 @@ app.post('/api/discord-token', async (req, res) => {
   }
 });
 
-app.post('/api/discord-me', async (req, res) => {
-  try {
-    const token = String(req.body?.access_token || '').trim();
-    if (!token) return res.status(400).json({ ok:false, error:'Missing Discord access token.' });
-
-    const meRes = await fetch('https://discord.com/api/users/@me', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const user = await meRes.json().catch(() => ({}));
-    if (!meRes.ok || !user?.id) {
-      return res.status(meRes.status || 500).json({ ok:false, error:user?.message || user?.error || 'Could not fetch Discord profile.' });
-    }
-    res.json({ ok:true, user });
-  } catch (err) {
-    res.status(500).json({ ok:false, error:err?.message || 'Could not fetch Discord profile.' });
-  }
-});
-
-app.get('/api/avatar', async (req, res) => {
-  try {
-    const raw = String(req.query?.url || '').trim();
-    if (!raw) return res.status(400).send('Missing avatar URL');
-
-    let parsed;
-    try { parsed = new URL(raw); }
-    catch { return res.status(400).send('Bad avatar URL'); }
-
-    const host = parsed.hostname.toLowerCase();
-    const allowed = host === 'cdn.discordapp.com' || host === 'media.discordapp.net' || host.endsWith('.discordapp.com') || host.endsWith('.discord.com');
-    if (!allowed || !/^https:$/.test(parsed.protocol)) return res.status(403).send('Avatar host not allowed');
-
-    const avatarRes = await fetch(parsed.toString(), {
-      headers: { 'User-Agent': 'DoolaDynastyCodeNames/1.0' }
-    });
-    if (!avatarRes.ok) return res.status(avatarRes.status).send('Avatar fetch failed');
-
-    const contentType = avatarRes.headers.get('content-type') || 'image/png';
-    const arrayBuffer = await avatarRes.arrayBuffer();
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.send(Buffer.from(arrayBuffer));
-  } catch (err) {
-    res.status(500).send('Avatar proxy failed');
-  }
-});
-
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
