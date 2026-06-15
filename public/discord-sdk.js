@@ -2,12 +2,24 @@ import { DiscordSDK, Events } from "https://cdn.jsdelivr.net/npm/@discord/embedd
 
 const DISCORD_CLIENT_ID = "1514895948197793893";
 
+function pick(obj, keys){
+  for(const key of keys){
+    const value = obj?.[key];
+    if(value !== undefined && value !== null && String(value).trim() !== '') return value;
+  }
+  return '';
+}
+
 function avatarUrl(user){
   if(!user) return '';
-  const direct = user.avatar_url || user.avatarUrl || user.display_avatar_url || user.displayAvatarURL || user.image_url || user.image || user.icon_url || user.icon;
+  const direct = pick(user, [
+    'avatar_url','avatarUrl','display_avatar_url','displayAvatarURL','display_avatar','displayAvatar',
+    'image_url','imageUrl','image','icon_url','iconUrl','icon','photo','photoURL','photo_url'
+  ]);
   if(direct && /^https?:\/\//i.test(String(direct))) return String(direct);
-  const id = user.id || user.user_id || user.userId;
-  const avatar = user.avatar || user.avatar_hash || user.avatarHash;
+
+  const id = pick(user, ['id','user_id','userId','discord_id','discordId']);
+  const avatar = pick(user, ['avatar','avatar_hash','avatarHash','avatar_id','avatarId']);
   if(avatar && /^https?:\/\//i.test(String(avatar))) return String(avatar);
   if(id && avatar){
     const ext = String(avatar).startsWith('a_') ? 'gif' : 'png';
@@ -19,26 +31,39 @@ function avatarUrl(user){
       return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
     }catch{}
   }
-  const disc = user.discriminator;
+  const disc = pick(user, ['discriminator']);
   if(disc && disc !== '0') return `https://cdn.discordapp.com/embed/avatars/${Number(disc) % 5}.png`;
   return 'https://cdn.discordapp.com/embed/avatars/0.png';
 }
 
 function displayName(user){
   if(!user) return 'Discord User';
-  return user.global_name || user.display_name || user.username || user.name || 'Discord User';
+  return pick(user, [
+    'global_name','globalName','display_name','displayName','nick','nickname','username','name'
+  ]) || 'Discord User';
 }
 
 function normalizeParticipant(p){
-  const user = p?.user || p;
+  const user = p?.user || p?.member?.user || p;
+  const merged = { ...(p || {}), ...(user || {}) };
   return {
-    id: user?.id || p?.id || p?.user_id || '',
-    name: displayName(user) || displayName(p),
-    username: user?.username || p?.username || '',
-    avatar: avatarUrl(user) || avatarUrl(p),
+    id: pick(merged, ['id','user_id','userId','discord_id','discordId']),
+    name: displayName(merged),
+    username: pick(merged, ['username','name']),
+    avatar: avatarUrl(merged),
     raw: p
   };
 }
+
+function setCurrentUserFromParticipants(participants){
+  const chosen = (participants || []).find(p => p?.id || p?.name || p?.avatar) || null;
+  if(chosen){
+    window.DD_CURRENT_USER = chosen;
+    if(window.DD_DISCORD) window.DD_DISCORD.currentUser = chosen;
+  }
+  return chosen;
+}
+
 
 async function initDiscordActivity() {
   try {
@@ -56,9 +81,9 @@ async function initDiscordActivity() {
       console.warn("Could not fetch Discord participants", err);
     }
 
-    // In most Discord Activity clients, the current user is the first local participant returned.
-    // If Discord changes the shape, the game still falls back to the typed/local name.
-    const currentUser = participants[0] || null;
+    // In most Discord Activity clients, the local/current participant is first.
+    // If Discord returns the participant list a little late, the update event below refreshes it.
+    const currentUser = setCurrentUserFromParticipants(participants);
 
     window.DD_DISCORD = {
       enabled: true,
@@ -70,7 +95,7 @@ async function initDiscordActivity() {
       participants,
       currentUser
     };
-    window.DD_CURRENT_USER = currentUser;
+    window.DD_CURRENT_USER = currentUser || window.DD_CURRENT_USER || null;
     window.DD_PARTICIPANTS = participants;
 
     window.DD_openInviteDialog = async function () {
@@ -87,6 +112,7 @@ async function initDiscordActivity() {
         const list = Array.isArray(payload?.participants) ? payload.participants : (Array.isArray(payload) ? payload : []);
         if(list.length){
           window.DD_PARTICIPANTS = list.map(normalizeParticipant);
+          setCurrentUserFromParticipants(window.DD_PARTICIPANTS);
           window.dispatchEvent(new CustomEvent("discordParticipantsChanged", { detail: window.DD_PARTICIPANTS }));
         }
       } catch(err){ console.warn('participants update failed', err); }

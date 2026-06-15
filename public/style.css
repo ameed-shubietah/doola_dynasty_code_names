@@ -2294,3 +2294,63 @@ body.discordActivity .playerBody b{white-space:nowrap;overflow:hidden;text-overf
   .gameLogEntry.passLog .logPickWord span,
   .logPickWord span{height:19px!important;line-height:19px!important;}
 }
+
+/* v27 Discord lobby identity + no duplicate seats polish */
+.discordLobby .discordSeatList{
+  gap:10px;
+  align-items:center;
+}
+.discordLobby .discordSeatMini.discordSeatLarge{
+  min-height:58px;
+  padding:6px 10px 6px 7px;
+  border-radius:22px;
+  gap:9px;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.36));
+  border:1px solid rgba(255,215,108,.32);
+  box-shadow:0 8px 18px rgba(0,0,0,.28);
+}
+.discordLobby .discordSeatMini.discordSeatLarge .avatar,
+.discordLobby .discordSeatMini.discordSeatLarge .lobbyAvatar{
+  width:50px!important;
+  height:50px!important;
+  min-width:50px!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+  background:rgba(255,255,255,.1)!important;
+  box-shadow:0 0 0 2px rgba(255,215,108,.32), 0 6px 14px rgba(0,0,0,.35);
+}
+.discordLobby .discordSeatMini.discordSeatLarge .avatar img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+}
+.discordLobby .discordSeatMini.discordSeatLarge span{
+  max-width:110px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:13px;
+  line-height:1;
+}
+.discordLobby .discordSeatMini.discordSeatLarge em{
+  font-size:9px;
+  padding:3px 6px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#ffe27a,#a77200);
+  color:#211300;
+}
+.discordIdentityCard .avatar,
+.discordIdentityCard .avatarPic{
+  width:44px!important;
+  height:44px!important;
+  border-radius:16px!important;
+  overflow:hidden!important;
+}
+.discordIdentityCard .avatar img,
+.avatarPic img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}

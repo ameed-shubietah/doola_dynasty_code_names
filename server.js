@@ -123,7 +123,15 @@ function newRoom(id) {
 function roomLobbyInfo(room) {
   const players = Object.values(room.players || {});
   const online = players.filter(p => p.online !== false);
-  const byTeamRole = (team, role) => online.filter(p => p.team === team && p.role === role).map(p => ({ id:p.id, name:p.name, avatar:p.avatar, discordId:p.discordId, isAdmin:!!p.isAdmin }));
+  const byTeamRole = (team, role) => {
+    const seen = new Set();
+    return online.filter(p => p.team === team && p.role === role).filter(p => {
+      const key = p.discordId || p.id || p.socketId || p.name;
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).map(p => ({ id:p.id, name:p.name, avatar:p.avatar, discordId:p.discordId, isAdmin:!!p.isAdmin }));
+  };
   const byTeam = t => online.filter(p => p.team === t);
   const spies = t => byTeam(t).filter(p => p.role === 'spymaster').map(p => p.name);
   return {
@@ -305,6 +313,8 @@ io.on('connection', socket => {
     socket.join(room.id);
     let key = safePlayerKey(playerKey);
     let existing = room.players[key];
+    const previousKey = socket.data.playerKey && String(socket.data.playerKey);
+    let previousPlayer = previousKey && previousKey !== key ? room.players[previousKey] : null;
     const incomingName = cleanName(name);
     const incomingNameKey = nameKey(incomingName);
     avatar = safeText(avatar, 300);
@@ -321,12 +331,35 @@ io.on('connection', socket => {
     if (discordId) {
       for (const [pid, oldPlayer] of Object.entries(room.players)) {
         if (pid !== key && oldPlayer.discordId && oldPlayer.discordId === discordId) {
+          // Same Discord user can only occupy one seat. Moving roles replaces the old seat.
+          if (oldPlayer.isAdmin && !forceAdmin) adminToken = room.adminToken;
           delete room.players[pid];
           delete room.votes?.[pid];
         }
       }
       existing = room.players[key];
     }
+
+    // If the same open Discord frame clicks Join again with a different fallback key, move the same seat.
+    // This prevents one user from appearing in several team/role blocks.
+    if (previousPlayer && !existing) {
+      if (previousPlayer.isAdmin && !forceAdmin) adminToken = room.adminToken;
+      delete room.players[previousKey];
+      delete room.votes?.[previousKey];
+      previousPlayer.id = key;
+      room.players[key] = previousPlayer;
+      existing = previousPlayer;
+    }
+
+    // Extra safety: same socket can never keep old seats in the same room.
+    for (const [pid, oldPlayer] of Object.entries(room.players)) {
+      if (pid !== key && oldPlayer.socketId === socket.id) {
+        if (oldPlayer.isAdmin && !forceAdmin) adminToken = room.adminToken;
+        delete room.players[pid];
+        delete room.votes?.[pid];
+      }
+    }
+    existing = room.players[key];
 
     if (existing && existing.online !== false && !discordId && !String(key).startsWith('d_')) {
       key = freshPlayerKey(room);

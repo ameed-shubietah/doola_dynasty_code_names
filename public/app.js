@@ -174,14 +174,35 @@ function hasOnlineSpymaster(team){ return Object.values(state?.players || {}).so
 function spymasterName(team){ const p = Object.values(state?.players || {}).find(p => p.online !== false && p.team === team && p.role === 'spymaster'); return p?.name || null; }
 
 
-function discordUser(){ return window.DD_CURRENT_USER || window.DD_DISCORD?.currentUser || null; }
-function playerAvatar(p){ return p?.avatar || ''; }
+function discordUser(){
+  const direct = window.DD_CURRENT_USER || window.DD_DISCORD?.currentUser || null;
+  if(direct && (direct.id || direct.name || direct.avatar)) return direct;
+  const list = Array.isArray(window.DD_PARTICIPANTS) ? window.DD_PARTICIPANTS : [];
+  return list.find(u => u?.id || u?.name || u?.avatar) || direct || null;
+}
+function playerAvatar(p){ return p?.avatar || p?.avatarUrl || p?.avatar_url || ''; }
 function playerNameFromDiscord(){ return discordUser()?.name || ''; }
+function stableDiscordFallbackKey(roomCode=''){
+  const base = localStorage.cc_playerKey || playerKey || ('p_' + Math.random().toString(36).slice(2) + Date.now().toString(36));
+  const safe = String(base).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,48) || 'local';
+  const room = String(roomCode || getDiscordActivityRoomCode?.() || 'room').replace(/[^a-zA-Z0-9]/g,'').slice(0,12) || 'room';
+  return `d_local_${room}_${safe}`;
+}
 function ensureDiscordIdentity(){
+  if(!isDiscordActivity) return;
   const u = discordUser();
-  if(!isDiscordActivity || !u) return;
-  if(nameInput){ nameInput.value = u.name || 'Discord User'; localStorage.cc_name = nameInput.value; }
-  if(u.id){ playerKey = `d_${u.id}`; myId = playerKey; localStorage.cc_playerKey = playerKey; }
+  const roomCode = (typeof getDiscordActivityRoomCode === 'function') ? getDiscordActivityRoomCode() : '';
+  if(u){
+    if(nameInput){ nameInput.value = u.name || nameInput.value || 'Discord User'; localStorage.cc_name = nameInput.value; }
+    if(u.id){ playerKey = `d_${u.id}`; myId = playerKey; localStorage.cc_playerKey = playerKey; return; }
+  }
+  // Discord sometimes gives the profile slightly late. Until then, still use one stable Discord-mode key
+  // so clicking Join again moves the same seat instead of creating duplicates.
+  if(!String(playerKey || '').startsWith('d_')){
+    playerKey = stableDiscordFallbackKey(roomCode);
+    myId = playerKey;
+    localStorage.cc_playerKey = playerKey;
+  }
 }
 
 function renderDiscordIdentity(){
@@ -281,15 +302,21 @@ function getDiscordActivityRoomCode(){
   return roomCodeFromSeed(seed);
 }
 function discordJoinPayload(team, role){
+  const roomCode = getDiscordActivityRoomCode();
   ensureDiscordIdentity();
   const u = discordUser();
-  const finalName = u?.name || nameInput.value.trim() || 'Discord User';
-  const finalAvatar = u?.avatar || '';
+  const finalName = u?.name || nameInput.value.trim() || localStorage.cc_name || 'Discord User';
+  const finalAvatar = playerAvatar(u) || '';
   const finalDiscordId = u?.id || '';
-  if(finalDiscordId){ playerKey = `d_${finalDiscordId}`; myId = playerKey; localStorage.cc_playerKey = playerKey; }
+  if(finalDiscordId){
+    playerKey = `d_${finalDiscordId}`;
+  } else if(!String(playerKey || '').startsWith('d_')){
+    playerKey = stableDiscordFallbackKey(roomCode);
+  }
+  myId = playerKey;
+  localStorage.cc_playerKey = playerKey;
   localStorage.cc_name = finalName;
   nameInput.value = finalName;
-  const roomCode = getDiscordActivityRoomCode();
   roomInput.value = roomCode;
   discordActivityRoomCode = roomCode;
   return {
@@ -362,12 +389,20 @@ window.addEventListener('discordActivityReady', (event)=>{
 
   syncDiscordLanding();
 });
-window.addEventListener('discordParticipantsChanged', ()=>{ ensureDiscordIdentity(); refreshDiscordLobbyPreview(true); });
+window.addEventListener('discordParticipantsChanged', ()=>{ ensureDiscordIdentity(); renderDiscordIdentity(); refreshDiscordLobbyPreview(true); });
 
 
 function roleListHtml(players){
   if(!players || !players.length) return '<div class="discordSeatEmpty">empty</div>';
-  return players.map(p=>`<div class="discordSeatMini">${avatarHtml(p)}<span>${p.name || 'Player'}</span>${p.isAdmin?'<em>Admin</em>':''}</div>`).join('');
+  const seen = new Set();
+  const unique = [];
+  for(const p of players){
+    const key = p?.discordId || p?.id || `${p?.name || 'player'}_${unique.length}`;
+    if(seen.has(key)) continue;
+    seen.add(key);
+    unique.push(p);
+  }
+  return unique.map(p=>`<div class="discordSeatMini discordSeatLarge">${avatarHtml(p,'lobbyAvatar')}<span>${p.name || 'Player'}</span>${p.isAdmin?'<em>Admin</em>':''}</div>`).join('');
 }
 function paintDiscordLobby(info){
   if(!info?.ok) return;
