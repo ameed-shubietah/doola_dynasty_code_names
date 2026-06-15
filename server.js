@@ -44,7 +44,32 @@ app.post('/api/discord-token', async (req, res) => {
       return res.status(tokenRes.status || 500).json({ ok:false, error:data.error_description || data.error || 'Discord token exchange failed.' });
     }
 
-    res.json({ ok:true, access_token:data.access_token, token_type:data.token_type, expires_in:data.expires_in, scope:data.scope });
+    let user = null;
+    try {
+      const userRes = await fetch('https://discord.com/api/users/@me', {
+        headers: { Authorization: `${data.token_type || 'Bearer'} ${data.access_token}` }
+      });
+      const userData = await userRes.json().catch(() => ({}));
+      if (userRes.ok && userData && userData.id) {
+        const avatarHash = userData.avatar || '';
+        const avatarExt = String(avatarHash).startsWith('a_') ? 'gif' : 'png';
+        const avatarUrl = avatarHash
+          ? `https://cdn.discordapp.com/avatars/${userData.id}/${avatarHash}.${avatarExt}?size=256`
+          : `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(userData.id) >> 22n) % 6}.png`;
+        user = {
+          id: userData.id,
+          username: userData.username || '',
+          global_name: userData.global_name || '',
+          display_name: userData.global_name || userData.username || '',
+          avatar: avatarHash,
+          avatar_url: avatarUrl
+        };
+      }
+    } catch (userErr) {
+      console.warn('Discord /users/@me lookup failed:', userErr?.message || userErr);
+    }
+
+    res.json({ ok:true, access_token:data.access_token, token_type:data.token_type, expires_in:data.expires_in, scope:data.scope, user });
   } catch (err) {
     res.status(500).json({ ok:false, error:err?.message || 'Discord token exchange failed.' });
   }

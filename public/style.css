@@ -2376,3 +2376,17 @@ body.discordActivity .playerBody b{white-space:nowrap;overflow:hidden;text-overf
 .discordIdentityCard.profileWaiting{opacity:.85;filter:saturate(.8)}
 .discordIdentityCard .identityAvatar{width:50px!important;height:50px!important;border-radius:18px!important;}
 .discordRoleJoin:disabled{opacity:.45;filter:grayscale(.5);cursor:not-allowed;}
+
+/* v31: Discord avatar fallback when CDN image is missing/late */
+.avatar.avatarPic.avatarBroken::before{
+  content:"👤";
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+  font-size:18px;
+}
+.discordSeatLarge .avatar.avatarPic.avatarBroken::before,
+.identityAvatar.avatarBroken::before{
+  font-size:26px;
+}
