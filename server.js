@@ -7,6 +7,7 @@ const fs = require('fs');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
+app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => {
   res.removeHeader('X-Frame-Options');
   res.setHeader(
@@ -15,6 +16,40 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+app.post('/api/discord-token', async (req, res) => {
+  try {
+    const code = String(req.body?.code || '').trim();
+    if (!code) return res.status(400).json({ ok:false, error:'Missing Discord OAuth code.' });
+
+    const clientId = process.env.DISCORD_CLIENT_ID || '1514895948197793893';
+    const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+    if (!clientSecret) {
+      return res.status(500).json({ ok:false, error:'DISCORD_CLIENT_SECRET is not set on the server.' });
+    }
+
+    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'authorization_code',
+        code
+      })
+    });
+
+    const data = await tokenRes.json().catch(() => ({}));
+    if (!tokenRes.ok || !data.access_token) {
+      return res.status(tokenRes.status || 500).json({ ok:false, error:data.error_description || data.error || 'Discord token exchange failed.' });
+    }
+
+    res.json({ ok:true, access_token:data.access_token, token_type:data.token_type, expires_in:data.expires_in, scope:data.scope });
+  } catch (err) {
+    res.status(500).json({ ok:false, error:err?.message || 'Discord token exchange failed.' });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
@@ -307,6 +342,50 @@ io.on('connection', socket => {
     const forceAdmin = created;
     joinRoom(socket, room, { name, avatar, discordId, team, role, character, playerKey, adminToken: forceAdmin ? room.adminToken : adminToken, forceAdmin });
     cb({ ok:true, roomId:room.id, playerKey:socket.data.playerKey, adminToken: forceAdmin ? room.adminToken : ((adminToken && adminToken === room.adminToken) ? room.adminToken : undefined) });
+  });
+
+
+  socket.on('updateDiscordIdentity', ({ name, avatar='', discordId='' }={}, cb=()=>{}) => {
+    const room = getPlayerRoom(socket.id);
+    if (!room) return cb({ ok:false, error:'No active room.' });
+    const p = getPlayerBySocket(room, socket.id);
+    if (!p) return cb({ ok:false, error:'No active player.' });
+
+    const cleanDiscordId = safeText(discordId, 80);
+    const cleanAvatar = safeText(avatar, 300);
+    const cleanDisplayName = cleanName(name || p.name);
+
+    p.name = cleanDisplayName;
+    if (cleanAvatar) p.avatar = cleanAvatar;
+    if (cleanDiscordId) p.discordId = cleanDiscordId;
+
+    let finalKey = p.id;
+    if (cleanDiscordId) {
+      const desiredKey = safePlayerKey('d_' + cleanDiscordId);
+      for (const [pid, oldPlayer] of Object.entries(room.players)) {
+        if (pid !== p.id && (oldPlayer.discordId === cleanDiscordId || oldPlayer.socketId === socket.id)) {
+          if (oldPlayer.isAdmin && !p.isAdmin) { p.isAdmin = true; p.adminToken = room.adminToken; }
+          delete room.players[pid];
+          delete room.votes?.[pid];
+        }
+      }
+      if (desiredKey !== p.id) {
+        const oldKey = p.id;
+        p.id = desiredKey;
+        finalKey = desiredKey;
+        room.players[desiredKey] = p;
+        delete room.players[oldKey];
+        if (room.votes?.[oldKey]) {
+          room.votes[desiredKey] = room.votes[oldKey];
+          delete room.votes[oldKey];
+        }
+      }
+    }
+
+    socket.data.playerKey = finalKey;
+    cb({ ok:true, playerKey:finalKey });
+    io.to(socket.id).emit('identityKey', { playerKey:finalKey });
+    emitRoom(room);
   });
 
   function joinRoom(socket, room, { name, avatar='', discordId='', team, role, character, playerKey, adminToken, forceAdmin=false }) {

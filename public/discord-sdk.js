@@ -33,7 +33,7 @@ function avatarUrl(user){
   }
   const disc = pick(user, ['discriminator']);
   if(disc && disc !== '0') return `https://cdn.discordapp.com/embed/avatars/${Number(disc) % 5}.png`;
-  return 'https://cdn.discordapp.com/embed/avatars/0.png';
+  return '';
 }
 
 function displayName(user){
@@ -41,6 +41,19 @@ function displayName(user){
   return pick(user, [
     'global_name','globalName','display_name','displayName','nick','nickname','username','name'
   ]) || 'Discord User';
+}
+
+function normalizeUser(user){
+  const u = user?.user || user?.member?.user || user || {};
+  const merged = { ...(user || {}), ...(u || {}) };
+  const id = pick(merged, ['id','user_id','userId','discord_id','discordId']);
+  return {
+    id,
+    name: displayName(merged),
+    username: pick(merged, ['username','name']),
+    avatar: avatarUrl(merged),
+    raw: user
+  };
 }
 
 function normalizeParticipant(p){
@@ -55,15 +68,50 @@ function normalizeParticipant(p){
   };
 }
 
-function setCurrentUserFromParticipants(participants){
-  const chosen = (participants || []).find(p => p?.id || p?.name || p?.avatar) || null;
-  if(chosen){
-    window.DD_CURRENT_USER = chosen;
-    if(window.DD_DISCORD) window.DD_DISCORD.currentUser = chosen;
+function setCurrentUser(user){
+  const normalized = normalizeUser(user);
+  if(normalized?.id || normalized?.name || normalized?.avatar){
+    window.DD_CURRENT_USER = normalized;
+    if(window.DD_DISCORD) window.DD_DISCORD.currentUser = normalized;
+    window.dispatchEvent(new CustomEvent('discordIdentityChanged', { detail: normalized }));
+    return normalized;
   }
-  return chosen;
+  return null;
 }
 
+async function getAuthenticatedUser(discordSdk){
+  try {
+    const auth = await discordSdk.commands.authorize({
+      client_id: DISCORD_CLIENT_ID,
+      response_type: 'code',
+      state: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      prompt: 'none',
+      scope: ['identify']
+    });
+
+    const code = auth?.code;
+    if(!code) throw new Error('Discord did not return an OAuth code.');
+
+    const tokenRes = await fetch('/api/discord-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const tokenData = await tokenRes.json().catch(() => ({}));
+    if(!tokenRes.ok || !tokenData?.access_token){
+      throw new Error(tokenData?.error || 'Could not exchange Discord OAuth code.');
+    }
+
+    const authRes = await discordSdk.commands.authenticate({ access_token: tokenData.access_token });
+    const user = authRes?.user || authRes;
+    return setCurrentUser(user);
+  } catch (err) {
+    console.warn('Discord profile auth failed:', err);
+    window.DD_PROFILE_ERROR = err?.message || String(err);
+    window.dispatchEvent(new CustomEvent('discordIdentityError', { detail: window.DD_PROFILE_ERROR }));
+    return null;
+  }
+}
 
 async function initDiscordActivity() {
   try {
@@ -73,18 +121,6 @@ async function initDiscordActivity() {
     await discordSdk.ready();
     document.body.classList.add("discordActivity");
 
-    let participants = [];
-    try {
-      const res = await discordSdk.commands.getInstanceConnectedParticipants();
-      participants = Array.isArray(res?.participants) ? res.participants.map(normalizeParticipant) : (Array.isArray(res) ? res.map(normalizeParticipant) : []);
-    } catch (err) {
-      console.warn("Could not fetch Discord participants", err);
-    }
-
-    // In most Discord Activity clients, the local/current participant is first.
-    // If Discord returns the participant list a little late, the update event below refreshes it.
-    const currentUser = setCurrentUserFromParticipants(participants);
-
     window.DD_DISCORD = {
       enabled: true,
       sdk: discordSdk,
@@ -92,11 +128,22 @@ async function initDiscordActivity() {
       channelId: discordSdk.channelId,
       guildId: discordSdk.guildId,
       platform: discordSdk.platform,
-      participants,
-      currentUser
+      participants: [],
+      currentUser: null
     };
-    window.DD_CURRENT_USER = currentUser || window.DD_CURRENT_USER || null;
+
+    const currentUser = await getAuthenticatedUser(discordSdk);
+    window.DD_DISCORD.currentUser = currentUser;
+
+    let participants = [];
+    try {
+      const res = await discordSdk.commands.getInstanceConnectedParticipants();
+      participants = Array.isArray(res?.participants) ? res.participants.map(normalizeParticipant) : (Array.isArray(res) ? res.map(normalizeParticipant) : []);
+    } catch (err) {
+      console.warn("Could not fetch Discord participants", err);
+    }
     window.DD_PARTICIPANTS = participants;
+    window.DD_DISCORD.participants = participants;
 
     window.DD_openInviteDialog = async function () {
       try {
@@ -112,7 +159,7 @@ async function initDiscordActivity() {
         const list = Array.isArray(payload?.participants) ? payload.participants : (Array.isArray(payload) ? payload : []);
         if(list.length){
           window.DD_PARTICIPANTS = list.map(normalizeParticipant);
-          setCurrentUserFromParticipants(window.DD_PARTICIPANTS);
+          if(window.DD_DISCORD) window.DD_DISCORD.participants = window.DD_PARTICIPANTS;
           window.dispatchEvent(new CustomEvent("discordParticipantsChanged", { detail: window.DD_PARTICIPANTS }));
         }
       } catch(err){ console.warn('participants update failed', err); }

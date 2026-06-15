@@ -2354,3 +2354,25 @@ body.discordActivity .playerBody b{white-space:nowrap;overflow:hidden;text-overf
   object-fit:cover;
   display:block;
 }
+
+/* v28 Discord authenticated profile fix: larger real lobby avatars */
+.discordLobby .discordSeatMini.discordSeatLarge{
+  min-height:76px!important;
+  padding:8px 12px 8px 8px!important;
+  border-radius:24px!important;
+}
+.discordLobby .discordSeatMini.discordSeatLarge .avatar,
+.discordLobby .discordSeatMini.discordSeatLarge .lobbyAvatar{
+  width:66px!important;
+  height:66px!important;
+  min-width:66px!important;
+  border-radius:22px!important;
+}
+.discordLobby .discordSeatMini.discordSeatLarge span{
+  max-width:140px!important;
+  font-size:15px!important;
+  line-height:1.05!important;
+}
+.discordIdentityCard.profileWaiting{opacity:.85;filter:saturate(.8)}
+.discordIdentityCard .identityAvatar{width:50px!important;height:50px!important;border-radius:18px!important;}
+.discordRoleJoin:disabled{opacity:.45;filter:grayscale(.5);cursor:not-allowed;}

@@ -175,12 +175,17 @@ function spymasterName(team){ const p = Object.values(state?.players || {}).find
 
 
 function discordUser(){
+  // Only the authenticated Discord user is safe as the local player.
+  // Do not guess from the participants list, because that can select the wrong user.
   const direct = window.DD_CURRENT_USER || window.DD_DISCORD?.currentUser || null;
   if(direct && (direct.id || direct.name || direct.avatar)) return direct;
-  const list = Array.isArray(window.DD_PARTICIPANTS) ? window.DD_PARTICIPANTS : [];
-  return list.find(u => u?.id || u?.name || u?.avatar) || direct || null;
+  return null;
 }
 function playerAvatar(p){ return p?.avatar || p?.avatarUrl || p?.avatar_url || ''; }
+function discordProfileReady(){
+  const u = discordUser();
+  return !!(u && u.id && u.name && u.name !== 'Discord User');
+}
 function playerNameFromDiscord(){ return discordUser()?.name || ''; }
 function stableDiscordFallbackKey(roomCode=''){
   const base = localStorage.cc_playerKey || playerKey || ('p_' + Math.random().toString(36).slice(2) + Date.now().toString(36));
@@ -191,17 +196,9 @@ function stableDiscordFallbackKey(roomCode=''){
 function ensureDiscordIdentity(){
   if(!isDiscordActivity) return;
   const u = discordUser();
-  const roomCode = (typeof getDiscordActivityRoomCode === 'function') ? getDiscordActivityRoomCode() : '';
   if(u){
-    if(nameInput){ nameInput.value = u.name || nameInput.value || 'Discord User'; localStorage.cc_name = nameInput.value; }
-    if(u.id){ playerKey = `d_${u.id}`; myId = playerKey; localStorage.cc_playerKey = playerKey; return; }
-  }
-  // Discord sometimes gives the profile slightly late. Until then, still use one stable Discord-mode key
-  // so clicking Join again moves the same seat instead of creating duplicates.
-  if(!String(playerKey || '').startsWith('d_')){
-    playerKey = stableDiscordFallbackKey(roomCode);
-    myId = playerKey;
-    localStorage.cc_playerKey = playerKey;
+    if(nameInput){ nameInput.value = u.name || 'Discord User'; localStorage.cc_name = nameInput.value; }
+    if(u.id){ playerKey = `d_${u.id}`; myId = playerKey; localStorage.cc_playerKey = playerKey; }
   }
 }
 
@@ -217,9 +214,12 @@ function renderDiscordIdentity(){
     if(joinBasics) joinBasics.insertAdjacentElement('afterend', card);
   }
   if(u){
-    card.innerHTML = `${avatarHtml({ name:u.name, avatar:u.avatar, role:'operative' })}<div><b>${u.name || 'Discord User'}</b><span>Discord profile detected</span></div>`;
+    card.classList.remove('profileWaiting');
+    card.innerHTML = `${avatarHtml({ name:u.name, avatar:u.avatar, role:'operative' }, 'identityAvatar')}<div><b>${u.name || 'Discord User'}</b><span>Discord profile ready</span></div>`;
   } else {
-    card.innerHTML = `<div class="avatar">?</div><div><b>Discord User</b><span>Waiting for Discord profile...</span></div>`;
+    const err = window.DD_PROFILE_ERROR || '';
+    card.classList.add('profileWaiting');
+    card.innerHTML = `<div class="avatar identityAvatar">⏳</div><div><b>Loading Discord profile</b><span>${err ? 'Check server DISCORD_CLIENT_SECRET.' : 'Please wait...'}</span></div>`;
   }
 }
 function avatarHtml(p, extra=''){
@@ -244,9 +244,10 @@ function setJoinButtonsReady(){
   const ready = !!(selectedTeamChoice && selectedRoleChoice && nameInput.value.trim());
   const cb = $('createBtn'), jb = $('joinBtn');
   if(isDiscordActivity){
+    const profileReady = discordProfileReady();
     if(cb) cb.disabled = true;
     if(jb) jb.disabled = true;
-    document.querySelectorAll('.discordRoleJoin').forEach(b => b.disabled = !nameInput.value.trim());
+    document.querySelectorAll('.discordRoleJoin').forEach(b => b.disabled = !profileReady);
     return;
   }
   if(cb) cb.disabled = !ready;
@@ -305,14 +306,14 @@ function discordJoinPayload(team, role){
   const roomCode = getDiscordActivityRoomCode();
   ensureDiscordIdentity();
   const u = discordUser();
-  const finalName = u?.name || nameInput.value.trim() || localStorage.cc_name || 'Discord User';
-  const finalAvatar = playerAvatar(u) || '';
-  const finalDiscordId = u?.id || '';
-  if(finalDiscordId){
-    playerKey = `d_${finalDiscordId}`;
-  } else if(!String(playerKey || '').startsWith('d_')){
-    playerKey = stableDiscordFallbackKey(roomCode);
+  if(!u?.id){
+    toast('Still loading your Discord profile. Wait a second and try again.');
+    return null;
   }
+  const finalName = u.name || 'Discord User';
+  const finalAvatar = playerAvatar(u) || '';
+  const finalDiscordId = u.id || '';
+  playerKey = `d_${finalDiscordId}`;
   myId = playerKey;
   localStorage.cc_playerKey = playerKey;
   localStorage.cc_name = finalName;
@@ -340,8 +341,24 @@ function joinDiscordActivity(team, role){
   if(teamSel) teamSel.value = team;
   if(roleSel) roleSel.value = role;
   updateJoinSummary(); setJoinButtonsReady();
-  socket.emit('joinOrCreateActivityRoom', discordJoinPayload(team, role), acceptJoinResponse);
+  const payload = discordJoinPayload(team, role);
+  if(!payload) return;
+  socket.emit('joinOrCreateActivityRoom', payload, acceptJoinResponse);
 }
+function sendDiscordIdentityToServer(){
+  if(!isDiscordActivity || !state) return;
+  const u = discordUser();
+  if(!u?.id) return;
+  const payload = { name:u.name || 'Discord User', avatar:playerAvatar(u) || '', discordId:u.id };
+  socket.emit('updateDiscordIdentity', payload, res => {
+    if(res?.ok && res.playerKey){
+      playerKey = res.playerKey;
+      myId = res.playerKey;
+      localStorage.cc_playerKey = res.playerKey;
+    }
+  });
+}
+
 async function openDiscordInvite(){
   // Give discord-sdk.js a moment to finish loading
   for(let i = 0; i < 10; i++){
@@ -389,7 +406,9 @@ window.addEventListener('discordActivityReady', (event)=>{
 
   syncDiscordLanding();
 });
-window.addEventListener('discordParticipantsChanged', ()=>{ ensureDiscordIdentity(); renderDiscordIdentity(); refreshDiscordLobbyPreview(true); });
+window.addEventListener('discordParticipantsChanged', ()=>{ renderDiscordIdentity(); refreshDiscordLobbyPreview(true); });
+window.addEventListener('discordIdentityChanged', ()=>{ ensureDiscordIdentity(); renderDiscordIdentity(); setJoinButtonsReady(); refreshDiscordLobbyPreview(true); sendDiscordIdentityToServer(); });
+window.addEventListener('discordIdentityError', ()=>{ renderDiscordIdentity(); setJoinButtonsReady(); });
 
 
 function roleListHtml(players){
@@ -520,6 +539,9 @@ $('joinBtn').onclick=()=> {
 };
 
 socket.on('connect',()=>{ myId = playerKey; });
+socket.on('identityKey', ({ playerKey:newKey }={})=>{
+  if(newKey){ playerKey = newKey; myId = newKey; localStorage.cc_playerKey = newKey; }
+});
 socket.on('toast', toast);
 socket.on('adminRequest', req=>{
   const current = me();
@@ -546,6 +568,7 @@ socket.on('state', s=>{
     const cw = $('clueWord'); if(cw) cw.value = '';
   }
   state = s; myId = playerKey;
+  if(isDiscordActivity) sendDiscordIdentityToServer();
   if(isDiscordActivity && s.status === 'lobby'){
     game.classList.add('hidden');
     landing.classList.remove('hidden');
