@@ -184,7 +184,7 @@ function discordUser(){
 function playerAvatar(p){ return p?.avatar || p?.avatarUrl || p?.avatar_url || ''; }
 function discordProfileReady(){
   const u = discordUser();
-  return !!(u && u.id && u.name && u.name !== 'Discord User');
+  return !!(u && (u.id || (u.name && u.name !== 'Discord User') || u.avatar));
 }
 function playerNameFromDiscord(){ return discordUser()?.name || ''; }
 function stableDiscordFallbackKey(roomCode=''){
@@ -219,7 +219,7 @@ function renderDiscordIdentity(){
   } else {
     const err = window.DD_PROFILE_ERROR || '';
     card.classList.add('profileWaiting');
-    card.innerHTML = `<div class="avatar identityAvatar">⏳</div><div><b>Loading Discord profile</b><span>${err ? 'Check server DISCORD_CLIENT_SECRET.' : 'Please wait...'}</span></div>`;
+    card.innerHTML = `<div class="avatar identityAvatar">⏳</div><div><b>Loading Discord profile</b><span>${err ? 'Using fallback if needed.' : 'Please wait...'}</span></div>`;
   }
 }
 function avatarHtml(p, extra=''){
@@ -306,20 +306,26 @@ function discordJoinPayload(team, role){
   const roomCode = getDiscordActivityRoomCode();
   ensureDiscordIdentity();
   const u = discordUser();
-  if(!u?.id){
-    toast('Still loading your Discord profile. Wait a second and try again.');
-    return null;
-  }
-  const finalName = u.name || 'Discord User';
+  const finalDiscordId = u?.id || '';
+  const finalName = (u?.name && u.name !== 'Discord User')
+    ? u.name
+    : (nameInput.value.trim() || localStorage.cc_name || 'Discord User');
   const finalAvatar = playerAvatar(u) || '';
-  const finalDiscordId = u.id || '';
-  playerKey = `d_${finalDiscordId}`;
+
+  if(finalDiscordId){
+    playerKey = `d_${finalDiscordId}`;
+  } else {
+    // Fallback only for cases where Discord OAuth/participants are delayed.
+    // This still prevents duplicate seats in the same frame/socket.
+    playerKey = stableDiscordFallbackKey(roomCode);
+  }
   myId = playerKey;
   localStorage.cc_playerKey = playerKey;
   localStorage.cc_name = finalName;
   nameInput.value = finalName;
   roomInput.value = roomCode;
   discordActivityRoomCode = roomCode;
+
   return {
     activityId: window.DD_DISCORD?.instanceId || localDiscordSeed || roomCode,
     roomId: roomCode,
