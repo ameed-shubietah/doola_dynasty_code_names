@@ -3831,3 +3831,234 @@ body.discordActivity .gameOptionsWrap .optionsBtn{
     right:12px!important;
   }
 }
+
+/* v44: full game-log clue/card names + spymaster crown floats above player cards. */
+.sideLogSection .log,
+.teamPanelBlack .log,
+#log.log,
+#log{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+.logPicks{
+  grid-template-columns:1fr!important;
+  gap:7px!important;
+}
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog,
+.gameLogEntry.hintLog{
+  width:100%!important;
+  max-width:100%!important;
+  height:auto!important;
+  min-height:42px!important;
+  max-height:none!important;
+  overflow:visible!important;
+  border-radius:13px!important;
+}
+.gameLogEntry.pickLog .logPickWord,
+.gameLogEntry.passLog .logPickWord,
+.logPickWord{
+  width:100%!important;
+  min-height:42px!important;
+  height:auto!important;
+  max-height:none!important;
+  display:grid!important;
+  grid-template-columns:38px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:4px 10px 4px 4px!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+.logPickWord span,
+.logLenShort .logPickWord span,
+.logLenMed .logPickWord span,
+.logLenLong .logPickWord span,
+.logLenXL .logPickWord span{
+  display:block!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  line-height:1.08!important;
+  text-align:center!important;
+  font-size:12px!important;
+  letter-spacing:.25px!important;
+}
+.gameLogEntry.hintLog{
+  display:grid!important;
+  grid-template-columns:38px minmax(0,1fr) 28px!important;
+  align-items:center!important;
+  gap:7px!important;
+  padding:4px 8px!important;
+}
+.gameLogEntry.hintLog b,
+.gameLogEntry.hintLog.logLenShort b,
+.gameLogEntry.hintLog.logLenMed b,
+.gameLogEntry.hintLog.logLenLong b,
+.gameLogEntry.hintLog.logLenXL b{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  line-height:1.05!important;
+  text-align:center!important;
+  font-size:12px!important;
+  letter-spacing:.2px!important;
+}
+.gameLogEntry.hintLog span:not(.characterLogFace):not(.logSpyAvatar){
+  width:26px!important;
+  min-width:26px!important;
+  height:26px!important;
+  display:grid!important;
+  place-items:center!important;
+  justify-self:end!important;
+  border-radius:999px!important;
+  font-size:11px!important;
+}
+.gameLogEntry.pickLog .logUserAvatar,
+.gameLogEntry.passLog .logUserAvatar,
+.gameLogEntry.hintLog .logSpyAvatar,
+.characterLogFace,
+.logUserAvatar,
+.logSpyAvatar,
+.characterLogFace.customAvatar,
+.logUserAvatar.customAvatar,
+.logSpyAvatar.customAvatar{
+  width:34px!important;
+  height:32px!important;
+  min-width:34px!important;
+  max-width:34px!important;
+  border-radius:4px!important;
+  overflow:hidden!important;
+  flex:0 0 34px!important;
+  font-size:20px!important;
+}
+.currentClueDock{
+  overflow:visible!important;
+}
+.currentClueDock b{
+  min-width:0!important;
+  max-width:calc(100% - 120px)!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+  line-height:.92!important;
+  font-size:clamp(22px,2.55vw,42px)!important;
+}
+#game .teamList,
+#game .teamPanel section,
+#game .player,
+#game .player .avatar,
+#game .avatar.characterAvatar{
+  overflow:visible!important;
+}
+#game .player{
+  position:relative!important;
+  margin-top:10px!important;
+}
+#game .player .crownMark,
+#game .avatar.characterAvatar .crownMark{
+  position:absolute!important;
+  top:-22px!important;
+  right:-8px!important;
+  z-index:50!important;
+  font-size:18px!important;
+  line-height:1!important;
+  transform:translateY(-2px)!important;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.9)) drop-shadow(0 0 5px rgba(255,215,108,.55))!important;
+  pointer-events:none!important;
+}
+body.discordActivity .gameLogEntry.pickLog,
+body.discordActivity .gameLogEntry.passLog,
+body.discordActivity .gameLogEntry.hintLog{
+  min-height:38px!important;
+}
+body.discordActivity .gameLogEntry.pickLog .logPickWord,
+body.discordActivity .gameLogEntry.passLog .logPickWord,
+body.discordActivity .logPickWord{
+  min-height:38px!important;
+  grid-template-columns:32px minmax(0,1fr)!important;
+  gap:6px!important;
+}
+body.discordActivity .logPickWord span,
+body.discordActivity .logLenShort .logPickWord span,
+body.discordActivity .logLenMed .logPickWord span,
+body.discordActivity .logLenLong .logPickWord span,
+body.discordActivity .logLenXL .logPickWord span,
+body.discordActivity .gameLogEntry.hintLog b{
+  font-size:10px!important;
+  letter-spacing:.1px!important;
+  line-height:1.05!important;
+}
+body.discordActivity .gameLogEntry.hintLog{
+  grid-template-columns:32px minmax(0,1fr) 24px!important;
+}
+body.discordActivity .gameLogEntry.pickLog .logUserAvatar,
+body.discordActivity .gameLogEntry.passLog .logUserAvatar,
+body.discordActivity .gameLogEntry.hintLog .logSpyAvatar,
+body.discordActivity .characterLogFace,
+body.discordActivity .logUserAvatar,
+body.discordActivity .logSpyAvatar,
+body.discordActivity .characterLogFace.customAvatar,
+body.discordActivity .logUserAvatar.customAvatar,
+body.discordActivity .logSpyAvatar.customAvatar{
+  width:30px!important;
+  height:28px!important;
+  min-width:30px!important;
+  max-width:30px!important;
+  flex-basis:30px!important;
+  font-size:18px!important;
+}
+body.discordActivity #game .player{
+  margin-top:10px!important;
+}
+body.discordActivity #game .player .crownMark,
+body.discordActivity #game .avatar.characterAvatar .crownMark{
+  top:-19px!important;
+  right:-7px!important;
+  font-size:15px!important;
+}
+body.discordActivity .currentClueDock b{
+  font-size:clamp(18px,2.2vw,34px)!important;
+  max-width:calc(100% - 92px)!important;
+}
+@media(max-width:1180px){
+  body.discordActivity .logPickWord span,
+  body.discordActivity .logLenShort .logPickWord span,
+  body.discordActivity .logLenMed .logPickWord span,
+  body.discordActivity .logLenLong .logPickWord span,
+  body.discordActivity .logLenXL .logPickWord span,
+  body.discordActivity .gameLogEntry.hintLog b{
+    font-size:9px!important;
+  }
+  body.discordActivity .gameLogEntry.pickLog .logPickWord,
+  body.discordActivity .gameLogEntry.passLog .logPickWord,
+  body.discordActivity .logPickWord{
+    grid-template-columns:28px minmax(0,1fr)!important;
+    gap:5px!important;
+  }
+  body.discordActivity .gameLogEntry.pickLog .logUserAvatar,
+  body.discordActivity .gameLogEntry.passLog .logUserAvatar,
+  body.discordActivity .gameLogEntry.hintLog .logSpyAvatar,
+  body.discordActivity .characterLogFace,
+  body.discordActivity .logUserAvatar,
+  body.discordActivity .logSpyAvatar,
+  body.discordActivity .characterLogFace.customAvatar,
+  body.discordActivity .logUserAvatar.customAvatar,
+  body.discordActivity .logSpyAvatar.customAvatar{
+    width:26px!important;
+    height:25px!important;
+    min-width:26px!important;
+    max-width:26px!important;
+    flex-basis:26px!important;
+    font-size:16px!important;
+  }
+}
