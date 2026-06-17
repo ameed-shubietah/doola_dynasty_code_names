@@ -1373,11 +1373,19 @@ const switchBtn = $('switchBtn'); if(switchBtn) switchBtn.onclick=()=> socket.em
 const randomBtn = $('randomBtn'); if(randomBtn) randomBtn.onclick=()=> socket.emit('randomizeTeams');
 function runOrRequestAdminAction(action, label, confirmText){
   const current = me();
-  if(current?.isAdmin || current?.role === 'spymaster'){
-    if(confirm(confirmText)){ targetIds.clear(); socket.emit(action); }
+  if(!current){ toast('Join the room first.'); return; }
+
+  // Discord Activities / iframes can silently block native confirm() dialogs,
+  // so the Options buttons must not depend on confirm() to run.
+  if(current.isAdmin || current.role === 'spymaster'){
+    targetIds.clear();
+    socket.emit(action);
+    toast(`${label || 'Option'} applied.`);
     return;
   }
-  toast('Only the admin and spymasters can use this option.');
+
+  // Non-admin players can still use the menu by sending a request to the room admin.
+  socket.emit('adminActionRequest', { action });
 }
 const startGameBtn = $('startGameBtn'); if(startGameBtn) startGameBtn.onclick=()=> socket.emit('startGame');
 const landingStartGameBtn = $('landingStartGameBtn'); if(landingStartGameBtn) landingStartGameBtn.onclick=()=> socket.emit('startGame');
