@@ -7,7 +7,7 @@ const fs = require('fs');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '2mb' }));
 app.use((req, res, next) => {
   res.removeHeader('X-Frame-Options');
   res.setHeader(
@@ -76,12 +76,16 @@ const CHARACTERS = [
   { id:'spark', name:'Spark', emoji:'⚡', accent:'#ffef68' },
   { id:'raven', name:'Raven', emoji:'🦅', accent:'#ff8aa8' },
   { id:'pixel', name:'Pixel', emoji:'🎮', accent:'#7af7d7' },
-  { id:'titan', name:'Titan', emoji:'🦾', accent:'#ff9d5c' }
+  { id:'titan', name:'Titan', emoji:'🦾', accent:'#ff9d5c' },
+  { id:'monarch', name:'Monarch', emoji:'👑', accent:'#ffd36e' },
+  { id:'ninja', name:'Ninja', emoji:'🥷', accent:'#c8c8d1' },
+  { id:'dragon', name:'Dragon', emoji:'🐉', accent:'#ff7b5f' },
+  { id:'oracle', name:'Oracle', emoji:'🔮', accent:'#b58cff' }
 ];
 
 function code() { return Math.random().toString(36).slice(2, 7).toUpperCase(); }
 function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
-function cleanName(n) { return String(n || 'Agent').trim().slice(0, 18) || 'Agent'; }
+function cleanName(n) { return String(n || 'Agent').replace(/[<>]/g, '').trim().slice(0, 32) || 'Agent'; }
 function nameKey(n) { return cleanName(n).toLowerCase().replace(/\s+/g, ' '); }
 function safeText(t, max=80) { return String(t || '').replace(/[<>]/g, '').trim().slice(0, max); }
 function safePlayerKey(k) {
@@ -165,7 +169,7 @@ function roomLobbyInfo(room) {
       if(seen.has(key)) return false;
       seen.add(key);
       return true;
-    }).map(p => ({ id:p.id, name:p.name, avatar:p.avatar, discordId:p.discordId, isAdmin:!!p.isAdmin }));
+    }).map(p => ({ id:p.id, name:p.name, avatar:p.avatar, discordId:p.discordId, character:p.character, isAdmin:!!p.isAdmin }));
   };
   const byTeam = t => online.filter(p => p.team === t);
   const spies = t => byTeam(t).filter(p => p.role === 'spymaster').map(p => p.name);
@@ -228,6 +232,8 @@ function emitRoom(room) {
   Object.values(room.players).forEach(p => {
     if (p.online !== false && p.socketId) io.to(p.socketId).emit('state', publicRoom(room, p.id));
   });
+  // Also update players who are still on the homepage/lobby preview before joining.
+  io.to(`preview:${room.id}`).emit('lobbyInfo', roomLobbyInfo(room));
 }
 function counts(room) {
   return { blue: room.board.filter(c=>c.color==='blue'&&!c.revealed).length, red: room.board.filter(c=>c.color==='red'&&!c.revealed).length };
@@ -247,7 +253,8 @@ function resetRoomTable(room, message='Table reset with a fresh board.') {
   room.votes = {};
   room.roundStartedAt = Date.now();
   room.gameStartedAt = Date.now();
-  room.log.push(`${message} ${startingTeam === 'blue' ? 'GOLD' : 'BLACK'} starts.`);
+  // Reset table means a clean board + clean game log.
+  room.log = [];
 }
 function removeVoteForCard(room, cardId) {
   room.votes = room.votes || {};
@@ -308,8 +315,10 @@ function emitAdminRequest(room, request) {
 
 io.on('connection', socket => {
   socket.on('getRoomInfo', ({ roomId }={}, cb=()=>{}) => {
-    const room = rooms.get(String(roomId||'').toUpperCase());
+    const id = String(roomId||'').toUpperCase();
+    const room = rooms.get(id);
     if (!room) return cb({ ok:false, error:'Room not found.' });
+    socket.join(`preview:${id}`);
     cb(roomLobbyInfo(room));
   });
 
@@ -317,14 +326,16 @@ io.on('connection', socket => {
     const roomId = code();
     const room = newRoom(roomId);
     rooms.set(roomId, room);
-    joinRoom(socket, room, { name, avatar, discordId, team, role, character, playerKey, forceAdmin:true, adminToken:room.adminToken });
+    const joined = joinRoom(socket, room, { name, avatar, discordId, team, role, character, playerKey, forceAdmin:true, adminToken:room.adminToken });
+    if (joined?.ok === false) return cb(joined);
     cb({ ok:true, roomId, playerKey: socket.data.playerKey, adminToken: room.adminToken });
   });
 
   socket.on('joinRoom', ({ roomId, name, avatar='', discordId='', team='spectator', role='operative', character='raiden', playerKey, adminToken }={}, cb=()=>{}) => {
     const room = rooms.get(String(roomId||'').toUpperCase());
     if (!room) return cb({ ok:false, error:'Room not found.' });
-    joinRoom(socket, room, { name, avatar, discordId, team, role, character, playerKey, adminToken });
+    const joined = joinRoom(socket, room, { name, avatar, discordId, team, role, character, playerKey, adminToken });
+    if (joined?.ok === false) return cb(joined);
     cb({ ok:true, roomId:room.id, playerKey: socket.data.playerKey, adminToken: (adminToken && adminToken === room.adminToken) ? room.adminToken : undefined });
   });
 
@@ -340,7 +351,8 @@ io.on('connection', socket => {
       created = true;
     }
     const forceAdmin = created;
-    joinRoom(socket, room, { name, avatar, discordId, team, role, character, playerKey, adminToken: forceAdmin ? room.adminToken : adminToken, forceAdmin });
+    const joined = joinRoom(socket, room, { name, avatar, discordId, team, role, character, playerKey, adminToken: forceAdmin ? room.adminToken : adminToken, forceAdmin });
+    if (joined?.ok === false) return cb(joined);
     cb({ ok:true, roomId:room.id, playerKey:socket.data.playerKey, adminToken: forceAdmin ? room.adminToken : ((adminToken && adminToken === room.adminToken) ? room.adminToken : undefined) });
   });
 
@@ -352,11 +364,14 @@ io.on('connection', socket => {
     if (!p) return cb({ ok:false, error:'No active player.' });
 
     const cleanDiscordId = safeText(discordId, 80);
-    const cleanAvatar = safeText(avatar, 300);
+    const cleanAvatar = safeText(avatar, 120000);
     const cleanDisplayName = cleanName(name || p.name);
 
     p.name = cleanDisplayName;
-    if (cleanAvatar) p.avatar = cleanAvatar;
+    if (cleanAvatar) {
+      p.avatar = cleanAvatar;
+      p.character = '';
+    }
     if (cleanDiscordId) p.discordId = cleanDiscordId;
 
     let finalKey = p.id;
@@ -388,6 +403,40 @@ io.on('connection', socket => {
     emitRoom(room);
   });
 
+
+  socket.on('updatePlayerProfile', ({ name, avatar='', character='' }={}, cb=()=>{}) => {
+    const room = getPlayerRoom(socket.id);
+    if (!room) return cb({ ok:false, error:'No active room.' });
+    const p = getPlayerBySocket(room, socket.id);
+    if (!p) return cb({ ok:false, error:'No active player.' });
+
+    const nextName = cleanName(name || p.name);
+    const nextAvatar = safeText(avatar, 120000);
+    const usingCustomAvatar = !!nextAvatar;
+    let nextCharacter = usingCustomAvatar ? '' : p.character;
+    if (!usingCustomAvatar && CHARACTERS.find(c => c.id === character)) nextCharacter = character;
+
+    const taken = nextCharacter ? Object.values(room.players || {}).find(old =>
+      old.online !== false &&
+      old.id !== p.id &&
+      old.socketId !== socket.id &&
+      old.character === nextCharacter &&
+      !old.avatar &&
+      (!p.discordId || old.discordId !== p.discordId)
+    ) : null;
+    if (taken) {
+      const charName = (CHARACTERS.find(c => c.id === nextCharacter)?.name || 'That character');
+      return cb({ ok:false, error:`${charName} is already taken by ${taken.name}.`, character:p.character });
+    }
+
+    p.name = nextName;
+    p.avatar = nextAvatar;
+    p.character = nextCharacter;
+    p.lastSeenAt = Date.now();
+    cb({ ok:true, playerKey:p.id });
+    emitRoom(room);
+  });
+
   function joinRoom(socket, room, { name, avatar='', discordId='', team, role, character, playerKey, adminToken, forceAdmin=false }) {
     socket.join(room.id);
     let key = safePlayerKey(playerKey);
@@ -396,9 +445,32 @@ io.on('connection', socket => {
     let previousPlayer = previousKey && previousKey !== key ? room.players[previousKey] : null;
     const incomingName = cleanName(name);
     const incomingNameKey = nameKey(incomingName);
-    avatar = safeText(avatar, 300);
+    avatar = safeText(avatar, 120000);
     discordId = safeText(discordId, 80);
-    const char = CHARACTERS.find(c=>c.id===character) ? character : CHARACTERS[Math.floor(Math.random()*CHARACTERS.length)].id;
+
+    // Browser tabs share localStorage, but each tab is a separate player when there is no Discord ID.
+    // Split an already-online same-key seat BEFORE checking character availability, otherwise the
+    // old seat can accidentally bypass the taken-character check and hide other players.
+    if (existing && existing.online !== false && existing.socketId !== socket.id && !discordId && !String(key).startsWith('d_')) {
+      key = freshPlayerKey(room);
+      existing = null;
+      previousPlayer = null;
+    }
+
+    const usingCustomAvatar = !!avatar;
+    const char = usingCustomAvatar ? '' : (CHARACTERS.find(c=>c.id===character) ? character : CHARACTERS[Math.floor(Math.random()*CHARACTERS.length)].id);
+    const takenCharPlayer = char ? Object.values(room.players || {}).find(old =>
+      old.online !== false &&
+      old.character === char &&
+      !old.avatar &&
+      old.id !== key &&
+      old.socketId !== socket.id &&
+      (!discordId || old.discordId !== discordId)
+    ) : null;
+    if (takenCharPlayer) {
+      const charName = (CHARACTERS.find(c => c.id === char)?.name || 'That character');
+      return { ok:false, error:`${charName} is already taken by ${takenCharPlayer.name}. Choose another character.` };
+    }
 
     team = ['blue','red','spectator'].includes(team) ? team : 'spectator';
     role = ['operative','spymaster','spectator'].includes(role) ? role : 'operative';
@@ -440,11 +512,6 @@ io.on('connection', socket => {
     }
     existing = room.players[key];
 
-    if (existing && existing.online !== false && !discordId && !String(key).startsWith('d_')) {
-      key = freshPlayerKey(room);
-      existing = null;
-    }
-
     // Reconnects are restored by the browser/session playerKey only.
     // Do not match by displayed name, because two different people may use the same name
     // on the same team with different roles.
@@ -457,14 +524,14 @@ io.on('connection', socket => {
       existing.online = true;
       existing.lastSeenAt = Date.now();
       existing.name = incomingName;
-      if (avatar) existing.avatar = avatar;
+      existing.avatar = avatar;
       if (discordId) existing.discordId = discordId;
       existing.team = team; existing.role = role;
-      if (CHARACTERS.find(c=>c.id===character)) existing.character = character;
+      existing.character = usingCustomAvatar ? '' : char;
       if (adminToken && adminToken === room.adminToken) { existing.isAdmin = true; existing.adminToken = room.adminToken; }
       // Keep same-name seats allowed. Only this exact playerKey seat is restored.
       emitRoom(room);
-      return;
+      return { ok:true };
     }
 
     // Only the original room creator/admin-token holder becomes admin. Becoming spymaster never gives admin power.
@@ -472,6 +539,7 @@ io.on('connection', socket => {
     room.players[key] = { id:key, socketId:socket.id, name:incomingName, avatar, discordId, team, role, character:char, joinedAt:Date.now(), lastSeenAt:Date.now(), online:true, isAdmin, adminToken:isAdmin ? room.adminToken : undefined };
     // Same displayed names are allowed for different people/roles.
     emitRoom(room);
+    return { ok:true };
   }
 
   socket.on('switchSeat', ({ team, role, character }={}) => {
@@ -622,7 +690,7 @@ io.on('connection', socket => {
     room.guessesThisTurn = 0;
     room.allowedGuesses = number + 1;
     room.status = 'guessing'; room.votes = room.votes || {}; room.roundStartedAt = Date.now(); room.hintRequested = null;
-    room.log.push(`HINT|${p.team}|${word.toUpperCase()}|${number || (room.clue?.number || 0)}|${p.name}|${p.avatar || ''}`);
+    room.log.push(`HINT|${p.team}|${word.toUpperCase()}|${number || (room.clue?.number || 0)}|${p.name}|${p.avatar || ''}|${p.character || ''}`);
     emitRoom(room);
   });
 
@@ -659,7 +727,7 @@ io.on('connection', socket => {
 
     const pickerTeamName = team === 'blue' ? 'GOLD' : 'BLACK';
     const cardTeamName = card.color === 'blue' ? 'GOLD' : card.color === 'red' ? 'BLACK' : card.color === 'neutral' ? 'EMPTY' : 'DANGER';
-    room.log.push(`PICK|${team}|${card.color}|${card.word}|${p.name}|${p.avatar || ''}`);
+    room.log.push(`PICK|${team}|${card.color}|${card.word}|${p.name}|${p.avatar || ''}|${p.character || ''}`);
 
     if (card.color === 'assassin') {
 
@@ -689,7 +757,7 @@ io.on('connection', socket => {
     emitRoom(room);
   });
 
-  socket.on('endTurn', () => { const room = getPlayerRoom(socket.id); if (!room) return; const p=getPlayerBySocket(room, socket.id); if(playerCanAct(room,p) && room.status==='guessing') { room.log.push(`PASS|${p.team}|${p.name}|${p.avatar || ''}`); switchTurn(room); emitRoom(room); } });
+  socket.on('endTurn', () => { const room = getPlayerRoom(socket.id); if (!room) return; const p=getPlayerBySocket(room, socket.id); if(playerCanAct(room,p) && room.status==='guessing') { room.log.push(`PASS|${p.team}|${p.name}|${p.avatar || ''}|${p.character || ''}`); switchTurn(room); emitRoom(room); } });
 
   socket.on('leaveToLobby', (cb=()=>{}) => {
     const room = getPlayerRoom(socket.id);

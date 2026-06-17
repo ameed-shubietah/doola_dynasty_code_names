@@ -18,37 +18,7 @@ function withTimeout(promise, ms, label = 'Timed out') {
 }
 
 function avatarUrl(user) {
-  if (!user) return '';
-
-  const direct = pick(user, [
-    'avatar_url', 'avatarUrl', 'display_avatar_url', 'displayAvatarURL',
-    'display_avatar', 'displayAvatar', 'image_url', 'imageUrl', 'image',
-    'icon_url', 'iconUrl', 'icon', 'photo', 'photoURL', 'photo_url'
-  ]);
-  if (direct && /^https?:\/\//i.test(String(direct))) return String(direct);
-
-  const id = pick(user, ['id', 'user_id', 'userId', 'discord_id', 'discordId']);
-  const avatar = pick(user, ['avatar', 'avatar_hash', 'avatarHash', 'avatar_id', 'avatarId']);
-
-  if (avatar && /^https?:\/\//i.test(String(avatar))) return String(avatar);
-
-  if (id && avatar && avatar !== 'null') {
-    const ext = String(avatar).startsWith('a_') ? 'gif' : 'png';
-    return `https://cdn.discordapp.com/avatars/${id}/${avatar}.${ext}?size=256`;
-  }
-
-  const discriminator = pick(user, ['discriminator']);
-  if (discriminator && discriminator !== '0') {
-    return `https://cdn.discordapp.com/embed/avatars/${Number(discriminator) % 5}.png`;
-  }
-
-  if (id) {
-    try {
-      const idx = Number((BigInt(id) >> 22n) % 6n);
-      return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
-    } catch {}
-  }
-
+  // Discord profile images are intentionally not used. Players choose in-game characters instead.
   return '';
 }
 

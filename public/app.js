@@ -2,8 +2,23 @@ const socket = io();
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
 let lastWinKey = null, winDockTimer = null;
 let lastBoardKey = '', lastBoardSpawnAt = 0;
-let playerKey = localStorage.cc_playerKey || ('p_' + Math.random().toString(36).slice(2) + Date.now().toString(36));
-localStorage.cc_playerKey = playerKey;
+function makePlayerKey(){ return 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
+function readTabPlayerKey(){
+  try {
+    let key = sessionStorage.getItem('cc_tabPlayerKey') || '';
+    if(!key){ key = makePlayerKey(); sessionStorage.setItem('cc_tabPlayerKey', key); }
+    return key;
+  } catch {
+    return makePlayerKey();
+  }
+}
+function setPlayerKey(newKey){
+  const key = String(newKey || '').trim() || makePlayerKey();
+  playerKey = key;
+  myId = key;
+  try { sessionStorage.setItem('cc_tabPlayerKey', key); } catch {}
+}
+let playerKey = readTabPlayerKey();
 let myId = playerKey;
 function adminStorageKey(roomId){ return `cc_adminToken_${String(roomId||'').toUpperCase()}`; }
 function getAdminToken(roomId){ return localStorage.getItem(adminStorageKey(roomId)) || ''; }
@@ -12,7 +27,10 @@ function storeAdminToken(roomId, token){ if(roomId && token) localStorage.setIte
 const $ = id => document.getElementById(id);
 const landing = $('landing'), game = $('game'), board = $('board');
 const nameInput = $('name'), roomInput = $('roomCode');
-nameInput.value = localStorage.cc_name || '';
+const avatarFileInput = $('avatarFile'), avatarPreview = $('avatarPreview'), avatarUploadBtn = $('avatarUploadBtn'), avatarClearBtn = $('avatarClearBtn');
+let customAvatar = localStorage.cc_avatar || '';
+let nameWasEditedLocally = !!localStorage.cc_name;
+if(nameInput) nameInput.value = localStorage.cc_name || '';
 const params = new URLSearchParams(location.search);
 
 function safeContains(value, text){
@@ -102,6 +120,21 @@ else if(discordActivityRoomCode) roomInput.value = discordActivityRoomCode;
 let selectedTeamChoice = '';
 let selectedRoleChoice = '';
 let pendingAdminRequest = null;
+let lastLobbyInfo = null;
+const FALLBACK_CHARACTERS = [
+  { id:'raiden', name:'Raiden', emoji:'🧙‍♂️', accent:'#71e2ff' },
+  { id:'viper', name:'Viper', emoji:'🐍', accent:'#9cff8c' },
+  { id:'nova', name:'Nova', emoji:'🚀', accent:'#ffd36e' },
+  { id:'phantom', name:'Phantom', emoji:'👻', accent:'#c9a7ff' },
+  { id:'spark', name:'Spark', emoji:'⚡', accent:'#ffef68' },
+  { id:'raven', name:'Raven', emoji:'🦅', accent:'#ff8aa8' },
+  { id:'pixel', name:'Pixel', emoji:'🎮', accent:'#7af7d7' },
+  { id:'titan', name:'Titan', emoji:'🦾', accent:'#ff9d5c' },
+  { id:'monarch', name:'Monarch', emoji:'👑', accent:'#ffd36e' },
+  { id:'ninja', name:'Ninja', emoji:'🥷', accent:'#c8c8d1' },
+  { id:'dragon', name:'Dragon', emoji:'🐉', accent:'#ff7b5f' },
+  { id:'oracle', name:'Oracle', emoji:'🔮', accent:'#b58cff' }
+];
 
 function inviteUrl(roomId){ return `${location.origin}${location.pathname}?room=${String(roomId||'').toUpperCase()}`; }
 function updateInviteFields(roomId){
@@ -117,14 +150,35 @@ function requestLobbyInfo(){
   updateInviteFields(code);
   const box = $('lobbyPreview');
   if(!box) return;
-  if(!code || !selectedTeamChoice || !selectedRoleChoice){ box.classList.add('hidden'); box.innerHTML=''; return; }
+  if(!code){ box.classList.add('hidden'); box.innerHTML=''; lastLobbyInfo = null; renderCharacters(); return; }
   socket.emit('getRoomInfo', { roomId: code }, res => {
     if(roomInput.value.trim().toUpperCase() !== code) return;
-    if(!res || !res.ok){ box.classList.remove('hidden'); box.innerHTML = `<b>Room preview</b><span class="muted">Room not found yet. Create it or check the code.</span>`; return; }
+    if(!res || !res.ok){
+      lastLobbyInfo = null;
+      renderCharacters();
+      setJoinButtonsReady();
+      if(selectedTeamChoice || selectedRoleChoice){
+        box.classList.remove('hidden');
+        box.innerHTML = `<b>Room preview</b><span class="muted">Room not found yet. Create it or check the code.</span>`;
+      } else {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+      }
+      return;
+    }
+    lastLobbyInfo = res;
+    renderCharacters();
+    if(isDiscordActivity) paintDiscordLobby(res);
+    setJoinButtonsReady();
     const gs = (res.spymasters?.blue || []).join(', ') || 'No Gold spymaster online';
     const bs = (res.spymasters?.red || []).join(', ') || 'No Black spymaster online';
-    box.classList.remove('hidden');
-    box.innerHTML = `<b>Room ${res.roomId} preview</b><div class="previewGrid"><span>Gold: <strong>${res.counts.blue}</strong></span><span>Black: <strong>${res.counts.red}</strong></span><span>Spectators: <strong>${res.counts.spectator}</strong></span><span>Total: <strong>${res.playersTotal}</strong></span></div><div class="previewSpies"><span>Gold spymaster: <strong>${gs}</strong></span><span>Black spymaster: <strong>${bs}</strong></span></div>`;
+    if(selectedTeamChoice || selectedRoleChoice || !isDiscordActivity){
+      box.classList.remove('hidden');
+      box.innerHTML = `<b>Room ${res.roomId} preview</b><div class="previewGrid"><span>Gold: <strong>${res.counts.blue}</strong></span><span>Black: <strong>${res.counts.red}</strong></span><span>Spectators: <strong>${res.counts.spectator}</strong></span><span>Total: <strong>${res.playersTotal}</strong></span></div><div class="previewSpies"><span>Gold spymaster: <strong>${gs}</strong></span><span>Black spymaster: <strong>${bs}</strong></span></div>`;
+    } else {
+      box.classList.add('hidden');
+      box.innerHTML = '';
+    }
   });
 }
 roomInput.addEventListener('input', requestLobbyInfo);
@@ -165,8 +219,22 @@ function closeAdminRequestPopup(){
 
 function fmt(ms){ let s=Math.floor(ms/1000); const m=String(Math.floor(s/60)).padStart(2,'0'); s=String(s%60).padStart(2,'0'); return `${m}:${s}`; }
 
-function charEmoji(id){ const c=state?.characters?.find(x=>x.id===id); return c?.emoji || '🕵️'; }
-function charAccent(id){ const c=state?.characters?.find(x=>x.id===id); return c?.accent || '#71e2ff'; }
+function allCharacters(){ return (state?.characters && state.characters.length ? state.characters : FALLBACK_CHARACTERS); }
+function charById(id){ return allCharacters().find(x => x.id === id) || allCharacters()[0] || { id:'agent', name:'Agent', emoji:'🕵️', accent:'#71e2ff' }; }
+function charEmoji(id){ return charById(id).emoji || '🕵️'; }
+function charAccent(id){ return charById(id).accent || '#71e2ff'; }
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+}
+function safeAvatarSrc(value){
+  const v = String(value || '').trim();
+  if(!v) return '';
+  if(/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(v) || /^https:\/\//i.test(v)) return escapeHtml(v);
+  return '';
+}
+function currentDisplayName(){
+  return (nameInput?.value || '').trim() || localStorage.cc_name || playerNameFromDiscord() || 'Agent';
+}
 function me(){ return state?.players?.[myId]; }
 function teamName(team){ return team === 'blue' ? 'Gold' : team === 'red' ? 'Black' : team === 'neutral' ? 'Empty' : team === 'assassin' ? 'Danger' : 'Spectator'; }
 function teamUpper(team){ return teamName(team).toUpperCase(); }
@@ -188,7 +256,7 @@ function discordProfileReady(){
 }
 function playerNameFromDiscord(){ return discordUser()?.name || ''; }
 function stableDiscordFallbackKey(roomCode=''){
-  const base = localStorage.cc_playerKey || playerKey || ('p_' + Math.random().toString(36).slice(2) + Date.now().toString(36));
+  const base = (() => { try { return sessionStorage.getItem('cc_tabPlayerKey') || playerKey || makePlayerKey(); } catch { return playerKey || makePlayerKey(); } })();
   const safe = String(base).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,48) || 'local';
   const room = String(roomCode || getDiscordActivityRoomCode?.() || 'room').replace(/[^a-zA-Z0-9]/g,'').slice(0,12) || 'room';
   return `d_local_${room}_${safe}`;
@@ -197,45 +265,178 @@ function ensureDiscordIdentity(){
   if(!isDiscordActivity) return;
   const u = discordUser();
   if(u){
-    if(nameInput){ nameInput.value = u.name || 'Discord User'; localStorage.cc_name = nameInput.value; }
-    if(u.id){ playerKey = `d_${u.id}`; myId = playerKey; localStorage.cc_playerKey = playerKey; }
+    if(nameInput && !nameWasEditedLocally && !nameInput.value.trim()){
+      nameInput.value = u.name || 'Discord User';
+      localStorage.cc_name = nameInput.value;
+    }
+    if(u.id){ setPlayerKey(`d_${u.id}`); }
   }
 }
 
 function renderDiscordIdentity(){
-  if(!isDiscordActivity) return;
-  const u = discordUser();
-  let card = document.getElementById('discordIdentityCard');
-  if(!card){
-    card = document.createElement('div');
-    card.id = 'discordIdentityCard';
-    card.className = 'discordIdentityCard';
-    const joinBasics = document.querySelector('.joinBasics');
-    if(joinBasics) joinBasics.insertAdjacentElement('afterend', card);
-  }
-  if(u){
-    card.classList.remove('profileWaiting');
-    card.innerHTML = `${avatarHtml({ name:u.name, avatar:u.avatar, role:'operative' }, 'identityAvatar')}<div><b>${u.name || 'Discord User'}</b><span>Discord profile ready</span></div>`;
-  } else {
-    const err = window.DD_PROFILE_ERROR || '';
-    card.classList.add('profileWaiting');
-    card.innerHTML = `<div class="avatar identityAvatar">⏳</div><div><b>Discord profile loading</b><span>${err ? 'Profile not ready yet — you can still join.' : 'You can join while it loads.'}</span></div>`;
-  }
+  // No visible Discord profile/loading card. We use Discord name quietly when available,
+  // and the chosen game character is the visible avatar everywhere.
+  const card = document.getElementById('discordIdentityCard');
+  if(card) card.remove();
+}
+
+function updateHomeAvatarPreview(){
+  if(!avatarPreview) return;
+  const src = safeAvatarSrc(customAvatar);
+  avatarPreview.classList.toggle('hasImage', !!src);
+  document.body.classList.toggle('hasCustomAvatar', !!src);
+  avatarPreview.innerHTML = src
+    ? `<img src="${src}" alt="Your avatar preview">`
+    : `<span style="--a:${charAccent(selectedCharacter)}">${charEmoji(selectedCharacter)}</span>`;
+  if(avatarClearBtn) avatarClearBtn.classList.toggle('hidden', !src);
+}
+function setCustomAvatar(value){
+  customAvatar = value || '';
+  if(customAvatar) localStorage.cc_avatar = customAvatar;
+  else localStorage.removeItem('cc_avatar');
+  updateHomeAvatarPreview();
+  renderCharacters();
+  setJoinButtonsReady();
+  updateJoinSummary();
+  scheduleProfileSync();
+}
+function hasCustomAvatar(){
+  return !!safeAvatarSrc(customAvatar);
+}
+function outboundCharacter(){
+  // Uploaded images are their own avatar choice, so they must not reserve any character slot.
+  return hasCustomAvatar() ? '' : selectedCharacter;
+}
+function resizeAvatarFile(file){
+  return new Promise((resolve, reject)=>{
+    if(!file || !file.type || !file.type.startsWith('image/')) return reject(new Error('Choose an image file.'));
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read the image.'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Could not load the image.'));
+      img.onload = () => {
+        const size = 180;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const minSide = Math.min(img.width, img.height) || 1;
+        const sx = Math.max(0, (img.width - minSide) / 2);
+        const sy = Math.max(0, (img.height - minSide) / 2);
+        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+        resolve(canvas.toDataURL('image/webp', .82));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+let profileSyncTimer = null;
+function scheduleProfileSync(){
+  if(profileSyncTimer) clearTimeout(profileSyncTimer);
+  profileSyncTimer = setTimeout(sendProfileToServer, 250);
+}
+function sendProfileToServer(){
+  profileSyncTimer = null;
+  const current = me();
+  if(!current || !state) return;
+  socket.emit('updatePlayerProfile', {
+    name: currentDisplayName(),
+    avatar: customAvatar,
+    character: outboundCharacter()
+  }, res => {
+    if(res?.ok === false){
+      toast(res.error || 'Could not update your profile.');
+      if(res.character) selectedCharacter = res.character;
+      renderCharacters();
+      updateHomeAvatarPreview();
+    }
+  });
+}
+function setupProfileControls(){
+  updateHomeAvatarPreview();
+  if(avatarUploadBtn && avatarFileInput) avatarUploadBtn.onclick = () => avatarFileInput.click();
+  if(avatarFileInput) avatarFileInput.onchange = async () => {
+    const file = avatarFileInput.files && avatarFileInput.files[0];
+    if(!file) return;
+    try{
+      const dataUrl = await resizeAvatarFile(file);
+      setCustomAvatar(dataUrl);
+      toast('Avatar updated.');
+    }catch(err){
+      toast(err?.message || 'Could not upload avatar.');
+    }finally{
+      avatarFileInput.value = '';
+    }
+  };
+  if(avatarClearBtn) avatarClearBtn.onclick = () => { setCustomAvatar(''); toast('Avatar removed.'); };
 }
 function avatarHtml(p, extra=''){
   const crown = p?.role === 'spymaster' ? '<span class="crownMark">👑</span>' : '';
-  const av = playerAvatar(p);
-  if(av) return `<div class="avatar avatarPic ${extra}"><img src="${av}" alt="${p.name || 'player'}"/>${crown}</div>`;
-  return `<div class="avatar ${extra}">${charEmoji(p?.character)}${crown}</div>`;
+  const character = p?.character || selectedCharacter || 'raiden';
+  const src = safeAvatarSrc(playerAvatar(p));
+  const face = src ? `<img src="${src}" alt="${escapeHtml(p?.name || 'avatar')}" loading="lazy">` : charEmoji(character);
+  return `<div class="avatar characterAvatar ${extra} ${src ? 'customAvatar' : ''}" style="--a:${charAccent(character)}">${face}${crown}</div>`;
 }
 
+function usedCharacters(){
+  const used = new Set();
+  const myDiscordId = discordUser()?.id || '';
+  const addPlayer = p => {
+    if(!p?.character) return;
+    // A custom uploaded picture is not a game character, so it must not block/grey out a character.
+    if(playerAvatar(p)) return;
+    if(p.id && p.id === myId) return;
+    if(myDiscordId && p.discordId && p.discordId === myDiscordId) return;
+    if(p.online === false) return;
+    used.add(p.character);
+  };
+  Object.values(state?.players || {}).forEach(addPlayer);
+  const roles = lastLobbyInfo?.roles || {};
+  for(const team of Object.values(roles)){
+    for(const list of Object.values(team || {})){
+      (Array.isArray(list) ? list : []).forEach(addPlayer);
+    }
+  }
+  return used;
+}
 function renderCharacters(){
-  if(isDiscordActivity){ const box=$('characterPick'); if(box) box.classList.add('hidden'); return; }
-  const list = [
-    { id:'raiden', name:'Raiden', emoji:'🧙‍♂️', accent:'#71e2ff' },{ id:'viper', name:'Viper', emoji:'🐍', accent:'#9cff8c' },{ id:'nova', name:'Nova', emoji:'🚀', accent:'#ffd36e' },{ id:'phantom', name:'Phantom', emoji:'👻', accent:'#c9a7ff' },{ id:'spark', name:'Spark', emoji:'⚡', accent:'#ffef68' },{ id:'raven', name:'Raven', emoji:'🦅', accent:'#ff8aa8' },{ id:'pixel', name:'Pixel', emoji:'🎮', accent:'#7af7d7' },{ id:'titan', name:'Titan', emoji:'🦾', accent:'#ff9d5c' }
-  ];
-  $('characterPick').innerHTML = list.map(c=>`<div class="char ${c.id===selectedCharacter?'selected':''}" data-char="${c.id}" title="${c.name}" style="--a:${c.accent}"><span>${c.emoji}</span></div>`).join('');
-  $('characterPick').querySelectorAll('.char').forEach(el=>el.onclick=()=>{selectedCharacter=el.dataset.char;renderCharacters();});
+  const box = $('characterPick');
+  if(!box) return;
+  box.classList.remove('hidden');
+  const list = allCharacters();
+  const taken = usedCharacters();
+  const usingCustom = hasCustomAvatar();
+  if(!usingCustom && taken.has(selectedCharacter)){
+    const free = list.find(c => !taken.has(c.id));
+    if(free) selectedCharacter = free.id;
+  }
+  box.innerHTML = `
+    <div class="characterTitle">Choose your character</div>
+    <div class="characterGrid">${list.map(c=>{
+      const disabled = !usingCustom && taken.has(c.id);
+      const selected = !usingCustom && c.id === selectedCharacter;
+      return `<button type="button" class="char ${selected?'selected':''} ${disabled?'taken':''}" data-char="${c.id}" title="${disabled ? c.name + ' is already taken' : c.name}" style="--a:${c.accent}" ${disabled?'disabled':''}><span>${c.emoji}</span><small>${c.name}</small></button>`;
+    }).join('')}</div>`;
+  box.querySelectorAll('.char').forEach(el=>{
+    el.onclick=()=>{
+      if(el.disabled || el.classList.contains('taken')){ toast('That character is already taken. Pick another one.'); return; }
+      selectedCharacter=el.dataset.char;
+      renderCharacters();
+      updateHomeAvatarPreview();
+      setJoinButtonsReady();
+      updateJoinSummary();
+      renderDiscordIdentity();
+      const currentPlayer = me();
+      if(currentPlayer && state){
+        socket.emit('updatePlayerProfile', { name:currentDisplayName(), avatar:customAvatar, character:outboundCharacter() }, res => {
+          if(res?.ok === false){ toast(res.error || 'That character is already taken.'); selectedCharacter = currentPlayer.character || selectedCharacter; renderCharacters(); updateHomeAvatarPreview(); }
+        });
+      } else if(isDiscordActivity && state?.status === 'lobby' && currentPlayer){
+        socket.emit('joinOrCreateActivityRoom', discordJoinPayload(currentPlayer.team, currentPlayer.role), acceptJoinResponse);
+      }
+    };
+  });
 }
 
 renderCharacters();
@@ -244,21 +445,21 @@ function setJoinButtonsReady(){
   const ready = !!(selectedTeamChoice && selectedRoleChoice && nameInput.value.trim());
   const cb = $('createBtn'), jb = $('joinBtn');
   if(isDiscordActivity){
-    const profileReady = discordProfileReady();
+    const characterReady = hasCustomAvatar() || (!!selectedCharacter && !usedCharacters().has(selectedCharacter));
     if(cb) cb.disabled = true;
     if(jb) jb.disabled = true;
-    document.querySelectorAll('.discordRoleJoin').forEach(b => b.disabled = false);
+    document.querySelectorAll('.discordRoleJoin').forEach(b => b.disabled = !characterReady);
     return;
   }
   if(cb) cb.disabled = !ready;
   if(jb) jb.disabled = !ready || !roomInput.value.trim();
 }
 function updateJoinSummary(){
+  // The selected team/role is shown by placing the local user preview inside
+  // the matching lobby role box, instead of using the old separate summary bar.
   const box = $('joinSummary');
-  if(!box) return;
-  if(!selectedTeamChoice || !selectedRoleChoice){ box.classList.add('hidden'); box.textContent=''; return; }
-  box.classList.remove('hidden');
-  box.innerHTML = `<b>Selected:</b> ${teamName(selectedTeamChoice)} Team · ${selectedRoleChoice}`;
+  if(box){ box.classList.add('hidden'); box.textContent=''; }
+  if(lastLobbyInfo?.ok && isDiscordActivity) paintDiscordLobby(lastLobbyInfo);
 }
 function openRolePopup(team){
   const overlay = $('roleOverlay');
@@ -292,7 +493,7 @@ function syncDiscordLanding(){
   const title = document.querySelector('.teamChooseTitle');
   if(title) title.textContent = isDiscordActivity ? 'Choose your role' : 'Choose your team';
   const chars = $('characterPick');
-  if(chars) chars.classList.toggle('hidden', !!isDiscordActivity);
+  if(chars) chars.classList.remove('hidden');
   if(isDiscordActivity){ ensureDiscordIdentity(); renderDiscordIdentity(); }
   refreshDiscordLobbyPreview();
   refreshLandingAdminControls();
@@ -307,20 +508,17 @@ function discordJoinPayload(team, role){
   ensureDiscordIdentity();
   const u = discordUser();
   const finalDiscordId = u?.id || '';
-  const finalName = (u?.name && u.name !== 'Discord User')
-    ? u.name
-    : (nameInput.value.trim() || localStorage.cc_name || 'Discord User');
-  const finalAvatar = playerAvatar(u) || '';
+  const finalName = nameInput.value.trim() || localStorage.cc_name || ((u?.name && u.name !== 'Discord User') ? u.name : 'Discord User');
+  const finalAvatar = customAvatar || '';
 
   if(finalDiscordId){
-    playerKey = `d_${finalDiscordId}`;
+    setPlayerKey(`d_${finalDiscordId}`);
   } else {
     // Fallback only for cases where Discord OAuth/participants are delayed.
     // This still prevents duplicate seats in the same frame/socket.
-    playerKey = stableDiscordFallbackKey(roomCode);
+    setPlayerKey(stableDiscordFallbackKey(roomCode));
   }
   myId = playerKey;
-  localStorage.cc_playerKey = playerKey;
   localStorage.cc_name = finalName;
   nameInput.value = finalName;
   roomInput.value = roomCode;
@@ -334,7 +532,7 @@ function discordJoinPayload(team, role){
     discordId: finalDiscordId,
     team,
     role,
-    character: selectedCharacter,
+    character: outboundCharacter(),
     playerKey,
     adminToken: getAdminToken(roomCode)
   };
@@ -347,20 +545,23 @@ function joinDiscordActivity(team, role){
   if(teamSel) teamSel.value = team;
   if(roleSel) roleSel.value = role;
   updateJoinSummary(); setJoinButtonsReady();
-  const payload = discordJoinPayload(team, role);
-  if(!payload) return;
-  socket.emit('joinOrCreateActivityRoom', payload, acceptJoinResponse);
+  const roomCode = getDiscordActivityRoomCode();
+  roomInput.value = roomCode;
+  withFreshLobbyBeforeJoin(roomCode, () => {
+    if(!characterAvailableNow()){ toast('That character is already taken. Pick another one first.'); renderCharacters(); return; }
+    const payload = discordJoinPayload(team, role);
+    if(!payload) return;
+    socket.emit('joinOrCreateActivityRoom', payload, acceptJoinResponse);
+  });
 }
 function sendDiscordIdentityToServer(){
   if(!isDiscordActivity || !state) return;
   const u = discordUser();
   if(!u?.id) return;
-  const payload = { name:u.name || 'Discord User', avatar:playerAvatar(u) || '', discordId:u.id };
+  const payload = { name:currentDisplayName() || u.name || 'Discord User', avatar:customAvatar || '', discordId:u.id };
   socket.emit('updateDiscordIdentity', payload, res => {
     if(res?.ok && res.playerKey){
-      playerKey = res.playerKey;
-      myId = res.playerKey;
-      localStorage.cc_playerKey = res.playerKey;
+      setPlayerKey(res.playerKey);
     }
   });
 }
@@ -417,6 +618,37 @@ window.addEventListener('discordIdentityChanged', ()=>{ ensureDiscordIdentity();
 window.addEventListener('discordIdentityError', ()=>{ renderDiscordIdentity(); setJoinButtonsReady(); });
 
 
+function pendingLobbyPlayerFor(team, role){
+  if(!selectedTeamChoice || !selectedRoleChoice) return null;
+  if(selectedTeamChoice !== team || selectedRoleChoice !== role) return null;
+  const name = currentDisplayName();
+  if(!name) return null;
+  return {
+    id: myId || playerKey || 'local-preview',
+    name,
+    avatar: customAvatar || '',
+    discordId: discordUser()?.id || '',
+    team,
+    role,
+    character: outboundCharacter(),
+    isAdmin: !!me()?.isAdmin,
+    isPreview: true
+  };
+}
+function withPendingLobbyPlayer(players, team, role){
+  const list = Array.isArray(players) ? [...players] : [];
+  const pending = pendingLobbyPlayerFor(team, role);
+  if(!pending) return list;
+  const pendingKey = pending.discordId || pending.id || pending.name;
+  const alreadyShown = list.some(p => {
+    const key = p?.discordId || p?.id || p?.name;
+    if(key && pendingKey && key === pendingKey) return true;
+    return String(p?.name || '').trim().toLowerCase() === String(pending.name || '').trim().toLowerCase() &&
+      String(p?.team || '') === team && String(p?.role || '') === role;
+  });
+  if(!alreadyShown) list.push(pending);
+  return list;
+}
 function roleListHtml(players){
   if(!players || !players.length) return '<div class="discordSeatEmpty">empty</div>';
   const seen = new Set();
@@ -427,7 +659,7 @@ function roleListHtml(players){
     seen.add(key);
     unique.push(p);
   }
-  return unique.map(p=>`<div class="discordSeatMini discordSeatLarge">${avatarHtml(p,'lobbyAvatar')}<span>${p.name || 'Player'}</span>${p.isAdmin?'<em>Admin</em>':''}</div>`).join('');
+  return unique.map(p=>`<div class="discordSeatMini discordSeatLarge ${p.isPreview ? 'pendingSeat' : ''}">${avatarHtml(p,'lobbyAvatar')}<span class="seatName">${escapeHtml(p.name || 'Player')}</span>${p.isAdmin?'<em>Admin</em>':''}${p.isPreview?'<em>You</em>':''}</div>`).join('');
 }
 function paintDiscordLobby(info){
   if(!info?.ok) return;
@@ -444,7 +676,7 @@ function paintDiscordLobby(info){
     if(!box) continue;
     let list = box.querySelector('.discordSeatList');
     if(!list){ list = document.createElement('div'); list.className='discordSeatList'; box.appendChild(list); }
-    list.innerHTML = roleListHtml(info.roles?.[team]?.[role] || []);
+    list.innerHTML = roleListHtml(withPendingLobbyPlayer(info.roles?.[team]?.[role] || [], team, role));
   }
 }
 function refreshLandingAdminControls(){
@@ -462,15 +694,72 @@ function refreshLandingAdminControls(){
 }
 
 let lobbyPreviewTimer = null;
+function lobbyInfoFromState(s){
+  const players = Object.values(s?.players || {}).filter(p => p.online !== false);
+  const roleList = (team, role) => players.filter(p => p.team === team && p.role === role)
+    .map(p => ({ id:p.id, name:p.name, avatar:p.avatar, discordId:p.discordId, character:p.character, isAdmin:!!p.isAdmin }));
+  const byTeam = team => players.filter(p => p.team === team);
+  return {
+    ok:true,
+    roomId:s?.id || '',
+    status:s?.status || 'lobby',
+    playersTotal:players.length,
+    counts:{ blue:byTeam('blue').length, red:byTeam('red').length, spectator:byTeam('spectator').length },
+    roles:{
+      blue:{ operative:roleList('blue','operative'), spymaster:roleList('blue','spymaster') },
+      red:{ operative:roleList('red','operative'), spymaster:roleList('red','spymaster') },
+      spectator:{ spectator:roleList('spectator','spectator') }
+    },
+    spymasters:{
+      blue:roleList('blue','spymaster').map(p => p.name),
+      red:roleList('red','spymaster').map(p => p.name)
+    }
+  };
+}
+
+function applyLobbyInfo(res){
+  if(!res?.ok) return;
+  const visibleCode = String(roomInput?.value || '').trim().toUpperCase();
+  if(visibleCode && String(res.roomId || '').toUpperCase() !== visibleCode) return;
+  lastLobbyInfo = res;
+  renderCharacters();
+  if(isDiscordActivity) paintDiscordLobby(res);
+  setJoinButtonsReady();
+}
+function characterAvailableNow(){
+  return hasCustomAvatar() || (!!selectedCharacter && !usedCharacters().has(selectedCharacter));
+}
 function refreshDiscordLobbyPreview(force=false){
   if(!isDiscordActivity || !roomInput) return;
   const code = getDiscordActivityRoomCode();
   if(code) roomInput.value = code;
   if(!force && lobbyPreviewTimer) return;
   lobbyPreviewTimer = setTimeout(()=>{ lobbyPreviewTimer=null; }, 650);
-  socket.emit('getRoomInfo', { roomId: code }, res => { if(res?.ok) paintDiscordLobby(res); });
+  socket.emit('getRoomInfo', { roomId: code }, res => { if(res?.ok) applyLobbyInfo(res); });
 }
-setInterval(()=>{ if(isDiscordActivity && !state) refreshDiscordLobbyPreview(true); }, 2500);
+function withFreshLobbyBeforeJoin(roomId, proceed){
+  const code = String(roomId || '').trim().toUpperCase();
+  if(!code) return proceed();
+  socket.emit('getRoomInfo', { roomId: code }, res => {
+    if(res?.ok){
+      applyLobbyInfo(res);
+      // If another user took the selected character while this tab was open, do not send a stale join.
+      // renderCharacters() may auto-select the next free character; if none exists, stop here.
+      if(!characterAvailableNow()){
+        toast('That character was just taken. Pick another one first.');
+        renderCharacters();
+        return;
+      }
+    }
+    proceed();
+  });
+}
+setInterval(()=>{ if(isDiscordActivity && !state) refreshDiscordLobbyPreview(true); }, 1200);
+setInterval(()=>{
+  if(isDiscordActivity) return;
+  if(!landing || landing.classList.contains('hidden')) return;
+  if(roomInput?.value.trim()) requestLobbyInfo();
+}, 1200);
 
 function setupJoinFlow(){
   const teamSel = $('team'), roleSel = $('role');
@@ -498,26 +787,37 @@ function setupJoinFlow(){
     btn.onclick=()=>joinDiscordActivity(btn.dataset.team, btn.dataset.role);
   });
   const di=$('discordInviteBtn'); if(di) di.onclick=openDiscordInvite;
-  nameInput.addEventListener('input', setJoinButtonsReady);
-  roomInput.addEventListener('input', setJoinButtonsReady);
+  if(nameInput) nameInput.addEventListener('input', ()=>{
+    nameWasEditedLocally = true;
+    localStorage.cc_name = nameInput.value.trim();
+    setJoinButtonsReady();
+    updateJoinSummary();
+    scheduleProfileSync();
+  });
+  if(roomInput) roomInput.addEventListener('input', setJoinButtonsReady);
   syncDiscordLanding();
 }
+setupProfileControls();
 setupJoinFlow();
+forceBottomOptionsBar();
 
 function joinPayload(){
-  localStorage.cc_name = nameInput.value.trim() || 'Agent';
+  localStorage.cc_name = currentDisplayName() || 'Agent';
   const code = isDiscordActivity ? getDiscordActivityRoomCode() : roomInput.value.trim().toUpperCase();
   if(isDiscordActivity) roomInput.value = code;
-  return { name:nameInput.value, team:$('team').value, role:$('role').value, character:selectedCharacter, playerKey, adminToken:getAdminToken(code) };
+  return { name:currentDisplayName(), avatar:customAvatar || '', team:$('team').value, role:$('role').value, character:outboundCharacter(), playerKey, adminToken:getAdminToken(code) };
 }
 function acceptJoinResponse(res){
-  if(!res.ok) return toast(res.error);
+  if(!res.ok){
+    toast(res.error);
+    if(isDiscordActivity) refreshDiscordLobbyPreview(true);
+    else requestLobbyInfo();
+    return;
+  }
   if(res.roomId){ roomInput.value = res.roomId; updateInviteFields(res.roomId); }
   if(res.roomId && res.adminToken) storeAdminToken(res.roomId, res.adminToken);
   if(res.playerKey){
-    playerKey = res.playerKey;
-    myId = res.playerKey;
-    localStorage.cc_playerKey = res.playerKey;
+    setPlayerKey(res.playerKey);
   }
   // joinRoom can broadcast the room state before this callback reaches the tab.
   // Re-render immediately after receiving the real seat key so a new tab shows
@@ -536,17 +836,22 @@ function acceptJoinResponse(res){
   }
 }
 $('createBtn').onclick=()=> {
-  if(isDiscordActivity) return socket.emit('joinOrCreateActivityRoom', discordJoinPayload($('team').value || 'spectator', $('role').value || 'spectator'), acceptJoinResponse);
+  if(isDiscordActivity) return joinDiscordActivity($('team').value || 'spectator', $('role').value || 'spectator');
   socket.emit('createRoom', joinPayload(), acceptJoinResponse);
 };
 $('joinBtn').onclick=()=> {
-  if(isDiscordActivity) return socket.emit('joinOrCreateActivityRoom', discordJoinPayload($('team').value || 'spectator', $('role').value || 'spectator'), acceptJoinResponse);
-  socket.emit('joinRoom', { ...joinPayload(), roomId:roomInput.value.trim().toUpperCase() }, acceptJoinResponse);
+  if(isDiscordActivity) return joinDiscordActivity($('team').value || 'spectator', $('role').value || 'spectator');
+  const roomId = roomInput.value.trim().toUpperCase();
+  withFreshLobbyBeforeJoin(roomId, () => {
+    if(!characterAvailableNow()){ toast('That character is already taken. Pick another one first.'); renderCharacters(); return; }
+    socket.emit('joinRoom', { ...joinPayload(), roomId }, acceptJoinResponse);
+  });
 };
 
-socket.on('connect',()=>{ myId = playerKey; });
+socket.on('connect',()=>{ myId = playerKey; requestLobbyInfo(); if(isDiscordActivity) refreshDiscordLobbyPreview(true); });
+socket.on('lobbyInfo', res=>{ applyLobbyInfo(res); });
 socket.on('identityKey', ({ playerKey:newKey }={})=>{
-  if(newKey){ playerKey = newKey; myId = newKey; localStorage.cc_playerKey = newKey; }
+  if(newKey){ setPlayerKey(newKey); }
 });
 socket.on('toast', toast);
 socket.on('adminRequest', req=>{
@@ -557,8 +862,7 @@ socket.on('adminRequest', req=>{
 socket.on('kicked', ({ roomId, message }={})=>{
   toast(message || 'You were kicked from the room. You can join back if you want.');
   state = null; targetIds.clear(); lastRevealed.clear();
-  playerKey = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-  myId = playerKey; localStorage.cc_playerKey = playerKey;
+  setPlayerKey(makePlayerKey());
   if(roomId) roomInput.value = roomId;
   game.classList.add('hidden'); landing.classList.remove('hidden');
   requestLobbyInfo(); setJoinButtonsReady();
@@ -578,6 +882,8 @@ socket.on('state', s=>{
   if(isDiscordActivity && s.status === 'lobby'){
     game.classList.add('hidden');
     landing.classList.remove('hidden');
+    if(roomInput && s.id) roomInput.value = s.id;
+    applyLobbyInfo(lobbyInfoFromState(s));
     refreshDiscordLobbyPreview(true);
     refreshLandingAdminControls();
     return;
@@ -708,8 +1014,22 @@ function render(){
   const gp=$('goldPanel'), bp=$('blackPanel');
   if(gp) gp.classList.toggle('winnerPanel', state.winner === 'blue');
   if(bp) bp.classList.toggle('winnerPanel', state.winner === 'red');
-  renderMe(); renderPlayers(); renderSeatControls(); renderBoard(); renderPanels(); renderVoteConfirm(); renderLog(); renderWinModal();
+  renderMe(); renderPlayers(); renderSeatControls(); renderBoard(); renderPanels(); renderCurrentClueDock(); renderVoteConfirm(); renderLog(); renderWinModal();
 }
+
+function renderCurrentClueDock(){
+  const el = $('currentClueDock');
+  if(!el) return;
+  if(state?.clue && state.status === 'guessing'){
+    const team = state.clue.team || state.turn;
+    el.className = `currentClueDock glass ${team}`;
+    el.innerHTML = `<span class="currentClueLabel">CLUE</span><b>${String(state.clue.word || '').toUpperCase()}</b><strong>${Number(state.clue.number || 0)}</strong>`;
+  } else {
+    el.className = 'currentClueDock hidden';
+    el.innerHTML = '';
+  }
+}
+
 function renderSeatCharacters(){ /* seat editing removed from in-game UI */ }
 function renderMe(){
   const p=me(); if(!p) return;
@@ -760,7 +1080,16 @@ function renderPlayers(){
   if(gc) gc.textContent = `${goldCount} player${goldCount===1?'':'s'}`;
   if(bc) bc.textContent = `${blackCount} player${blackCount===1?'':'s'}`;
 }
+
+function forceBottomOptionsBar(){
+  const bar = $('adminControlBar');
+  const g = $('game');
+  if(!bar || !g) return;
+  if(bar.parentElement !== g) g.appendChild(bar);
+  bar.classList.add('bottomOptionsBar');
+}
 function renderSeatControls(){
+  forceBottomOptionsBar();
   const p=me();
   const bar=$('adminControlBar');
   if(bar){
@@ -846,10 +1175,13 @@ function revealHeroSvg(color){ return ''; }
 
 function renderBoard(){
   if(state?.status === 'lobby'){
+    board.classList.remove('spyBoard','operativeBoard');
     board.innerHTML = '<div class="waitingBoard">Waiting for admin to start the game...</div>';
     return;
   }
   const p=me(); const spy = p?.role==='spymaster';
+  board.classList.toggle('spyBoard', !!spy);
+  board.classList.toggle('operativeBoard', !spy);
   const marked = myMarkedIds();
   // Spawn animation should happen only for a truly fresh board, not for votes/reveals/turn changes.
   // Do not include visible colors, revealed state, votes, or round number here because those
@@ -872,13 +1204,11 @@ function renderBoard(){
     // Spymasters need a clear marker for operative selections.
     // MARKED = operative selected it but has not confirmed yet.
     // PICKED = operative confirmed/revealed it, and this stays visible after reveal.
-    const wasPickedByOperative = !!c.revealedById;
     const markedByOperative = voted && !c.revealed;
-    const pickedText = wasPickedByOperative ? 'PICKED' : (markedByOperative ? 'MARKED' : '');
-    const pickedLabel = spy && pickedText ? `<span class="pickedLabel ${c.revealed ? 'pickedRevealed' : 'markedLive'}">${pickedText}</span>` : '';
+    const pickedLabel = spy && markedByOperative ? `<span class="pickedLabel markedLive">MARKED</span>` : '';
     const confirmMini = canConfirmThis ? `<span class="cardConfirm" data-confirm-id="${c.id}" title="Confirm ${c.word}">✓</span>` : '';
     const revealBadge = c.revealed ? revealHeroSvg(c.color) : '';
-    return `<button class="card ${shouldSpawn?'spawnCard':''} ${colorClass} ${c.revealed?'revealed':''} ${showOrigin && !c.revealed?'originShown':''} ${target?'target':''} ${playableSpyTarget?'spyPickable':''} ${voted?'voted':''} ${agreed?'agreed':''} ${myVote?'myVote':''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${voteFaces}${pickedLabel}${confirmMini}</button>`;
+    return `<button class="card ${shouldSpawn?'spawnCard':''} ${colorClass} ${c.revealed?'revealed':''} ${showOrigin && !c.revealed?'originShown':''} ${target?'target':''} ${playableSpyTarget?'spyPickable':''} ${voted?'voted pickedByOperative':''} ${c.revealed?'pickedByOperative':''} ${agreed?'agreed':''} ${myVote?'myVote':''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${voteFaces}${pickedLabel}${confirmMini}</button>`;
   }).join('');
   board.querySelectorAll('.card').forEach(el=>{
     el.onclick=(ev)=>{
@@ -937,19 +1267,18 @@ function renderPanels(){
 
   const dock=$('bottomClueDock');
   if(dock){
-    dock.classList.toggle('hidden', !isAnySpy);
+    const clueAlreadyShown = !!(state?.clue && state.status === 'guessing');
+    dock.classList.toggle('hidden', !isAnySpy || clueAlreadyShown);
     $('clueWord').disabled = !isCurrentSpy;
     $('clueNumber').readOnly = true;
     $('clueNumber').disabled = false;
     syncClueCount();
     if(isCurrentSpy){
-      $('dockTitle').textContent = 'Your turn: write the clue';
-      $('dockHelp').textContent = 'Click only your own color cards. The number increases automatically.';
+      $('dockTitle').textContent = 'Give Clue';
+      $('dockHelp').textContent = '';
     } else if(isAnySpy){
-      $('dockTitle').textContent = 'Clue box waiting';
-      $('dockHelp').textContent = state.status==='waiting-clue'
-        ? `It is ${teamName(state.turn)} Team's clue turn. Only that team's spymaster can send now.`
-        : 'A clue is already active. Wait for the operatives to finish guessing.';
+      $('dockTitle').textContent = 'Waiting';
+      $('dockHelp').textContent = '';
     }
   }
 
@@ -960,12 +1289,23 @@ function renderPanels(){
 }
 
 function renderLog(){
-  function logAvatar(avatar, by, cls){
-    return avatar
-      ? `<img class="${cls}" src="${avatar}" alt="${by || 'player'}" title="${by || 'player'}"/>`
-      : `<span class="${cls} fallback" title="${by || 'player'}">👤</span>`;
+  function characterForName(name, team){
+    const n = String(name || '').toLowerCase();
+    const p = Object.values(state?.players || {}).find(p => String(p.name || '').toLowerCase() === n && (!team || p.team === team))
+      || Object.values(state?.players || {}).find(p => String(p.name || '').toLowerCase() === n);
+    return p?.character || 'raiden';
   }
-
+  function logFace(character, by, cls, avatar=''){
+    const ch = character || characterForName(by);
+    const src = safeAvatarSrc(avatar);
+    const title = escapeHtml(by || 'player');
+    if(src) return `<span class="${cls} characterLogFace customAvatar" style="--a:${charAccent(ch)}" title="${title}"><img src="${src}" alt="${title}"></span>`;
+    return `<span class="${cls} characterLogFace" style="--a:${charAccent(ch)}" title="${title}">${charEmoji(ch)}</span>`;
+  }
+  function lenClass(word){
+    const l = String(word || '').length;
+    return l > 12 ? 'logLenXL' : l > 8 ? 'logLenLong' : l > 5 ? 'logLenMed' : 'logLenShort';
+  }
   function entryTeam(x){
     const parts = String(x || '').split('|');
     if(parts[0] === 'HINT') return parts[1] || '';
@@ -973,31 +1313,42 @@ function renderLog(){
     if(parts[0] === 'PASS') return parts[1] || '';
     return '';
   }
-
-  function entryHtml(x){
-    const parts = String(x || '').split('|');
-    if(parts[0] === 'HINT'){
-      const team = parts[1]; const word = parts[2] || ''; const num = parts[3] || ''; const by = parts[4] || ''; const avatar = parts[5] || '';
-      const img = avatar ? `<img class="logSpyAvatar" src="${avatar}" alt="${by || 'spymaster'}" title="${by || 'spymaster'}"/>` : `<span class="logSpyAvatar fallback" title="${by || 'spymaster'}">👑</span>`;
-      return `<div class="gameLogEntry hintLog ${team}">${img}<b>${word}</b><span>${num}</span></div>`;
-    }
-    if(parts[0] === 'PICK'){
-      const team = parts[1]; const color = parts[2]; const word = parts[3] || ''; const by = parts[4] || ''; const avatar = parts[5] || '';
-      const face = logAvatar(avatar, by, 'logUserAvatar');
-      return `<div class="gameLogEntry pickLog ${color}" title="${by || 'Player'} chose ${word}"><b class="logPickWord">${face}<span>${word}</span></b></div>`;
-    }
-    if(parts[0] === 'PASS'){
-      const team = parts[1]; const by = parts[2] || ''; const avatar = parts[3] || '';
-      const face = logAvatar(avatar, by, 'logUserAvatar');
-      return `<div class="gameLogEntry passLog ${team}" title="${by || 'Player'} passed"><b class="logPickWord">${face}<span>PASS</span></b></div>`;
-    }
-    return '';
+  function hintHtml(parts){
+    const team = parts[1]; const word = parts[2] || ''; const num = parts[3] || ''; const by = parts[4] || ''; const avatar = parts[5] || ''; const character = parts[6] || characterForName(by, team);
+    const face = logFace(character, by, 'logSpyAvatar', avatar);
+    return `<div class="gameLogEntry hintLog ${team} ${lenClass(word)}">${face}<b>${word}</b><span>${num}</span></div>`;
   }
-
+  function pickHtml(parts){
+    const team = parts[1]; const color = parts[2]; const word = parts[3] || ''; const by = parts[4] || ''; const avatar = parts[5] || ''; const character = parts[6] || characterForName(by, team);
+    const face = logFace(character, by, 'logUserAvatar', avatar);
+    return `<div class="gameLogEntry pickLog ${color} ${lenClass(word)}" title="${by || 'Player'} chose ${word}"><b class="logPickWord">${face}<span>${word}</span></b></div>`;
+  }
+  function passHtml(parts){
+    const team = parts[1]; const by = parts[2] || ''; const avatar = parts[3] || ''; const character = parts[4] || characterForName(by, team);
+    const face = logFace(character, by, 'logUserAvatar', avatar);
+    return `<div class="gameLogEntry passLog ${team}" title="${by || 'Player'} passed"><b class="logPickWord">${face}<span>PASS</span></b></div>`;
+  }
   const entries = (state.log || []).filter(x => ['blue','red'].includes(entryTeam(x)));
-  const html = entries.length
-    ? `<div class="logFlow">${entries.map(entryHtml).filter(Boolean).join('')}</div>`
-    : '<div class="gameLogEmpty">No guesses yet</div>';
+  const rounds = [];
+  let current = null;
+  for(const raw of entries){
+    const parts = String(raw || '').split('|');
+    if(parts[0] === 'HINT'){
+      current = { hint: parts, picks: [] };
+      rounds.push(current);
+    } else if(parts[0] === 'PICK' || parts[0] === 'PASS'){
+      if(!current || current.hint?.[1] !== parts[1]){
+        current = { hint: null, picks: [] };
+        rounds.push(current);
+      }
+      current.picks.push(parts);
+    }
+  }
+  const html = rounds.length ? `<div class="logRounds">${rounds.map(r => `
+    <div class="logRound">
+      ${r.hint ? hintHtml(r.hint) : ''}
+      <div class="logPicks">${r.picks.map(parts => parts[0] === 'PICK' ? pickHtml(parts) : passHtml(parts)).join('')}</div>
+    </div>`).join('')}</div>` : '<div class="gameLogEmpty">No guesses yet</div>';
   const mainLog = $('log');
   if(mainLog){ mainLog.innerHTML = html; }
   const hiddenLog = $('logHidden');
@@ -1060,9 +1411,7 @@ if(backToLobbyBtn) backToLobbyBtn.onclick=()=>{
     state = null;
     targetIds.clear();
     lastRevealed.clear();
-    playerKey = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    myId = playerKey;
-    localStorage.cc_playerKey = playerKey;
+    setPlayerKey(makePlayerKey());
     if(currentRoom) roomInput.value = currentRoom;
     selectedTeamChoice = '';
     selectedRoleChoice = '';

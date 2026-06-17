@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Doola's Dynasty Code Names</title>
-    <link rel="stylesheet" href="/style.css?v=30"/>
+    <link rel="stylesheet" href="/style.css?v=41"/>
 </head>
 <body>
 <div id="app">
@@ -16,12 +16,25 @@
         <div class="joinBasics">
             <label>
                 Name
-                <input id="name" maxlength="18" placeholder="Name/Nickname"/>
+                <input id="name" maxlength="32" autocomplete="nickname" placeholder="Name/Nickname"/>
             </label>
 
             <label class="websiteRoomField">
                 Room Code
                 <input id="roomCode" maxlength="5" placeholder="ABCDE"/>
+            </label>
+        </div>
+        <div class="homeProfileTools">
+            <label class="avatarUploadLabel">
+                Avatar <small>(optional)</small>
+                <div class="avatarUploadRow">
+                    <div id="avatarPreview" class="homeAvatarPreview" aria-hidden="true">🕵️</div>
+                    <div class="avatarUploadActions">
+                        <input id="avatarFile" type="file" accept="image/*" hidden/>
+                        <button id="avatarUploadBtn" type="button">Upload Image</button>
+                        <button id="avatarClearBtn" class="dangerSoft hidden" type="button">Remove</button>
+                    </div>
+                </div>
             </label>
         </div>
         <div class="teamChooseTitle">Choose your team</div>
@@ -50,7 +63,7 @@
         <div id="characterPick" class="characters"></div>
         <div id="discordLobby" class="discordLobby hidden" aria-label="Discord Activity lobby">
             <div class="discordLobbyTop">
-                <button id="discordInviteBtn" class="discordInviteBtn" type="button" title="Invite Discord friends">👥 + Invite Friends</button>
+
             </div>
             <div class="discordRoleGrid">
                 <section class="discordTeamCard discordGoldCard">
@@ -119,11 +132,7 @@
     <main id="game" class="hidden gameV9">
         <header class="topbar glass">
             <div class="brandSide">
-                <div class="brandInviteRow">
-                    <button id="topInviteBtn" class="primary" type="button">Invite</button>
-                    <input id="topInviteLink" readonly placeholder="Invite link"/>
-                </div>
-                <h2 class="topLogo"><span>Doola's</span> Dynasty <em>Code Names</em></h2><span id="roomLabel"></span>
+                <span id="roomLabel"></span>
             </div>
             <div class="topCenter">
                 <div class="status">
@@ -140,16 +149,6 @@
                 <div class="topGameTools hidden" aria-hidden="true"></div>
                 <div id="topOperativeActions" class="topActionBar hidden">
                     <button id="endTurnBtn">Pass / End Turn</button>
-                </div>
-                <div id="adminControlBar" class="adminControlBar hidden">
-                    <div class="optionsWrap gameOptionsWrap">
-                        <button class="optionsBtn" type="button">Options ▾</button>
-                        <div class="optionsMenu">
-                            <button id="resetTableBtn" type="button">Reset Table</button>
-                            <button id="shuffleTeamsBtn" type="button">Shuffle Teams</button>
-                            <button id="changeWordListBtn" type="button">Change Word List</button>
-                        </div>
-                    </div>
                 </div>
                 <button id="newRoundBtn" class="primary hidden">Create New Game</button>
             </div>
@@ -212,6 +211,19 @@
             </div>
         </section>
 
+        <section id="currentClueDock" class="currentClueDock hidden" aria-live="polite"></section>
+
+        <div id="adminControlBar" class="adminControlBar bottomOptionsBar hidden">
+            <div class="optionsWrap gameOptionsWrap">
+                <button class="optionsBtn" type="button">Options ▾</button>
+                <div class="optionsMenu">
+                    <button id="resetTableBtn" type="button">Reset Table</button>
+                    <button id="shuffleTeamsBtn" type="button">Shuffle Teams</button>
+                    <button id="changeWordListBtn" type="button">Change Word List</button>
+                </div>
+            </div>
+        </div>
+
         <section id="bottomClueDock" class="bottomClueDock glass hidden">
             <div class="dockText">
                 <b id="dockTitle">Give your clue</b>
@@ -247,8 +259,8 @@
 <script>
   window.FORCE_DISCORD_ACTIVITY = true;
 </script>
-<script type="module" src="/discord-sdk.js?v=30"></script>
+<script type="module" src="/discord-sdk.js?v=40"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js?v=30"></script>
+<script src="/app.js?v=42"></script>
 </body>
 </html>

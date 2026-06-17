@@ -2376,3 +2376,1045 @@ body.discordActivity .playerBody b{white-space:nowrap;overflow:hidden;text-overf
 .discordIdentityCard.profileWaiting{opacity:.85;filter:saturate(.8)}
 .discordIdentityCard .identityAvatar{width:50px!important;height:50px!important;border-radius:18px!important;}
 .discordRoleJoin:disabled{opacity:.45;filter:grayscale(.5);cursor:not-allowed;}
+
+
+/* v33 requested fixes: character selection, spy/operative card views, bottom controls, clue dock, log sizing */
+body.discordActivity #characterPick{display:block!important;max-width:980px;margin:8px auto 14px!important;}
+.characters{display:block!important;text-align:center;}
+.characterTitle{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#ffe9a6;font-weight:1000;margin:4px 0 8px;text-align:center;}
+.characterGrid{display:flex;justify-content:center;align-items:center;gap:9px;flex-wrap:wrap;}
+.characterGrid .char{width:62px;height:66px;border-radius:18px;padding:5px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px solid rgba(255,215,108,.25);background:radial-gradient(circle at 50% 15%, color-mix(in srgb, var(--a) 35%, transparent), rgba(0,0,0,.38));color:#fff8df;}
+.characterGrid .char span{font-size:27px;line-height:1;}
+.characterGrid .char small{font-size:8px;text-transform:uppercase;max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#ecd899;font-weight:1000;}
+.characterGrid .char.selected{border-color:#ffe285!important;box-shadow:0 0 0 2px rgba(255,215,108,.4),0 0 24px rgba(255,215,108,.45)!important;transform:translateY(-2px);}
+.characterGrid .char.taken{opacity:.34;filter:grayscale(.9);cursor:not-allowed;}
+.characterGrid .char.taken small{color:#ffaaaa;}
+.characterAvatar{background:radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--a) 55%, #fff 12%), rgba(255,255,255,.08))!important;border:1px solid rgba(255,215,108,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 6px 14px rgba(0,0,0,.25);}
+.discordIdentityCard .identityAvatar{font-size:28px!important;}
+
+/* Operatives see unknown cards as silver with the crown background. */
+.board.operativeBoard .card:not(.revealed):not(.originShown){background:linear-gradient(135deg,#f3f3f5,#aeb2b8 45%,#6d7178 100%)!important;border-color:rgba(235,238,242,.72)!important;color:#111!important;}
+.board.operativeBoard .card:not(.revealed):not(.originShown) .word{background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(210,214,220,.48))!important;color:#111!important;text-shadow:0 1px 0 rgba(255,255,255,.45)!important;}
+.board.operativeBoard .card:not(.revealed):before{background-image:url('/crown.png')!important;background-repeat:no-repeat!important;background-position:center!important;background-size:72% auto!important;opacity:.20!important;filter:drop-shadow(0 10px 12px rgba(0,0,0,.42));}
+
+/* Spymasters see clean solid colors; crown appears only after an operative marks/picks/reveals a card. */
+.board.spyBoard .card:before{background-image:none!important;opacity:0!important;}
+.board.spyBoard .card.pickedByOperative:before,
+.board.spyBoard .card.voted:before,
+.board.spyBoard .card.revealed:before{background-image:url('/crown.png')!important;background-repeat:no-repeat!important;background-position:center!important;background-size:66% auto!important;opacity:.18!important;border:0!important;filter:drop-shadow(0 10px 12px rgba(0,0,0,.48));}
+.board.spyBoard .card.blue{background:linear-gradient(135deg,#fff3a6,#ffd04b 55%,#b87900)!important;color:#161000!important;border-color:rgba(255,236,160,.9)!important;}
+.board.spyBoard .card.blue .word{background:rgba(255,255,255,.45)!important;color:#111!important;text-shadow:0 1px 0 rgba(255,255,255,.4)!important;}
+.board.spyBoard .card.red{background:linear-gradient(135deg,#323337,#070708 72%,#000)!important;color:#fff4c8!important;border-color:rgba(255,215,108,.72)!important;}
+.board.spyBoard .card.red .word{background:rgba(255,215,108,.12)!important;color:#fff!important;}
+.board.spyBoard .card.neutral{background:linear-gradient(135deg,#f3f3f5,#aeb2b8 48%,#666b72)!important;border-color:rgba(235,238,242,.82)!important;color:#111!important;}
+.board.spyBoard .card.neutral .word{background:rgba(255,255,255,.52)!important;color:#111!important;text-shadow:0 1px 0 rgba(255,255,255,.4)!important;}
+.board.spyBoard .card.assassin{background:linear-gradient(135deg,#ff342d,#a60808 58%,#510000)!important;border-color:rgba(255,170,150,.8)!important;color:#fff!important;}
+.board.spyBoard .card.assassin .word{background:rgba(80,0,0,.45)!important;color:#fff!important;}
+.card.assassin{background:linear-gradient(135deg,#ff342d,#a60808 58%,#510000)!important;border-color:rgba(255,170,150,.8)!important;color:#fff!important;}
+.card.assassin .word{background:rgba(80,0,0,.45)!important;color:#fff!important;}
+
+/* Big centered turn badge */
+#turnBadge{min-width:260px!important;padding:16px 38px!important;font-size:clamp(22px,2vw,34px)!important;letter-spacing:1.4px!important;text-align:center!important;}
+#game .topCenter{align-items:center!important;justify-content:center!important;transform:none!important;}
+#game .topCenter .status{justify-content:center!important;}
+@media(min-width:981px){
+  .gameV9 .topbar{grid-template-columns:minmax(350px,.9fr) minmax(520px,1.2fr) minmax(190px,.5fr)!important;}
+}
+
+/* Options button lives at the bottom and opens upward. */
+#adminControlBar{position:fixed!important;left:50%!important;bottom:calc(env(safe-area-inset-bottom,0px) + 84px)!important;transform:translateX(-50%)!important;z-index:180!important;margin:0!important;}
+.gameOptionsWrap .optionsMenu{top:auto!important;bottom:calc(100% + 8px)!important;z-index:300!important;}
+.gameOptionsWrap .optionsBtn{min-width:140px!important;}
+
+/* Start Game stays obvious above Discord's lower controls/footer. */
+.landingAdminBar{z-index:500!important;}
+body.discordActivity .landingAdminBar{position:fixed!important;left:50%!important;bottom:clamp(92px,13vh,154px)!important;transform:translateX(-50%)!important;width:min(520px,calc(100vw - 36px))!important;display:flex!important;justify-content:center!important;pointer-events:none;}
+body.discordActivity .landingAdminBar.hidden{display:none!important;}
+body.discordActivity .landingStartGameBtn{pointer-events:auto;width:100%;max-width:360px;height:58px;font-size:24px!important;border-radius:999px!important;box-shadow:0 0 38px rgba(255,215,108,.62),0 16px 32px rgba(0,0,0,.5)!important;}
+
+/* Centered bottom current clue for all players. */
+.currentClueDock{position:fixed;left:260px;right:260px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);height:68px;z-index:120;border-radius:22px;display:flex;align-items:center;justify-content:center;gap:14px;text-align:center;pointer-events:none;}
+.currentClueDock.hidden{display:none!important;}
+.currentClueDock .currentClueLabel{font-size:12px;letter-spacing:1.5px;color:#e9d69a;font-weight:1000;}
+.currentClueDock b{font-family:"Segoe UI Black","Arial Black",system-ui,sans-serif;font-size:clamp(26px,3vw,48px);line-height:1;text-transform:uppercase;}
+.currentClueDock strong{display:grid;place-items:center;min-width:44px;height:44px;border-radius:999px;background:linear-gradient(180deg,#fff0a2,#c58a00);color:#160e00;font-size:24px;font-family:"Segoe UI Black","Arial Black",system-ui,sans-serif;}
+.currentClueDock.blue{box-shadow:0 0 38px rgba(255,215,108,.35),0 18px 40px rgba(0,0,0,.5);}
+.currentClueDock.red{box-shadow:0 0 28px rgba(0,0,0,.8),0 0 22px rgba(255,215,108,.18),0 18px 40px rgba(0,0,0,.5);}
+.currentClueDock.red strong{background:linear-gradient(180deg,#45454a,#060607);color:#fff1b2;border:1px solid rgba(255,215,108,.5);}
+body.discordActivity .currentClueDock{left:226px;right:236px;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);height:58px;}
+
+/* Clean clue input bar: no helper text, just the controls. */
+#dockHelp{display:none!important;}
+.bottomClueDock .dockText b{font-size:clamp(18px,1.7vw,28px)!important;}
+.bottomClueDock{padding-top:10px!important;padding-bottom:10px!important;}
+
+/* Game log: fixed equal sizes, characters instead of Discord image. */
+.logFlow{display:flex!important;flex-wrap:wrap!important;gap:7px!important;align-items:center!important;justify-content:center!important;}
+.gameLogEntry{box-sizing:border-box!important;overflow:visible!important;}
+.gameLogEntry.pickLog,.gameLogEntry.passLog{width:94px!important;height:26px!important;min-width:94px!important;max-width:94px!important;min-height:26px!important;max-height:26px!important;padding:2px!important;display:flex!important;align-items:center!important;justify-content:center!important;border-radius:999px!important;}
+.gameLogEntry.hintLog{width:128px!important;height:30px!important;min-width:128px!important;max-width:128px!important;padding:3px 7px!important;border-radius:999px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;}
+.logPickWord{width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;line-height:1!important;overflow:hidden!important;}
+.logPickWord span,.hintLog b{display:block!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;line-height:1!important;text-align:center!important;}
+.logPickWord span{font-size:10px!important;letter-spacing:.1px!important;}
+.logLenMed .logPickWord span,.logLenMed.hintLog b{font-size:9px!important;}
+.logLenLong .logPickWord span,.logLenLong.hintLog b{font-size:8px!important;letter-spacing:0!important;}
+.logLenXL .logPickWord span,.logLenXL.hintLog b{font-size:7px!important;letter-spacing:-.2px!important;}
+.characterLogFace,.logUserAvatar,.logSpyAvatar{width:17px!important;height:17px!important;min-width:17px!important;border-radius:999px!important;display:grid!important;place-items:center!important;background:radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--a) 55%, #fff 12%), rgba(0,0,0,.25))!important;border:1px solid rgba(255,255,255,.22)!important;font-size:11px!important;line-height:1!important;object-fit:cover!important;}
+.hintLog .logSpyAvatar{width:19px!important;height:19px!important;min-width:19px!important;font-size:12px!important;}
+.sideLogSection .log{padding:8px!important;}
+
+/* Winner banner/docked card no side clipping. */
+.winModal.docked .winModalCard{width:min(320px,calc(100vw - 28px))!important;max-width:320px!important;overflow:visible!important;padding:16px 18px!important;}
+.winModal.docked.winBlue .winModalCard{left:14px!important;right:auto!important;}
+.winModal.docked.winRed .winModalCard{right:14px!important;left:auto!important;}
+.winModal.docked .winModalCard h2{font-size:clamp(20px,2.2vw,30px)!important;white-space:normal!important;overflow:visible!important;line-height:1.05!important;}
+.teamPanel.winnerPanel:before{font-size:clamp(20px,2.1vw,34px)!important;letter-spacing:.5px!important;padding:10px!important;white-space:normal!important;overflow:visible!important;}
+.teamPanel.winnerPanel{overflow:visible!important;}
+
+@media(max-width:980px){
+  .currentClueDock{left:12px!important;right:12px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 8px)!important;}
+  #adminControlBar{bottom:calc(env(safe-area-inset-bottom,0px) + 84px)!important;}
+  body.discordActivity .landingAdminBar{bottom:clamp(86px,14vh,142px)!important;}
+  #turnBadge{min-width:auto!important;width:min(360px,100%)!important;}
+}
+
+/* v34 final polish: compact lobby, character avatars, bottom controls, clean game log */
+/* No profile-loading card and no invite buttons in Discord Activity. */
+#discordIdentityCard,
+#discordInviteBtn,
+#topInviteBtn,
+#topInviteLink,
+.brandInviteRow,
+#game .topLogo{display:none!important;}
+#game .brandSide{display:none!important;}
+#game .topbar{grid-template-columns:1fr auto!important;}
+#game .topCenter{grid-column:1!important;justify-self:center!important;width:100%;}
+#game .timers{grid-column:2!important;justify-self:end!important;}
+
+/* Homepage should fit its panel and not overflow into neighboring blocks. */
+body.discordActivity .landing{width:min(1180px,calc(100vw - 24px))!important;max-height:calc(100vh - 26px);overflow:hidden;padding:18px!important;margin:1.4vh auto!important;}
+body.discordActivity .homeTitleSplit{margin-bottom:6px!important;}
+body.discordActivity .homeDynasty{font-size:clamp(34px,5.4vw,72px)!important;}
+body.discordActivity .homeCode{font-size:clamp(36px,5.7vw,78px)!important;}
+body.discordActivity .teamChooseTitle{margin:4px 0 4px!important;}
+body.discordActivity #characterPick{margin:4px auto 10px!important;max-width:1040px!important;}
+.discordRoleGrid{grid-template-columns:minmax(0,1fr) minmax(190px,.62fr) minmax(0,1fr)!important;gap:12px!important;width:100%;min-width:0;}
+.discordTeamCard,.discordSpectatorCard{min-width:0!important;padding:14px!important;}
+.discordRoleBox{min-width:0!important;gap:8px!important;padding:12px!important;}
+.discordRoleBox > div{min-width:0;}
+.discordRoleBox b{font-size:clamp(15px,1.1vw,18px)!important;}
+.discordRoleJoin{min-width:90px!important;padding:10px 12px!important;}
+.discordLobbyTop:empty{display:none!important;}
+
+/* Bigger character picker; taken characters are simply greyed out, no confusing label. */
+.characterGrid{gap:11px!important;}
+.characterGrid .char{width:76px!important;height:78px!important;border-radius:20px!important;}
+.characterGrid .char span{font-size:34px!important;}
+.characterGrid .char small{font-size:9px!important;max-width:68px!important;}
+.characterGrid .char.taken{opacity:.28!important;filter:grayscale(1) brightness(.72)!important;}
+.characterGrid .char.taken span{filter:grayscale(1);}
+.characterAvatar{font-size:24px!important;}
+.player .avatar{width:42px!important;height:42px!important;border-radius:14px!important;font-size:24px!important;}
+.discordLobby .discordSeatMini.discordSeatLarge .avatar,
+.discordLobby .discordSeatMini.discordSeatLarge .lobbyAvatar{width:76px!important;height:76px!important;min-width:76px!important;border-radius:24px!important;font-size:34px!important;}
+.discordLobby .discordSeatMini.discordSeatLarge{min-height:86px!important;max-width:100%;}
+.discordLobby .discordSeatMini.discordSeatLarge span{max-width:160px!important;font-size:16px!important;}
+
+/* Start Game: fixed bottom center, lower than role cards, visible with screen resizing. */
+body.discordActivity .landingAdminBar{position:fixed!important;left:50%!important;bottom:calc(env(safe-area-inset-bottom,0px) + 18px)!important;transform:translateX(-50%)!important;width:min(480px,calc(100vw - 36px))!important;z-index:900!important;display:flex!important;justify-content:center!important;pointer-events:none!important;}
+body.discordActivity .landingAdminBar.hidden{display:none!important;}
+body.discordActivity .landingStartGameBtn{pointer-events:auto!important;width:min(360px,100%)!important;height:58px!important;font-size:23px!important;border-radius:999px!important;}
+
+/* Spymaster: strong crown only after operative marks/picks/reveals. */
+.board.spyBoard .card:before{background-image:none!important;opacity:0!important;}
+.board.spyBoard .card.voted:before{background-image:url('/crown.png')!important;background-repeat:no-repeat!important;background-position:center!important;background-size:73% auto!important;opacity:.35!important;filter:drop-shadow(0 12px 16px rgba(0,0,0,.5))!important;}
+.board.spyBoard .card.pickedByOperative:before,
+.board.spyBoard .card.revealed:before{background-image:url('/crown.png')!important;background-repeat:no-repeat!important;background-position:center!important;background-size:78% auto!important;opacity:.55!important;filter:drop-shadow(0 14px 18px rgba(0,0,0,.58))!important;}
+.pickedLabel.pickedRevealed{display:none!important;}
+.card.revealed .pickedLabel{display:none!important;}
+
+/* Bottom current clue is centered and big. Put options under it and make the menu visible. */
+.currentClueDock{left:260px!important;right:260px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 54px)!important;height:64px!important;z-index:150!important;}
+.currentClueDock b{font-size:clamp(28px,3.2vw,52px)!important;}
+#adminControlBar{position:fixed!important;left:50%!important;bottom:calc(env(safe-area-inset-bottom,0px) + 8px)!important;transform:translateX(-50%)!important;z-index:500!important;margin:0!important;display:flex!important;}
+#adminControlBar.hidden{display:none!important;}
+.gameOptionsWrap .optionsMenu{top:auto!important;bottom:calc(100% + 8px)!important;z-index:650!important;min-width:210px!important;}
+.gameOptionsWrap .optionsBtn{min-width:148px!important;height:40px!important;}
+
+/* Keep the spymaster clue input low, but not covering the options. */
+.bottomClueDock{bottom:calc(env(safe-area-inset-bottom,0px) + 54px)!important;z-index:130!important;}
+body.discordActivity .bottomClueDock{bottom:calc(env(safe-area-inset-bottom,0px) + 54px)!important;}
+#dockHelp{display:none!important;}
+
+/* Game log grouped by clue: two picked cards per row; bigger avatar alone beside word. */
+.sideLogSection .log{padding:8px!important;overflow:visible!important;}
+.logRounds{width:100%;display:flex;flex-direction:column;gap:8px;align-items:center;}
+.logRound{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.logPicks{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;align-items:center;justify-items:center;}
+.logFlow{display:contents!important;}
+.gameLogEntry.hintLog{width:min(170px,100%)!important;max-width:170px!important;height:34px!important;min-height:34px!important;padding:3px 8px!important;gap:6px!important;}
+.gameLogEntry.pickLog,.gameLogEntry.passLog{width:100%!important;min-width:0!important;max-width:100%!important;height:30px!important;min-height:30px!important;max-height:30px!important;padding:0!important;border-radius:999px!important;}
+.gameLogEntry.pickLog .logPickWord,.gameLogEntry.passLog .logPickWord{height:30px!important;min-height:30px!important;max-height:30px!important;line-height:30px!important;padding:0 7px 0 3px!important;gap:5px!important;justify-content:flex-start!important;}
+.logPickWord span{height:auto!important;line-height:1!important;transform:none!important;font-size:10px!important;letter-spacing:0!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;}
+.logLenMed .logPickWord span{font-size:9.2px!important;}
+.logLenLong .logPickWord span{font-size:8.2px!important;letter-spacing:-.15px!important;}
+.logLenXL .logPickWord span{font-size:7.4px!important;letter-spacing:-.25px!important;}
+.characterLogFace,.logUserAvatar,.logSpyAvatar{background:transparent!important;border:0!important;box-shadow:none!important;width:22px!important;height:22px!important;min-width:22px!important;flex:0 0 22px!important;font-size:18px!important;line-height:1!important;}
+.hintLog .logSpyAvatar{width:24px!important;height:24px!important;min-width:24px!important;font-size:19px!important;}
+.hintLog b{font-size:10px!important;line-height:1!important;white-space:nowrap!important;overflow:visible!important;}
+.hintLog span{font-size:11px!important;}
+
+/* Winner banner/card: no side clipping. */
+.winModalCard{width:min(680px,calc(100vw - 42px))!important;overflow:visible!important;}
+.winModalCard h2{font-size:clamp(28px,4.4vw,58px)!important;white-space:normal!important;line-height:1.05!important;}
+.winModal.docked .winModalCard{width:min(360px,calc(100vw - 30px))!important;max-width:360px!important;}
+.teamPanel.winnerPanel{overflow:hidden!important;}
+.teamPanel.winnerPanel:before{font-size:clamp(18px,2vw,32px)!important;padding:10px!important;word-break:keep-all!important;}
+
+/* Mobile/sidechat responsive: scale without needing scroll where possible. */
+@media(max-width:980px){
+  body.discordActivity{overflow:hidden!important;}
+  body.discordActivity #app{height:100vh!important;overflow:hidden!important;}
+  body.discordActivity .landing{height:calc(100vh - 10px)!important;max-height:calc(100vh - 10px)!important;margin:5px auto!important;padding:10px!important;}
+  body.discordActivity .homeTitleSplit{grid-template-columns:1fr!important;gap:0!important;}
+  body.discordActivity .homeDynasty{font-size:clamp(28px,8vw,48px)!important;text-align:center!important;}
+  body.discordActivity .homeCode{font-size:clamp(30px,8.5vw,52px)!important;text-align:center!important;}
+  .characterGrid .char{width:58px!important;height:58px!important;border-radius:16px!important;}
+  .characterGrid .char span{font-size:25px!important;}
+  .characterGrid .char small{font-size:7px!important;}
+  .discordRoleGrid{grid-template-columns:1fr 0.72fr 1fr!important;gap:6px!important;}
+  .discordTeamCard,.discordSpectatorCard{padding:8px!important;border-radius:16px!important;}
+  .discordTeamCard h2,.discordSpectatorCard h2{font-size:18px!important;margin-bottom:6px!important;}
+  .discordRoleBox{padding:8px!important;margin-top:7px!important;border-radius:13px!important;}
+  .discordRoleBox small,.discordSpectatorCard p{font-size:10px!important;}
+  .discordRoleJoin{min-width:64px!important;padding:8px!important;font-size:12px!important;}
+  .discordLobby .discordSeatMini.discordSeatLarge .avatar,.discordLobby .discordSeatMini.discordSeatLarge .lobbyAvatar{width:48px!important;height:48px!important;min-width:48px!important;font-size:23px!important;border-radius:16px!important;}
+  .discordLobby .discordSeatMini.discordSeatLarge{min-height:58px!important;padding:5px!important;}
+  .discordLobby .discordSeatMini.discordSeatLarge span{font-size:12px!important;max-width:74px!important;}
+  body.discordActivity .landingStartGameBtn{height:46px!important;font-size:18px!important;}
+  body.discordActivity #game.gameV9{height:100vh!important;grid-template-columns:104px minmax(0,1fr) 112px!important;grid-template-rows:58px minmax(0,1fr)!important;padding:4px!important;gap:4px!important;overflow:hidden!important;}
+  body.discordActivity .gameV9 .topbar{height:58px!important;min-height:58px!important;padding:4px!important;display:grid!important;grid-template-columns:1fr auto!important;}
+  #turnBadge{min-width:0!important;width:min(260px,60vw)!important;padding:10px 14px!important;font-size:17px!important;}
+  body.discordActivity .teamPanel{padding:5px!important;border-radius:12px!important;}
+  body.discordActivity .teamHeader b{font-size:12px!important;}
+  body.discordActivity .miniScoreCard{width:42px!important;height:52px!important;}
+  body.discordActivity .miniScoreCard strong{font-size:22px!important;}
+  body.discordActivity .teamPanel h3{font-size:9px!important;margin:4px 0 3px!important;}
+  body.discordActivity .player{padding:4px!important;gap:4px!important;margin:3px 0!important;}
+  body.discordActivity .player .avatar{width:24px!important;height:24px!important;font-size:14px!important;}
+  body.discordActivity .player b{font-size:10px!important;}
+  body.discordActivity .roleTag{font-size:7px!important;}
+  body.discordActivity .board{gap:4px!important;grid-template-rows:repeat(5,minmax(0,1fr))!important;}
+  body.discordActivity .card{border-radius:9px!important;padding:3px!important;}
+  body.discordActivity .word{min-height:26px!important;font-size:clamp(9px,1.8vw,14px)!important;padding:3px!important;}
+  .currentClueDock{left:112px!important;right:118px!important;bottom:46px!important;height:42px!important;border-radius:14px!important;}
+  .currentClueDock b{font-size:20px!important;}
+  .currentClueDock strong{min-width:30px!important;height:30px!important;font-size:16px!important;}
+  #adminControlBar{bottom:6px!important;}
+  .gameOptionsWrap .optionsBtn{height:34px!important;min-width:118px!important;font-size:12px!important;}
+  .bottomClueDock{left:112px!important;right:118px!important;bottom:46px!important;grid-template-columns:1fr 70px auto!important;padding:5px!important;gap:5px!important;}
+  .bottomClueDock .dockText{display:none!important;}
+  .bottomClueDock #clueWord,.bottomClueDock #clueNumber,.bottomClueDock button{height:30px!important;font-size:11px!important;}
+  .sideLogSection .log{padding:4px!important;}
+  .gameLogEntry.hintLog{height:28px!important;max-width:142px!important;}
+  .gameLogEntry.pickLog,.gameLogEntry.passLog{height:24px!important;max-height:24px!important;}
+  .gameLogEntry.pickLog .logPickWord,.gameLogEntry.passLog .logPickWord{height:24px!important;min-height:24px!important;max-height:24px!important;line-height:24px!important;gap:3px!important;padding:0 4px 0 1px!important;}
+  .characterLogFace,.logUserAvatar,.logSpyAvatar{width:18px!important;height:18px!important;min-width:18px!important;flex-basis:18px!important;font-size:14px!important;}
+}
+
+
+/* v36 profile/avatar sync + lobby fitting fixes */
+.joinBasics{grid-template-columns:minmax(260px,1fr) 180px!important;max-width:760px!important;}
+#name{min-width:0!important;width:100%!important;text-overflow:clip!important;white-space:nowrap!important;font-size:17px!important;}
+.homeProfileTools{max-width:760px;margin:0 auto 14px;text-align:left;}
+.avatarUploadLabel{display:block;color:var(--muted);font-weight:900;font-size:13px;}
+.avatarUploadLabel small{color:#bba76e;font-weight:800;}
+.avatarUploadRow{margin-top:7px;display:flex;align-items:center;gap:12px;justify-content:center;padding:10px;border:1px solid rgba(255,215,108,.22);border-radius:18px;background:rgba(0,0,0,.22);}
+.homeAvatarPreview{width:64px;height:64px;min-width:64px;border-radius:20px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 30% 20%,rgba(255,215,108,.24),rgba(255,255,255,.06));border:1px solid rgba(255,215,108,.34);font-size:30px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 8px 18px rgba(0,0,0,.28);}
+.homeAvatarPreview img{width:100%;height:100%;object-fit:cover;display:block;}
+.homeAvatarPreview span{display:grid;place-items:center;width:100%;height:100%;background:radial-gradient(circle at 30% 20%,color-mix(in srgb,var(--a) 50%,#fff 12%),rgba(0,0,0,.15));}
+.avatarUploadActions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;}
+.avatarUploadActions button{padding:10px 13px;border-radius:999px;font-size:13px;}
+.characterAvatar{overflow:hidden;position:relative;flex:0 0 auto;}
+.characterAvatar img,.characterLogFace img,.logUserAvatar img,.logSpyAvatar img{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;border-radius:inherit!important;}
+.characterAvatar.customAvatar{background:#111!important;padding:0!important;}
+.characterAvatar.customAvatar .crownMark{position:absolute;right:-3px;top:-6px;z-index:3;}
+.characterLogFace.customAvatar,.logUserAvatar.customAvatar,.logSpyAvatar.customAvatar{padding:0!important;overflow:hidden!important;background:#111!important;border:1px solid rgba(255,215,108,.28)!important;box-shadow:0 0 0 1px rgba(0,0,0,.35)!important;}
+.discordSeatMini span,.discordLobby .discordSeatMini.discordSeatLarge span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;max-width:none!important;word-break:break-word!important;line-height:1.05!important;}
+.discordSeatMini{min-width:0!important;overflow:visible!important;}
+.teamPanel{overflow:hidden!important;}
+.teamPanel section{min-height:0!important;overflow:visible!important;}
+.teamList{padding-top:4px!important;padding-bottom:4px!important;overflow-y:auto!important;overflow-x:hidden!important;}
+.player{min-height:46px!important;overflow:visible!important;flex-shrink:0!important;align-items:center!important;}
+.playerBody{min-width:0!important;overflow:visible!important;}
+.playerBody b,.player b{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;max-width:none!important;line-height:1.05!important;word-break:break-word!important;}
+.roleTag{line-height:1.1!important;}
+body.discordActivity .player{min-height:32px!important;}
+body.discordActivity .playerBody b{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;max-width:none!important;}
+body.discordActivity .teamList{padding-top:3px!important;}
+#adminControlBar{position:fixed!important;left:50%!important;bottom:calc(env(safe-area-inset-bottom,0px) + 8px)!important;transform:translateX(-50%)!important;z-index:700!important;margin:0!important;display:flex!important;}
+.gameOptionsWrap .optionsMenu{top:auto!important;bottom:calc(100% + 8px)!important;z-index:800!important;}
+.gameLogEntry.pickLog,.gameLogEntry.passLog{min-height:34px!important;height:34px!important;max-height:34px!important;}
+.gameLogEntry.pickLog .logPickWord,.gameLogEntry.passLog .logPickWord{height:34px!important;min-height:34px!important;max-height:34px!important;line-height:34px!important;}
+.characterLogFace,.logUserAvatar,.logSpyAvatar{width:30px!important;height:30px!important;min-width:30px!important;flex-basis:30px!important;font-size:21px!important;}
+.hintLog .logSpyAvatar{width:32px!important;height:32px!important;min-width:32px!important;font-size:22px!important;}
+.gameLogEntry.hintLog{height:40px!important;min-height:40px!important;}
+@media(max-width:620px){.joinBasics{grid-template-columns:1fr!important}.avatarUploadRow{align-items:stretch;flex-direction:column}.homeAvatarPreview{margin:0 auto}.avatarUploadActions button{flex:1;min-width:120px}}
+@media(max-width:980px){.characterLogFace,.logUserAvatar,.logSpyAvatar{width:22px!important;height:22px!important;min-width:22px!important;flex-basis:22px!important;font-size:16px!important}.gameLogEntry.pickLog,.gameLogEntry.passLog{height:28px!important;min-height:28px!important;max-height:28px!important}.gameLogEntry.pickLog .logPickWord,.gameLogEntry.passLog .logPickWord{height:28px!important;min-height:28px!important;max-height:28px!important;line-height:28px!important}}
+
+
+/* v37 final requested fixes: visible editable name input, clean lobby names, bottom-only options, compact log avatars */
+body.discordActivity .joinBasics,
+.joinBasics.nameVisibleFix{
+  display:grid!important;
+}
+body.discordActivity .joinBasics{
+  grid-template-columns:minmax(280px,680px)!important;
+  max-width:680px!important;
+  width:min(680px,calc(100vw - 44px))!important;
+  margin:8px auto 12px!important;
+  align-items:end!important;
+  gap:10px!important;
+}
+body.discordActivity #name{
+  pointer-events:auto!important;
+  opacity:1!important;
+  display:block!important;
+  height:46px!important;
+  font-size:18px!important;
+  font-weight:1000!important;
+  letter-spacing:.2px!important;
+  color:#fff8df!important;
+  text-align:left!important;
+  padding:12px 16px!important;
+  background:linear-gradient(180deg,rgba(255,215,108,.10),rgba(0,0,0,.55))!important;
+  border:1px solid rgba(255,215,108,.44)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.22)!important;
+}
+body.discordActivity .joinBasics label{
+  color:#ffe8a4!important;
+  font-size:13px!important;
+  letter-spacing:.3px!important;
+  text-transform:uppercase!important;
+}
+body.discordActivity .homeProfileTools{
+  max-width:680px!important;
+  width:min(680px,calc(100vw - 44px))!important;
+  margin:0 auto 12px!important;
+}
+body.discordActivity .avatarUploadRow{
+  justify-content:center!important;
+  min-height:70px!important;
+  padding:9px 12px!important;
+}
+body.discordActivity .teamChooseTitle{
+  text-align:left!important;
+  max-width:1120px!important;
+  margin:8px auto 10px!important;
+}
+
+/* Lobby role rows: keep uploaded avatar + name organized and prevent vertical letter stacking. */
+.discordRoleBox{
+  display:grid!important;
+  grid-template-columns:minmax(120px,1fr) auto!important;
+  grid-auto-rows:auto!important;
+  align-items:center!important;
+  gap:8px 12px!important;
+}
+.discordRoleBox > .discordSeatList,
+.discordSpectatorCard > .discordSeatList{
+  grid-column:1 / -1!important;
+  width:100%!important;
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:7px!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  overflow:visible!important;
+}
+.discordSeatMini.discordSeatLarge,
+.discordLobby .discordSeatMini.discordSeatLarge{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  min-height:54px!important;
+  display:grid!important;
+  grid-template-columns:46px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:9px!important;
+  padding:6px 9px!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+  background:rgba(0,0,0,.32)!important;
+}
+.discordSeatMini.discordSeatLarge .avatar,
+.discordSeatMini.discordSeatLarge .lobbyAvatar,
+.discordLobby .discordSeatMini.discordSeatLarge .avatar,
+.discordLobby .discordSeatMini.discordSeatLarge .lobbyAvatar{
+  width:46px!important;
+  height:46px!important;
+  min-width:46px!important;
+  border-radius:15px!important;
+  font-size:23px!important;
+  overflow:hidden!important;
+  flex:0 0 46px!important;
+}
+.discordSeatMini.discordSeatLarge .avatar img,
+.discordSeatMini.discordSeatLarge .lobbyAvatar img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  border-radius:inherit!important;
+  display:block!important;
+}
+.discordSeatMini.discordSeatLarge span,
+.discordSeatMini.discordSeatLarge .seatName,
+.discordLobby .discordSeatMini.discordSeatLarge span,
+.discordLobby .discordSeatMini.discordSeatLarge .seatName{
+  display:block!important;
+  min-width:0!important;
+  max-width:100%!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  word-break:normal!important;
+  overflow-wrap:anywhere!important;
+  line-height:1.12!important;
+  text-align:left!important;
+  font-size:15px!important;
+  font-family:"Segoe UI Black","Arial Black",system-ui,sans-serif!important;
+  letter-spacing:.2px!important;
+}
+.discordSeatMini.discordSeatLarge em{
+  justify-self:end!important;
+  white-space:nowrap!important;
+  font-size:9px!important;
+  padding:4px 6px!important;
+}
+
+/* Keep the game Options control out of the topbar. It is moved to #game by app.js and fixed at the bottom. */
+#adminControlBar.bottomOptionsBar,
+body.discordActivity #adminControlBar.bottomOptionsBar{
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 10px)!important;
+  transform:translateX(-50%)!important;
+  z-index:900000!important;
+  margin:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  max-width:calc(100vw - 24px)!important;
+  pointer-events:auto!important;
+}
+#adminControlBar.bottomOptionsBar.hidden{display:none!important;}
+#adminControlBar.bottomOptionsBar .gameOptionsWrap{position:relative!important;z-index:900001!important;}
+#adminControlBar.bottomOptionsBar .optionsBtn{
+  min-width:150px!important;
+  height:38px!important;
+  border-radius:999px!important;
+  padding:8px 18px!important;
+  box-shadow:0 0 18px rgba(255,215,108,.28),0 12px 28px rgba(0,0,0,.55)!important;
+}
+#adminControlBar.bottomOptionsBar .optionsMenu{
+  position:absolute!important;
+  top:auto!important;
+  bottom:calc(100% + 8px)!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  min-width:210px!important;
+  z-index:900002!important;
+}
+
+/* Game log: avatar/image must stay inside each word chip and never stretch into a long photo bar. */
+.sideLogSection .log,
+#log.log,
+#log{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  max-height:190px!important;
+  padding:7px!important;
+}
+.logRounds{width:100%!important;align-items:stretch!important;gap:7px!important;}
+.logRound{width:100%!important;align-items:stretch!important;gap:5px!important;}
+.logPicks{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:5px!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+}
+.gameLogEntry.hintLog,
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  border-radius:13px!important;
+}
+.gameLogEntry.hintLog{
+  height:34px!important;
+  min-height:34px!important;
+  max-height:34px!important;
+  display:grid!important;
+  grid-template-columns:24px minmax(0,1fr) 26px!important;
+  align-items:center!important;
+  gap:5px!important;
+  padding:4px 6px!important;
+}
+.gameLogEntry.hintLog b{
+  min-width:0!important;
+  max-width:100%!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  line-height:1!important;
+  text-align:center!important;
+}
+.gameLogEntry.hintLog span:not(.logSpyAvatar):not(.characterLogFace){
+  min-width:24px!important;
+  height:24px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border-radius:999px!important;
+}
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog{
+  height:30px!important;
+  min-height:30px!important;
+  max-height:30px!important;
+  display:block!important;
+  padding:0!important;
+}
+.gameLogEntry.pickLog .logPickWord,
+.gameLogEntry.passLog .logPickWord,
+.logPickWord{
+  width:100%!important;
+  height:30px!important;
+  min-height:30px!important;
+  max-height:30px!important;
+  display:grid!important;
+  grid-template-columns:24px minmax(0,1fr)!important;
+  align-items:center!important;
+  justify-content:stretch!important;
+  gap:5px!important;
+  padding:3px 8px 3px 4px!important;
+  line-height:1!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+.logPickWord span{
+  display:block!important;
+  min-width:0!important;
+  max-width:100%!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  line-height:1!important;
+  text-align:center!important;
+  font-size:10px!important;
+  letter-spacing:.2px!important;
+}
+.characterLogFace,
+.logUserAvatar,
+.logSpyAvatar,
+.characterLogFace.customAvatar,
+.logUserAvatar.customAvatar,
+.logSpyAvatar.customAvatar,
+.gameLogEntry.pickLog .logUserAvatar,
+.gameLogEntry.passLog .logUserAvatar,
+.gameLogEntry.hintLog .logSpyAvatar{
+  width:22px!important;
+  height:22px!important;
+  min-width:22px!important;
+  max-width:22px!important;
+  flex:0 0 22px!important;
+  border-radius:8px!important;
+  overflow:hidden!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  font-size:15px!important;
+  line-height:1!important;
+  background:rgba(0,0,0,.28)!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  box-shadow:none!important;
+}
+.characterLogFace img,
+.logUserAvatar img,
+.logSpyAvatar img,
+.characterLogFace.customAvatar img,
+.logUserAvatar.customAvatar img,
+.logSpyAvatar.customAvatar img{
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+  border-radius:inherit!important;
+}
+.logLenLong .logPickWord span,.logLenXL .logPickWord span{font-size:9px!important;letter-spacing:0!important;}
+
+@media(max-width:980px){
+  body.discordActivity .joinBasics{width:min(520px,calc(100vw - 26px))!important;margin:4px auto 8px!important;}
+  body.discordActivity #name{height:38px!important;font-size:15px!important;padding:9px 12px!important;}
+  body.discordActivity .homeProfileTools{width:min(520px,calc(100vw - 26px))!important;margin-bottom:8px!important;}
+  body.discordActivity .avatarUploadRow{min-height:52px!important;padding:6px!important;}
+  body.discordActivity .homeAvatarPreview{width:44px!important;height:44px!important;min-width:44px!important;border-radius:14px!important;}
+  .discordSeatMini.discordSeatLarge,.discordLobby .discordSeatMini.discordSeatLarge{grid-template-columns:34px minmax(0,1fr) auto!important;min-height:42px!important;padding:4px 6px!important;gap:6px!important;}
+  .discordSeatMini.discordSeatLarge .avatar,.discordSeatMini.discordSeatLarge .lobbyAvatar,.discordLobby .discordSeatMini.discordSeatLarge .avatar,.discordLobby .discordSeatMini.discordSeatLarge .lobbyAvatar{width:34px!important;height:34px!important;min-width:34px!important;border-radius:11px!important;font-size:18px!important;}
+  .discordSeatMini.discordSeatLarge span,.discordSeatMini.discordSeatLarge .seatName{font-size:11px!important;line-height:1.08!important;}
+  #adminControlBar.bottomOptionsBar{bottom:6px!important;}
+  #adminControlBar.bottomOptionsBar .optionsBtn{height:32px!important;min-width:124px!important;font-size:11px!important;padding:6px 12px!important;}
+  .sideLogSection .log,#log{max-height:128px!important;padding:4px!important;}
+  .gameLogEntry.hintLog{height:28px!important;min-height:28px!important;max-height:28px!important;grid-template-columns:19px minmax(0,1fr) 22px!important;}
+  .gameLogEntry.pickLog,.gameLogEntry.passLog,.gameLogEntry.pickLog .logPickWord,.gameLogEntry.passLog .logPickWord,.logPickWord{height:25px!important;min-height:25px!important;max-height:25px!important;grid-template-columns:18px minmax(0,1fr)!important;gap:4px!important;}
+  .characterLogFace,.logUserAvatar,.logSpyAvatar,.characterLogFace.customAvatar,.logUserAvatar.customAvatar,.logSpyAvatar.customAvatar{width:18px!important;height:18px!important;min-width:18px!important;max-width:18px!important;border-radius:6px!important;font-size:12px!important;}
+  .logPickWord span{font-size:8px!important;}
+}
+
+/* v38 custom uploaded avatars do not reserve character slots + larger rectangular game-log images. */
+.char.usingUploadedImage,
+body.hasCustomAvatar .char.selected{box-shadow:none!important;}
+body.hasCustomAvatar #characterPick .characterTitle::after{
+  content:" · uploaded image active";
+  color:#ffe9a7;
+  opacity:.75;
+  font-size:.86em;
+}
+#adminControlBar.bottomOptionsBar,
+body.discordActivity #adminControlBar.bottomOptionsBar{
+  position:fixed!important;
+  left:50%!important;
+  top:auto!important;
+  right:auto!important;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 10px)!important;
+  transform:translateX(-50%)!important;
+  z-index:1000000!important;
+  margin:0!important;
+  width:auto!important;
+  max-width:calc(100vw - 24px)!important;
+}
+.topbar #adminControlBar{position:fixed!important;}
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog{
+  height:38px!important;
+  min-height:38px!important;
+  max-height:38px!important;
+}
+.gameLogEntry.pickLog .logPickWord,
+.gameLogEntry.passLog .logPickWord,
+.logPickWord{
+  height:38px!important;
+  min-height:38px!important;
+  max-height:38px!important;
+  line-height:38px!important;
+  grid-template-columns:40px minmax(0,1fr)!important;
+  gap:7px!important;
+  padding:3px 9px 3px 3px!important;
+}
+.characterLogFace,
+.logUserAvatar,
+.logSpyAvatar,
+.characterLogFace.customAvatar,
+.logUserAvatar.customAvatar,
+.logSpyAvatar.customAvatar,
+.gameLogEntry.pickLog .logUserAvatar,
+.gameLogEntry.passLog .logUserAvatar,
+.gameLogEntry.hintLog .logSpyAvatar{
+  width:36px!important;
+  height:32px!important;
+  min-width:36px!important;
+  max-width:36px!important;
+  flex:0 0 36px!important;
+  border-radius:5px!important;
+  overflow:hidden!important;
+  background:rgba(0,0,0,.18)!important;
+  border:1px solid rgba(255,215,108,.22)!important;
+  box-shadow:none!important;
+  font-size:22px!important;
+}
+.characterLogFace.customAvatar,
+.logUserAvatar.customAvatar,
+.logSpyAvatar.customAvatar{
+  border-radius:4px!important;
+  background:transparent!important;
+}
+.characterLogFace img,
+.logUserAvatar img,
+.logSpyAvatar img,
+.characterLogFace.customAvatar img,
+.logUserAvatar.customAvatar img,
+.logSpyAvatar.customAvatar img{
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:cover!important;
+  border-radius:0!important;
+  display:block!important;
+}
+.gameLogEntry.hintLog{
+  height:42px!important;
+  min-height:42px!important;
+  max-height:42px!important;
+  grid-template-columns:40px minmax(0,1fr) 28px!important;
+}
+.gameLogEntry.hintLog .logSpyAvatar,
+.gameLogEntry.hintLog .logSpyAvatar.customAvatar{
+  width:36px!important;
+  height:34px!important;
+  min-width:36px!important;
+  max-width:36px!important;
+}
+.logPickWord span{font-size:11px!important;}
+.logLenMed .logPickWord span{font-size:10px!important;}
+.logLenLong .logPickWord span,.logLenXL .logPickWord span{font-size:9px!important;}
+@media(max-width:980px){
+  #adminControlBar.bottomOptionsBar{bottom:6px!important;}
+  .gameLogEntry.pickLog,.gameLogEntry.passLog{height:31px!important;min-height:31px!important;max-height:31px!important;}
+  .gameLogEntry.pickLog .logPickWord,.gameLogEntry.passLog .logPickWord,.logPickWord{height:31px!important;min-height:31px!important;max-height:31px!important;line-height:31px!important;grid-template-columns:28px minmax(0,1fr)!important;gap:5px!important;}
+  .characterLogFace,.logUserAvatar,.logSpyAvatar,.characterLogFace.customAvatar,.logUserAvatar.customAvatar,.logSpyAvatar.customAvatar{width:26px!important;height:25px!important;min-width:26px!important;max-width:26px!important;border-radius:4px!important;font-size:16px!important;}
+  .gameLogEntry.hintLog{height:33px!important;min-height:33px!important;max-height:33px!important;grid-template-columns:28px minmax(0,1fr) 23px!important;}
+  .gameLogEntry.hintLog .logSpyAvatar,.gameLogEntry.hintLog .logSpyAvatar.customAvatar{width:26px!important;height:26px!important;min-width:26px!important;max-width:26px!important;}
+}
+
+
+/* v39 lobby live sync + taller two-column game log */
+.sideLogSection{
+  flex:1 1 auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:260px!important;
+  overflow:visible!important;
+}
+.sideLogSection h3{flex:0 0 auto!important;}
+.sideLogSection .log,
+.teamPanelBlack .log,
+#log.log,
+#log{
+  flex:1 1 auto!important;
+  min-height:230px!important;
+  max-height:none!important;
+  overflow:visible!important;
+  overflow-y:visible!important;
+  overflow-x:visible!important;
+  scrollbar-width:none!important;
+}
+.sideLogSection .log::-webkit-scrollbar,
+.teamPanelBlack .log::-webkit-scrollbar,
+#log::-webkit-scrollbar{display:none!important;}
+.logRounds{
+  width:100%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+  align-items:stretch!important;
+}
+.logRound{
+  width:100%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:6px!important;
+  align-items:stretch!important;
+}
+.logPicks{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:6px!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+}
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:42px!important;
+  min-height:42px!important;
+  max-height:42px!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+.gameLogEntry.pickLog .logPickWord,
+.gameLogEntry.passLog .logPickWord,
+.logPickWord{
+  width:100%!important;
+  height:42px!important;
+  min-height:42px!important;
+  max-height:42px!important;
+  display:grid!important;
+  grid-template-columns:40px minmax(0,1fr)!important;
+  align-items:center!important;
+  justify-content:stretch!important;
+  gap:6px!important;
+  padding:3px 7px 3px 3px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+.gameLogEntry.pickLog .logUserAvatar,
+.gameLogEntry.passLog .logUserAvatar,
+.characterLogFace,
+.logUserAvatar,
+.logSpyAvatar,
+.characterLogFace.customAvatar,
+.logUserAvatar.customAvatar,
+.logSpyAvatar.customAvatar{
+  width:38px!important;
+  height:34px!important;
+  min-width:38px!important;
+  max-width:38px!important;
+  border-radius:4px!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  padding:0!important;
+  background:rgba(0,0,0,.18)!important;
+  border:1px solid rgba(255,215,108,.22)!important;
+  box-shadow:none!important;
+  font-size:22px!important;
+}
+.gameLogEntry.hintLog{
+  justify-self:center!important;
+  align-self:center!important;
+  width:min(178px,100%)!important;
+  max-width:178px!important;
+  height:42px!important;
+  min-height:42px!important;
+  max-height:42px!important;
+  display:grid!important;
+  grid-template-columns:38px minmax(0,1fr) 28px!important;
+  align-items:center!important;
+  gap:6px!important;
+  padding:3px 7px!important;
+  overflow:hidden!important;
+}
+.gameLogEntry.hintLog .logSpyAvatar{
+  width:36px!important;
+  height:34px!important;
+  min-width:36px!important;
+  max-width:36px!important;
+}
+.logPickWord span{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  line-height:1!important;
+  text-align:center!important;
+  font-size:10.5px!important;
+}
+.logLenMed .logPickWord span{font-size:9.6px!important;}
+.logLenLong .logPickWord span,.logLenXL .logPickWord span{font-size:8.4px!important;letter-spacing:-.1px!important;}
+body.discordActivity .teamPanelBlack .sideLogSection{min-height:260px!important;}
+body.discordActivity .teamPanelBlack .log,
+body.discordActivity #log{min-height:224px!important;max-height:none!important;overflow:visible!important;}
+@media(max-width:1280px){
+  .logPicks{gap:5px!important;}
+  .gameLogEntry.pickLog,.gameLogEntry.passLog{height:38px!important;min-height:38px!important;max-height:38px!important;}
+  .gameLogEntry.pickLog .logPickWord,.gameLogEntry.passLog .logPickWord,.logPickWord{height:38px!important;min-height:38px!important;max-height:38px!important;grid-template-columns:34px minmax(0,1fr)!important;gap:4px!important;padding-right:5px!important;}
+  .gameLogEntry.pickLog .logUserAvatar,.gameLogEntry.passLog .logUserAvatar,.characterLogFace,.logUserAvatar,.logSpyAvatar,.characterLogFace.customAvatar,.logUserAvatar.customAvatar,.logSpyAvatar.customAvatar{width:32px!important;height:30px!important;min-width:32px!important;max-width:32px!important;font-size:19px!important;}
+  .logPickWord span{font-size:9px!important;}
+}
+@media(max-width:980px){
+  .sideLogSection,.sideLogSection .log,#log{min-height:150px!important;}
+  .logPicks{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important;}
+  .gameLogEntry.pickLog,.gameLogEntry.passLog{height:31px!important;min-height:31px!important;max-height:31px!important;}
+  .gameLogEntry.pickLog .logPickWord,.gameLogEntry.passLog .logPickWord,.logPickWord{height:31px!important;min-height:31px!important;max-height:31px!important;grid-template-columns:25px minmax(0,1fr)!important;gap:3px!important;padding:2px 4px 2px 2px!important;}
+  .gameLogEntry.pickLog .logUserAvatar,.gameLogEntry.passLog .logUserAvatar,.characterLogFace,.logUserAvatar,.logSpyAvatar,.characterLogFace.customAvatar,.logUserAvatar.customAvatar,.logSpyAvatar.customAvatar{width:23px!important;height:23px!important;min-width:23px!important;max-width:23px!important;font-size:14px!important;}
+  .logPickWord span{font-size:7.5px!important;}
+}
+
+/* v41: game log returns to a real scrollbar, one picked card per row, full card names visible. */
+.sideLogSection{
+  flex:1 1 auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:330px!important;
+  overflow:hidden!important;
+}
+.sideLogSection h3{
+  flex:0 0 auto!important;
+}
+.sideLogSection .log,
+.teamPanelBlack .log,
+#log.log,
+#log{
+  flex:1 1 auto!important;
+  width:100%!important;
+  min-height:285px!important;
+  height:clamp(285px,34vh,390px)!important;
+  max-height:clamp(285px,34vh,390px)!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:rgba(255,215,108,.75) rgba(255,255,255,.08)!important;
+  padding:8px!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  background:rgba(0,0,0,.22)!important;
+  border:1px solid rgba(255,215,108,.16)!important;
+  border-radius:16px!important;
+}
+.sideLogSection .log::-webkit-scrollbar,
+.teamPanelBlack .log::-webkit-scrollbar,
+#log::-webkit-scrollbar{
+  display:block!important;
+  width:8px!important;
+}
+.sideLogSection .log::-webkit-scrollbar-track,
+.teamPanelBlack .log::-webkit-scrollbar-track,
+#log::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.07)!important;
+  border-radius:999px!important;
+}
+.sideLogSection .log::-webkit-scrollbar-thumb,
+.teamPanelBlack .log::-webkit-scrollbar-thumb,
+#log::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#ffe285,#9b6500)!important;
+  border-radius:999px!important;
+}
+.logRounds{
+  width:100%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:10px!important;
+  align-items:stretch!important;
+}
+.logRound{
+  width:100%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:7px!important;
+  align-items:stretch!important;
+}
+.logPicks{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:7px!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+}
+.gameLogEntry.pickLog,
+.gameLogEntry.passLog{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:auto!important;
+  min-height:44px!important;
+  max-height:none!important;
+  padding:0!important;
+  border-radius:13px!important;
+  overflow:visible!important;
+}
+.gameLogEntry.pickLog .logPickWord,
+.gameLogEntry.passLog .logPickWord,
+.logPickWord{
+  width:100%!important;
+  height:auto!important;
+  min-height:44px!important;
+  max-height:none!important;
+  display:grid!important;
+  grid-template-columns:40px minmax(0,1fr)!important;
+  align-items:center!important;
+  justify-content:stretch!important;
+  gap:8px!important;
+  padding:4px 10px 4px 4px!important;
+  box-sizing:border-box!important;
+  overflow:visible!important;
+  line-height:1.08!important;
+}
+.gameLogEntry.pickLog .logUserAvatar,
+.gameLogEntry.passLog .logUserAvatar,
+.characterLogFace,
+.logUserAvatar,
+.logSpyAvatar,
+.characterLogFace.customAvatar,
+.logUserAvatar.customAvatar,
+.logSpyAvatar.customAvatar{
+  width:38px!important;
+  height:34px!important;
+  min-width:38px!important;
+  max-width:38px!important;
+  border-radius:4px!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  padding:0!important;
+  background:rgba(0,0,0,.18)!important;
+  border:1px solid rgba(255,215,108,.22)!important;
+  box-shadow:none!important;
+  font-size:22px!important;
+}
+.logPickWord span,
+.logLenMed .logPickWord span,
+.logLenLong .logPickWord span,
+.logLenXL .logPickWord span{
+  display:block!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  word-break:normal!important;
+  overflow-wrap:anywhere!important;
+  line-height:1.08!important;
+  text-align:center!important;
+  font-size:12px!important;
+  letter-spacing:.35px!important;
+}
+.gameLogEntry.hintLog{
+  justify-self:center!important;
+  align-self:center!important;
+  width:100%!important;
+  max-width:100%!important;
+  height:44px!important;
+  min-height:44px!important;
+  max-height:44px!important;
+  display:grid!important;
+  grid-template-columns:38px minmax(0,1fr) 28px!important;
+  align-items:center!important;
+  gap:7px!important;
+  padding:4px 8px!important;
+  overflow:hidden!important;
+  border-radius:13px!important;
+}
+.gameLogEntry.hintLog b{
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body.discordActivity .teamPanelBlack .sideLogSection{min-height:330px!important;}
+body.discordActivity .teamPanelBlack .log,
+body.discordActivity #log{
+  min-height:285px!important;
+  height:clamp(285px,34vh,390px)!important;
+  max-height:clamp(285px,34vh,390px)!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+@media(max-width:1280px){
+  .sideLogSection{min-height:290px!important;}
+  .sideLogSection .log,.teamPanelBlack .log,#log.log,#log{min-height:245px!important;height:clamp(245px,30vh,330px)!important;max-height:clamp(245px,30vh,330px)!important;}
+  .logPickWord span,.logLenMed .logPickWord span,.logLenLong .logPickWord span,.logLenXL .logPickWord span{font-size:11px!important;}
+}
+@media(max-width:980px){
+  .sideLogSection{min-height:180px!important;}
+  .sideLogSection .log,.teamPanelBlack .log,#log.log,#log{min-height:150px!important;height:220px!important;max-height:220px!important;}
+  .gameLogEntry.pickLog .logPickWord,.gameLogEntry.passLog .logPickWord,.logPickWord{grid-template-columns:28px minmax(0,1fr)!important;min-height:36px!important;gap:6px!important;}
+  .gameLogEntry.pickLog .logUserAvatar,.gameLogEntry.passLog .logUserAvatar,.characterLogFace,.logUserAvatar,.logSpyAvatar,.characterLogFace.customAvatar,.logUserAvatar.customAvatar,.logSpyAvatar.customAvatar{width:26px!important;height:26px!important;min-width:26px!important;max-width:26px!important;font-size:16px!important;}
+  .logPickWord span,.logLenMed .logPickWord span,.logLenLong .logPickWord span,.logLenXL .logPickWord span{font-size:10px!important;}
+}
