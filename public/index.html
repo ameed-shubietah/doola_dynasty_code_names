@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Doola's Dynasty Code Names</title>
-    <link rel="stylesheet" href="/style.css?v=44"/>
+    <link rel="stylesheet" href="/style.css?v=50"/>
 </head>
 <body>
 <div id="app">
@@ -16,7 +16,7 @@
         <div class="joinBasics">
             <label>
                 Name
-                <input id="name" maxlength="32" autocomplete="nickname" placeholder="Name/Nickname"/>
+                <input id="name" maxlength="32" autocomplete="nickname" placeholder="Your Name"/>
             </label>
 
             <label class="websiteRoomField">
@@ -70,34 +70,46 @@
                     <h2>Gold Team</h2>
                     <div class="discordRoleBox">
                         <div><b>Operatives</b><small>Guess cards</small></div>
-                        <button type="button" class="discordRoleJoin primary" data-team="blue" data-role="operative">Join</button>
+                        <button type="button" class="discordRoleJoin primary" data-team="blue" data-role="operative">
+                            Join
+                        </button>
                     </div>
                     <div class="discordRoleBox">
                         <div><b>Spymasters</b><small>Give clues</small></div>
-                        <button type="button" class="discordRoleJoin primary" data-team="blue" data-role="spymaster">Join</button>
+                        <button type="button" class="discordRoleJoin primary" data-team="blue" data-role="spymaster">
+                            Join
+                        </button>
                     </div>
                 </section>
                 <section class="discordSpectatorCard">
                     <h2>Spectators 👁</h2>
                     <p>Watch the match without guessing.</p>
-                    <button type="button" class="discordRoleJoin" data-team="spectator" data-role="spectator">Join as Spectator</button>
-                    <p class="discordHelpText">Choose any side and role, then your Discord Activity room opens automatically.</p>
+                    <button type="button" class="discordRoleJoin" data-team="spectator" data-role="spectator">Join as
+                        Spectator
+                    </button>
+                    <p class="discordHelpText">Choose any side and role, then your Discord Activity room opens
+                        automatically.</p>
                 </section>
                 <section class="discordTeamCard discordBlackCard">
                     <h2>Black Team</h2>
                     <div class="discordRoleBox">
                         <div><b>Operatives</b><small>Guess cards</small></div>
-                        <button type="button" class="discordRoleJoin primary" data-team="red" data-role="operative">Join</button>
+                        <button type="button" class="discordRoleJoin primary" data-team="red" data-role="operative">
+                            Join
+                        </button>
                     </div>
                     <div class="discordRoleBox">
                         <div><b>Spymasters</b><small>Give clues</small></div>
-                        <button type="button" class="discordRoleJoin primary" data-team="red" data-role="spymaster">Join</button>
+                        <button type="button" class="discordRoleJoin primary" data-team="red" data-role="spymaster">
+                            Join
+                        </button>
                     </div>
                 </section>
             </div>
         </div>
         <div id="landingAdminBar" class="landingAdminBar hidden">
-            <button id="landingStartGameBtn" class="primary landingStartGameBtn hidden" type="button">Start Game</button>
+            <button id="landingStartGameBtn" class="primary landingStartGameBtn hidden" type="button">Start Game
+            </button>
             <div id="landingOptionsWrap" class="optionsWrap hidden">
                 <button class="optionsBtn" type="button">Options ▾</button>
                 <div class="optionsMenu">
@@ -147,9 +159,6 @@
                     <span id="winnerBadge"></span>
                 </div>
                 <div class="topGameTools hidden" aria-hidden="true"></div>
-                <div id="topOperativeActions" class="topActionBar hidden">
-                    <button id="endTurnBtn">Pass / End Turn</button>
-                </div>
                 <button id="newRoundBtn" class="primary hidden">Create New Game</button>
             </div>
             <div class="timers"><span>Round <b id="roundTime">00:00</b></span><span>Game <b
@@ -224,6 +233,10 @@
             </div>
         </div>
 
+        <div id="topOperativeActions" class="topActionBar bottomPassBar hidden">
+            <button id="endTurnBtn" type="button">PASS</button>
+        </div>
+
         <section id="bottomClueDock" class="bottomClueDock glass hidden">
             <div class="dockText">
                 <b id="dockTitle">Give your clue</b>
@@ -257,10 +270,10 @@
 </div>
 <div id="toast"></div>
 <script>
-  window.FORCE_DISCORD_ACTIVITY = true;
+    window.FORCE_DISCORD_ACTIVITY = true;
 </script>
-<script type="module" src="/discord-sdk.js?v=40"></script>
+<script type="module" src="/discord-sdk.js?v=48"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js?v=45"></script>
+<script src="/app.js?v=48"></script>
 </body>
 </html>
