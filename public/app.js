@@ -1581,23 +1581,23 @@ function renderBoard() {
     board.innerHTML = state.board.map((c, i) => {
         const showOrigin = state.status === 'finished';
         const colorClass = ((c.revealed || spy || showOrigin) && c.color) ? c.color : '';
-        const target = !c.revealed && (c.clueTarget || targetIds.has(c.id));
+        // Spymaster clue-target selections should show the crown only, without the old cyan border/tick.
+        const spyClueTarget = !c.revealed && spy && (c.clueTarget || targetIds.has(c.id));
         const voteCount = state.voteInfo?.counts?.[c.id] || 0;
         const agreed = state.voteInfo?.agreedCardId === c.id;
         const myVote = marked.includes(c.id);
         const voted = voteCount > 0;
+        const revealer = c.revealedById ? state?.players?.[c.revealedById] : null;
+        // Only a correct operative reveal hides the word and leaves the crown/background.
+        // Wrong/neutral/danger reveals keep the word visible for both operatives and spymasters.
+        const correctReveal = !!(c.revealed && revealer && (c.color === 'blue' || c.color === 'red') && revealer.team === c.color);
         const playableSpyTarget = spy && p?.team === state.turn && state.status === 'waiting-clue' && c.color === p.team && !c.revealed;
         const canConfirmThis = p?.role === 'operative' && p.team === state.turn && state.status === 'guessing' && myVote && !c.revealed;
-        const voteBadge = voted && !c.revealed ? `<span class="voteBadge ${agreed ? 'agreed' : ''}">${voteCount}</span>` : '';
+        const voteBadge = '';
         const voteFaces = voted && !c.revealed ? voteFacesHtml(c.id) : '';
-        // Spymasters need a clear marker for operative selections.
-        // MARKED = operative selected it but has not confirmed yet.
-        // PICKED = operative confirmed/revealed it, and this stays visible after reveal.
-        const markedByOperative = voted && !c.revealed;
-        const pickedLabel = spy && markedByOperative ? `<span class="pickedLabel markedLive">MARKED</span>` : '';
         const confirmMini = canConfirmThis ? `<span class="cardConfirm" data-confirm-id="${c.id}" title="Confirm ${c.word}">✓</span>` : '';
         const revealBadge = c.revealed ? revealHeroSvg(c.color) : '';
-        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${target ? 'target' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${voteFaces}${pickedLabel}${confirmMini}</button>`;
+        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${correctReveal ? 'correctReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {
