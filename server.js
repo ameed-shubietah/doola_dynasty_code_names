@@ -931,6 +931,15 @@ io.on('connection', socket => {
             emitRoom(room);
             return;
         }
+        if (action === 'assignAdmin') {
+            target.isAdmin = true;
+            target.adminToken = room.adminToken;
+            if (target.socketId) io.to(target.socketId).emit('toast', 'You are now an admin.');
+            socket.emit('toast', `${target.name} is now an admin.`);
+            room.log.push(`Admin assigned admin access to ${target.name}.`);
+            emitRoom(room);
+            return;
+        }
         if (action === 'move') {
             team = ['blue', 'red', 'spectator'].includes(team) ? team : target.team;
             role = ['operative', 'spymaster', 'spectator'].includes(role) ? role : target.role;

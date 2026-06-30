@@ -1371,14 +1371,14 @@ function renderPlayers() {
 
     function adminTools(p) {
         if (!adminMode || p.id === myId || p.isAdmin) return '';
-        return `<div class="adminActions"><button data-admin-kick="${p.id}">Kick</button></div>`;
+        return `<div class="adminActions"><button data-admin-kick="${p.id}">Kick</button><button data-admin-assign="${p.id}">Assign Admin</button></div>`;
     }
 
     function playerHtml(p) {
         const offline = p.online === false;
-        const adminBadge = p.isAdmin ? '<span class="adminBadge">Admin</span>' : '';
+        const adminBadge = p.isAdmin ? '<span class="adminBadge adminCrown" title="Admin">👑</span>' : '';
         const canDrag = adminMode && (!p.isAdmin || p.id === myId);
-        return `<div class="player ${p.team} ${offline ? 'offline' : ''} ${canDrag ? 'draggablePlayer' : ''} ${p.isAdmin ? 'adminPlayer' : ''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}">${avatarHtml(p)}<div class="playerBody"><b>${p.name} ${adminBadge} ${offline ? '<span class="offlineIcon" title="Offline">📡</span>' : ''}</b><span class="roleTag">${p.role}${offline ? ' · offline' : ''}</span>${adminTools(p)}</div></div>`;
+        return `<div class="player ${p.team} ${offline ? 'offline' : ''} ${canDrag ? 'draggablePlayer' : ''} ${p.isAdmin ? 'adminPlayer' : ''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}">${avatarHtml(p)}<div class="playerBody"><b>${escapeHtml(p.name || 'Player')} ${adminBadge} ${offline ? '<span class="offlineIcon" title="Offline">📡</span>' : ''}</b>${adminTools(p)}</div></div>`;
     }
 
     function hexToRgba(hex, alpha = 1) {
@@ -1404,6 +1404,14 @@ function renderPlayers() {
             ev.stopPropagation();
             const target = btn.dataset.adminKick;
             socket.emit('adminUpdatePlayer', {playerId: target, action: 'kick'});
+        };
+    });
+    document.querySelectorAll('[data-admin-assign]').forEach(btn => {
+        btn.onclick = (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const target = btn.dataset.adminAssign;
+            socket.emit('adminUpdatePlayer', {playerId: target, action: 'assignAdmin'});
         };
     });
     setupAdminDragAndDrop(adminMode);
