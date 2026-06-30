@@ -11909,3 +11909,135 @@ body.discordActivity #name[readonly] {
         min-height: 70px !important;
     }
 }
+
+/* v59: mobile cards a bit shorter, keep the game log visible + scrollable, preserve desktop */
+@media (max-width: 980px) and (orientation: portrait) {
+    body.discordActivity #game.gameV9,
+    #game.gameV9 {
+        grid-template-rows: auto auto minmax(0, clamp(365px, 50svh, 455px)) auto !important;
+        gap: 4px !important;
+    }
+
+    body.discordActivity #game.gameV9 .boardWrap,
+    #game.gameV9 .boardWrap {
+        height: clamp(365px, 50svh, 455px) !important;
+        max-height: clamp(365px, 50svh, 455px) !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    body.discordActivity #game .board,
+    #game .board {
+        height: 100% !important;
+        grid-template-rows: repeat(5, minmax(0, 1fr)) !important;
+        gap: 3px !important;
+    }
+
+    body.discordActivity #game .card,
+    #game .card {
+        min-height: 0 !important;
+        height: auto !important;
+        border-radius: 8px !important;
+        padding: 2px !important;
+    }
+
+    body.discordActivity #game .word,
+    #game .word {
+        min-height: 17px !important;
+        max-height: 20px !important;
+        padding: 2px 3px !important;
+        font-size: clamp(6px, 1.8vw, 9.4px) !important;
+        letter-spacing: .18px !important;
+    }
+
+    body.discordActivity #game .word.longWord,
+    #game .word.longWord {
+        font-size: clamp(5.4px, 1.55vw, 7.8px) !important;
+        letter-spacing: -.05px !important;
+    }
+
+    body.discordActivity #game .teamPanelBlack,
+    #game .teamPanelBlack {
+        padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)) !important;
+        max-height: none !important;
+    }
+
+    body.discordActivity #game .teamPanelGold,
+    #game .teamPanelGold {
+        min-height: 62px !important;
+    }
+
+    body.discordActivity #game .teamHeader,
+    #game .teamHeader {
+        min-height: 50px !important;
+    }
+
+    body.discordActivity #game .sideLogSection,
+    #game .sideLogSection {
+        display: block !important;
+        margin-top: 5px !important;
+    }
+
+    body.discordActivity #game .sideLogSection .log,
+    body.discordActivity #log.log,
+    body.discordActivity #log,
+    #game .sideLogSection .log,
+    #log.log,
+    #log {
+        height: clamp(78px, 14svh, 122px) !important;
+        min-height: 78px !important;
+        max-height: clamp(78px, 14svh, 122px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
+        scrollbar-width: thin !important;
+        padding: 5px !important;
+    }
+
+    body.discordActivity #game .logRounds,
+    #game .logRounds {
+        padding-bottom: 8px !important;
+    }
+
+    body.discordActivity .bottomClueDock,
+    .bottomClueDock {
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 36px) !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        padding: 3px 5px !important;
+    }
+
+    body.discordActivity .bottomClueDock #clueWord,
+    body.discordActivity .bottomClueDock #clueNumber,
+    body.discordActivity .bottomClueDock button,
+    .bottomClueDock #clueWord,
+    .bottomClueDock #clueNumber,
+    .bottomClueDock button {
+        height: 24px !important;
+        min-height: 24px !important;
+        font-size: 9px !important;
+    }
+
+    body.discordActivity #topOperativeActions.bottomPassBar:not(.hidden),
+    #topOperativeActions.bottomPassBar:not(.hidden),
+    body.discordActivity #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar,
+    #adminControlBar.bottomOptionsBar,
+    #adminControlBar {
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 2px) !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    body.discordActivity #game .sideLogSection .log,
+    #game .sideLogSection .log,
+    body.discordActivity #log,
+    #log {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        touch-action: pan-y !important;
+        scrollbar-width: thin !important;
+    }
+}

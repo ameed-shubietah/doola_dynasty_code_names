@@ -26,7 +26,8 @@ function displayName(user) {
     if (!user) return 'Discord User';
     return pick(user, [
         'global_name', 'globalName', 'display_name', 'displayName',
-        'nick', 'nickname', 'username', 'name'
+        'nick', 'nickname', 'member_nick', 'memberNick',
+        'username', 'user_name', 'userName', 'name', 'display_name'
     ]) || 'Discord User';
 }
 
@@ -176,6 +177,18 @@ async function initDiscordActivity() {
             } catch (err) {
                 return {ok: false, error: err?.message || 'Could not open Discord invite dialog.'};
             }
+        };
+
+        window.DD_forceIdentityRefresh = async function () {
+            const participants = await fetchParticipants(discordSdk);
+            if (participants.length) {
+                window.DD_PARTICIPANTS = participants;
+                window.DD_DISCORD.participants = participants;
+                const fallback = chooseCurrentUserFromParticipants(participants);
+                if (fallback) setCurrentUser(fallback, 'participants-force-refresh');
+                window.dispatchEvent(new CustomEvent('discordParticipantsChanged', {detail: participants}));
+            }
+            return window.DD_CURRENT_USER || window.DD_DISCORD.currentUser || null;
         };
 
         // Tell app.js the Discord SDK is alive immediately. Do not leave the lobby stuck

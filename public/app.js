@@ -63,18 +63,59 @@ function lockDiscordNameField() {
     }
 }
 
+function isRealDiscordName(value) {
+    const n = String(value || '').trim();
+    if (!n) return false;
+    return !['discord user', 'loading discord name...', 'getting discord name...', 'your name', 'agent'].includes(n.toLowerCase());
+}
+
+function cachedDiscordName() {
+    const values = [localStorage.dd_last_discord_name, localStorage.cc_name];
+    return values.find(isRealDiscordName) || '';
+}
+
+function resolvedDiscordName() {
+    const u = discordUser();
+    return (u?.name && isRealDiscordName(u.name)) ? u.name : cachedDiscordName();
+}
+
 function applyDiscordNameToInput(force = false) {
     if (!nameInput || !isDiscordActivity) return;
-    const u = discordUser();
-    const discordName = (u?.name && u.name !== 'Discord User') ? u.name : '';
+    const discordName = resolvedDiscordName();
     if (discordName && (force || nameInput.value.trim() !== discordName)) {
         nameInput.value = discordName;
         localStorage.cc_name = discordName;
+        localStorage.dd_last_discord_name = discordName;
         nameWasEditedLocally = false;
-    } else if (!nameInput.value.trim()) {
-        nameInput.value = localStorage.dd_last_discord_name || localStorage.cc_name || 'Discord User';
+    } else if (!isRealDiscordName(nameInput.value)) {
+        nameInput.value = discordName || 'Getting Discord name...';
     }
     lockDiscordNameField();
+}
+
+function waitForDiscordName(timeout = 2600) {
+    return new Promise(resolve => {
+        const nowName = resolvedDiscordName();
+        if (nowName) return resolve(nowName);
+        if (window.DD_forceIdentityRefresh) {
+            try { window.DD_forceIdentityRefresh(); } catch {}
+        }
+        const started = Date.now();
+        const done = () => {
+            window.removeEventListener('discordIdentityChanged', onChange);
+            window.removeEventListener('discordParticipantsChanged', onChange);
+            clearInterval(timer);
+            resolve(resolvedDiscordName());
+        };
+        const onChange = () => {
+            if (resolvedDiscordName()) done();
+        };
+        const timer = setInterval(() => {
+            if (resolvedDiscordName() || Date.now() - started >= timeout) done();
+        }, 120);
+        window.addEventListener('discordIdentityChanged', onChange);
+        window.addEventListener('discordParticipantsChanged', onChange);
+    });
 }
 
 const params = new URLSearchParams(location.search);
@@ -369,8 +410,7 @@ function safeAvatarSrc(value) {
 
 function currentDisplayName() {
     if (isDiscordActivity) {
-        const discordName = playerNameFromDiscord();
-        return (discordName && discordName !== 'Discord User') ? discordName : ((nameInput?.value || '').trim() || localStorage.dd_last_discord_name || localStorage.cc_name || 'Discord User');
+        return resolvedDiscordName() || (isRealDiscordName(nameInput?.value) ? nameInput.value.trim() : '') || 'Discord Guest';
     }
     return (nameInput?.value || '').trim() || localStorage.cc_name || playerNameFromDiscord() || 'Agent';
 }
@@ -398,10 +438,17 @@ function spymasterName(team) {
 
 
 function discordUser() {
-    // Only the authenticated Discord user is safe as the local player.
-    // Do not guess from the participants list, because that can select the wrong user.
     const direct = window.DD_CURRENT_USER || window.DD_DISCORD?.currentUser || null;
-    if (direct && (direct.id || direct.name || direct.avatar)) return direct;
+    if (direct && (direct.id || isRealDiscordName(direct.name) || direct.avatar)) return direct;
+
+    const participants = Array.isArray(window.DD_PARTICIPANTS) ? window.DD_PARTICIPANTS : (Array.isArray(window.DD_DISCORD?.participants) ? window.DD_DISCORD.participants : []);
+    const lastId = localStorage.dd_last_discord_id || '';
+    const picked = participants.find(p => p?.isCurrentUser) || (lastId ? participants.find(p => p?.id === lastId) : null) || (participants.length === 1 ? participants[0] : null);
+    if (picked && (picked.id || isRealDiscordName(picked.name) || picked.avatar)) return picked;
+
+    const cachedName = cachedDiscordName();
+    const cachedId = localStorage.dd_last_discord_id || '';
+    if (cachedName || cachedId) return {id: cachedId, name: cachedName, avatar: ''};
     return null;
 }
 
@@ -415,7 +462,7 @@ function discordProfileReady() {
 }
 
 function playerNameFromDiscord() {
-    return discordUser()?.name || '';
+    return resolvedDiscordName();
 }
 
 function stableDiscordFallbackKey(roomCode = '') {
@@ -440,8 +487,8 @@ function ensureDiscordIdentity() {
         if (u.id) {
             setPlayerKey(`d_${u.id}`);
         }
-    } else if (nameInput && !nameInput.value.trim()) {
-        nameInput.value = localStorage.dd_last_discord_name || localStorage.cc_name || 'Discord User';
+    } else if (nameInput && !isRealDiscordName(nameInput.value)) {
+        nameInput.value = cachedDiscordName() || 'Getting Discord name...';
     }
 }
 
@@ -729,7 +776,7 @@ function discordJoinPayload(team, role) {
     ensureDiscordIdentity();
     const u = discordUser();
     const finalDiscordId = u?.id || '';
-    const finalName = ((u?.name && u.name !== 'Discord User') ? u.name : '') || nameInput.value.trim() || localStorage.dd_last_discord_name || localStorage.cc_name || 'Discord User';
+    const finalName = resolvedDiscordName() || (isRealDiscordName(nameInput.value) ? nameInput.value.trim() : '') || 'Discord Guest';
     const finalAvatar = customAvatar || '';
 
     if (finalDiscordId) {
@@ -759,7 +806,7 @@ function discordJoinPayload(team, role) {
     };
 }
 
-function joinDiscordActivity(team, role) {
+async function joinDiscordActivity(team, role) {
     if (!isDiscordActivity && !nameInput.value.trim()) {
         toast('Write your name first.');
         nameInput.focus();
@@ -772,6 +819,14 @@ function joinDiscordActivity(team, role) {
     if (roleSel) roleSel.value = role;
     updateJoinSummary();
     setJoinButtonsReady();
+
+    if (isDiscordActivity && !resolvedDiscordName()) {
+        applyDiscordNameToInput(true);
+        toast('Getting your Discord name...');
+        await waitForDiscordName(2600);
+        applyDiscordNameToInput(true);
+    }
+
     const roomCode = getDiscordActivityRoomCode();
     roomInput.value = roomCode;
     withFreshLobbyBeforeJoin(roomCode, () => {
@@ -791,7 +846,7 @@ function sendDiscordIdentityToServer() {
     const u = discordUser();
     if (!u?.id) return;
     const payload = {
-        name: currentDisplayName() || u.name || 'Discord User',
+        name: currentDisplayName() || u.name || 'Discord Guest',
         avatar: customAvatar || '',
         discordId: u.id
     };
@@ -851,8 +906,10 @@ window.addEventListener('discordActivityReady', (event) => {
     syncDiscordLanding();
 });
 window.addEventListener('discordParticipantsChanged', () => {
+    applyDiscordNameToInput(true);
     renderDiscordIdentity();
     refreshDiscordLobbyPreview(true);
+    sendDiscordIdentityToServer();
 });
 window.addEventListener('discordIdentityChanged', () => {
     ensureDiscordIdentity();
@@ -863,6 +920,7 @@ window.addEventListener('discordIdentityChanged', () => {
     sendDiscordIdentityToServer();
 });
 window.addEventListener('discordIdentityError', () => {
+    applyDiscordNameToInput(true);
     renderDiscordIdentity();
     setJoinButtonsReady();
 });
@@ -1872,10 +1930,12 @@ function renderLog() {
     const mainLog = $('log');
     if (mainLog) {
         mainLog.innerHTML = html;
+        requestAnimationFrame(() => { mainLog.scrollTop = mainLog.scrollHeight; });
     }
     const hiddenLog = $('logHidden');
     if (hiddenLog) {
         hiddenLog.innerHTML = html;
+        requestAnimationFrame(() => { hiddenLog.scrollTop = hiddenLog.scrollHeight; });
     }
 }
 
