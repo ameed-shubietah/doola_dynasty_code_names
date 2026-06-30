@@ -1679,7 +1679,10 @@ function renderBoard() {
         const voteFaces = voted && !c.revealed ? voteFacesHtml(c.id) : '';
         const confirmMini = canConfirmThis ? `<span class="cardConfirm" data-confirm-id="${c.id}" title="Confirm ${c.word}">✓</span>` : '';
         const revealBadge = c.revealed ? revealHeroSvg(c.color) : '';
-        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${correctReveal ? 'correctReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${voteFaces}${confirmMini}</button>`;
+        // Use a real centered crown layer instead of card backgrounds/pseudo-elements.
+        // This avoids mobile Safari/Discord cropping the crown into the top-left corner.
+        const crownLayer = (spyClueTarget || correctReveal) ? `<img class="cardCrownLayer" src="/crown.png" alt="" aria-hidden="true">` : '';
+        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${correctReveal ? 'correctReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${(spyClueTarget || correctReveal) ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {

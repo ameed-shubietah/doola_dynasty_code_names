@@ -12300,3 +12300,95 @@ body.discordActivity #name[readonly] {
         transform: translate(-50%, -50%) !important;
     }
 }
+
+
+/* v62: final crown positioning fix.
+   Draw selected/correct crowns as a real centered image layer, not as a background
+   or ::before layer, so mobile portrait/landscape cannot crop it into a corner. */
+#game .card.hasCrownLayer,
+body.discordActivity #game .card.hasCrownLayer {
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: cover !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+}
+
+#game .card.hasCrownLayer.blue,
+body.discordActivity #game .card.hasCrownLayer.blue {
+    background-image: linear-gradient(145deg, #fff3a6, #ffd04b 55%, #b87900) !important;
+}
+
+#game .card.hasCrownLayer.red,
+body.discordActivity #game .card.hasCrownLayer.red {
+    background-image: linear-gradient(145deg, #333338, #070708 72%, #010101) !important;
+}
+
+#game .card.hasCrownLayer.neutral,
+body.discordActivity #game .card.hasCrownLayer.neutral {
+    background-image: linear-gradient(145deg, #f1f2f4, #b7bac0 48%, #747980) !important;
+}
+
+#game .card.hasCrownLayer.assassin,
+body.discordActivity #game .card.hasCrownLayer.assassin {
+    background-image: linear-gradient(145deg, #ff2d26, #b00806 58%, #530100) !important;
+}
+
+#game .card.hasCrownLayer::before,
+#game .board.spyBoard .card.hasCrownLayer::before,
+#game .board.operativeBoard .card.hasCrownLayer::before,
+body.discordActivity #game .card.hasCrownLayer::before,
+body.discordActivity #game .board.spyBoard .card.hasCrownLayer::before,
+body.discordActivity #game .board.operativeBoard .card.hasCrownLayer::before {
+    content: "" !important;
+    display: none !important;
+    background-image: none !important;
+    opacity: 0 !important;
+}
+
+#game .card .cardCrownLayer,
+body.discordActivity #game .card .cardCrownLayer {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: min(78%, 104px) !important;
+    height: min(86%, 116px) !important;
+    transform: translate(-50%, -50%) !important;
+    transform-origin: center center !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+    opacity: .92 !important;
+    filter: drop-shadow(0 9px 12px rgba(0, 0, 0, .58)) !important;
+}
+
+#game .card.hasCrownLayer .word,
+body.discordActivity #game .card.hasCrownLayer .word {
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+#game .card.hasCrownLayer.correctReveal .word,
+body.discordActivity #game .card.hasCrownLayer.correctReveal .word {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+@media (max-width: 980px) {
+    #game .card .cardCrownLayer,
+    body.discordActivity #game .card .cardCrownLayer {
+        width: min(80%, 76px) !important;
+        height: min(84%, 88px) !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    #game .card .cardCrownLayer,
+    body.discordActivity #game .card .cardCrownLayer {
+        width: min(76%, 96px) !important;
+        height: min(82%, 86px) !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
