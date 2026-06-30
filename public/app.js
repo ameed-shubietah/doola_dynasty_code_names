@@ -55,67 +55,44 @@ let nameWasEditedLocally = !!localStorage.cc_name;
 if (nameInput) nameInput.value = localStorage.cc_name || '';
 
 function lockDiscordNameField() {
+    // Discord Activity no longer locks or auto-fills the player name.
+    // Every player can type/edit their own in-game name.
     if (!nameInput) return;
-    if (isDiscordActivity || document.body.classList.contains('discordActivity')) {
-        nameInput.readOnly = true;
-        nameInput.classList.add('discordNameLocked');
-        nameInput.title = 'Discord Activities use your Discord display name.';
-    }
+    nameInput.readOnly = false;
+    nameInput.classList.remove('discordNameLocked');
+    nameInput.title = '';
 }
 
 function isRealDiscordName(value) {
     const n = String(value || '').trim();
     if (!n) return false;
-    return !['discord user', 'loading discord name...', 'getting discord name...', 'your name', 'agent'].includes(n.toLowerCase());
+    return !['discord user', 'loading discord name...', 'getting discord name...', 'waiting for discord name...', 'discord guest', 'your name'].includes(n.toLowerCase());
 }
 
 function cachedDiscordName() {
-    const values = [localStorage.dd_last_discord_name, localStorage.cc_name];
-    return values.find(isRealDiscordName) || '';
+    return '';
 }
 
 function resolvedDiscordName() {
-    const u = discordUser();
-    return (u?.name && isRealDiscordName(u.name)) ? u.name : cachedDiscordName();
+    return '';
 }
 
-function applyDiscordNameToInput(force = false) {
-    if (!nameInput || !isDiscordActivity) return;
-    const discordName = resolvedDiscordName();
-    if (discordName && (force || nameInput.value.trim() !== discordName)) {
-        nameInput.value = discordName;
-        localStorage.cc_name = discordName;
-        localStorage.dd_last_discord_name = discordName;
-        nameWasEditedLocally = false;
-    } else if (!isRealDiscordName(nameInput.value)) {
-        nameInput.value = discordName || 'Getting Discord name...';
-    }
+function applyDiscordNameToInput() {
+    // Intentionally disabled. We keep Discord Activity room/invite support,
+    // but names are now manual again.
     lockDiscordNameField();
 }
 
-function waitForDiscordName(timeout = 2600) {
-    return new Promise(resolve => {
-        const nowName = resolvedDiscordName();
-        if (nowName) return resolve(nowName);
-        if (window.DD_forceIdentityRefresh) {
-            try { window.DD_forceIdentityRefresh(); } catch {}
-        }
-        const started = Date.now();
-        const done = () => {
-            window.removeEventListener('discordIdentityChanged', onChange);
-            window.removeEventListener('discordParticipantsChanged', onChange);
-            clearInterval(timer);
-            resolve(resolvedDiscordName());
-        };
-        const onChange = () => {
-            if (resolvedDiscordName()) done();
-        };
-        const timer = setInterval(() => {
-            if (resolvedDiscordName() || Date.now() - started >= timeout) done();
-        }, 120);
-        window.addEventListener('discordIdentityChanged', onChange);
-        window.addEventListener('discordParticipantsChanged', onChange);
-    });
+function waitForDiscordName() {
+    // No waiting for Discord identity anymore.
+    return Promise.resolve('');
+}
+
+if (nameInput && !isRealDiscordName(nameInput.value)) {
+    nameInput.value = '';
+    try {
+        if (!isRealDiscordName(localStorage.cc_name)) localStorage.removeItem('cc_name');
+    } catch {}
 }
 
 const params = new URLSearchParams(location.search);
@@ -409,10 +386,8 @@ function safeAvatarSrc(value) {
 }
 
 function currentDisplayName() {
-    if (isDiscordActivity) {
-        return resolvedDiscordName() || (isRealDiscordName(nameInput?.value) ? nameInput.value.trim() : '') || 'Discord Guest';
-    }
-    return (nameInput?.value || '').trim() || localStorage.cc_name || playerNameFromDiscord() || 'Agent';
+    const typed = (nameInput?.value || '').trim();
+    return typed || localStorage.cc_name || 'Agent';
 }
 
 function me() {
@@ -462,7 +437,7 @@ function discordProfileReady() {
 }
 
 function playerNameFromDiscord() {
-    return resolvedDiscordName();
+    return '';
 }
 
 function stableDiscordFallbackKey(roomCode = '') {
@@ -479,22 +454,11 @@ function stableDiscordFallbackKey(roomCode = '') {
 }
 
 function ensureDiscordIdentity() {
-    if (!isDiscordActivity) return;
+    // Keep the Activity/session support, but do not fetch or force Discord names.
     lockDiscordNameField();
-    const u = discordUser();
-    if (u) {
-        applyDiscordNameToInput(true);
-        if (u.id) {
-            setPlayerKey(`d_${u.id}`);
-        }
-    } else if (nameInput && !isRealDiscordName(nameInput.value)) {
-        nameInput.value = cachedDiscordName() || 'Getting Discord name...';
-    }
 }
 
 function renderDiscordIdentity() {
-    // No visible Discord profile/loading card. We use Discord name quietly when available,
-    // and the chosen game character is the visible avatar everywhere.
     const card = document.getElementById('discordIdentityCard');
     if (card) card.remove();
 }
@@ -773,19 +737,12 @@ function getDiscordActivityRoomCode() {
 
 function discordJoinPayload(team, role) {
     const roomCode = getDiscordActivityRoomCode();
-    ensureDiscordIdentity();
-    const u = discordUser();
-    const finalDiscordId = u?.id || '';
-    const finalName = resolvedDiscordName() || (isRealDiscordName(nameInput.value) ? nameInput.value.trim() : '') || 'Discord Guest';
+    const finalName = currentDisplayName();
     const finalAvatar = customAvatar || '';
 
-    if (finalDiscordId) {
-        setPlayerKey(`d_${finalDiscordId}`);
-    } else {
-        // Fallback only for cases where Discord OAuth/participants are delayed.
-        // This still prevents duplicate seats in the same frame/socket.
-        setPlayerKey(stableDiscordFallbackKey(roomCode));
-    }
+    // Do not depend on Discord identity. A stable per-tab Activity key makes joins
+    // work on PC, mobile, tablet, and iPad even when Discord profile data is delayed.
+    setPlayerKey(stableDiscordFallbackKey(roomCode));
     myId = playerKey;
     localStorage.cc_name = finalName;
     nameInput.value = finalName;
@@ -797,7 +754,7 @@ function discordJoinPayload(team, role) {
         roomId: roomCode,
         name: finalName,
         avatar: finalAvatar,
-        discordId: finalDiscordId,
+        discordId: '',
         team,
         role,
         character: outboundCharacter(),
@@ -807,7 +764,7 @@ function discordJoinPayload(team, role) {
 }
 
 async function joinDiscordActivity(team, role) {
-    if (!isDiscordActivity && !nameInput.value.trim()) {
+    if (!nameInput.value.trim()) {
         toast('Write your name first.');
         nameInput.focus();
         return;
@@ -819,13 +776,6 @@ async function joinDiscordActivity(team, role) {
     if (roleSel) roleSel.value = role;
     updateJoinSummary();
     setJoinButtonsReady();
-
-    if (isDiscordActivity && !resolvedDiscordName()) {
-        applyDiscordNameToInput(true);
-        toast('Getting your Discord name...');
-        await waitForDiscordName(2600);
-        applyDiscordNameToInput(true);
-    }
 
     const roomCode = getDiscordActivityRoomCode();
     roomInput.value = roomCode;
@@ -842,19 +792,7 @@ async function joinDiscordActivity(team, role) {
 }
 
 function sendDiscordIdentityToServer() {
-    if (!isDiscordActivity || !state) return;
-    const u = discordUser();
-    if (!u?.id) return;
-    const payload = {
-        name: currentDisplayName() || u.name || 'Discord Guest',
-        avatar: customAvatar || '',
-        discordId: u.id
-    };
-    socket.emit('updateDiscordIdentity', payload, res => {
-        if (res?.ok && res.playerKey) {
-            setPlayerKey(res.playerKey);
-        }
-    });
+    // Disabled: player names are manual and editable again.
 }
 
 async function openDiscordInvite() {
@@ -1140,10 +1078,6 @@ function setupJoinFlow() {
     const di = $('discordInviteBtn');
     if (di) di.onclick = openDiscordInvite;
     if (nameInput) nameInput.addEventListener('input', () => {
-        if (isDiscordActivity) {
-            applyDiscordNameToInput(true);
-            return;
-        }
         nameWasEditedLocally = true;
         localStorage.cc_name = nameInput.value.trim();
         setJoinButtonsReady();
