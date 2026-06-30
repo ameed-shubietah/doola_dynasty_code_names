@@ -686,26 +686,36 @@ io.on('connection', socket => {
         }
 
         const usingCustomAvatar = !!avatar;
-        const char = usingCustomAvatar ? '' : (CHARACTERS.find(c => c.id === character) ? character : CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)].id);
-        const takenCharPlayer = char ? Object.values(room.players || {}).find(old =>
+        let char = usingCustomAvatar ? '' : (CHARACTERS.find(c => c.id === character) ? character : CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)].id);
+        const charTakenByOther = candidate => !!(candidate && Object.values(room.players || {}).find(old =>
             old.online !== false &&
-            old.character === char &&
+            old.character === candidate &&
             !old.avatar &&
             old.id !== key &&
             old.socketId !== socket.id &&
             (!discordId || old.discordId !== discordId)
-        ) : null;
-        if (takenCharPlayer) {
-            const charName = (CHARACTERS.find(c => c.id === char)?.name || 'That character');
-            return {
-                ok: false,
-                error: `${charName} is already taken by ${takenCharPlayer.name}. Choose another character.`
-            };
+        ));
+        if (char && charTakenByOther(char)) {
+            const freeCharacter = CHARACTERS.find(c => !charTakenByOther(c.id));
+            char = freeCharacter ? freeCharacter.id : '';
         }
 
         team = ['blue', 'red', 'spectator'].includes(team) ? team : 'spectator';
         role = ['operative', 'spymaster', 'spectator'].includes(role) ? role : 'operative';
         if (team === 'spectator') role = 'spectator';
+        if (role === 'spymaster' && team !== 'spectator') {
+            const occupyingSpy = Object.values(room.players || {}).find(old =>
+                old.online !== false &&
+                old.team === team &&
+                old.role === 'spymaster' &&
+                old.id !== key &&
+                old.socketId !== socket.id &&
+                (!discordId || old.discordId !== discordId)
+            );
+            if (occupyingSpy) {
+                return {ok: false, error: `${team === 'blue' ? 'Gold' : 'Black'} Team already has a spymaster.`};
+            }
+        }
 
         // Same browser in a new tab shares localStorage, so it sends the same playerKey.
         // If that player is still online, treat this as a NEW seat using the selected team/role.
@@ -944,6 +954,10 @@ io.on('connection', socket => {
             team = ['blue', 'red', 'spectator'].includes(team) ? team : target.team;
             role = ['operative', 'spymaster', 'spectator'].includes(role) ? role : target.role;
             if (team === 'spectator') role = 'spectator';
+            if (role === 'spymaster' && team !== 'spectator') {
+                const existingSpy = Object.values(room.players || {}).find(p => p.online !== false && p.id !== target.id && p.team === team && p.role === 'spymaster');
+                if (existingSpy) return socket.emit('toast', `${team === 'blue' ? 'Gold' : 'Black'} Team already has a spymaster.`);
+            }
             target.team = team;
             target.role = role;
             delete room.votes?.[target.id];

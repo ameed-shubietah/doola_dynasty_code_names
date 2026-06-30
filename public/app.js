@@ -53,6 +53,30 @@ const avatarFileInput = $('avatarFile'), avatarPreview = $('avatarPreview'), ava
 let customAvatar = localStorage.cc_avatar || '';
 let nameWasEditedLocally = !!localStorage.cc_name;
 if (nameInput) nameInput.value = localStorage.cc_name || '';
+
+function lockDiscordNameField() {
+    if (!nameInput) return;
+    if (isDiscordActivity || document.body.classList.contains('discordActivity')) {
+        nameInput.readOnly = true;
+        nameInput.classList.add('discordNameLocked');
+        nameInput.title = 'Discord Activities use your Discord display name.';
+    }
+}
+
+function applyDiscordNameToInput(force = false) {
+    if (!nameInput || !isDiscordActivity) return;
+    const u = discordUser();
+    const discordName = (u?.name && u.name !== 'Discord User') ? u.name : '';
+    if (discordName && (force || nameInput.value.trim() !== discordName)) {
+        nameInput.value = discordName;
+        localStorage.cc_name = discordName;
+        nameWasEditedLocally = false;
+    } else if (!nameInput.value.trim()) {
+        nameInput.value = localStorage.dd_last_discord_name || localStorage.cc_name || 'Discord User';
+    }
+    lockDiscordNameField();
+}
+
 const params = new URLSearchParams(location.search);
 
 function safeContains(value, text) {
@@ -139,6 +163,7 @@ let discordActivityInfo = null;
 let isDiscordActivity = isDiscordForced || Boolean(localDiscordSeed || safeContains(location.hostname, 'discordsays.com'));
 let discordActivityRoomCode = localDiscordSeed ? roomCodeFromSeed(localDiscordSeed) : '';
 if (isDiscordActivity) document.body.classList.add('discordActivity');
+if (isDiscordActivity) setTimeout(() => applyDiscordNameToInput(true), 0);
 window.DD_MODE_DIAGNOSTIC = {
     isDiscordActivity,
     isDiscordForced,
@@ -343,6 +368,10 @@ function safeAvatarSrc(value) {
 }
 
 function currentDisplayName() {
+    if (isDiscordActivity) {
+        const discordName = playerNameFromDiscord();
+        return (discordName && discordName !== 'Discord User') ? discordName : ((nameInput?.value || '').trim() || localStorage.dd_last_discord_name || localStorage.cc_name || 'Discord User');
+    }
     return (nameInput?.value || '').trim() || localStorage.cc_name || playerNameFromDiscord() || 'Agent';
 }
 
@@ -404,15 +433,15 @@ function stableDiscordFallbackKey(roomCode = '') {
 
 function ensureDiscordIdentity() {
     if (!isDiscordActivity) return;
+    lockDiscordNameField();
     const u = discordUser();
     if (u) {
-        if (nameInput && !nameWasEditedLocally && !nameInput.value.trim()) {
-            nameInput.value = u.name || 'Discord User';
-            localStorage.cc_name = nameInput.value;
-        }
+        applyDiscordNameToInput(true);
         if (u.id) {
             setPlayerKey(`d_${u.id}`);
         }
+    } else if (nameInput && !nameInput.value.trim()) {
+        nameInput.value = localStorage.dd_last_discord_name || localStorage.cc_name || 'Discord User';
     }
 }
 
@@ -617,7 +646,14 @@ function setJoinButtonsReady() {
         const characterReady = hasCustomAvatar() || (!!selectedCharacter && !usedCharacters().has(selectedCharacter));
         if (cb) cb.disabled = true;
         if (jb) jb.disabled = true;
-        document.querySelectorAll('.discordRoleJoin').forEach(b => b.disabled = !characterReady);
+        document.querySelectorAll('.discordRoleJoin').forEach(b => {
+            const role = b.dataset.role;
+            const team = b.dataset.team;
+            const list = lastLobbyInfo?.roles?.[team]?.[role] || [];
+            const fullSpy = role === 'spymaster' && Array.isArray(list) && list.length >= 1 && !list.some(p => p.id === myId || (discordUser()?.id && p.discordId === discordUser().id));
+            b.disabled = !characterReady || fullSpy;
+            b.textContent = fullSpy ? 'Full' : (role === 'spectator' ? 'Join as Spectator' : 'Join');
+        });
         return;
     }
     if (cb) cb.disabled = !ready;
@@ -675,6 +711,7 @@ function syncDiscordLanding() {
     if (chars) chars.classList.remove('hidden');
     if (isDiscordActivity) {
         ensureDiscordIdentity();
+        applyDiscordNameToInput(true);
         renderDiscordIdentity();
     }
     refreshDiscordLobbyPreview();
@@ -692,7 +729,7 @@ function discordJoinPayload(team, role) {
     ensureDiscordIdentity();
     const u = discordUser();
     const finalDiscordId = u?.id || '';
-    const finalName = nameInput.value.trim() || localStorage.cc_name || ((u?.name && u.name !== 'Discord User') ? u.name : 'Discord User');
+    const finalName = ((u?.name && u.name !== 'Discord User') ? u.name : '') || nameInput.value.trim() || localStorage.dd_last_discord_name || localStorage.cc_name || 'Discord User';
     const finalAvatar = customAvatar || '';
 
     if (finalDiscordId) {
@@ -819,6 +856,7 @@ window.addEventListener('discordParticipantsChanged', () => {
 });
 window.addEventListener('discordIdentityChanged', () => {
     ensureDiscordIdentity();
+    applyDiscordNameToInput(true);
     renderDiscordIdentity();
     setJoinButtonsReady();
     refreshDiscordLobbyPreview(true);
@@ -895,7 +933,14 @@ function paintDiscordLobby(info) {
             list.className = 'discordSeatList';
             box.appendChild(list);
         }
-        list.innerHTML = roleListHtml(withPendingLobbyPlayer(info.roles?.[team]?.[role] || [], team, role));
+        const players = withPendingLobbyPlayer(info.roles?.[team]?.[role] || [], team, role);
+        list.innerHTML = roleListHtml(players);
+        if (btn && role === 'spymaster') {
+            const myDiscordId = discordUser()?.id || '';
+            const occupiedByOther = players.some(p => p && !p.isPreview && p.id !== myId && (!myDiscordId || p.discordId !== myDiscordId));
+            btn.disabled = occupiedByOther;
+            btn.textContent = occupiedByOther ? 'Full' : 'Join';
+        }
     }
 }
 
@@ -1037,6 +1082,10 @@ function setupJoinFlow() {
     const di = $('discordInviteBtn');
     if (di) di.onclick = openDiscordInvite;
     if (nameInput) nameInput.addEventListener('input', () => {
+        if (isDiscordActivity) {
+            applyDiscordNameToInput(true);
+            return;
+        }
         nameWasEditedLocally = true;
         localStorage.cc_name = nameInput.value.trim();
         setJoinButtonsReady();
@@ -1354,6 +1403,38 @@ function renderMe() {
     $('meCard').innerHTML = `<div class="player ${p.team}">${avatarHtml(p)}<div><b>${p.name}</b><span class="roleTag">${teamName(p.team)} · ${p.role}</span></div></div>`;
 }
 
+const mobileTeamOpenState = {goldPanel: false, blackPanel: false};
+
+function ensureMobileTeamToggle(panelId) {
+    const panel = $(panelId);
+    if (!panel) return;
+    const header = panel.querySelector('.teamHeader');
+    if (!header) return;
+    let btn = header.querySelector('.mobileTeamToggle');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mobileTeamToggle';
+        btn.addEventListener('click', ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            mobileTeamOpenState[panelId] = !mobileTeamOpenState[panelId];
+            ensureMobileTeamToggles();
+        });
+        header.appendChild(btn);
+    }
+    const open = !!mobileTeamOpenState[panelId];
+    panel.classList.toggle('mobileTeamOpen', open);
+    btn.textContent = open ? 'Hide Team' : 'Show Team';
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function ensureMobileTeamToggles() {
+    ensureMobileTeamToggle('goldPanel');
+    ensureMobileTeamToggle('blackPanel');
+}
+
+
 function renderPlayers() {
     const current = me();
     const adminMode = !!current?.isAdmin;
@@ -1421,6 +1502,7 @@ function renderPlayers() {
     const gc = $('goldPlayerCount'), bc = $('blackPlayerCount');
     if (gc) gc.textContent = `${goldCount} player${goldCount === 1 ? '' : 's'}`;
     if (bc) bc.textContent = `${blackCount} player${blackCount === 1 ? '' : 's'}`;
+    ensureMobileTeamToggles();
 }
 
 
