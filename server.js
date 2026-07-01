@@ -717,6 +717,19 @@ io.on('connection', socket => {
             }
         }
 
+        // If a disconnected user rejoins with a fresh browser/session key, remove
+        // their old offline seat so the room does not show a duplicate no-wifi card.
+        for (const [pid, oldPlayer] of Object.entries(room.players || {})) {
+            if (pid === key || oldPlayer.online !== false) continue;
+            const sameDiscordUser = !!(discordId && oldPlayer.discordId && oldPlayer.discordId === discordId);
+            const sameNamedSeat = !!(incomingNameKey && nameKey(oldPlayer.name) === incomingNameKey);
+            if (!sameDiscordUser && !sameNamedSeat) continue;
+            if (oldPlayer.isAdmin && !forceAdmin) adminToken = room.adminToken;
+            delete room.players[pid];
+            delete room.votes?.[pid];
+        }
+        existing = room.players[key];
+
         // Same browser in a new tab shares localStorage, so it sends the same playerKey.
         // If that player is still online, treat this as a NEW seat using the selected team/role.
         // If that player is offline, restore their old seat so refresh/reconnect/host return works.
@@ -922,10 +935,12 @@ io.on('connection', socket => {
         }
     });
 
-    socket.on('adminUpdatePlayer', ({playerId, action, team, role} = {}) => {
+    socket.on('adminUpdatePlayer', ({playerId, action, team, role, name} = {}) => {
         const room = getPlayerRoom(socket.id);
-        if (!room || !canAdmin(room, socket.id)) return;
+        if (!room) return;
         const actor = getPlayerBySocket(room, socket.id);
+        const canManagePlayers = !!(actor && (actor.isAdmin || actor.role === 'spymaster'));
+        if (!canManagePlayers) return;
         const target = room.players[String(playerId || '')];
         if (!target) return;
         if (target.isAdmin && target.id !== actor?.id) return socket.emit('toast', 'The room admin cannot be moved or kicked by anyone else.');
@@ -947,6 +962,17 @@ io.on('connection', socket => {
             if (target.socketId) io.to(target.socketId).emit('toast', 'You are now an admin.');
             socket.emit('toast', `${target.name} is now an admin.`);
             room.log.push(`Admin assigned admin access to ${target.name}.`);
+            emitRoom(room);
+            return;
+        }
+        if (action === 'changeName') {
+            const oldName = target.name;
+            const nextName = cleanName(name || target.name);
+            target.name = nextName;
+            target.lastSeenAt = Date.now();
+            if (target.socketId) io.to(target.socketId).emit('toast', `Your name was changed to ${nextName}.`);
+            socket.emit('toast', `${oldName} is now ${nextName}.`);
+            room.log.push(`${actor?.name || 'Admin'} changed ${oldName}'s name to ${nextName}.`);
             emitRoom(room);
             return;
         }

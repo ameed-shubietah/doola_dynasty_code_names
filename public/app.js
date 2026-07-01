@@ -685,9 +685,28 @@ function spymasterSlotFullFor(team) {
     return lobbyRolePlayers(team, 'spymaster').some(p => !sameLocalPlayer(p));
 }
 
+function selectedSpymasterSlotFull() {
+    return !!(selectedRoleChoice === 'spymaster' && selectedTeamChoice !== 'spectator' && spymasterSlotFullFor(selectedTeamChoice));
+}
+
+function refreshRoleFullStates(team = selectedTeamChoice) {
+    document.querySelectorAll('.rolePick').forEach(btn => {
+        const role = btn.dataset.role;
+        const label = btn.querySelector('b');
+        if (label && !btn.dataset.baseLabel) btn.dataset.baseLabel = label.textContent || '';
+        const fullSpy = role === 'spymaster' && team !== 'spectator' && spymasterSlotFullFor(team);
+        btn.disabled = !!fullSpy;
+        btn.classList.toggle('fullRole', !!fullSpy);
+        btn.setAttribute('aria-disabled', fullSpy ? 'true' : 'false');
+        if (label) label.textContent = fullSpy ? 'Spymaster Full' : (btn.dataset.baseLabel || label.textContent || role);
+    });
+}
+
 function setJoinButtonsReady() {
     const ready = !!(selectedTeamChoice && selectedRoleChoice && nameInput.value.trim());
     const cb = $('createBtn'), jb = $('joinBtn');
+    const selectedSpyFull = selectedSpymasterSlotFull();
+    refreshRoleFullStates();
     if (isDiscordActivity) {
         const characterReady = hasCustomAvatar() || (!!selectedCharacter && !usedCharacters().has(selectedCharacter));
         if (cb) cb.disabled = true;
@@ -702,7 +721,10 @@ function setJoinButtonsReady() {
         return;
     }
     if (cb) cb.disabled = !ready;
-    if (jb) jb.disabled = !ready || !roomInput.value.trim();
+    if (jb) {
+        jb.disabled = !ready || selectedSpyFull || !roomInput.value.trim();
+        jb.textContent = selectedSpyFull ? 'Spymaster Full' : 'Join Room';
+    }
 }
 
 function updateJoinSummary() {
@@ -730,6 +752,7 @@ function openRolePopup(team) {
         if (text) text.textContent = 'Pick Operative to guess cards, or Spymaster to give clues.';
         document.querySelectorAll('.rolePick').forEach(b => b.classList.toggle('hidden', b.dataset.role === 'spectator'));
     }
+    refreshRoleFullStates(team);
     overlay.classList.remove('hidden');
 }
 
@@ -810,10 +833,19 @@ async function joinDiscordActivity(team, role) {
     if (roleSel) roleSel.value = role;
     updateJoinSummary();
     setJoinButtonsReady();
+    if (role === 'spymaster' && spymasterSlotFullFor(team)) {
+        toast(`${teamName(team)} Team already has a spymaster.`);
+        return;
+    }
 
     const roomCode = getDiscordActivityRoomCode();
     roomInput.value = roomCode;
     withFreshLobbyBeforeJoin(roomCode, () => {
+        if (role === 'spymaster' && spymasterSlotFullFor(team)) {
+            toast(`${teamName(team)} Team already has a spymaster.`);
+            setJoinButtonsReady();
+            return;
+        }
         if (!characterAvailableNow()) {
             toast('That character is already taken. Pick another one first.');
             renderCharacters();
@@ -1090,6 +1122,11 @@ function setupJoinFlow() {
     });
     document.querySelectorAll('.rolePick').forEach(btn => {
         btn.onclick = () => {
+            if (btn.disabled || btn.classList.contains('fullRole')) {
+                toast(`${teamName(selectedTeamChoice)} Team already has a spymaster.`);
+                setJoinButtonsReady();
+                return;
+            }
             selectedRoleChoice = selectedTeamChoice === 'spectator' ? 'spectator' : btn.dataset.role;
             if (roleSel) roleSel.value = selectedRoleChoice;
             document.querySelectorAll('.rolePick').forEach(b => b.classList.toggle('selected', b.dataset.role === selectedRoleChoice));
@@ -1106,7 +1143,14 @@ function setupJoinFlow() {
         if (e.target === overlay) closeRolePopup();
     };
     document.querySelectorAll('.discordRoleJoin').forEach(btn => {
-        btn.onclick = () => joinDiscordActivity(btn.dataset.team, btn.dataset.role);
+        btn.onclick = () => {
+            if (btn.disabled || (btn.dataset.role === 'spymaster' && spymasterSlotFullFor(btn.dataset.team))) {
+                toast(`${teamName(btn.dataset.team)} Team already has a spymaster.`);
+                setJoinButtonsReady();
+                return;
+            }
+            joinDiscordActivity(btn.dataset.team, btn.dataset.role);
+        };
     });
     const di = $('discordInviteBtn');
     if (di) di.onclick = openDiscordInvite;
@@ -1180,6 +1224,11 @@ $('joinBtn').onclick = () => {
     if (isDiscordActivity) return joinDiscordActivity($('team').value || 'spectator', $('role').value || 'spectator');
     const roomId = roomInput.value.trim().toUpperCase();
     withFreshLobbyBeforeJoin(roomId, () => {
+        if (selectedSpymasterSlotFull()) {
+            toast(`${teamName(selectedTeamChoice)} Team already has a spymaster.`);
+            setJoinButtonsReady();
+            return;
+        }
         if (!characterAvailableNow()) {
             toast('That character is already taken. Pick another one first.');
             renderCharacters();
@@ -1463,6 +1512,7 @@ function ensureMobileTeamToggles() {
 function renderPlayers() {
     const current = me();
     const adminMode = !!current?.isAdmin;
+    const playerOptionsMode = !!(current?.isAdmin || current?.role === 'spymaster');
     const teams = {
         blue: {operative: [], spymaster: []},
         red: {operative: [], spymaster: []},
@@ -1476,8 +1526,15 @@ function renderPlayers() {
     });
 
     function adminTools(p) {
-        if (!adminMode || p.id === myId || p.isAdmin) return '';
-        return `<div class="adminActions"><button data-admin-kick="${p.id}">Kick</button><button data-admin-assign="${p.id}">Assign Admin</button></div>`;
+        if (!playerOptionsMode || p.id === myId) return '';
+        return `<div class="adminActions playerOptionsWrap">
+            <button class="playerOptionsBtn" type="button" data-player-options="${p.id}">Options ▾</button>
+            <div class="playerOptionsMenu">
+                <button type="button" data-admin-kick="${p.id}">Kick</button>
+                <button type="button" data-admin-assign="${p.id}">Assign Admin</button>
+                <button type="button" data-admin-rename="${p.id}" data-player-name="${escapeHtml(p.name || 'Player')}">Change Name</button>
+            </div>
+        </div>`;
     }
 
     function playerHtml(p) {
@@ -1504,10 +1561,23 @@ function renderPlayers() {
     $('blackOperatives').innerHTML = teams.red.operative.map(playerHtml).join('') || empty('No operatives yet');
     $('blackSpymasters').innerHTML = teams.red.spymaster.map(playerHtml).join('') || empty('No spymaster yet');
     $('spectators').innerHTML = teams.spectator.spectator.map(playerHtml).join('') || empty('No spectators');
+    document.querySelectorAll('[data-player-options]').forEach(btn => {
+        btn.onclick = (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const wrap = btn.closest('.playerOptionsWrap');
+            const open = !wrap?.classList.contains('open');
+            document.querySelectorAll('.playerOptionsWrap.open').forEach(w => {
+                if (w !== wrap) w.classList.remove('open');
+            });
+            if (wrap) wrap.classList.toggle('open', open);
+        };
+    });
     document.querySelectorAll('[data-admin-kick]').forEach(btn => {
         btn.onclick = (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
+            btn.closest('.playerOptionsWrap')?.classList.remove('open');
             const target = btn.dataset.adminKick;
             socket.emit('adminUpdatePlayer', {playerId: target, action: 'kick'});
         };
@@ -1516,10 +1586,36 @@ function renderPlayers() {
         btn.onclick = (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
+            btn.closest('.playerOptionsWrap')?.classList.remove('open');
             const target = btn.dataset.adminAssign;
             socket.emit('adminUpdatePlayer', {playerId: target, action: 'assignAdmin'});
         };
     });
+    document.querySelectorAll('[data-admin-rename]').forEach(btn => {
+        btn.onclick = (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            btn.closest('.playerOptionsWrap')?.classList.remove('open');
+            const target = btn.dataset.adminRename;
+            const currentName = btn.dataset.playerName || '';
+            const nextName = prompt('Change player name:', currentName);
+            if (nextName === null) return;
+            const cleanName = String(nextName || '').trim();
+            if (!cleanName) return toast('Name cannot be empty.');
+            socket.emit('adminUpdatePlayer', {playerId: target, action: 'changeName', name: cleanName});
+        };
+    });
+    if (!window.__ddPlayerOptionsOutsideClickReady) {
+        window.__ddPlayerOptionsOutsideClickReady = true;
+        document.addEventListener('click', ev => {
+            if (ev.target.closest('.playerOptionsWrap')) return;
+            document.querySelectorAll('.playerOptionsWrap.open').forEach(wrap => wrap.classList.remove('open'));
+        });
+        document.addEventListener('keydown', ev => {
+            if (ev.key !== 'Escape') return;
+            document.querySelectorAll('.playerOptionsWrap.open').forEach(wrap => wrap.classList.remove('open'));
+        });
+    }
     setupAdminDragAndDrop(adminMode);
     applyActiveTurnHighlight();
     const goldCount = teams.blue.operative.length + teams.blue.spymaster.length;
@@ -1704,9 +1800,9 @@ function renderBoard() {
         const myVote = marked.includes(c.id);
         const voted = voteCount > 0;
         const revealer = c.revealedById ? state?.players?.[c.revealedById] : null;
-        // Only a correct operative reveal hides the word and leaves the crown/background.
-        // Wrong/neutral/danger reveals keep the word visible for both operatives and spymasters.
-        const correctReveal = !!(c.revealed && revealer && (c.color === 'blue' || c.color === 'red') && revealer.team === c.color);
+        // Revealed Gold/Black/Grey cards become crown-only. Assassin/danger still keeps its normal reveal.
+        const teamReveal = !!(c.revealed && (c.color === 'blue' || c.color === 'red'));
+        const correctReveal = teamReveal;
         const neutralReveal = !!(c.revealed && c.color === 'neutral');
         const playableSpyTarget = spy && p?.team === state.turn && state.status === 'waiting-clue' && c.color === p.team && !c.revealed;
         const canConfirmThis = p?.role === 'operative' && p.team === state.turn && state.status === 'guessing' && myVote && !c.revealed;
@@ -1717,10 +1813,11 @@ function renderBoard() {
         // Use a real centered crown layer instead of card backgrounds/pseudo-elements.
         // This avoids mobile Safari/Discord cropping the crown into the top-left corner.
         const crownSrc = neutralReveal ? '/crown-bw.png' : '/crown.png';
-        const hasCrownLayer = spyClueTarget || correctReveal || neutralReveal;
+        const hasCrownLayer = spyClueTarget || teamReveal || neutralReveal;
         const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
-        const wordLayer = (correctReveal || neutralReveal) ? '' : `<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>`;
-        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${correctReveal ? 'correctReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
+        const crownOnlyReveal = teamReveal || neutralReveal;
+        const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>`;
+        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {
