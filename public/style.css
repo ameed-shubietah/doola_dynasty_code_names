@@ -12821,3 +12821,307 @@ body.discordActivity #game .card.hasCrownLayer.correctReveal .word {
         padding: 0 8px !important;
     }
 }
+
+/* v65: one crown layer only, grey reveals use crown-bw.png, and mobile log stays usable. */
+#game .card.hasCrownLayer::before,
+#game .card.hasCrownLayer::after,
+#game .board.spyBoard .card.hasCrownLayer::before,
+#game .board.spyBoard .card.hasCrownLayer::after,
+#game .board.operativeBoard .card.hasCrownLayer::before,
+#game .board.operativeBoard .card.hasCrownLayer::after,
+body.discordActivity #game .card.hasCrownLayer::before,
+body.discordActivity #game .card.hasCrownLayer::after,
+body.discordActivity #game .board.spyBoard .card.hasCrownLayer::before,
+body.discordActivity #game .board.spyBoard .card.hasCrownLayer::after,
+body.discordActivity #game .board.operativeBoard .card.hasCrownLayer::before,
+body.discordActivity #game .board.operativeBoard .card.hasCrownLayer::after {
+    content: none !important;
+    display: none !important;
+    background-image: none !important;
+    opacity: 0 !important;
+}
+
+#game .card.neutralReveal .cardCrownBwLayer,
+body.discordActivity #game .card.neutralReveal .cardCrownBwLayer {
+    width: min(70%, 96px) !important;
+    height: min(78%, 108px) !important;
+    opacity: .78 !important;
+    z-index: 2 !important;
+    filter: drop-shadow(0 7px 10px rgba(0, 0, 0, .45)) grayscale(1) contrast(1.08) !important;
+}
+
+#game .card.neutralReveal .word,
+body.discordActivity #game .card.neutralReveal .word {
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative !important;
+    z-index: 6 !important;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity #game .card.hasCrownLayer::before,
+    body.discordActivity #game .card.hasCrownLayer::after,
+    #game .card.hasCrownLayer::before,
+    #game .card.hasCrownLayer::after {
+        content: none !important;
+        display: none !important;
+    }
+
+    body.discordActivity #game .card.neutralReveal .cardCrownBwLayer,
+    #game .card.neutralReveal .cardCrownBwLayer {
+        width: min(72%, 68px) !important;
+        height: min(78%, 78px) !important;
+        transform: translate(-50%, -50%) !important;
+    }
+
+    body.discordActivity #game .teamPanel.mobileTeamOpen section:not(.sideLogSection),
+    #game .teamPanel.mobileTeamOpen section:not(.sideLogSection) {
+        max-height: 16svh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
+    }
+
+    body.discordActivity #game .teamPanel.mobileTeamOpen .teamList,
+    #game .teamPanel.mobileTeamOpen .teamList {
+        max-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
+    }
+
+    body.discordActivity #game .teamPanelBlack .sideLogSection,
+    body.discordActivity #game .teamPanelGold .sideLogSection,
+    #game .teamPanelBlack .sideLogSection,
+    #game .teamPanelGold .sideLogSection {
+        position: relative !important;
+        z-index: 1250 !important;
+        pointer-events: auto !important;
+    }
+
+    body.discordActivity #game .sideLogSection .log,
+    body.discordActivity #log.log,
+    body.discordActivity #log,
+    #game .sideLogSection .log,
+    #log.log,
+    #log {
+        position: relative !important;
+        z-index: 1260 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
+        pointer-events: auto !important;
+        user-select: text !important;
+    }
+
+    body.discordActivity .currentClueDock,
+    .currentClueDock {
+        pointer-events: none !important;
+    }
+
+    body.discordActivity .bottomClueDock,
+    .bottomClueDock {
+        pointer-events: auto !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    body.discordActivity #game .teamPanel.mobileTeamOpen section:not(.sideLogSection),
+    #game .teamPanel.mobileTeamOpen section:not(.sideLogSection) {
+        max-height: 28svh !important;
+    }
+
+    body.discordActivity #game .card.neutralReveal .cardCrownBwLayer,
+    #game .card.neutralReveal .cardCrownBwLayer {
+        width: min(68%, 88px) !important;
+        height: min(74%, 78px) !important;
+    }
+}
+
+/* v66: grey reveal is crown-only, and mobile team crowns cannot double-render. */
+#game .card.neutralReveal .word,
+#game .board.spyBoard .card.neutralReveal .word,
+#game .board.operativeBoard .card.neutralReveal .word,
+body.discordActivity #game .card.neutralReveal .word,
+body.discordActivity #game .board.spyBoard .card.neutralReveal .word,
+body.discordActivity #game .board.operativeBoard .card.neutralReveal .word {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer::before,
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer::after,
+    body.discordActivity #game.gameV9 .board.spyBoard .card.hasCrownLayer::before,
+    body.discordActivity #game.gameV9 .board.spyBoard .card.hasCrownLayer::after,
+    body.discordActivity #game.gameV9 .board.operativeBoard .card.hasCrownLayer::before,
+    body.discordActivity #game.gameV9 .board.operativeBoard .card.hasCrownLayer::after,
+    #game.gameV9 .board .card.hasCrownLayer::before,
+    #game.gameV9 .board .card.hasCrownLayer::after,
+    #game.gameV9 .board.spyBoard .card.hasCrownLayer::before,
+    #game.gameV9 .board.spyBoard .card.hasCrownLayer::after,
+    #game.gameV9 .board.operativeBoard .card.hasCrownLayer::before,
+    #game.gameV9 .board.operativeBoard .card.hasCrownLayer::after {
+        content: none !important;
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        inset: auto !important;
+        background: none !important;
+        background-image: none !important;
+        opacity: 0 !important;
+        box-shadow: none !important;
+        filter: none !important;
+    }
+
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer .cardCrownLayer {
+        display: block !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+        z-index: 4 !important;
+    }
+
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer.correctReveal .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer.correctReveal .cardCrownLayer {
+        width: min(74%, 72px) !important;
+        height: min(80%, 82px) !important;
+    }
+
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer.neutralReveal .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer.neutralReveal .cardCrownLayer {
+        width: min(70%, 66px) !important;
+        height: min(76%, 76px) !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer.correctReveal .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer.correctReveal .cardCrownLayer {
+        width: min(72%, 88px) !important;
+        height: min(78%, 82px) !important;
+    }
+
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer.neutralReveal .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer.neutralReveal .cardCrownLayer {
+        width: min(68%, 82px) !important;
+        height: min(74%, 76px) !important;
+    }
+}
+
+/* v67: Options is click-toggle only, PASS is bottom-center, Options is far bottom-right. */
+.optionsWrap .optionsMenu,
+.optionsWrap:hover .optionsMenu,
+.optionsWrap:focus-within .optionsMenu,
+body.discordActivity .optionsWrap .optionsMenu,
+body.discordActivity .optionsWrap:hover .optionsMenu,
+body.discordActivity .optionsWrap:focus-within .optionsMenu {
+    display: none !important;
+}
+
+.optionsWrap.open .optionsMenu,
+body.discordActivity .optionsWrap.open .optionsMenu {
+    display: flex !important;
+}
+
+#adminControlBar.hidden,
+#adminControlBar.bottomOptionsBar.hidden,
+body.discordActivity #adminControlBar.hidden,
+body.discordActivity #adminControlBar.bottomOptionsBar.hidden {
+    display: none !important;
+}
+
+#adminControlBar.bottomOptionsBar,
+body.discordActivity #adminControlBar.bottomOptionsBar,
+body.discordActivity #adminControlBar {
+    position: fixed !important;
+    left: auto !important;
+    right: max(8px, env(safe-area-inset-right, 0px)) !important;
+    top: auto !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+    transform: none !important;
+    z-index: 100004 !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+#adminControlBar.bottomOptionsBar .gameOptionsWrap,
+body.discordActivity #adminControlBar.bottomOptionsBar .gameOptionsWrap {
+    position: relative !important;
+}
+
+#adminControlBar.bottomOptionsBar .optionsBtn,
+body.discordActivity #adminControlBar.bottomOptionsBar .optionsBtn,
+body.discordActivity .gameOptionsWrap .optionsBtn {
+    height: 34px !important;
+    min-width: 98px !important;
+    padding: 0 12px !important;
+    font-size: 10px !important;
+}
+
+#adminControlBar.bottomOptionsBar .optionsMenu,
+body.discordActivity #adminControlBar.bottomOptionsBar .optionsMenu {
+    top: auto !important;
+    bottom: calc(100% + 8px) !important;
+    left: auto !important;
+    right: 0 !important;
+    transform: none !important;
+    z-index: 100005 !important;
+}
+
+#topOperativeActions.bottomPassBar:not(.hidden),
+body.discordActivity #topOperativeActions.bottomPassBar:not(.hidden) {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 6px) !important;
+    transform: translateX(-50%) !important;
+    z-index: 100006 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: auto !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+#topOperativeActions.bottomPassBar #endTurnBtn,
+body.discordActivity #topOperativeActions.bottomPassBar #endTurnBtn {
+    height: 34px !important;
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 0 10px !important;
+}
+
+@media (max-width: 980px) {
+    #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar {
+        right: max(5px, env(safe-area-inset-right, 0px)) !important;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 3px) !important;
+    }
+
+    #topOperativeActions.bottomPassBar:not(.hidden),
+    body.discordActivity #topOperativeActions.bottomPassBar:not(.hidden) {
+        left: 50% !important;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 2px) !important;
+        transform: translateX(-50%) !important;
+    }
+}

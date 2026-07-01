@@ -443,7 +443,12 @@ function playerNameFromDiscord() {
 function stableDiscordFallbackKey(roomCode = '') {
     const base = (() => {
         try {
-            return sessionStorage.getItem('cc_tabPlayerKey') || playerKey || makePlayerKey();
+            let seed = sessionStorage.getItem('cc_activityTabSeatSeed') || '';
+            if (!seed) {
+                seed = makePlayerKey();
+                sessionStorage.setItem('cc_activityTabSeatSeed', seed);
+            }
+            return seed;
         } catch {
             return playerKey || makePlayerKey();
         }
@@ -650,6 +655,36 @@ function renderCharacters() {
 
 renderCharacters();
 
+function sameLocalPlayer(p) {
+    const du = discordUser?.() || null;
+    return !!(p && (p.id === myId || (du?.id && p.discordId === du.id)));
+}
+
+function lobbyRolePlayers(team, role) {
+    const merged = [];
+    const seen = new Set();
+    const add = p => {
+        if (!p) return;
+        const key = p.discordId || p.id || p.socketId || `${p.name || 'player'}_${merged.length}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        merged.push(p);
+    };
+    const fromLobby = lastLobbyInfo?.roles?.[team]?.[role];
+    if (Array.isArray(fromLobby)) fromLobby.forEach(add);
+    if (state?.players) Object.values(state.players).filter(p =>
+        p &&
+        p.online !== false &&
+        p.team === team &&
+        p.role === role
+    ).forEach(add);
+    return merged;
+}
+
+function spymasterSlotFullFor(team) {
+    return lobbyRolePlayers(team, 'spymaster').some(p => !sameLocalPlayer(p));
+}
+
 function setJoinButtonsReady() {
     const ready = !!(selectedTeamChoice && selectedRoleChoice && nameInput.value.trim());
     const cb = $('createBtn'), jb = $('joinBtn');
@@ -660,8 +695,7 @@ function setJoinButtonsReady() {
         document.querySelectorAll('.discordRoleJoin').forEach(b => {
             const role = b.dataset.role;
             const team = b.dataset.team;
-            const list = lastLobbyInfo?.roles?.[team]?.[role] || [];
-            const fullSpy = role === 'spymaster' && Array.isArray(list) && list.length >= 1 && !list.some(p => p.id === myId || (discordUser()?.id && p.discordId === discordUser().id));
+            const fullSpy = role === 'spymaster' && team !== 'spectator' && spymasterSlotFullFor(team);
             b.disabled = !characterReady || fullSpy;
             b.textContent = fullSpy ? 'Full' : (role === 'spectator' ? 'Join as Spectator' : 'Join');
         });
@@ -929,11 +963,10 @@ function paintDiscordLobby(info) {
             list.className = 'discordSeatList';
             box.appendChild(list);
         }
-        const players = withPendingLobbyPlayer(info.roles?.[team]?.[role] || [], team, role);
+        const players = withPendingLobbyPlayer(lobbyRolePlayers(team, role), team, role);
         list.innerHTML = roleListHtml(players);
         if (btn && role === 'spymaster') {
-            const myDiscordId = discordUser()?.id || '';
-            const occupiedByOther = players.some(p => p && !p.isPreview && p.id !== myId && (!myDiscordId || p.discordId !== myDiscordId));
+            const occupiedByOther = players.some(p => p && !p.isPreview && !sameLocalPlayer(p));
             btn.disabled = occupiedByOther;
             btn.textContent = occupiedByOther ? 'Full' : 'Join';
         }
@@ -1537,11 +1570,12 @@ function forceBottomOptionsBar() {
 function renderSeatControls() {
     forceBottomOptionsBar();
     const p = me();
+    const canOptions = !!(p?.isAdmin || p?.role === 'spymaster');
     const bar = $('adminControlBar');
     if (bar) {
-        bar.classList.remove('hidden');
-        bar.classList.toggle('nonAdminControls', !p?.isAdmin);
-        bar.title = p?.isAdmin ? 'Admin controls' : 'Request these actions from the room admin';
+        bar.classList.toggle('hidden', !canOptions);
+        bar.classList.toggle('nonAdminControls', false);
+        bar.title = p?.isAdmin ? 'Admin controls' : (p?.role === 'spymaster' ? 'Spymaster controls' : '');
     }
 }
 
@@ -1673,6 +1707,7 @@ function renderBoard() {
         // Only a correct operative reveal hides the word and leaves the crown/background.
         // Wrong/neutral/danger reveals keep the word visible for both operatives and spymasters.
         const correctReveal = !!(c.revealed && revealer && (c.color === 'blue' || c.color === 'red') && revealer.team === c.color);
+        const neutralReveal = !!(c.revealed && c.color === 'neutral');
         const playableSpyTarget = spy && p?.team === state.turn && state.status === 'waiting-clue' && c.color === p.team && !c.revealed;
         const canConfirmThis = p?.role === 'operative' && p.team === state.turn && state.status === 'guessing' && myVote && !c.revealed;
         const voteBadge = '';
@@ -1681,8 +1716,11 @@ function renderBoard() {
         const revealBadge = c.revealed ? revealHeroSvg(c.color) : '';
         // Use a real centered crown layer instead of card backgrounds/pseudo-elements.
         // This avoids mobile Safari/Discord cropping the crown into the top-left corner.
-        const crownLayer = (spyClueTarget || correctReveal) ? `<img class="cardCrownLayer" src="/crown.png" alt="" aria-hidden="true">` : '';
-        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${correctReveal ? 'correctReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${(spyClueTarget || correctReveal) ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>${voteBadge}${voteFaces}${confirmMini}</button>`;
+        const crownSrc = neutralReveal ? '/crown-bw.png' : '/crown.png';
+        const hasCrownLayer = spyClueTarget || correctReveal || neutralReveal;
+        const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
+        const wordLayer = (correctReveal || neutralReveal) ? '' : `<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>`;
+        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${correctReveal ? 'correctReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {
@@ -1738,8 +1776,9 @@ function renderPanels() {
     const adminBar = $('adminControlBar');
     if (adminBar) {
         adminBar.classList.remove('nonAdminControls');
-        adminBar.classList.toggle('hidden', false);
-        adminBar.classList.toggle('viewerOptions', !canOptions);
+        adminBar.classList.toggle('hidden', !canOptions);
+        adminBar.classList.toggle('viewerOptions', false);
+        if (!canOptions) adminBar.querySelectorAll('.optionsWrap.open').forEach(w => w.classList.remove('open'));
     }
     if (state?.status === 'lobby') {
         const cs = $('clueStatus');
@@ -1926,8 +1965,41 @@ if (landingStartGameBtn) landingStartGameBtn.onclick = () => socket.emit('startG
 
 function wireOptionButton(id, action, label, text) {
     const b = $(id);
-    if (b) b.onclick = () => runOrRequestAdminAction(action, label, text);
+    if (b) b.onclick = () => {
+        b.closest('.optionsWrap')?.classList.remove('open');
+        runOrRequestAdminAction(action, label, text);
+    };
 }
+
+function setupOptionsToggles() {
+    document.querySelectorAll('.optionsWrap').forEach(wrap => {
+        const btn = wrap.querySelector('.optionsBtn');
+        if (!btn || btn.dataset.toggleReady === '1') return;
+        btn.dataset.toggleReady = '1';
+        btn.addEventListener('click', ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const willOpen = !wrap.classList.contains('open');
+            document.querySelectorAll('.optionsWrap.open').forEach(other => {
+                if (other !== wrap) other.classList.remove('open');
+            });
+            wrap.classList.toggle('open', willOpen);
+        });
+    });
+    if (!window.__ddOptionsOutsideClickReady) {
+        window.__ddOptionsOutsideClickReady = true;
+        document.addEventListener('click', ev => {
+            if (ev.target.closest('.optionsWrap')) return;
+            document.querySelectorAll('.optionsWrap.open').forEach(wrap => wrap.classList.remove('open'));
+        });
+        document.addEventListener('keydown', ev => {
+            if (ev.key !== 'Escape') return;
+            document.querySelectorAll('.optionsWrap.open').forEach(wrap => wrap.classList.remove('open'));
+        });
+    }
+}
+
+setupOptionsToggles();
 
 wireOptionButton('resetTableBtn', 'resetTable', 'Reset Table', 'Reset the table with a fresh board but keep the same room and players?');
 wireOptionButton('shuffleTeamsBtn', 'shuffleTeams', 'Shuffle Teams', 'Shuffle online players between Gold and Black teams?');
