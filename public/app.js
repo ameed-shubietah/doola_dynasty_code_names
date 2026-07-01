@@ -1508,8 +1508,58 @@ function ensureMobileTeamToggles() {
     ensureMobileTeamToggle('blackPanel');
 }
 
+function ownerWrapForFloatingMenu(menu) {
+    const ownerId = menu?.dataset?.ownerPlayerId || '';
+    if (!ownerId) return null;
+    return [...document.querySelectorAll('.playerOptionsWrap')].find(wrap =>
+        wrap.querySelector('[data-player-options]')?.dataset.playerOptions === ownerId
+    ) || null;
+}
+
+function closePlayerOptionsMenus(exceptWrap = null) {
+    document.querySelectorAll('.playerOptionsWrap.open').forEach(wrap => {
+        if (wrap !== exceptWrap) wrap.classList.remove('open');
+    });
+    document.querySelectorAll('body > .playerOptionsMenu.floatingPlayerOptions').forEach(menu => {
+        const owner = ownerWrapForFloatingMenu(menu);
+        if (owner && owner !== exceptWrap) {
+            menu.classList.remove('floatingPlayerOptions');
+            menu.style.left = '';
+            menu.style.top = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            owner.appendChild(menu);
+        } else if (!owner) {
+            menu.remove();
+        }
+    });
+}
+
+function openPlayerOptionsMenu(wrap, btn) {
+    const menu = wrap.querySelector('.playerOptionsMenu');
+    if (!menu) return;
+    wrap.classList.add('open');
+    menu.dataset.ownerPlayerId = btn.dataset.playerOptions || '';
+    menu.classList.add('floatingPlayerOptions');
+    document.body.appendChild(menu);
+
+    const rect = btn.getBoundingClientRect();
+    const menuWidth = Math.min(180, Math.max(132, menu.offsetWidth || 150));
+    const menuHeight = Math.max(104, menu.offsetHeight || 112);
+    const pad = 8;
+    let left = rect.left;
+    let top = rect.bottom + 7;
+    if (left + menuWidth > window.innerWidth - pad) left = window.innerWidth - menuWidth - pad;
+    if (left < pad) left = pad;
+    if (top + menuHeight > window.innerHeight - pad) top = rect.top - menuHeight - 7;
+    if (top < pad) top = pad;
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+}
+
 
 function renderPlayers() {
+    closePlayerOptionsMenus();
     const current = me();
     const adminMode = !!current?.isAdmin;
     const playerOptionsMode = !!(current?.isAdmin || current?.role === 'spymaster');
@@ -1567,17 +1617,15 @@ function renderPlayers() {
             ev.stopPropagation();
             const wrap = btn.closest('.playerOptionsWrap');
             const open = !wrap?.classList.contains('open');
-            document.querySelectorAll('.playerOptionsWrap.open').forEach(w => {
-                if (w !== wrap) w.classList.remove('open');
-            });
-            if (wrap) wrap.classList.toggle('open', open);
+            closePlayerOptionsMenus(open ? wrap : null);
+            if (wrap && open) openPlayerOptionsMenu(wrap, btn);
         };
     });
     document.querySelectorAll('[data-admin-kick]').forEach(btn => {
         btn.onclick = (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
-            btn.closest('.playerOptionsWrap')?.classList.remove('open');
+            closePlayerOptionsMenus();
             const target = btn.dataset.adminKick;
             socket.emit('adminUpdatePlayer', {playerId: target, action: 'kick'});
         };
@@ -1586,7 +1634,7 @@ function renderPlayers() {
         btn.onclick = (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
-            btn.closest('.playerOptionsWrap')?.classList.remove('open');
+            closePlayerOptionsMenus();
             const target = btn.dataset.adminAssign;
             socket.emit('adminUpdatePlayer', {playerId: target, action: 'assignAdmin'});
         };
@@ -1595,7 +1643,7 @@ function renderPlayers() {
         btn.onclick = (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
-            btn.closest('.playerOptionsWrap')?.classList.remove('open');
+            closePlayerOptionsMenus();
             const target = btn.dataset.adminRename;
             const currentName = btn.dataset.playerName || '';
             const nextName = prompt('Change player name:', currentName);
@@ -1608,13 +1656,14 @@ function renderPlayers() {
     if (!window.__ddPlayerOptionsOutsideClickReady) {
         window.__ddPlayerOptionsOutsideClickReady = true;
         document.addEventListener('click', ev => {
-            if (ev.target.closest('.playerOptionsWrap')) return;
-            document.querySelectorAll('.playerOptionsWrap.open').forEach(wrap => wrap.classList.remove('open'));
+            if (ev.target.closest('.playerOptionsWrap') || ev.target.closest('.playerOptionsMenu')) return;
+            closePlayerOptionsMenus();
         });
         document.addEventListener('keydown', ev => {
             if (ev.key !== 'Escape') return;
-            document.querySelectorAll('.playerOptionsWrap.open').forEach(wrap => wrap.classList.remove('open'));
+            closePlayerOptionsMenus();
         });
+        window.addEventListener('resize', () => closePlayerOptionsMenus());
     }
     setupAdminDragAndDrop(adminMode);
     applyActiveTurnHighlight();

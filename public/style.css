@@ -13323,3 +13323,62 @@ body.discordActivity #game .teamPanel .playerOptionsMenu [data-admin-rename] {
         font-size: 8px !important;
     }
 }
+
+/* v70: float player Options above all cards/log panels so every item is visible. */
+body > .playerOptionsMenu.floatingPlayerOptions,
+body.discordActivity > .playerOptionsMenu.floatingPlayerOptions {
+    position: fixed !important;
+    right: auto !important;
+    bottom: auto !important;
+    z-index: 3000000 !important;
+    display: grid !important;
+    gap: 5px !important;
+    min-width: 148px !important;
+    max-width: calc(100vw - 16px) !important;
+    padding: 7px !important;
+    border-radius: 13px !important;
+    background: rgba(9, 7, 4, .985) !important;
+    border: 1px solid rgba(255, 215, 108, .48) !important;
+    box-shadow: 0 18px 34px rgba(0, 0, 0, .72), 0 0 18px rgba(255, 215, 108, .15), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+    pointer-events: auto !important;
+}
+
+body > .playerOptionsMenu.floatingPlayerOptions button,
+body.discordActivity > .playerOptionsMenu.floatingPlayerOptions button {
+    display: block !important;
+    width: 100% !important;
+    min-height: 30px !important;
+    padding: 7px 10px !important;
+    border-radius: 10px !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+}
+
+body > .playerOptionsMenu.floatingPlayerOptions [data-admin-assign],
+body.discordActivity > .playerOptionsMenu.floatingPlayerOptions [data-admin-assign] {
+    color: #171005 !important;
+    background: linear-gradient(180deg, #ffe999, #ad7707) !important;
+}
+
+body > .playerOptionsMenu.floatingPlayerOptions [data-admin-rename],
+body.discordActivity > .playerOptionsMenu.floatingPlayerOptions [data-admin-rename] {
+    color: #fff6dd !important;
+    background: linear-gradient(180deg, #4b4335, #17130c) !important;
+}
+
+@media (max-width: 980px) {
+    body > .playerOptionsMenu.floatingPlayerOptions,
+    body.discordActivity > .playerOptionsMenu.floatingPlayerOptions {
+        min-width: 132px !important;
+        padding: 6px !important;
+    }
+
+    body > .playerOptionsMenu.floatingPlayerOptions button,
+    body.discordActivity > .playerOptionsMenu.floatingPlayerOptions button {
+        min-height: 27px !important;
+        padding: 6px 9px !important;
+        font-size: 9px !important;
+    }
+}
