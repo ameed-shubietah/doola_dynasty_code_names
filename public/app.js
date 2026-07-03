@@ -32,6 +32,9 @@ function setPlayerKey(newKey) {
 
 let playerKey = readTabPlayerKey();
 let myId = playerKey;
+let clueNumberEdited = false;
+let lastClueTargetCount = 0;
+const pendingRevealIds = new Set();
 
 function adminStorageKey(roomId) {
     return `cc_adminToken_${String(roomId || '').toUpperCase()}`;
@@ -292,11 +295,23 @@ function tone(freq = 440, dur = .16, type = 'sine', gain = .05) {
 
 function sound(kind) {
     if (audio.state === 'suspended') audio.resume();
-    if (kind === 'win') {
+    if (kind === 'win' || kind === 'correct') {
         tone(523, .09, 'sine', .035);
         setTimeout(() => tone(659, .10, 'sine', .035), 80);
         setTimeout(() => tone(784, .14, 'triangle', .04), 165);
         flash('winFlash');
+    }
+    if (kind === 'wrong') {
+        tone(196, .12, 'triangle', .045);
+        setTimeout(() => tone(155, .16, 'sawtooth', .04), 95);
+        setTimeout(() => tone(116, .18, 'sawtooth', .035), 210);
+        flash('loseFlash');
+    }
+    if (kind === 'neutral') {
+        tone(392, .10, 'sine', .028);
+        setTimeout(() => tone(330, .11, 'triangle', .026), 95);
+        setTimeout(() => tone(294, .13, 'sine', .024), 190);
+        flash('neutralFlash');
     }
     if (kind === 'gameWin') {
         [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => tone(f, .16, 'triangle', .045), i * 95));
@@ -409,6 +424,27 @@ function hasOnlineSpymaster(team) {
 function spymasterName(team) {
     const p = Object.values(state?.players || {}).find(p => p.online !== false && p.team === team && p.role === 'spymaster');
     return p?.name || null;
+}
+
+function spymasterForTeam(team) {
+    return Object.values(state?.players || {}).find(p => p.online !== false && p.team === team && p.role === 'spymaster') || null;
+}
+
+function turnStatusHtml() {
+    if (!state || state.status === 'finished') return '';
+    if (state.status === 'waiting-clue') {
+        const spy = spymasterForTeam(state.turn);
+        if (!spy) return `WAITING FOR ${teamUpper(state.turn)} SPYMASTER TO GIVE A CLUE`;
+        const src = safeAvatarSrc(playerAvatar(spy));
+        const face = src
+            ? `<span class="turnStatusAvatar"><img src="${src}" alt="${escapeHtml(spy.name || 'spymaster')}"></span>`
+            : `<span class="turnStatusAvatar fallback">${charEmoji(spy.character)}</span>`;
+        return `WAITING FOR ${face}<strong>${escapeHtml(spy.name || 'SPYMASTER')}</strong> TO GIVE A CLUE`;
+    }
+    if (state.status === 'guessing') {
+        return `WAITING FOR ${teamUpper(state.turn)} TEAM OPERATIVES TO PICK THE CARDS`;
+    }
+    return '';
 }
 
 
@@ -1279,6 +1315,8 @@ socket.on('state', s => {
         targetIds.clear();
         const cw = $('clueWord');
         if (cw) cw.value = '';
+        clueNumberEdited = false;
+        lastClueTargetCount = 0;
     }
     state = s;
     myId = playerKey;
@@ -1312,7 +1350,9 @@ function detectRevealSound(before, now) {
         if (old && !old.revealed && c.revealed) {
             const p = me();
             if (c.color === 'assassin') return sound('assassin');
-            if (p && p.team !== 'spectator') sound(c.color === p.team ? 'win' : 'lose');
+            if (c.color === 'neutral') return sound('neutral');
+            if (p && p.team !== 'spectator') return sound(c.color === p.team ? 'correct' : 'wrong');
+            return sound(c.color === 'blue' || c.color === 'red' ? 'correct' : 'neutral');
         }
     }
 }
@@ -1428,13 +1468,8 @@ function render() {
     updateInviteFields(state.id);
     $('turnBadge').className = `badge ${state.turn}`;
     $('turnBadge').textContent = `${teamUpper(state.turn)} TURN`;
-    $('clueBadge').className = 'badge gold';
-    if (state.clue) {
-        const baseClue = `${state.clue.word.toUpperCase()} - ${state.clue.number} ${state.clue.number === 1 ? 'CARD' : 'CARDS'}`;
-        $('clueBadge').textContent = state.clue.extraWord ? `${baseClue} · EXTRA: ${String(state.clue.extraWord).toUpperCase()}` : baseClue;
-    } else {
-        $('clueBadge').textContent = state.hintRequested ? 'ONE-TIME HINT REQUESTED' : 'WAITING FOR CLUE';
-    }
+    $('clueBadge').className = `badge turnSubStatus ${state.turn}`;
+    $('clueBadge').innerHTML = turnStatusHtml();
     $('winnerBadge').className = state.winner ? `badge ${state.winner}` : 'hidden';
     $('winnerBadge').textContent = state.winner ? `${teamUpper(state.winner)} WINS` : '';
     updateScoreDisplay(state.points?.blue ?? 9, state.points?.red ?? 9);
@@ -1590,8 +1625,8 @@ function renderPlayers() {
     function playerHtml(p) {
         const offline = p.online === false;
         const adminBadge = p.isAdmin ? '<span class="adminBadge adminCrown" title="Admin">👑</span>' : '';
-        const canDrag = adminMode && (!p.isAdmin || p.id === myId);
-        return `<div class="player ${p.team} ${offline ? 'offline' : ''} ${canDrag ? 'draggablePlayer' : ''} ${p.isAdmin ? 'adminPlayer' : ''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}">${avatarHtml(p)}<div class="playerBody"><b>${escapeHtml(p.name || 'Player')} ${adminBadge} ${offline ? '<span class="offlineIcon" title="Offline">📡</span>' : ''}</b>${adminTools(p)}</div></div>`;
+        const canDrag = playerOptionsMode && p.id !== myId && (!p.isAdmin || adminMode);
+        return `<div class="player ${p.team} ${offline ? 'offline' : ''} ${canDrag ? 'draggablePlayer' : ''} ${p.isAdmin ? 'adminPlayer' : ''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}">${avatarHtml(p)}<div class="playerBody"><b class="${p.isAdmin ? 'adminNameLine' : ''}"><span class="playerNameText">${escapeHtml(p.name || 'Player')}</span>${adminBadge}${offline ? '<span class="offlineIcon" title="Offline">📡</span>' : ''}</b>${adminTools(p)}</div></div>`;
     }
 
     function hexToRgba(hex, alpha = 1) {
@@ -1665,7 +1700,7 @@ function renderPlayers() {
         });
         window.addEventListener('resize', () => closePlayerOptionsMenus());
     }
-    setupAdminDragAndDrop(adminMode);
+    setupAdminDragAndDrop(playerOptionsMode);
     applyActiveTurnHighlight();
     const goldCount = teams.blue.operative.length + teams.blue.spymaster.length;
     const blackCount = teams.red.operative.length + teams.red.spymaster.length;
@@ -1763,7 +1798,14 @@ function setupAdminDragAndDrop(adminMode) {
 function syncClueCount() {
     const n = targetIds.size;
     const num = $('clueNumber');
-    if (num) num.value = n;
+    if (num) {
+        const current = parseInt(num.value, 10);
+        if (!clueNumberEdited || Number.isNaN(current) || lastClueTargetCount !== n) {
+            num.value = n;
+            clueNumberEdited = false;
+        }
+    }
+    lastClueTargetCount = n;
     const btn = $('giveClueBtn');
     const p = me();
     const hintMode = !!(state?.hintRequested && p && state.hintRequested.team === p.team && p.team === state?.turn);
@@ -1841,7 +1883,9 @@ function renderBoard() {
     lastBoardKey = boardKey;
     board.innerHTML = state.board.map((c, i) => {
         const showOrigin = state.status === 'finished';
-        const colorClass = ((c.revealed || spy || showOrigin) && c.color) ? c.color : '';
+        const pendingReveal = false;
+        const visuallyRevealed = !!c.revealed;
+        const colorClass = ((visuallyRevealed || spy || showOrigin) && c.color) ? c.color : '';
         // Spymaster clue-target selections should show the crown only, without the old cyan border/tick.
         const spyClueTarget = !c.revealed && spy && (c.clueTarget || targetIds.has(c.id));
         const voteCount = state.voteInfo?.counts?.[c.id] || 0;
@@ -1850,15 +1894,15 @@ function renderBoard() {
         const voted = voteCount > 0;
         const revealer = c.revealedById ? state?.players?.[c.revealedById] : null;
         // Revealed Gold/Black/Grey cards become crown-only. Assassin/danger still keeps its normal reveal.
-        const teamReveal = !!(c.revealed && (c.color === 'blue' || c.color === 'red'));
+        const teamReveal = !!(visuallyRevealed && (c.color === 'blue' || c.color === 'red'));
         const correctReveal = teamReveal;
-        const neutralReveal = !!(c.revealed && c.color === 'neutral');
+        const neutralReveal = !!(visuallyRevealed && c.color === 'neutral');
         const playableSpyTarget = spy && p?.team === state.turn && state.status === 'waiting-clue' && c.color === p.team && !c.revealed;
         const canConfirmThis = p?.role === 'operative' && p.team === state.turn && state.status === 'guessing' && myVote && !c.revealed;
         const voteBadge = '';
         const voteFaces = voted && !c.revealed ? voteFacesHtml(c.id) : '';
         const confirmMini = canConfirmThis ? `<span class="cardConfirm" data-confirm-id="${c.id}" title="Confirm ${c.word}">✓</span>` : '';
-        const revealBadge = c.revealed ? revealHeroSvg(c.color) : '';
+        const revealBadge = visuallyRevealed ? revealHeroSvg(c.color) : '';
         // Use a real centered crown layer instead of card backgrounds/pseudo-elements.
         // This avoids mobile Safari/Discord cropping the crown into the top-left corner.
         const crownSrc = neutralReveal ? '/crown-bw.png' : '/crown.png';
@@ -1866,7 +1910,7 @@ function renderBoard() {
         const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
         const crownOnlyReveal = teamReveal || neutralReveal;
         const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>`;
-        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
+        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {
@@ -1950,8 +1994,8 @@ function renderPanels() {
         const clueAlreadyShown = !!(state?.clue && state.status === 'guessing');
         dock.classList.toggle('hidden', !isAnySpy || clueAlreadyShown);
         $('clueWord').disabled = !isCurrentSpy;
-        $('clueNumber').readOnly = true;
-        $('clueNumber').disabled = false;
+        $('clueNumber').readOnly = false;
+        $('clueNumber').disabled = !isCurrentSpy;
         syncClueCount();
         if (isCurrentSpy) {
             $('dockTitle').textContent = 'Give Clue';
@@ -2163,6 +2207,7 @@ if (newGameBtn) newGameBtn.onclick = () => {
 $('giveClueBtn').onclick = () => {
     const targets = [...targetIds];
     const clueWord = $('clueWord').value.trim();
+    const clueNumberValue = Math.max(0, Math.min(9, parseInt($('clueNumber')?.value || targets.length, 10) || 0));
     const p = me();
     const hintMode = !!(state?.hintRequested && p && state.hintRequested.team === p.team);
     if (!clueWord) {
@@ -2173,8 +2218,17 @@ $('giveClueBtn').onclick = () => {
         toast('Pick at least one of your team cards first.');
         return;
     }
-    socket.emit('giveClue', {word: clueWord, number: targets.length, targetIds: targets});
+    socket.emit('giveClue', {word: clueWord, number: clueNumberValue, targetIds: targets});
 };
+const clueNumberInput = $('clueNumber');
+if (clueNumberInput) {
+    clueNumberInput.addEventListener('input', () => {
+        clueNumberEdited = true;
+        const value = Math.max(0, Math.min(9, parseInt(clueNumberInput.value || '0', 10) || 0));
+        clueNumberInput.value = value;
+        syncClueCount();
+    });
+}
 const newRoundBtn = $('newRoundBtn');
 if (newRoundBtn) newRoundBtn.onclick = () => {
     targetIds.clear();

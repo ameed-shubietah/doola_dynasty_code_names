@@ -303,6 +303,7 @@ function roomLobbyInfo(room) {
 function publicRoom(room, forPlayerKey = null) {
     const player = forPlayerKey ? room.players[forPlayerKey] : null;
     const isSpy = player && player.role === 'spymaster';
+    const canSeeClueTargets = !!(isSpy && player.team === room.turn);
     return {
         id: room.id,
         createdAt: room.createdAt,
@@ -317,7 +318,7 @@ function publicRoom(room, forPlayerKey = null) {
         adminOnline: Object.values(room.players).some(p => p.online !== false && p.isAdmin),
         guessesThisTurn: room.guessesThisTurn,
         allowedGuesses: room.allowedGuesses || 0,
-        voteInfo: voteInfo(room),
+        voteInfo: voteInfo(room, player),
         hintUsed: room.hintUsed,
         hintRequested: room.hintRequested,
         players: publicPlayers(room.players),
@@ -329,7 +330,7 @@ function publicRoom(room, forPlayerKey = null) {
             revealed: c.revealed,
             revealedBy: c.revealedBy,
             revealedById: c.revealedById,
-            clueTarget: (isSpy ? c.clueTarget : false),
+            clueTarget: (canSeeClueTargets ? c.clueTarget : false),
             color: (isSpy || c.revealed || room.status === 'finished') ? c.color : null
         }))
     };
@@ -340,9 +341,12 @@ function activeOperatives(room, team) {
     return Object.values(room.players).filter(p => p.online !== false && p.team === team && p.role === 'operative');
 }
 
-function voteInfo(room) {
+function voteInfo(room, viewer = null) {
     const ops = activeOperatives(room, room.turn);
     const votes = room.votes || {};
+    if (viewer?.role === 'spymaster') {
+        return {votes: {}, counts: {}, totalOperatives: ops.length, agreedCardId: null};
+    }
     const counts = {};
     Object.values(votes).forEach(v => {
         const ids = Array.isArray(v) ? v : (v === undefined || v === null ? [] : [v]);
@@ -1006,7 +1010,8 @@ io.on('connection', socket => {
         const cleanTargets = [...new Set((Array.isArray(targetIds) ? targetIds : []).map(x => parseInt(x, 10)))]
             .filter(id => room.board.some(c => c.id === id && !c.revealed && c.color === p.team))
             .slice(0, 9);
-        number = cleanTargets.length;
+        const declaredNumber = Math.max(0, Math.min(9, parseInt(number, 10) || 0));
+        number = declaredNumber;
         if (!word) return socket.emit('toast', 'Write a clue word first.');
         if (!isExtraHint && number < 1) return socket.emit('toast', 'Choose at least one card from your own team color.');
         room.board.forEach(c => c.clueTarget = false);
@@ -1153,11 +1158,19 @@ io.on('connection', socket => {
         if (!room) return;
         const p = findPlayerBySocket(room, socket.id);
         if (p) {
+            const offlinePlayerId = p.id;
             p.online = false;
             p.socketId = null;
             p.lastSeenAt = Date.now();
             room.log.push(`${p.name} disconnected. The room stays alive and they can rejoin with code ${room.id}.`);
             emitRoom(room);
+            setTimeout(() => {
+                const latest = room.players?.[offlinePlayerId];
+                if (!latest || latest.online !== false) return;
+                delete room.votes?.[offlinePlayerId];
+                delete room.players[offlinePlayerId];
+                emitRoom(room);
+            }, 10000);
         }
     });
 });
