@@ -95,7 +95,8 @@ if (nameInput && !isRealDiscordName(nameInput.value)) {
     nameInput.value = '';
     try {
         if (!isRealDiscordName(localStorage.cc_name)) localStorage.removeItem('cc_name');
-    } catch {}
+    } catch {
+    }
 }
 
 const params = new URLSearchParams(location.search);
@@ -1265,21 +1266,46 @@ $('createBtn').onclick = () => {
 const singlePlayerBtn = $('singlePlayerBtn');
 if (singlePlayerBtn) {
     singlePlayerBtn.onclick = () => {
+        const overlay = $('singleDifficultyOverlay');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            return;
+        }
+        startSinglePlayer('medium');
+    };
+}
+
+function startSinglePlayer(difficulty = 'medium') {
+    difficulty = ['easy', 'medium', 'extreme'].includes(difficulty) ? difficulty : 'medium';
+    if (singlePlayerBtn) {
         localStorage.cc_name = currentDisplayName() || 'Agent';
         singlePlayerBtn.disabled = true;
         singlePlayerBtn.textContent = 'Starting...';
-        socket.emit('createSinglePlayerRoom', {
-            name: currentDisplayName(),
-            avatar: customAvatar || '',
-            character: outboundCharacter(),
-            playerKey
-        }, res => {
+    }
+    socket.emit('createSinglePlayerRoom', {
+        name: currentDisplayName(),
+        avatar: customAvatar || '',
+        character: outboundCharacter(),
+        difficulty,
+        playerKey
+    }, res => {
+        if (singlePlayerBtn) {
             singlePlayerBtn.disabled = false;
             singlePlayerBtn.textContent = 'Single Player';
-            acceptJoinResponse(res);
-        });
-    };
+        }
+        acceptJoinResponse(res);
+    });
 }
+
+const singleDifficultyOverlay = $('singleDifficultyOverlay');
+const closeSingleDifficulty = $('closeSingleDifficulty');
+if (closeSingleDifficulty) closeSingleDifficulty.onclick = () => singleDifficultyOverlay?.classList.add('hidden');
+document.querySelectorAll('[data-single-difficulty]').forEach(btn => {
+    btn.onclick = () => {
+        singleDifficultyOverlay?.classList.add('hidden');
+        startSinglePlayer(btn.dataset.singleDifficulty || 'medium');
+    };
+});
 $('joinBtn').onclick = () => {
     if (isDiscordActivity) return joinDiscordActivity($('team').value || 'spectator', $('role').value || 'spectator');
     const roomId = roomInput.value.trim().toUpperCase();
@@ -2124,12 +2150,16 @@ function renderLog() {
     const mainLog = $('log');
     if (mainLog) {
         mainLog.innerHTML = html;
-        requestAnimationFrame(() => { mainLog.scrollTop = mainLog.scrollHeight; });
+        requestAnimationFrame(() => {
+            mainLog.scrollTop = mainLog.scrollHeight;
+        });
     }
     const hiddenLog = $('logHidden');
     if (hiddenLog) {
         hiddenLog.innerHTML = html;
-        requestAnimationFrame(() => { hiddenLog.scrollTop = hiddenLog.scrollHeight; });
+        requestAnimationFrame(() => {
+            hiddenLog.scrollTop = hiddenLog.scrollHeight;
+        });
     }
 }
 

@@ -252,6 +252,7 @@ function newRoom(id) {
         adminToken: makeAdminToken(),
         adminRequests: [],
         singlePlayer: false,
+        singlePlayerDifficulty: 'medium',
         botTimer: null,
         log: []
     };
@@ -605,11 +606,23 @@ function chooseBotGuess(room) {
     const neutral = unrevealed.filter(c => c.color === 'neutral');
     const wrongTeam = unrevealed.filter(c => c.color === 'blue');
     const danger = unrevealed.filter(c => c.color === 'assassin');
+    const difficulty = ['easy', 'medium', 'extreme'].includes(room.singlePlayerDifficulty) ? room.singlePlayerDifficulty : 'medium';
+
+    if (difficulty === 'extreme') {
+        if (intended.length) return shuffle(intended)[0];
+        if (black.length) return shuffle(black)[0];
+        return shuffle(unrevealed)[0];
+    }
+
     const roll = Math.random();
-    if (roll < 0.64 && intended.length) return shuffle(intended)[0];
-    if (roll < 0.82 && black.length) return shuffle(black)[0];
-    if (roll < 0.94 && neutral.length) return shuffle(neutral)[0];
-    if (roll < 0.99 && wrongTeam.length) return shuffle(wrongTeam)[0];
+    const profile = difficulty === 'easy'
+        ? {intended: .46, own: .66, neutral: .86, wrong: .97}
+        : {intended: .90, own: .96, neutral: .985, wrong: .998};
+
+    if (roll < profile.intended && intended.length) return shuffle(intended)[0];
+    if (roll < profile.own && black.length) return shuffle(black)[0];
+    if (roll < profile.neutral && neutral.length) return shuffle(neutral)[0];
+    if (roll < profile.wrong && wrongTeam.length) return shuffle(wrongTeam)[0];
     return shuffle(danger.length ? danger : unrevealed)[0];
 }
 
@@ -724,12 +737,14 @@ io.on('connection', socket => {
                                              name,
                                              avatar = '',
                                              character = 'raiden',
+                                             difficulty = 'medium',
                                              playerKey
                                          } = {}, cb = () => {
     }) => {
         const roomId = code();
         const room = newRoom(roomId);
         room.singlePlayer = true;
+        room.singlePlayerDifficulty = ['easy', 'medium', 'extreme'].includes(difficulty) ? difficulty : 'medium';
         room.turn = 'blue';
         room.board = makeBoard('blue');
         room.status = 'waiting-clue';
@@ -751,10 +766,17 @@ io.on('connection', socket => {
         if (joined?.ok === false) return cb(joined);
         const human = room.players[socket.data.playerKey];
         addSinglePlayerBots(room, human?.character || character);
-        room.log.push('Single Player started: GOLD vs DSTY Bot.');
+        room.log.push(`Single Player started: GOLD vs DSTY Bot (${room.singlePlayerDifficulty.toUpperCase()} mode).`);
         emitRoom(room);
         scheduleSinglePlayerBot(room);
-        cb({ok: true, roomId, playerKey: socket.data.playerKey, adminToken: room.adminToken, singlePlayer: true});
+        cb({
+            ok: true,
+            roomId,
+            playerKey: socket.data.playerKey,
+            adminToken: room.adminToken,
+            singlePlayer: true,
+            difficulty: room.singlePlayerDifficulty
+        });
     });
 
     socket.on('joinRoom', ({
@@ -1128,6 +1150,7 @@ io.on('connection', socket => {
         fresh.players = players;
         fresh.adminToken = adminToken;
         fresh.singlePlayer = !!room.singlePlayer;
+        fresh.singlePlayerDifficulty = room.singlePlayerDifficulty || 'medium';
         if (fresh.singlePlayer) {
             fresh.turn = 'blue';
             fresh.board = makeBoard('blue');

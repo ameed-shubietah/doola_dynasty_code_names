@@ -14057,9 +14057,8 @@ body.discordActivity #game .teamPanel .playerBody > b.adminNameLine .adminBadge.
     letter-spacing: .8px !important;
     text-transform: uppercase !important;
     color: #130b00 !important;
-    background:
-        radial-gradient(circle at 18% 20%, rgba(255, 255, 255, .72), transparent 22%),
-        linear-gradient(180deg, #fff2a8 0%, #ffd646 42%, #a56d00 100%) !important;
+    background: radial-gradient(circle at 18% 20%, rgba(255, 255, 255, .72), transparent 22%),
+    linear-gradient(180deg, #fff2a8 0%, #ffd646 42%, #a56d00 100%) !important;
     border: 1px solid rgba(255, 242, 178, .92) !important;
     box-shadow: 0 0 22px rgba(255, 215, 108, .42), 0 12px 24px rgba(0, 0, 0, .45) !important;
     position: relative !important;
@@ -14094,5 +14093,88 @@ body.discordActivity #game .teamPanel .playerBody > b.adminNameLine .adminBadge.
         min-height: 38px !important;
         border-radius: 13px !important;
         font-size: 12px !important;
+    }
+}
+
+/* v78: single-player difficulty chooser. */
+.singleDifficultyOverlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9000 !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 18px !important;
+    background: rgba(0, 0, 0, .68) !important;
+    backdrop-filter: blur(5px) !important;
+}
+
+.singleDifficultyOverlay.hidden {
+    display: none !important;
+}
+
+.singleDifficultyCard {
+    width: min(540px, 94vw) !important;
+    border-radius: 18px !important;
+    padding: 22px !important;
+    position: relative !important;
+    text-align: center !important;
+    border: 1px solid rgba(255, 215, 108, .55) !important;
+    box-shadow: 0 0 40px rgba(255, 215, 108, .22), 0 24px 60px rgba(0, 0, 0, .65) !important;
+}
+
+.singleDifficultyCard h2 {
+    margin: 0 0 6px !important;
+    color: #ffe58a !important;
+    font-size: clamp(22px, 3vw, 34px) !important;
+    text-transform: uppercase !important;
+}
+
+.singleDifficultyCard p {
+    margin: 0 0 16px !important;
+    color: rgba(255, 246, 206, .82) !important;
+    font-weight: 800 !important;
+}
+
+.singleDifficultyChoices {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+}
+
+.singleDifficultyChoices button {
+    min-height: 112px !important;
+    border-radius: 14px !important;
+    padding: 12px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    color: #160d00 !important;
+    background: linear-gradient(180deg, #fff2a5, #d39510 68%, #5c3900) !important;
+    border: 1px solid rgba(255, 236, 165, .85) !important;
+}
+
+.singleDifficultyChoices button b {
+    font-size: 14px !important;
+    text-transform: uppercase !important;
+}
+
+.singleDifficultyChoices button span {
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+}
+
+@media (max-width: 640px) {
+    .singleDifficultyCard {
+        padding: 15px !important;
+    }
+
+    .singleDifficultyChoices {
+        grid-template-columns: 1fr !important;
+    }
+
+    .singleDifficultyChoices button {
+        min-height: 64px !important;
     }
 }
