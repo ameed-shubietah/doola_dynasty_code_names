@@ -14178,3 +14178,54 @@ body.discordActivity #game .teamPanel .playerBody > b.adminNameLine .adminBadge.
         min-height: 64px !important;
     }
 }
+
+/* v84: final single-player board reveal + red crown cards. */
+#game .card.red,
+#game .board.spyBoard .card.red,
+body.discordActivity #game .card.red,
+body.discordActivity #game .board.spyBoard .card.red {
+    background: linear-gradient(145deg, #ff372f 0%, #b70806 58%, #520100 100%) !important;
+    background-image: linear-gradient(145deg, #ff372f 0%, #b70806 58%, #520100 100%) !important;
+    color: #fff !important;
+    border-color: rgba(255, 196, 132, .9) !important;
+}
+
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word {
+    background: rgba(78, 0, 0, .58) !important;
+    color: #fff7d6 !important;
+    border-color: rgba(255, 221, 143, .58) !important;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .62) !important;
+}
+
+#game .card.hasCrownLayer.red,
+body.discordActivity #game .card.hasCrownLayer.red {
+    background-image: linear-gradient(145deg, #ff372f 0%, #b70806 58%, #520100 100%) !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown {
+    cursor: default !important;
+    filter: saturate(1.04) brightness(1) !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word,
+#game .board.finishedBoard .card.finalOriginShown.crownOnlyReveal .word,
+#game .board.finishedBoard .card.finalOriginShown.revealed .word,
+#game .board.finishedBoard .card.finalOriginShown.correctReveal .word,
+#game .board.finishedBoard .card.finalOriginShown.hasCrownLayer .word,
+#game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+#game .board.finishedBoard.operativeBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.crownOnlyReveal .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.revealed .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.correctReveal .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.hasCrownLayer .word,
+body.discordActivity #game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard.operativeBoard .card.finalOriginShown .word {
+    display: inline-flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}

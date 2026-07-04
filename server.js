@@ -141,7 +141,10 @@ function clueGroupsForBank(bank) {
 function singlePlayerWordsForColors(bank, colors) {
     const words = Array(colors.length).fill('');
     const used = new Set();
-    const groups = clueGroupsForBank(bank);
+    const groups = clueGroupsForBank(bank).sort((a, b) =>
+        singlePlayerRecentGroupPenalty(a.key) - singlePlayerRecentGroupPenalty(b.key) ||
+        Math.random() - 0.5
+    );
     const teamSlots = team => shuffle(colors.map((color, i) => color === team ? i : -1).filter(i => i >= 0));
 
     const placeTeamClusters = team => {
@@ -588,6 +591,33 @@ function buildBotClueGroups() {
 }
 
 const BOT_CLUE_GROUPS = buildBotClueGroups();
+const SINGLE_PLAYER_RECENT_LIMIT = 44;
+const singlePlayerRecentClues = [];
+const singlePlayerRecentGroupKeys = [];
+
+function pushRecentValue(list, value, limit = SINGLE_PLAYER_RECENT_LIMIT) {
+    value = String(value || '').toUpperCase();
+    if (!value) return;
+    const existing = list.indexOf(value);
+    if (existing >= 0) list.splice(existing, 1);
+    list.unshift(value);
+    if (list.length > limit) list.length = limit;
+}
+
+function singlePlayerRecentGroupPenalty(groupKey = '') {
+    const idx = singlePlayerRecentGroupKeys.indexOf(String(groupKey || '').toUpperCase());
+    return idx < 0 ? 0 : Math.max(8, SINGLE_PLAYER_RECENT_LIMIT - idx);
+}
+
+function singlePlayerRecentCluePenalty(clue = '') {
+    const idx = singlePlayerRecentClues.indexOf(String(clue || '').toUpperCase());
+    return idx < 0 ? 0 : Math.max(8, SINGLE_PLAYER_RECENT_LIMIT - idx);
+}
+
+function rememberSinglePlayerClue(clue) {
+    pushRecentValue(singlePlayerRecentClues, clue?.word);
+    pushRecentValue(singlePlayerRecentGroupKeys, clue?.groupKey);
+}
 
 function addSinglePlayerBots(room, humanCharacter = '') {
     const characterIds = CHARACTERS.map(c => c.id);
@@ -614,7 +644,7 @@ function chooseBotClue(room, team) {
     const boardWords = new Set(room.board.filter(c => !c.revealed).map(c => c.word));
     const usedClues = new Set((room.singlePlayerUsedClues?.[team] || []).map(w => String(w).toUpperCase()));
     const usedGroupKeys = new Set(room.singlePlayerUsedClueGroups?.[team] || []);
-    const buildOptions = (allowUsedGroup = false) => BOT_CLUE_GROUPS
+    const buildOptions = (allowUsedGroup = false) => shuffle(BOT_CLUE_GROUPS)
         .filter(group => {
             const clue = String(group.clue || '').toUpperCase();
             const key = clueGroupKey(group);
@@ -630,17 +660,24 @@ function chooseBotClue(room, team) {
             const targetCards = matches.slice(0, 9);
             const multiBonus = targetCards.length >= 2 ? 30 : 0;
             const specificBonus = Math.max(0, 18 - Math.floor(groupWords.size / 8));
-            const score = targetCards.length * 100 + multiBonus + specificBonus;
+            const freshnessPenalty = (usedGroupKeys.has(clueGroupKey(group)) ? 34 : 0) +
+                singlePlayerRecentGroupPenalty(clueGroupKey(group)) +
+                singlePlayerRecentCluePenalty(group.clue);
+            const score = targetCards.length * 100 + multiBonus + specificBonus - freshnessPenalty;
             return {group, groupKey: clueGroupKey(group), targetCards, hazardCards, score};
         })
         .filter(x => x.targetCards.length && x.hazardCards.length === 0);
-    const options = buildOptions(false);
-    const relaxedOptions = options.length ? options : buildOptions(true);
-    const best = relaxedOptions.sort((a, b) =>
+    const rankOptions = options => options.sort((a, b) =>
         b.targetCards.length - a.targetCards.length ||
         b.score - a.score ||
-        a.group.words.length - b.group.words.length
-    )[0];
+        a.group.words.length - b.group.words.length ||
+        Math.random() - 0.5
+    );
+    const bestFresh = rankOptions(buildOptions(false))[0];
+    const bestAny = rankOptions(buildOptions(true))[0];
+    const best = (!bestFresh || (bestAny && bestAny.targetCards.length > bestFresh.targetCards.length))
+        ? bestAny
+        : bestFresh;
     if (best && best.score >= 10) {
         return {
             word: best.group.clue,
@@ -735,6 +772,7 @@ function botGiveClue(room) {
     if (clue.groupKey && !room.singlePlayerUsedClueGroups[room.turn].includes(clue.groupKey)) {
         room.singlePlayerUsedClueGroups[room.turn].push(clue.groupKey);
     }
+    rememberSinglePlayerClue({word: room.clue.word, groupKey: clue.groupKey});
     room.guessesThisTurn = 0;
     room.allowedGuesses = clue.number + 1;
     room.status = 'guessing';

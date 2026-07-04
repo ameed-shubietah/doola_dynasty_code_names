@@ -1928,6 +1928,7 @@ function renderBoard() {
     const spy = p?.role === 'spymaster';
     board.classList.toggle('spyBoard', !!spy);
     board.classList.toggle('operativeBoard', !spy);
+    board.classList.toggle('finishedBoard', state.status === 'finished');
     const marked = myMarkedIds();
     // Spawn animation should happen only for a truly fresh board, not for votes/reveals/turn changes.
     // Do not include visible colors, revealed state, votes, or round number here because those
@@ -1947,10 +1948,10 @@ function renderBoard() {
         const myVote = marked.includes(c.id);
         const voted = voteCount > 0;
         const revealer = c.revealedById ? state?.players?.[c.revealedById] : null;
-        // Revealed Gold/Black/Grey cards become crown-only. Assassin/danger still keeps its normal reveal.
-        const teamReveal = !!(visuallyRevealed && (c.color === 'blue' || c.color === 'red'));
+        // During play, revealed team/grey cards become crown-only. After the win, show every real word/color.
+        const teamReveal = !!(!showOrigin && visuallyRevealed && (c.color === 'blue' || c.color === 'red'));
         const correctReveal = teamReveal;
-        const neutralReveal = !!(visuallyRevealed && c.color === 'neutral');
+        const neutralReveal = !!(!showOrigin && visuallyRevealed && c.color === 'neutral');
         const playableSpyTarget = spy && p?.team === state.turn && state.status === 'waiting-clue' && c.color === p.team && !c.revealed;
         const canConfirmThis = p?.role === 'operative' && p.team === state.turn && state.status === 'guessing' && myVote && !c.revealed;
         const voteBadge = '';
@@ -1964,7 +1965,7 @@ function renderBoard() {
         const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
         const crownOnlyReveal = teamReveal || neutralReveal;
         const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>`;
-        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin && !c.revealed ? 'originShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
+        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {
