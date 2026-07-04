@@ -118,6 +118,64 @@ function themedWordsFromBank(bank, count = 25) {
     return chosen.slice(0, count);
 }
 
+function randomWordsFromBank(bank, count = 25) {
+    return shuffle(bank).slice(0, count);
+}
+
+function clueGroupKey(group) {
+    return [...new Set((group?.words || []).map(w => String(w).toUpperCase()))].sort().join('|');
+}
+
+function clueGroupsForBank(bank) {
+    const available = new Set(bank);
+    return shuffle(BOT_CLUE_GROUPS || [])
+        .map(group => ({
+            ...group,
+            key: clueGroupKey(group),
+            availableWords: [...new Set((group.words || []).filter(w => available.has(w)))]
+        }))
+        .filter(group => group.availableWords.length >= 2 && group.clue && !available.has(group.clue));
+}
+
+function singlePlayerWordsForColors(bank, colors) {
+    const words = Array(colors.length).fill('');
+    const used = new Set();
+    const groups = clueGroupsForBank(bank);
+    const teamSlots = team => shuffle(colors.map((color, i) => color === team ? i : -1).filter(i => i >= 0));
+
+    const placeTeamClusters = team => {
+        const slots = teamSlots(team);
+        const usedGroupKeys = new Set();
+        for (const group of groups) {
+            if (slots.length < 2) break;
+            if (usedGroupKeys.has(group.key)) continue;
+            const candidates = shuffle(group.availableWords.filter(w => !used.has(w)));
+            if (candidates.length < 2) continue;
+            const take = Math.min(slots.length, candidates.length, 2 + Math.floor(Math.random() * 3));
+            if (take < 2) continue;
+            for (const word of candidates.slice(0, take)) {
+                const idx = slots.shift();
+                words[idx] = word;
+                used.add(word);
+            }
+            usedGroupKeys.add(group.key);
+            if (Math.random() < .42) break;
+        }
+    };
+
+    placeTeamClusters('blue');
+    placeTeamClusters('red');
+
+    const remaining = shuffle(bank.filter(w => !used.has(w)));
+    for (let i = 0; i < words.length; i++) {
+        if (!words[i]) {
+            words[i] = remaining.shift() || shuffle(bank)[0];
+            used.add(words[i]);
+        }
+    }
+    return words;
+}
+
 const CHARACTERS = [
     {id: 'raiden', name: 'Raiden', emoji: '🧙‍♂️', accent: '#71e2ff'},
     {id: 'viper', name: 'Viper', emoji: '🐍', accent: '#9cff8c'},
@@ -204,9 +262,8 @@ function publicPlayers(players) {
     return out;
 }
 
-function makeBoard(startingTeam = 'red') {
+function makeBoard(startingTeam = 'red', wordMode = 'themed') {
     const playable = WORDS.slice(0, Math.min(10000, WORDS.length));
-    const words = themedWordsFromBank(playable, 25);
     const teamCounts = {
         blue: startingTeam === 'blue' ? 9 : 8,
         red: startingTeam === 'red' ? 9 : 8,
@@ -219,6 +276,9 @@ function makeBoard(startingTeam = 'red') {
     for (let i = 0; i < teamCounts.neutral; i++) colors.push('neutral'); // Blank cards: skip turn only
     colors.push('assassin');                                         // Grey danger card: instant loss
     const shuffledColors = shuffle(colors);
+    const words = wordMode === 'full'
+        ? singlePlayerWordsForColors(playable, shuffledColors)
+        : themedWordsFromBank(playable, 25);
     return words.map((word, i) => ({
         id: i,
         word,
@@ -253,6 +313,8 @@ function newRoom(id) {
         adminRequests: [],
         singlePlayer: false,
         singlePlayerDifficulty: 'medium',
+        singlePlayerUsedClues: {blue: [], red: []},
+        singlePlayerUsedClueGroups: {blue: [], red: []},
         botTimer: null,
         log: []
     };
@@ -404,13 +466,15 @@ function resetRoomTable(room, message = 'Table reset with a fresh board.') {
     room.status = 'waiting-clue';
     room.turn = startingTeam;
     room.winner = null;
-    room.board = makeBoard(startingTeam);
+    room.board = makeBoard(startingTeam, room.singlePlayer ? 'full' : 'themed');
     room.clue = null;
     room.guessesThisTurn = 0;
     room.allowedGuesses = 0;
     room.hintUsed = {blue: false, red: false};
     room.hintRequested = null;
     room.votes = {};
+    room.singlePlayerUsedClues = {blue: [], red: []};
+    room.singlePlayerUsedClueGroups = {blue: [], red: []};
     room.roundStartedAt = Date.now();
     room.gameStartedAt = Date.now();
     // Reset table means a clean board + clean game log.
@@ -452,25 +516,45 @@ const SINGLE_BOT_IDS = {
 
 const BOT_CLUE_GROUPS = [
     {clue: 'ROYALTY', words: ['KING', 'QUEEN', 'CROWN', 'THRONE', 'PALACE', 'ROYAL', 'MONARCH', 'CASTLE']},
+    {clue: 'KINGDOM', words: ['KING', 'QUEEN', 'CROWN', 'THRONE', 'PALACE', 'ROYAL', 'MONARCH', 'CASTLE']},
     {clue: 'OCEAN', words: ['SEA', 'WAVE', 'BEACH', 'ISLAND', 'REEF', 'ANCHOR', 'SHIP', 'SAIL']},
+    {clue: 'MARINE', words: ['SEA', 'WAVE', 'BEACH', 'ISLAND', 'REEF', 'ANCHOR', 'SHIP', 'SAIL', 'WALRUS']},
     {clue: 'MEDICAL', words: ['DOCTOR', 'NURSE', 'HOSPITAL', 'PHARMACY', 'MEDICINE', 'PATIENT', 'CLINIC']},
+    {clue: 'HEALTH', words: ['DOCTOR', 'NURSE', 'HOSPITAL', 'PHARMACY', 'MEDICINE', 'PATIENT', 'CLINIC']},
     {clue: 'RAILWAY', words: ['TRAIN', 'STATION', 'TRACK', 'ENGINE', 'RAIL', 'TICKET', 'PLATFORM']},
+    {clue: 'TRANSIT', words: ['TRAIN', 'STATION', 'TRACK', 'ENGINE', 'RAIL', 'TICKET', 'PLATFORM', 'PLANE', 'AIRPORT']},
     {clue: 'SPACE', words: ['PLANE', 'PILOT', 'AIRPORT', 'ROCKET', 'SATELLITE', 'COMET', 'ASTEROID']},
+    {clue: 'COSMIC', words: ['EARTH', 'MERCURY', 'PLANET', 'COMET', 'ASTEROID', 'SATELLITE', 'ROCKET']},
     {clue: 'SCHOOL', words: ['TEACHER', 'STUDENT', 'BOOK', 'PAPER', 'PENCIL', 'CLASS']},
+    {clue: 'CLASSROOM', words: ['TEACHER', 'STUDENT', 'BOOK', 'PAPER', 'PENCIL', 'CLASS', 'SCHOOL']},
     {clue: 'TECH', words: ['PHONE', 'SCREEN', 'KEYBOARD', 'ROBOT', 'COMPUTER', 'PIXEL', 'PRINTER']},
+    {clue: 'DIGITAL', words: ['PHONE', 'SCREEN', 'KEYBOARD', 'ROBOT', 'COMPUTER', 'PIXEL', 'PRINTER']},
     {clue: 'GEMS', words: ['GOLD', 'SILVER', 'DIAMOND', 'RUBY', 'CRYSTAL', 'MARBLE', 'JEWEL']},
+    {clue: 'PRECIOUS', words: ['GOLD', 'SILVER', 'DIAMOND', 'RUBY', 'CRYSTAL', 'JEWEL']},
     {clue: 'NATURE', words: ['FOREST', 'TREE', 'LEAF', 'GRASS', 'FLOWER', 'ROOT', 'MOSS']},
+    {clue: 'PLANTS', words: ['FOREST', 'TREE', 'LEAF', 'GRASS', 'FLOWER', 'ROOT', 'MOSS']},
     {clue: 'DESERT', words: ['SAND', 'OASIS', 'CAMEL', 'PYRAMID', 'SUN', 'DUST']},
     {clue: 'FOOD', words: ['BREAD', 'CHEESE', 'APPLE', 'LEMON', 'MANGO', 'JUICE', 'SPICE']},
+    {clue: 'EAT', words: ['BREAD', 'CHEESE', 'APPLE', 'LEMON', 'MANGO', 'JUICE', 'SPICE', 'BERRY']},
     {clue: 'SPORTS', words: ['GOAL', 'BALL', 'COURT', 'ARENA', 'TEAM', 'MATCH']},
+    {clue: 'GAME', words: ['GOAL', 'BALL', 'COURT', 'ARENA', 'TEAM', 'MATCH', 'ARCADE']},
     {clue: 'MUSIC', words: ['BAND', 'PIANO', 'GUITAR', 'DRUM', 'SONG', 'ORCHESTRA']},
+    {clue: 'SOUND', words: ['BAND', 'PIANO', 'GUITAR', 'DRUM', 'SONG', 'ORCHESTRA']},
     {clue: 'ANIMALS', words: ['DOG', 'CAT', 'ELEPHANT', 'MONKEY', 'DRAGON', 'VIPER', 'RAVEN']},
+    {clue: 'CREATURES', words: ['DOG', 'CAT', 'ELEPHANT', 'MONKEY', 'DRAGON', 'VIPER', 'RAVEN', 'PARROT', 'WALRUS']},
     {clue: 'WEATHER', words: ['CLOUD', 'STORM', 'RAIN', 'LIGHTNING', 'SNOW', 'FROST']},
+    {clue: 'SKY', words: ['CLOUD', 'STORM', 'RAIN', 'LIGHTNING', 'SNOW', 'FROST', 'SUN']},
     {clue: 'MONEY', words: ['BANK', 'CASINO', 'CARD', 'CASH', 'VAULT', 'SAFE']},
+    {clue: 'FINANCE', words: ['BANK', 'CASINO', 'CARD', 'CASH', 'VAULT', 'SAFE']},
     {clue: 'MAGIC', words: ['WIZARD', 'ORACLE', 'PHANTOM', 'SHADOW', 'SPELL', 'CRYSTAL']},
+    {clue: 'MYSTIC', words: ['WIZARD', 'ORACLE', 'PHANTOM', 'SHADOW', 'SPELL', 'CRYSTAL', 'MAGICIAN']},
     {clue: 'HOUSE', words: ['ROOF', 'DOOR', 'WINDOW', 'KITCHEN', 'BED', 'TABLE']},
+    {clue: 'HOME', words: ['ROOF', 'DOOR', 'WINDOW', 'KITCHEN', 'BED', 'TABLE', 'HOUSE']},
     {clue: 'BODY', words: ['HAND', 'ARM', 'LEG', 'EYE', 'HEART', 'BLOOD']},
+    {clue: 'HUMAN', words: ['HAND', 'ARM', 'LEG', 'EYE', 'HEART', 'BLOOD', 'BODY']},
+    {clue: 'ANATOMY', words: ['HAND', 'ARM', 'LEG', 'EYE', 'HEART', 'BLOOD', 'BODY']},
     {clue: 'CITY', words: ['MAYOR', 'STREET', 'TOWER', 'BRIDGE', 'MARKET', 'HOTEL']},
+    {clue: 'URBAN', words: ['MAYOR', 'STREET', 'TOWER', 'BRIDGE', 'MARKET', 'HOTEL', 'CITY']},
     {clue: 'TRAVEL', words: ['PLANE', 'TRAIN', 'STATION', 'AIRPORT', 'TICKET', 'SHIP', 'PILOT']},
     {clue: 'BUILDING', words: ['PALACE', 'CASTLE', 'HOSPITAL', 'SCHOOL', 'HOTEL', 'TOWER']},
     {clue: 'PLANETS', words: ['EARTH', 'MERCURY', 'PLANET', 'COMET', 'ASTEROID', 'SATELLITE']},
@@ -506,32 +590,48 @@ function chooseBotClue(room, team) {
     const own = room.board.filter(c => !c.revealed && c.color === team);
     if (!own.length) return null;
     const boardWords = new Set(room.board.filter(c => !c.revealed).map(c => c.word));
+    const usedClues = new Set((room.singlePlayerUsedClues?.[team] || []).map(w => String(w).toUpperCase()));
+    const usedGroupKeys = new Set(room.singlePlayerUsedClueGroups?.[team] || []);
     const options = BOT_CLUE_GROUPS
-        .filter(group => !boardWords.has(group.clue))
+        .filter(group => !boardWords.has(group.clue) && !usedClues.has(group.clue) && !usedGroupKeys.has(clueGroupKey(group)))
         .map(group => {
             const matches = own.filter(c => group.words.includes(c.word));
             const hazardCards = room.board.filter(c => !c.revealed && c.color !== team && group.words.includes(c.word));
-            const targetCards = matches.slice(0, 3);
-            const exactness = targetCards.length >= 2 ? 7 : 0;
-            const score = targetCards.length * 14 + exactness - hazardCards.length * 8 - Math.max(0, matches.length - targetCards.length) * 2;
-            return {group, targetCards, hazardCards, score};
+            const targetCards = matches.slice(0, 4);
+            const exactness = targetCards.length >= 2 ? 12 : 0;
+            const score = targetCards.length * 18 + exactness - hazardCards.length * 10 - Math.max(0, matches.length - targetCards.length) * 2;
+            return {group, groupKey: clueGroupKey(group), targetCards, hazardCards, score};
         })
-        .filter(x => x.targetCards.length);
+        .filter(x => x.targetCards.length && x.score > 0);
     const best = options.sort((a, b) =>
-        b.score - a.score ||
         b.targetCards.length - a.targetCards.length ||
-        a.hazardCards.length - b.hazardCards.length
+        a.hazardCards.length - b.hazardCards.length ||
+        b.score - a.score
     )[0];
     if (best && best.score >= 10) {
         return {
             word: best.group.clue,
+            groupKey: best.groupKey,
             targets: best.targetCards,
             number: best.targetCards.length
         };
     }
+    const singleOptions = shuffle(own).map(card => ({
+        card,
+        group: BOT_CLUE_GROUPS.find(group =>
+            !boardWords.has(group.clue) &&
+            !usedClues.has(group.clue) &&
+            !usedGroupKeys.has(clueGroupKey(group)) &&
+            group.words.includes(card.word)
+        )
+    })).filter(x => x.group);
+    if (singleOptions.length) {
+        const picked = singleOptions[0];
+        return {word: picked.group.clue, groupKey: clueGroupKey(picked.group), targets: [picked.card], number: 1};
+    }
     const card = shuffle(own)[0];
-    const single = BOT_CLUE_GROUPS.find(group => !boardWords.has(group.clue) && group.words.includes(card.word));
-    return {word: single?.clue || 'TARGET', targets: [card], number: 1};
+    const fallback = ['TARGET', 'SOLO', 'SINGLE', 'DIRECT', 'FOCUS'].find(w => !boardWords.has(w) && !usedClues.has(w)) || 'TARGET';
+    return {word: fallback, groupKey: `fallback:${fallback}`, targets: [card], number: 1};
 }
 
 function applyConfirmedGuess(room, p, card) {
@@ -587,6 +687,16 @@ function botGiveClue(room) {
         extraHint: false,
         at: Date.now()
     };
+    room.singlePlayerUsedClues = room.singlePlayerUsedClues || {blue: [], red: []};
+    room.singlePlayerUsedClues[room.turn] = room.singlePlayerUsedClues[room.turn] || [];
+    if (!room.singlePlayerUsedClues[room.turn].includes(room.clue.word.toUpperCase())) {
+        room.singlePlayerUsedClues[room.turn].push(room.clue.word.toUpperCase());
+    }
+    room.singlePlayerUsedClueGroups = room.singlePlayerUsedClueGroups || {blue: [], red: []};
+    room.singlePlayerUsedClueGroups[room.turn] = room.singlePlayerUsedClueGroups[room.turn] || [];
+    if (clue.groupKey && !room.singlePlayerUsedClueGroups[room.turn].includes(clue.groupKey)) {
+        room.singlePlayerUsedClueGroups[room.turn].push(clue.groupKey);
+    }
     room.guessesThisTurn = 0;
     room.allowedGuesses = clue.number + 1;
     room.status = 'guessing';
@@ -616,8 +726,8 @@ function chooseBotGuess(room) {
 
     const roll = Math.random();
     const profile = difficulty === 'easy'
-        ? {intended: .46, own: .66, neutral: .86, wrong: .97}
-        : {intended: .90, own: .96, neutral: .985, wrong: .998};
+        ? {intended: .30, own: .50, neutral: .80, wrong: .96}
+        : {intended: .50, own: .68, neutral: .88, wrong: .98};
 
     if (roll < profile.intended && intended.length) return shuffle(intended)[0];
     if (roll < profile.own && black.length) return shuffle(black)[0];
@@ -745,8 +855,10 @@ io.on('connection', socket => {
         const room = newRoom(roomId);
         room.singlePlayer = true;
         room.singlePlayerDifficulty = ['easy', 'medium', 'extreme'].includes(difficulty) ? difficulty : 'medium';
+        room.singlePlayerUsedClues = {blue: [], red: []};
+        room.singlePlayerUsedClueGroups = {blue: [], red: []};
         room.turn = 'blue';
-        room.board = makeBoard('blue');
+        room.board = makeBoard('blue', 'full');
         room.status = 'waiting-clue';
         room.roundStartedAt = Date.now();
         room.gameStartedAt = Date.now();
@@ -769,14 +881,7 @@ io.on('connection', socket => {
         room.log.push(`Single Player started: GOLD vs DSTY Bot (${room.singlePlayerDifficulty.toUpperCase()} mode).`);
         emitRoom(room);
         scheduleSinglePlayerBot(room);
-        cb({
-            ok: true,
-            roomId,
-            playerKey: socket.data.playerKey,
-            adminToken: room.adminToken,
-            singlePlayer: true,
-            difficulty: room.singlePlayerDifficulty
-        });
+        cb({ok: true, roomId, playerKey: socket.data.playerKey, adminToken: room.adminToken, singlePlayer: true, difficulty: room.singlePlayerDifficulty});
     });
 
     socket.on('joinRoom', ({
@@ -1153,7 +1258,9 @@ io.on('connection', socket => {
         fresh.singlePlayerDifficulty = room.singlePlayerDifficulty || 'medium';
         if (fresh.singlePlayer) {
             fresh.turn = 'blue';
-            fresh.board = makeBoard('blue');
+            fresh.board = makeBoard('blue', 'full');
+            fresh.singlePlayerUsedClues = {blue: [], red: []};
+            fresh.singlePlayerUsedClueGroups = {blue: [], red: []};
         }
         rooms.set(room.id, fresh);
         emitRoom(fresh);
