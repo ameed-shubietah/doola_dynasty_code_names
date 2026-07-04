@@ -123,6 +123,7 @@ function randomWordsFromBank(bank, count = 25) {
 }
 
 function clueGroupKey(group) {
+    if (group?.key) return group.key;
     return [...new Set((group?.words || []).map(w => String(w).toUpperCase()))].sort().join('|');
 }
 
@@ -134,7 +135,7 @@ function clueGroupsForBank(bank) {
             key: clueGroupKey(group),
             availableWords: [...new Set((group.words || []).filter(w => available.has(w)))]
         }))
-        .filter(group => group.availableWords.length >= 2 && group.clue && !available.has(group.clue));
+        .filter(group => group.availableWords.length >= 2 && group.clue);
 }
 
 function singlePlayerWordsForColors(bank, colors) {
@@ -514,58 +515,79 @@ const SINGLE_BOT_IDS = {
     blackBot: 'single_black_bot'
 };
 
-const BOT_CLUE_GROUPS = [
-    {clue: 'ROYALTY', words: ['KING', 'QUEEN', 'CROWN', 'THRONE', 'PALACE', 'ROYAL', 'MONARCH', 'CASTLE']},
-    {clue: 'KINGDOM', words: ['KING', 'QUEEN', 'CROWN', 'THRONE', 'PALACE', 'ROYAL', 'MONARCH', 'CASTLE']},
-    {clue: 'OCEAN', words: ['SEA', 'WAVE', 'BEACH', 'ISLAND', 'REEF', 'ANCHOR', 'SHIP', 'SAIL']},
-    {clue: 'MARINE', words: ['SEA', 'WAVE', 'BEACH', 'ISLAND', 'REEF', 'ANCHOR', 'SHIP', 'SAIL', 'WALRUS']},
-    {clue: 'MEDICAL', words: ['DOCTOR', 'NURSE', 'HOSPITAL', 'PHARMACY', 'MEDICINE', 'PATIENT', 'CLINIC']},
-    {clue: 'HEALTH', words: ['DOCTOR', 'NURSE', 'HOSPITAL', 'PHARMACY', 'MEDICINE', 'PATIENT', 'CLINIC']},
-    {clue: 'RAILWAY', words: ['TRAIN', 'STATION', 'TRACK', 'ENGINE', 'RAIL', 'TICKET', 'PLATFORM']},
-    {clue: 'TRANSIT', words: ['TRAIN', 'STATION', 'TRACK', 'ENGINE', 'RAIL', 'TICKET', 'PLATFORM', 'PLANE', 'AIRPORT']},
-    {clue: 'SPACE', words: ['PLANE', 'PILOT', 'AIRPORT', 'ROCKET', 'SATELLITE', 'COMET', 'ASTEROID']},
-    {clue: 'COSMIC', words: ['EARTH', 'MERCURY', 'PLANET', 'COMET', 'ASTEROID', 'SATELLITE', 'ROCKET']},
-    {clue: 'SCHOOL', words: ['TEACHER', 'STUDENT', 'BOOK', 'PAPER', 'PENCIL', 'CLASS']},
-    {clue: 'CLASSROOM', words: ['TEACHER', 'STUDENT', 'BOOK', 'PAPER', 'PENCIL', 'CLASS', 'SCHOOL']},
-    {clue: 'TECH', words: ['PHONE', 'SCREEN', 'KEYBOARD', 'ROBOT', 'COMPUTER', 'PIXEL', 'PRINTER']},
-    {clue: 'DIGITAL', words: ['PHONE', 'SCREEN', 'KEYBOARD', 'ROBOT', 'COMPUTER', 'PIXEL', 'PRINTER']},
-    {clue: 'GEMS', words: ['GOLD', 'SILVER', 'DIAMOND', 'RUBY', 'CRYSTAL', 'MARBLE', 'JEWEL']},
-    {clue: 'PRECIOUS', words: ['GOLD', 'SILVER', 'DIAMOND', 'RUBY', 'CRYSTAL', 'JEWEL']},
-    {clue: 'NATURE', words: ['FOREST', 'TREE', 'LEAF', 'GRASS', 'FLOWER', 'ROOT', 'MOSS']},
-    {clue: 'PLANTS', words: ['FOREST', 'TREE', 'LEAF', 'GRASS', 'FLOWER', 'ROOT', 'MOSS']},
-    {clue: 'DESERT', words: ['SAND', 'OASIS', 'CAMEL', 'PYRAMID', 'SUN', 'DUST']},
-    {clue: 'FOOD', words: ['BREAD', 'CHEESE', 'APPLE', 'LEMON', 'MANGO', 'JUICE', 'SPICE']},
-    {clue: 'EAT', words: ['BREAD', 'CHEESE', 'APPLE', 'LEMON', 'MANGO', 'JUICE', 'SPICE', 'BERRY']},
-    {clue: 'SPORTS', words: ['GOAL', 'BALL', 'COURT', 'ARENA', 'TEAM', 'MATCH']},
-    {clue: 'GAME', words: ['GOAL', 'BALL', 'COURT', 'ARENA', 'TEAM', 'MATCH', 'ARCADE']},
-    {clue: 'MUSIC', words: ['BAND', 'PIANO', 'GUITAR', 'DRUM', 'SONG', 'ORCHESTRA']},
-    {clue: 'SOUND', words: ['BAND', 'PIANO', 'GUITAR', 'DRUM', 'SONG', 'ORCHESTRA']},
-    {clue: 'ANIMALS', words: ['DOG', 'CAT', 'ELEPHANT', 'MONKEY', 'DRAGON', 'VIPER', 'RAVEN']},
-    {clue: 'CREATURES', words: ['DOG', 'CAT', 'ELEPHANT', 'MONKEY', 'DRAGON', 'VIPER', 'RAVEN', 'PARROT', 'WALRUS']},
-    {clue: 'WEATHER', words: ['CLOUD', 'STORM', 'RAIN', 'LIGHTNING', 'SNOW', 'FROST']},
-    {clue: 'SKY', words: ['CLOUD', 'STORM', 'RAIN', 'LIGHTNING', 'SNOW', 'FROST', 'SUN']},
-    {clue: 'MONEY', words: ['BANK', 'CASINO', 'CARD', 'CASH', 'VAULT', 'SAFE']},
-    {clue: 'FINANCE', words: ['BANK', 'CASINO', 'CARD', 'CASH', 'VAULT', 'SAFE']},
-    {clue: 'MAGIC', words: ['WIZARD', 'ORACLE', 'PHANTOM', 'SHADOW', 'SPELL', 'CRYSTAL']},
-    {clue: 'MYSTIC', words: ['WIZARD', 'ORACLE', 'PHANTOM', 'SHADOW', 'SPELL', 'CRYSTAL', 'MAGICIAN']},
-    {clue: 'HOUSE', words: ['ROOF', 'DOOR', 'WINDOW', 'KITCHEN', 'BED', 'TABLE']},
-    {clue: 'HOME', words: ['ROOF', 'DOOR', 'WINDOW', 'KITCHEN', 'BED', 'TABLE', 'HOUSE']},
-    {clue: 'BODY', words: ['HAND', 'ARM', 'LEG', 'EYE', 'HEART', 'BLOOD']},
-    {clue: 'HUMAN', words: ['HAND', 'ARM', 'LEG', 'EYE', 'HEART', 'BLOOD', 'BODY']},
-    {clue: 'ANATOMY', words: ['HAND', 'ARM', 'LEG', 'EYE', 'HEART', 'BLOOD', 'BODY']},
-    {clue: 'CITY', words: ['MAYOR', 'STREET', 'TOWER', 'BRIDGE', 'MARKET', 'HOTEL']},
-    {clue: 'URBAN', words: ['MAYOR', 'STREET', 'TOWER', 'BRIDGE', 'MARKET', 'HOTEL', 'CITY']},
-    {clue: 'TRAVEL', words: ['PLANE', 'TRAIN', 'STATION', 'AIRPORT', 'TICKET', 'SHIP', 'PILOT']},
-    {clue: 'BUILDING', words: ['PALACE', 'CASTLE', 'HOSPITAL', 'SCHOOL', 'HOTEL', 'TOWER']},
-    {clue: 'PLANETS', words: ['EARTH', 'MERCURY', 'PLANET', 'COMET', 'ASTEROID', 'SATELLITE']},
-    {clue: 'PLAY', words: ['ARCADE', 'CASINO', 'BALLOON', 'SPORT', 'MATCH', 'TEAM']},
-    {clue: 'OBJECTS', words: ['BOTTLE', 'HELMET', 'PAPER', 'UMBRELLA', 'MARBLE', 'CRYSTAL']},
-    {clue: 'BIRDS', words: ['PARROT', 'RAVEN']},
-    {clue: 'SEAFOOD', words: ['WALRUS', 'ANCHOR', 'OCEAN', 'SEA', 'ISLAND']},
-    {clue: 'YELLOW', words: ['GOLD', 'SUN', 'LEMON']},
-    {clue: 'DARK', words: ['SHADOW', 'RAVEN', 'NINJA']},
-    {clue: 'SAFE', words: ['BANK', 'VAULT', 'CASH', 'CARD']}
+const BOT_CLUE_CATEGORY_SPECS = [
+    {id: 'royalty', clues: ['ROYALTY', 'KINGDOM', 'MONARCHY', 'CROWNED', 'NOBILITY', 'PALACE'], words: ['KING', 'QUEEN', 'PRINCE', 'PRINCESS', 'EMPEROR', 'CAESAR', 'NAPOLEON', 'CLEOPATRA', 'CROWN', 'THRONE', 'PALACE', 'CASTLE', 'KINGDOM', 'KNIGHT']},
+    {id: 'water', clues: ['AQUATIC', 'MARINE', 'SEASIDE', 'NAUTICAL', 'OCEANIC', 'WATER'], words: ['OCEAN', 'SEA', 'WAVE', 'WATER', 'RIVER', 'LAKE', 'BEACH', 'ISLAND', 'HARBOR', 'FOUNTAIN', 'WATERFALL', 'PUDDLE', 'SWAMP', 'NILE', 'ATLANTIS', 'SAIL', 'ANCHOR', 'RUDDER', 'BOAT', 'SHIP', 'FERRY', 'SAILOR']},
+    {id: 'sea-life', clues: ['AQUARIUM', 'SEAFOOD', 'REEF', 'UNDERSEA', 'FISHERY', 'DIVING'], words: ['FISH', 'SHARK', 'WHALE', 'DOLPHIN', 'OCTOPUS', 'SQUID', 'LOBSTER', 'CRAB', 'SALMON', 'TURTLE', 'PENGUIN', 'GOOSE', 'DUCK', 'SWAN']},
+    {id: 'animals', clues: ['ANIMALS', 'WILDLIFE', 'BEASTS', 'ZOO', 'MAMMALS', 'FAUNA'], words: ['DOG', 'CAT', 'HORSE', 'COW', 'GOAT', 'SHEEP', 'PIG', 'CHICKEN', 'ROOSTER', 'TURKEY', 'RABBIT', 'MOUSE', 'RAT', 'DEER', 'BEAR', 'WOLF', 'FOX', 'LION', 'TIGER', 'GORILLA', 'MONKEY', 'ELEPHANT', 'GIRAFFE', 'ZEBRA', 'KANGAROO', 'KOALA', 'PANDA', 'CAMEL', 'BEAVER']},
+    {id: 'birds', clues: ['BIRD', 'FEATHER', 'AVIAN', 'WINGED', 'FLOCK', 'FLYING'], words: ['BIRD', 'FEATHER', 'EAGLE', 'HAWK', 'FALCON', 'CROW', 'RAVEN', 'PARROT', 'OWL', 'PIGEON', 'FLAMINGO', 'GOOSE', 'DUCK', 'SWAN', 'ROOSTER']},
+    {id: 'bugs-reptiles', clues: ['CRAWLERS', 'REPTILE', 'INSECTS', 'VENOM', 'SCALES', 'BUGS'], words: ['ANT', 'BEE', 'BEETLE', 'BUTTERFLY', 'MOSQUITO', 'SPIDER', 'SCORPION', 'SNAKE', 'COBRA', 'LIZARD', 'FROG', 'TURTLE', 'DINOSAUR']},
+    {id: 'food', clues: ['FOOD', 'MEAL', 'EDIBLE', 'CUISINE', 'SNACK', 'FLAVOR'], words: ['BREAD', 'CHEESE', 'BUTTER', 'MILK', 'COOKIE', 'CAKE', 'PIE', 'CANDY', 'CHOCOLATE', 'BURGER', 'PIZZA', 'PASTA', 'SOUP', 'SALAD', 'RICE', 'BEAN', 'CORN', 'POTATO', 'CARROT', 'ONION', 'GARLIC', 'TOMATO', 'PEPPER', 'OLIVE', 'SALT', 'SUGAR', 'HONEY', 'KETCHUP', 'MUSTARD', 'SAUCE', 'SPICE', 'FLAVOR']},
+    {id: 'fruit', clues: ['FRUIT', 'JUICY', 'ORCHARD', 'TROPICAL', 'CITRUS', 'SWEET'], words: ['APPLE', 'APRICOT', 'BANANA', 'BERRY', 'CHERRY', 'FIG', 'GRAPE', 'KIWI', 'LEMON', 'LIME', 'MANGO', 'MELON', 'ORANGE', 'PEA', 'PEACH', 'PEAR', 'PINEAPPLE', 'PLUM', 'COCONUT', 'JUICE']},
+    {id: 'kitchen', clues: ['KITCHEN', 'COOKING', 'DINING', 'UTENSIL', 'BAKERY', 'CHEF'], words: ['KITCHEN', 'OVEN', 'STOVE', 'FRIDGE', 'KETTLE', 'PAN', 'POT', 'BOWL', 'PLATE', 'CUP', 'FORK', 'SPOON', 'NAPKIN', 'BAKERY', 'BAKER', 'CHEF', 'RESTAURANT', 'CAFE', 'COFFEE', 'TEA']},
+    {id: 'home', clues: ['HOME', 'HOUSEHOLD', 'FURNITURE', 'ROOMS', 'INDOOR', 'DOMESTIC'], words: ['HOME', 'HOUSE', 'ROOM', 'DOOR', 'WINDOW', 'ROOF', 'WALL', 'FLOOR', 'STAIRS', 'BASEMENT', 'ATTIC', 'CELLAR', 'GARAGE', 'CABIN', 'KITCHEN', 'BATH', 'CLOSET', 'CABINET', 'DRAWER', 'SHELF', 'TABLE', 'DESK', 'CHAIR', 'SOFA', 'COUCH', 'BED', 'PILLOW', 'BLANKET', 'CARPET', 'LAMP', 'LANTERN', 'MIRROR', 'CANDLE', 'VACUUM', 'WASHER', 'DRYER']},
+    {id: 'clothing', clues: ['CLOTHING', 'FASHION', 'OUTFIT', 'WEARABLE', 'WARDROBE', 'DRESS'], words: ['SHOE', 'BOOT', 'SLIPPER', 'SOCK', 'GLOVE', 'HAT', 'CAP', 'HELMET', 'DRESS', 'SUIT', 'TUXEDO', 'JACKET', 'SCARF', 'BELT', 'COLLAR', 'APRON', 'TUTU', 'COSTUME', 'MASK', 'ARMOR', 'SHIELD']},
+    {id: 'body', clues: ['BODY', 'ANATOMY', 'HUMAN', 'HEALTH', 'PHYSICAL', 'ORGAN'], words: ['BODY', 'HEAD', 'FACE', 'EYE', 'EAR', 'NOSE', 'MOUTH', 'TONGUE', 'TOOTH', 'BEARD', 'HAIR', 'SKIN', 'HAND', 'FINGER', 'THUMB', 'ARM', 'ELBOW', 'SHOULDER', 'BACK', 'LEG', 'KNEE', 'FOOT', 'HEART', 'BRAIN', 'BLOOD', 'BONE', 'ORGAN']},
+    {id: 'medical', clues: ['MEDICAL', 'CLINICAL', 'HOSPITAL', 'DOCTOR', 'NURSING', 'PHARMACY'], words: ['DOCTOR', 'NURSE', 'HOSPITAL', 'CLINIC', 'PHARMACY', 'VIRUS', 'NEEDLE', 'BLOOD', 'HEART', 'BRAIN', 'ORGAN', 'HEALTH']},
+    {id: 'colors', clues: ['COLOR', 'PALETTE', 'PAINT', 'SHADE', 'HUE', 'BRIGHT'], words: ['RED', 'BLUE', 'GREEN', 'YELLOW', 'BLACK', 'WHITE', 'GREY', 'BROWN', 'PURPLE', 'PINK', 'ORANGE', 'CYAN', 'AZURE', 'VIOLET', 'INDIGO', 'CRIMSON', 'SCARLET', 'AMBER', 'BRONZE', 'SILVER', 'GOLD', 'COPPER', 'JADE', 'EMERALD', 'OPAL', 'PEARL']},
+    {id: 'gems-metals', clues: ['PRECIOUS', 'JEWELRY', 'METAL', 'GEMS', 'MINERAL', 'TREASURE'], words: ['GOLD', 'SILVER', 'BRONZE', 'COPPER', 'IRON', 'STEEL', 'METAL', 'COAL', 'STONE', 'ROCK', 'MARBLE', 'CRYSTAL', 'DIAMOND', 'RUBY', 'EMERALD', 'OPAL', 'JADE', 'PEARL', 'JEWEL', 'TREASURE', 'COIN']},
+    {id: 'nature', clues: ['NATURE', 'OUTDOORS', 'WILD', 'EARTHY', 'SCENERY', 'LANDSCAPE'], words: ['FOREST', 'JUNGLE', 'GARDEN', 'PARK', 'FIELD', 'VALLEY', 'HILL', 'MOUNTAIN', 'CLIFF', 'CANYON', 'CAVE', 'DESERT', 'SAHARA', 'EVEREST', 'HIMALAYAS', 'VOLCANO', 'LAVA', 'MUD', 'SAND', 'GRAVEL', 'CLAY', 'DUST', 'ASH', 'OASIS', 'SWAMP', 'WATERFALL']},
+    {id: 'plants', clues: ['PLANTS', 'BOTANY', 'GROWTH', 'FLORAL', 'GREENERY', 'GARDEN'], words: ['TREE', 'BRANCH', 'ROOT', 'LEAF', 'FLOWER', 'ROSE', 'TULIP', 'ORCHID', 'BLOSSOM', 'GRASS', 'BUSH', 'MOSS', 'VINE', 'CEDAR']},
+    {id: 'weather', clues: ['WEATHER', 'SKY', 'CLIMATE', 'STORMY', 'FORECAST', 'AIR'], words: ['SUN', 'MOON', 'STAR', 'CLOUD', 'RAIN', 'SNOW', 'ICE', 'FROST', 'STORM', 'THUNDER', 'LIGHTNING', 'TORNADO', 'HURRICANE', 'WIND', 'SMOKE', 'FIRE', 'FLAME', 'GLOW', 'LIGHT', 'BEACON', 'MORNING', 'EVENING', 'NIGHT']},
+    {id: 'space', clues: ['SPACE', 'COSMIC', 'ORBITAL', 'ASTRO', 'GALAXY', 'PLANETARY'], words: ['SPACE', 'GALAXY', 'ORBIT', 'PLANET', 'EARTH', 'MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'NEPTUNE', 'PLUTO', 'MOON', 'STAR', 'COMET', 'METEOR', 'ASTEROID', 'ECLIPSE', 'ROCKET', 'SATELLITE']},
+    {id: 'travel', clues: ['TRAVEL', 'TRANSIT', 'VEHICLE', 'TRANSPORT', 'JOURNEY', 'ROAD'], words: ['CAR', 'TAXI', 'BUS', 'TRUCK', 'TRAIN', 'SUBWAY', 'STATION', 'TRACK', 'ENGINE', 'TICKET', 'PLANE', 'JET', 'HELICOPTER', 'AIRPORT', 'PILOT', 'DRIVER', 'BICYCLE', 'SCOOTER', 'MOTORCYCLE', 'FERRY', 'BOAT', 'SHIP', 'ROAD', 'TRAFFIC', 'PARKING', 'BRAKE', 'WHEEL', 'TIRE', 'COMPASS', 'MAP']},
+    {id: 'places', clues: ['GEOGRAPHY', 'WORLD', 'COUNTRY', 'CITY', 'GLOBAL', 'TRAVEL'], words: ['COUNTRY', 'NATION', 'AMERICA', 'CANADA', 'BRAZIL', 'MEXICO', 'EUROPE', 'ASIA', 'AFRICA', 'INDIA', 'CHINA', 'EGYPT', 'GREECE', 'ROME', 'PARIS', 'LONDON', 'TOKYO', 'DUBAI', 'CAIRO', 'AMAZON', 'NILE', 'HIMALAYAS', 'EVEREST', 'SAHARA', 'CITY', 'VILLAGE', 'STREET', 'ROAD', 'BRIDGE', 'TUNNEL', 'MALL', 'MARKET', 'STORE', 'HOTEL', 'UNIVERSITY', 'COLLEGE', 'SCHOOL', 'LIBRARY', 'MUSEUM', 'THEATER', 'CINEMA', 'CHURCH', 'MOSQUE', 'TEMPLE', 'PRISON', 'FACTORY', 'OFFICE', 'LABORATORY', 'FARM', 'ZOO', 'AQUARIUM', 'STADIUM', 'ARENA', 'COURT']},
+    {id: 'people', clues: ['PEOPLE', 'PERSON', 'ROLE', 'WORKER', 'HUMAN', 'CHARACTER'], words: ['FATHER', 'FARMER', 'BAKER', 'CHEF', 'DOCTOR', 'NURSE', 'TEACHER', 'STUDENT', 'ATHLETE', 'COACH', 'REFEREE', 'LAWYER', 'JUDGE', 'POLICE', 'SHERIFF', 'GUARD', 'SOLDIER', 'ARMY', 'CAPTAIN', 'GENERAL', 'PRESIDENT', 'MAYOR', 'PIRATE', 'SAILOR', 'COWBOY', 'VIKING', 'SAMURAI', 'NINJA', 'SPY', 'AGENT', 'ROBBER', 'DEALER', 'DRIVER', 'PILOT', 'MINER', 'HUNTER', 'ARTIST', 'WRITER', 'POET', 'ACTOR', 'DANCER', 'SINGER', 'HERO', 'VILLAIN', 'BRIDE', 'GROOM']},
+    {id: 'history', clues: ['HISTORY', 'FAMOUS', 'LEGEND', 'CLASSIC', 'GENIUS', 'ANCIENT'], words: ['EDISON', 'EINSTEIN', 'TESLA', 'NEWTON', 'LINCOLN', 'COLUMBUS', 'SHAKESPEARE', 'MOZART', 'PICASSO', 'CAESAR', 'CLEOPATRA', 'NAPOLEON', 'SAMURAI', 'VIKING', 'EGYPT', 'ROME', 'GREECE']},
+    {id: 'arts', clues: ['ARTS', 'STAGE', 'CREATIVE', 'PERFORM', 'CULTURE', 'SHOW'], words: ['MUSIC', 'SONG', 'BAND', 'ORCHESTRA', 'PIANO', 'GUITAR', 'VIOLIN', 'FLUTE', 'TRUMPET', 'DRUM', 'MICROPHONE', 'SPEAKER', 'RADIO', 'HEADPHONE', 'SOUND', 'NOISE', 'VOICE', 'BEAT', 'DANCE', 'DANCER', 'BALLET', 'THEATER', 'CINEMA', 'COMEDY', 'CIRCUS', 'PARADE', 'FESTIVAL', 'PARTY', 'ALBUM', 'CAMERA', 'PAINT', 'CRAYON', 'INK', 'STATUE', 'ARTIST', 'WRITER', 'POET', 'STORY', 'FABLE', 'JOKE', 'RIDDLE']},
+    {id: 'sports-games', clues: ['SPORTS', 'GAME', 'PLAY', 'COMPETITION', 'SCORE', 'MATCH'], words: ['SPORT', 'ATHLETE', 'TEAM', 'GOAL', 'SCORE', 'MATCH', 'BALL', 'SOCCER', 'TENNIS', 'GOLF', 'HOCKEY', 'BOWLING', 'BOXING', 'RACING', 'MARATHON', 'SWIMMING', 'SURFING', 'SKIING', 'SKATE', 'RACKET', 'COURT', 'ARENA', 'STADIUM', 'REFEREE', 'COACH', 'TROPHY', 'MEDAL', 'CHESS', 'CHECKER', 'DICE', 'CARD', 'ACE', 'CASINO', 'ARCADE', 'CONTROLLER', 'PUZZLE', 'TOY', 'DOLL', 'BALLOON']},
+    {id: 'technology', clues: ['TECH', 'DIGITAL', 'ELECTRONIC', 'COMPUTING', 'DEVICE', 'CIRCUIT'], words: ['COMPUTER', 'LAPTOP', 'KEYBOARD', 'SCREEN', 'PHONE', 'SERVER', 'PROGRAM', 'CODE', 'PIXEL', 'ROBOT', 'PRINTER', 'CIRCUIT', 'CHIP', 'BATTERY', 'CABLE', 'WIRE', 'SWITCH', 'FILTER', 'SIGNAL', 'LASER', 'CAMERA', 'RADIO', 'SPEAKER', 'HEADPHONE']},
+    {id: 'tools', clues: ['TOOLS', 'HARDWARE', 'WORKSHOP', 'BUILD', 'REPAIR', 'EQUIPMENT'], words: ['HAMMER', 'ANVIL', 'CHISEL', 'AXE', 'KNIFE', 'DAGGER', 'SWORD', 'SPEAR', 'CANNON', 'GUN', 'ARROW', 'BOW', 'ROPE', 'CHAIN', 'LADDER', 'BUCKET', 'TAPE', 'GLUE', 'NEEDLE', 'THREAD', 'BUTTON', 'ZIPPER', 'SCISSORS']},
+    {id: 'law-danger', clues: ['DANGER', 'RISKY', 'CRIME', 'LEGAL', 'SECURITY', 'WARNING'], words: ['DANGER', 'RISK', 'CHAOS', 'SECRET', 'TRUTH', 'LIE', 'LAW', 'RULE', 'ORDER', 'LAWYER', 'JUDGE', 'POLICE', 'SHERIFF', 'GUARD', 'PRISON', 'ROBBER', 'SPY', 'AGENT', 'ARMY', 'SOLDIER', 'BADGE', 'SHIELD', 'SAFE', 'VAULT', 'COFFIN']},
+    {id: 'money', clues: ['MONEY', 'FINANCE', 'PAYMENT', 'BANKING', 'VALUE', 'PRICE'], words: ['MONEY', 'CASH', 'COIN', 'DOLLAR', 'EURO', 'POUND', 'SHEKEL', 'BANK', 'VAULT', 'WALLET', 'CARD', 'BILL', 'PRICE', 'TAX', 'TRADE', 'DEALER', 'MARKET', 'STORE', 'MALL', 'CHECK', 'ORDER']},
+    {id: 'magic-horror', clues: ['MAGIC', 'MYSTIC', 'FANTASY', 'SUPERNATURAL', 'HORROR', 'MYTH'], words: ['MAGICIAN', 'WIZARD', 'WITCH', 'FAIRY', 'ANGEL', 'GHOST', 'SPIRIT', 'PHOENIX', 'DRAGON', 'UNICORN', 'GIANT', 'MONSTER', 'ZOMBIE', 'VAMPIRE', 'DEMON', 'CLOWN', 'VILLAIN', 'SHADOW', 'DARK', 'DREAM', 'LUCK']},
+    {id: 'time', clues: ['TIME', 'CALENDAR', 'CLOCK', 'SEASON', 'DATE', 'DURATION'], words: ['TIME', 'CLOCK', 'WATCH', 'HOUR', 'MINUTE', 'SECOND', 'DAY', 'WEEK', 'MONTH', 'YEAR', 'DATE', 'MORNING', 'EVENING', 'NIGHT', 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER', 'HOLIDAY', 'BIRTHDAY', 'WEDDING']},
+    {id: 'language', clues: ['LANGUAGE', 'WRITING', 'MESSAGE', 'IDEA', 'ANSWER', 'MEMORY'], words: ['WORD', 'LETTER', 'PAGE', 'PAPER', 'BOOK', 'NOTE', 'NAME', 'QUESTION', 'ANSWER', 'CLUE', 'SIGN', 'SYMBOL', 'MAIL', 'FOLDER', 'MEMORY', 'IDEA', 'STORY', 'FABLE', 'RIDDLE', 'JOKE', 'TRUTH', 'LIE', 'SECRET']},
+    {id: 'school', clues: ['SCHOOL', 'EDUCATION', 'CLASSROOM', 'STUDY', 'LEARNING', 'ACADEMIC'], words: ['SCHOOL', 'UNIVERSITY', 'COLLEGE', 'TEACHER', 'STUDENT', 'BOOK', 'PENCIL', 'PEN', 'PAPER', 'PAGE', 'LETTER', 'NOTE', 'QUESTION', 'ANSWER', 'LIBRARY', 'LABORATORY']},
+    {id: 'materials', clues: ['MATERIAL', 'TEXTILE', 'SUBSTANCE', 'SURFACE', 'FABRIC', 'SOLID'], words: ['WOOD', 'PLASTIC', 'RUBBER', 'GLASS', 'PAPER', 'COTTON', 'WOOL', 'SILK', 'VELVET', 'LEATHER', 'FABRIC', 'THREAD', 'METAL', 'IRON', 'STEEL', 'COPPER', 'STONE', 'ROCK', 'MARBLE', 'CLAY', 'BRICK', 'CARTON', 'BOX', 'BOTTLE', 'SOAP', 'SHAMPOO', 'SPONGE', 'TOWEL']},
+    {id: 'objects', clues: ['OBJECT', 'ITEM', 'THING', 'GEAR', 'SUPPLY', 'EQUIPMENT'], words: ['BAG', 'BANNER', 'BARREL', 'BASKET', 'BEACON', 'BELL', 'BLOCK', 'BOTTLE', 'BOX', 'BROOM', 'CABINET', 'CANDLE', 'CARTON', 'CHEST', 'CIRCLE', 'CLUB', 'COMPASS', 'CRADLE', 'FILTER', 'FOLDER', 'GLASS', 'HORN', 'KEYBOARD', 'LAMP', 'LANTERN', 'MAIL', 'MAP', 'MIRROR', 'NET', 'PENCIL', 'PEN', 'PLATE', 'POCKET', 'RING', 'ROPE', 'SADDLE', 'SHELF', 'SIGN', 'SLIDER', 'SOAP', 'SPONGE', 'SWITCH', 'TAPE', 'TICKET', 'TOOTHBRUSH', 'TOWEL', 'TROPHY', 'UMBRELLA', 'WALLET', 'WHISTLE']},
+    {id: 'shapes-positions', clues: ['SHAPE', 'POSITION', 'DIRECTION', 'CENTER', 'EDGE', 'FORM'], words: ['ROUND', 'CIRCLE', 'CENTER', 'CORNER', 'BACK', 'HEAD', 'FOOT', 'FIELD', 'TRACK', 'ROAD', 'BRIDGE', 'TUNNEL', 'STAIRS', 'WALL', 'FLOOR', 'ROOF']},
+    {id: 'emotion-abstract', clues: ['ABSTRACT', 'FEELING', 'THOUGHT', 'MOOD', 'CONCEPT', 'MENTAL'], words: ['CHANCE', 'CHAOS', 'DREAM', 'IDEA', 'LUCK', 'MEMORY', 'ORDER', 'QUESTION', 'ANSWER', 'RISK', 'RULE', 'SECRET', 'SILENCE', 'SMILE', 'TRUTH', 'LIE', 'SOUND', 'TIME']}
 ];
+
+const BOT_EXTRA_FALLBACK_CLUES = ['KNOWN', 'ASSOCIATED', 'RELATED', 'GENERAL', 'COMMON', 'REFERENCE'];
+
+function normalizeWordList(words = []) {
+    return [...new Set(words.map(w => String(w).toUpperCase()).filter(w => /^[A-Z][A-Z-]{1,20}$/.test(w)))];
+}
+
+function buildBotClueGroups() {
+    const bank = new Set(WORDS);
+    const covered = new Set();
+    const groups = [];
+
+    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
+        const words = normalizeWordList(spec.words).filter(w => bank.has(w));
+        if (!words.length) return;
+        words.forEach(w => covered.add(w));
+        normalizeWordList(spec.clues)
+            .filter(clue => /^[A-Z]+$/.test(clue))
+            .forEach(clue => {
+                groups.push({clue, words, key: `semantic:${spec.id}`});
+            });
+    });
+
+    const uncovered = WORDS.filter(w => !covered.has(w));
+    if (uncovered.length) {
+        BOT_EXTRA_FALLBACK_CLUES.forEach(clue => {
+            groups.push({clue, words: uncovered, key: 'semantic:uncategorized'});
+        });
+    }
+
+    return groups;
+}
+
+const BOT_CLUE_GROUPS = buildBotClueGroups();
 
 function addSinglePlayerBots(room, humanCharacter = '') {
     const characterIds = CHARACTERS.map(c => c.id);
@@ -592,21 +614,32 @@ function chooseBotClue(room, team) {
     const boardWords = new Set(room.board.filter(c => !c.revealed).map(c => c.word));
     const usedClues = new Set((room.singlePlayerUsedClues?.[team] || []).map(w => String(w).toUpperCase()));
     const usedGroupKeys = new Set(room.singlePlayerUsedClueGroups?.[team] || []);
-    const options = BOT_CLUE_GROUPS
-        .filter(group => !boardWords.has(group.clue) && !usedClues.has(group.clue) && !usedGroupKeys.has(clueGroupKey(group)))
+    const buildOptions = (allowUsedGroup = false) => BOT_CLUE_GROUPS
+        .filter(group => {
+            const clue = String(group.clue || '').toUpperCase();
+            const key = clueGroupKey(group);
+            return /^[A-Z]+$/.test(clue) &&
+                !boardWords.has(clue) &&
+                !usedClues.has(clue) &&
+                (allowUsedGroup || !usedGroupKeys.has(key));
+        })
         .map(group => {
-            const matches = own.filter(c => group.words.includes(c.word));
-            const hazardCards = room.board.filter(c => !c.revealed && c.color !== team && group.words.includes(c.word));
-            const targetCards = matches.slice(0, 4);
-            const exactness = targetCards.length >= 2 ? 12 : 0;
-            const score = targetCards.length * 18 + exactness - hazardCards.length * 10 - Math.max(0, matches.length - targetCards.length) * 2;
+            const groupWords = new Set((group.words || []).map(w => String(w).toUpperCase()));
+            const matches = own.filter(c => groupWords.has(c.word));
+            const hazardCards = room.board.filter(c => !c.revealed && c.color !== team && groupWords.has(c.word));
+            const targetCards = matches.slice(0, 9);
+            const multiBonus = targetCards.length >= 2 ? 30 : 0;
+            const specificBonus = Math.max(0, 18 - Math.floor(groupWords.size / 8));
+            const score = targetCards.length * 100 + multiBonus + specificBonus;
             return {group, groupKey: clueGroupKey(group), targetCards, hazardCards, score};
         })
-        .filter(x => x.targetCards.length && x.score > 0);
-    const best = options.sort((a, b) =>
+        .filter(x => x.targetCards.length && x.hazardCards.length === 0);
+    const options = buildOptions(false);
+    const relaxedOptions = options.length ? options : buildOptions(true);
+    const best = relaxedOptions.sort((a, b) =>
         b.targetCards.length - a.targetCards.length ||
-        a.hazardCards.length - b.hazardCards.length ||
-        b.score - a.score
+        b.score - a.score ||
+        a.group.words.length - b.group.words.length
     )[0];
     if (best && best.score >= 10) {
         return {
@@ -616,15 +649,20 @@ function chooseBotClue(room, team) {
             number: best.targetCards.length
         };
     }
-    const singleOptions = shuffle(own).map(card => ({
-        card,
-        group: BOT_CLUE_GROUPS.find(group =>
-            !boardWords.has(group.clue) &&
-            !usedClues.has(group.clue) &&
-            !usedGroupKeys.has(clueGroupKey(group)) &&
-            group.words.includes(card.word)
-        )
-    })).filter(x => x.group);
+    const singleOptions = shuffle(own).map(card => {
+        const group = BOT_CLUE_GROUPS.find(group => {
+            const clue = String(group.clue || '').toUpperCase();
+            const groupWords = new Set((group.words || []).map(w => String(w).toUpperCase()));
+            const hazards = room.board.filter(c => !c.revealed && c.color !== team && groupWords.has(c.word));
+            return /^[A-Z]+$/.test(clue) &&
+                !boardWords.has(clue) &&
+                !usedClues.has(clue) &&
+                !usedGroupKeys.has(clueGroupKey(group)) &&
+                groupWords.has(card.word) &&
+                hazards.length === 0;
+        });
+        return {card, group};
+    }).filter(x => x.group);
     if (singleOptions.length) {
         const picked = singleOptions[0];
         return {word: picked.group.clue, groupKey: clueGroupKey(picked.group), targets: [picked.card], number: 1};
