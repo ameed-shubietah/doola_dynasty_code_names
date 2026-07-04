@@ -251,6 +251,8 @@ function newRoom(id) {
         votes: {},
         adminToken: makeAdminToken(),
         adminRequests: [],
+        singlePlayer: false,
+        botTimer: null,
         log: []
     };
 }
@@ -313,7 +315,8 @@ function publicRoom(room, forPlayerKey = null) {
         status: room.status,
         turn: room.turn,
         winner: room.winner,
-        clue: room.clue,
+        clue: publicClue(room, player),
+        singlePlayer: !!room.singlePlayer,
         points: counts(room),
         adminOnline: Object.values(room.players).some(p => p.online !== false && p.isAdmin),
         guessesThisTurn: room.guessesThisTurn,
@@ -323,7 +326,7 @@ function publicRoom(room, forPlayerKey = null) {
         hintRequested: room.hintRequested,
         players: publicPlayers(room.players),
         characters: CHARACTERS,
-        log: room.log.slice(-30),
+        log: publicLog(room, player),
         board: room.board.map(c => ({
             id: c.id,
             word: c.word,
@@ -344,6 +347,9 @@ function activeOperatives(room, team) {
 function voteInfo(room, viewer = null) {
     const ops = activeOperatives(room, room.turn);
     const votes = room.votes || {};
+    if (room.singlePlayer && viewer && viewer.team !== room.turn) {
+        return {votes: {}, counts: {}, totalOperatives: ops.length, agreedCardId: null};
+    }
     if (viewer?.role === 'spymaster') {
         return {votes: {}, counts: {}, totalOperatives: ops.length, agreedCardId: null};
     }
@@ -359,6 +365,19 @@ function voteInfo(room, viewer = null) {
         agreedCardId = Number(Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]);
     }
     return {votes, counts, totalOperatives: ops.length, agreedCardId};
+}
+
+function publicClue(room, player) {
+    if (!room.clue) return null;
+    if (room.singlePlayer && player && room.clue.team !== player.team) return null;
+    return room.clue;
+}
+
+function publicLog(room, player) {
+    const lines = room.log.slice(-30);
+    // In single-player, keep the current clue private via publicClue(), but show
+    // both sides' clue history in the game log so the bot turn is understandable.
+    return lines;
 }
 
 
@@ -378,7 +397,8 @@ function counts(room) {
 }
 
 function resetRoomTable(room, message = 'Table reset with a fresh board.') {
-    const startingTeam = Math.random() > 0.5 ? 'blue' : 'red';
+    const startingTeam = room.singlePlayer ? 'blue' : (Math.random() > 0.5 ? 'blue' : 'red');
+    if (room.botTimer) clearTimeout(room.botTimer);
     room.round += 1;
     room.status = 'waiting-clue';
     room.turn = startingTeam;
@@ -423,6 +443,201 @@ function finish(room, winner, reason) {
     room.status = 'finished';
     room.winner = winner;
     room.log.push(`${winner === 'blue' ? 'GOLD' : winner === 'red' ? 'BLACK' : winner.toUpperCase()} wins. ${reason}`);
+}
+
+const SINGLE_BOT_IDS = {
+    blackBot: 'single_black_bot'
+};
+
+const BOT_CLUE_GROUPS = [
+    {clue: 'ROYALTY', words: ['KING', 'QUEEN', 'CROWN', 'THRONE', 'PALACE', 'ROYAL', 'MONARCH', 'CASTLE']},
+    {clue: 'OCEAN', words: ['SEA', 'WAVE', 'BEACH', 'ISLAND', 'REEF', 'ANCHOR', 'SHIP', 'SAIL']},
+    {clue: 'MEDICAL', words: ['DOCTOR', 'NURSE', 'HOSPITAL', 'PHARMACY', 'MEDICINE', 'PATIENT', 'CLINIC']},
+    {clue: 'RAILWAY', words: ['TRAIN', 'STATION', 'TRACK', 'ENGINE', 'RAIL', 'TICKET', 'PLATFORM']},
+    {clue: 'SPACE', words: ['PLANE', 'PILOT', 'AIRPORT', 'ROCKET', 'SATELLITE', 'COMET', 'ASTEROID']},
+    {clue: 'SCHOOL', words: ['TEACHER', 'STUDENT', 'BOOK', 'PAPER', 'PENCIL', 'CLASS']},
+    {clue: 'TECH', words: ['PHONE', 'SCREEN', 'KEYBOARD', 'ROBOT', 'COMPUTER', 'PIXEL', 'PRINTER']},
+    {clue: 'GEMS', words: ['GOLD', 'SILVER', 'DIAMOND', 'RUBY', 'CRYSTAL', 'MARBLE', 'JEWEL']},
+    {clue: 'NATURE', words: ['FOREST', 'TREE', 'LEAF', 'GRASS', 'FLOWER', 'ROOT', 'MOSS']},
+    {clue: 'DESERT', words: ['SAND', 'OASIS', 'CAMEL', 'PYRAMID', 'SUN', 'DUST']},
+    {clue: 'FOOD', words: ['BREAD', 'CHEESE', 'APPLE', 'LEMON', 'MANGO', 'JUICE', 'SPICE']},
+    {clue: 'SPORTS', words: ['GOAL', 'BALL', 'COURT', 'ARENA', 'TEAM', 'MATCH']},
+    {clue: 'MUSIC', words: ['BAND', 'PIANO', 'GUITAR', 'DRUM', 'SONG', 'ORCHESTRA']},
+    {clue: 'ANIMALS', words: ['DOG', 'CAT', 'ELEPHANT', 'MONKEY', 'DRAGON', 'VIPER', 'RAVEN']},
+    {clue: 'WEATHER', words: ['CLOUD', 'STORM', 'RAIN', 'LIGHTNING', 'SNOW', 'FROST']},
+    {clue: 'MONEY', words: ['BANK', 'CASINO', 'CARD', 'CASH', 'VAULT', 'SAFE']},
+    {clue: 'MAGIC', words: ['WIZARD', 'ORACLE', 'PHANTOM', 'SHADOW', 'SPELL', 'CRYSTAL']},
+    {clue: 'HOUSE', words: ['ROOF', 'DOOR', 'WINDOW', 'KITCHEN', 'BED', 'TABLE']},
+    {clue: 'BODY', words: ['HAND', 'ARM', 'LEG', 'EYE', 'HEART', 'BLOOD']},
+    {clue: 'CITY', words: ['MAYOR', 'STREET', 'TOWER', 'BRIDGE', 'MARKET', 'HOTEL']},
+    {clue: 'TRAVEL', words: ['PLANE', 'TRAIN', 'STATION', 'AIRPORT', 'TICKET', 'SHIP', 'PILOT']},
+    {clue: 'BUILDING', words: ['PALACE', 'CASTLE', 'HOSPITAL', 'SCHOOL', 'HOTEL', 'TOWER']},
+    {clue: 'PLANETS', words: ['EARTH', 'MERCURY', 'PLANET', 'COMET', 'ASTEROID', 'SATELLITE']},
+    {clue: 'PLAY', words: ['ARCADE', 'CASINO', 'BALLOON', 'SPORT', 'MATCH', 'TEAM']},
+    {clue: 'OBJECTS', words: ['BOTTLE', 'HELMET', 'PAPER', 'UMBRELLA', 'MARBLE', 'CRYSTAL']},
+    {clue: 'BIRDS', words: ['PARROT', 'RAVEN']},
+    {clue: 'SEAFOOD', words: ['WALRUS', 'ANCHOR', 'OCEAN', 'SEA', 'ISLAND']},
+    {clue: 'YELLOW', words: ['GOLD', 'SUN', 'LEMON']},
+    {clue: 'DARK', words: ['SHADOW', 'RAVEN', 'NINJA']},
+    {clue: 'SAFE', words: ['BANK', 'VAULT', 'CASH', 'CARD']}
+];
+
+function addSinglePlayerBots(room, humanCharacter = '') {
+    const characterIds = CHARACTERS.map(c => c.id);
+    const pickChar = (...avoid) => characterIds.find(id => !avoid.includes(id)) || 'oracle';
+    room.players[SINGLE_BOT_IDS.blackBot] = {
+        id: SINGLE_BOT_IDS.blackBot,
+        socketId: '',
+        name: 'DSTY Bot',
+        avatar: '',
+        discordId: '',
+        team: 'red',
+        role: 'operative',
+        character: pickChar(humanCharacter),
+        joinedAt: Date.now(),
+        lastSeenAt: Date.now(),
+        online: true,
+        isBot: true
+    };
+}
+
+function chooseBotClue(room, team) {
+    const own = room.board.filter(c => !c.revealed && c.color === team);
+    if (!own.length) return null;
+    const boardWords = new Set(room.board.filter(c => !c.revealed).map(c => c.word));
+    const options = BOT_CLUE_GROUPS
+        .filter(group => !boardWords.has(group.clue))
+        .map(group => {
+            const matches = own.filter(c => group.words.includes(c.word));
+            const hazardCards = room.board.filter(c => !c.revealed && c.color !== team && group.words.includes(c.word));
+            const targetCards = matches.slice(0, 3);
+            const exactness = targetCards.length >= 2 ? 7 : 0;
+            const score = targetCards.length * 14 + exactness - hazardCards.length * 8 - Math.max(0, matches.length - targetCards.length) * 2;
+            return {group, targetCards, hazardCards, score};
+        })
+        .filter(x => x.targetCards.length);
+    const best = options.sort((a, b) =>
+        b.score - a.score ||
+        b.targetCards.length - a.targetCards.length ||
+        a.hazardCards.length - b.hazardCards.length
+    )[0];
+    if (best && best.score >= 10) {
+        return {
+            word: best.group.clue,
+            targets: best.targetCards,
+            number: best.targetCards.length
+        };
+    }
+    const card = shuffle(own)[0];
+    const single = BOT_CLUE_GROUPS.find(group => !boardWords.has(group.clue) && group.words.includes(card.word));
+    return {word: single?.clue || 'TARGET', targets: [card], number: 1};
+}
+
+function applyConfirmedGuess(room, p, card) {
+    card.revealed = true;
+    card.revealedBy = p.name;
+    card.revealedById = p.id;
+    const team = p.team;
+    room.guessesThisTurn += 1;
+    removeVoteForCard(room, card.id);
+    room.log.push(`PICK|${team}|${card.color}|${card.word}|${p.name}|${p.avatar || ''}|${p.character || ''}`);
+
+    if (card.color === 'assassin') {
+        finish(room, team === 'blue' ? 'red' : 'blue', `${p.name} confirmed the grey danger card.`);
+        return;
+    }
+
+    const leftAfterReveal = counts(room);
+    if (leftAfterReveal.blue === 0) {
+        finish(room, 'blue', 'GOLD reached 0 remaining cards.');
+        return;
+    }
+    if (leftAfterReveal.red === 0) {
+        finish(room, 'red', 'BLACK reached 0 remaining cards.');
+        return;
+    }
+
+    if (card.color === 'neutral' || card.color !== team) {
+        switchTurn(room);
+        return;
+    }
+
+    const maxGuesses = room.allowedGuesses || ((room.clue?.number || 0) + 1);
+    const remainingBonus = Math.max(0, maxGuesses - room.guessesThisTurn);
+    if (remainingBonus <= 0) switchTurn(room);
+}
+
+function botGiveClue(room) {
+    if (!room?.singlePlayer || room.status !== 'waiting-clue' || room.winner) return;
+    const clue = chooseBotClue(room, room.turn);
+    if (!clue) return;
+    room.board.forEach(c => c.clueTarget = false);
+    clue.targets.forEach(card => card.clueTarget = true);
+    const giver = room.turn === 'blue'
+        ? {name: 'DSTY Oracle', character: 'oracle'}
+        : {name: 'Bot Oracle', character: 'ninja'};
+    room.clue = {
+        word: safeText(clue.word, 24).replace(/\s+/g, '-'),
+        number: clue.number,
+        by: giver?.name || 'DSTY Oracle',
+        avatar: '',
+        team: room.turn,
+        targetIds: clue.targets.map(c => c.id),
+        extraHint: false,
+        at: Date.now()
+    };
+    room.guessesThisTurn = 0;
+    room.allowedGuesses = clue.number + 1;
+    room.status = 'guessing';
+    room.votes = {};
+    room.roundStartedAt = Date.now();
+    room.hintRequested = null;
+    room.log.push(`HINT|${room.turn}|${room.clue.word.toUpperCase()}|${room.clue.number}|${room.clue.by}|${room.clue.avatar || ''}|${giver?.character || ''}`);
+    emitRoom(room);
+    scheduleSinglePlayerBot(room);
+}
+
+function chooseBotGuess(room) {
+    const unrevealed = room.board.filter(c => !c.revealed);
+    const clueTargets = new Set(Array.isArray(room.clue?.targetIds) ? room.clue.targetIds : []);
+    const intended = unrevealed.filter(c => c.color === 'red' && clueTargets.has(c.id));
+    const black = unrevealed.filter(c => c.color === 'red');
+    const neutral = unrevealed.filter(c => c.color === 'neutral');
+    const wrongTeam = unrevealed.filter(c => c.color === 'blue');
+    const danger = unrevealed.filter(c => c.color === 'assassin');
+    const roll = Math.random();
+    if (roll < 0.64 && intended.length) return shuffle(intended)[0];
+    if (roll < 0.82 && black.length) return shuffle(black)[0];
+    if (roll < 0.94 && neutral.length) return shuffle(neutral)[0];
+    if (roll < 0.99 && wrongTeam.length) return shuffle(wrongTeam)[0];
+    return shuffle(danger.length ? danger : unrevealed)[0];
+}
+
+function botGuess(room) {
+    if (!room?.singlePlayer || room.status !== 'guessing' || room.turn !== 'red' || room.winner) return;
+    const bot = room.players[SINGLE_BOT_IDS.blackBot];
+    const card = chooseBotGuess(room);
+    if (!bot || !card) return;
+    room.votes = {};
+    room.votes[bot.id] = [card.id];
+    emitRoom(room);
+    room.botTimer = setTimeout(() => {
+        if (!room.singlePlayer || room.status !== 'guessing' || room.turn !== 'red' || room.winner || card.revealed) return;
+        applyConfirmedGuess(room, bot, card);
+        emitRoom(room);
+        scheduleSinglePlayerBot(room);
+    }, 850);
+}
+
+function scheduleSinglePlayerBot(room) {
+    if (!room?.singlePlayer) return;
+    if (room.botTimer) clearTimeout(room.botTimer);
+    if (room.status === 'finished') return;
+    if (room.status === 'waiting-clue') {
+        room.botTimer = setTimeout(() => botGiveClue(room), 650);
+    } else if (room.status === 'guessing' && room.turn === 'red') {
+        room.botTimer = setTimeout(() => botGuess(room), 1000 + Math.floor(Math.random() * 600));
+    }
 }
 
 function hasTeamSpymaster(room, team) {
@@ -503,6 +718,43 @@ io.on('connection', socket => {
         });
         if (joined?.ok === false) return cb(joined);
         cb({ok: true, roomId, playerKey: socket.data.playerKey, adminToken: room.adminToken});
+    });
+
+    socket.on('createSinglePlayerRoom', ({
+                                             name,
+                                             avatar = '',
+                                             character = 'raiden',
+                                             playerKey
+                                         } = {}, cb = () => {
+    }) => {
+        const roomId = code();
+        const room = newRoom(roomId);
+        room.singlePlayer = true;
+        room.turn = 'blue';
+        room.board = makeBoard('blue');
+        room.status = 'waiting-clue';
+        room.roundStartedAt = Date.now();
+        room.gameStartedAt = Date.now();
+        room.log = [];
+        rooms.set(roomId, room);
+        const joined = joinRoom(socket, room, {
+            name,
+            avatar,
+            discordId: '',
+            team: 'blue',
+            role: 'operative',
+            character,
+            playerKey,
+            forceAdmin: true,
+            adminToken: room.adminToken
+        });
+        if (joined?.ok === false) return cb(joined);
+        const human = room.players[socket.data.playerKey];
+        addSinglePlayerBots(room, human?.character || character);
+        room.log.push('Single Player started: GOLD vs DSTY Bot.');
+        emitRoom(room);
+        scheduleSinglePlayerBot(room);
+        cb({ok: true, roomId, playerKey: socket.data.playerKey, adminToken: room.adminToken, singlePlayer: true});
     });
 
     socket.on('joinRoom', ({
@@ -861,11 +1113,13 @@ io.on('connection', socket => {
         room.gameStartedAt = Date.now();
         room.log = [];
         emitRoom(room);
+        scheduleSinglePlayerBot(room);
     });
 
     socket.on('newGame', () => {
         const room = getPlayerRoom(socket.id);
         if (!room) return;
+        if (room.botTimer) clearTimeout(room.botTimer);
         const players = room.players;
         const adminToken = room.adminToken;
         const fresh = newRoom(room.id);
@@ -873,8 +1127,14 @@ io.on('connection', socket => {
         fresh.log = [];
         fresh.players = players;
         fresh.adminToken = adminToken;
+        fresh.singlePlayer = !!room.singlePlayer;
+        if (fresh.singlePlayer) {
+            fresh.turn = 'blue';
+            fresh.board = makeBoard('blue');
+        }
         rooms.set(room.id, fresh);
         emitRoom(fresh);
+        scheduleSinglePlayerBot(fresh);
     });
 
     socket.on('resetTable', () => {
@@ -882,7 +1142,10 @@ io.on('connection', socket => {
         if (!room) return;
         const p = getPlayerBySocket(room, socket.id);
         if (!canAdmin(room, socket.id) && p?.role !== 'spymaster') return socket.emit('toast', 'Only the admin and spymasters can reset the table.');
-        if (runAdminTableAction(room, 'resetTable', p?.name || 'Admin')) emitRoom(room);
+        if (runAdminTableAction(room, 'resetTable', p?.name || 'Admin')) {
+            emitRoom(room);
+            scheduleSinglePlayerBot(room);
+        }
     });
 
     socket.on('changeWordList', () => {
@@ -890,7 +1153,10 @@ io.on('connection', socket => {
         if (!room) return;
         const p = getPlayerBySocket(room, socket.id);
         if (!canAdmin(room, socket.id) && p?.role !== 'spymaster') return socket.emit('toast', 'Only the admin and spymasters can change the word list.');
-        if (runAdminTableAction(room, 'changeWordList', p?.name || 'Admin')) emitRoom(room);
+        if (runAdminTableAction(room, 'changeWordList', p?.name || 'Admin')) {
+            emitRoom(room);
+            scheduleSinglePlayerBot(room);
+        }
     });
 
     socket.on('adminActionRequest', ({action} = {}) => {
@@ -1071,57 +1337,9 @@ io.on('connection', socket => {
             return;
         }
 
-        card.revealed = true;
-        card.revealedBy = p.name;
-        card.revealedById = p.id;
-        const team = p.team;
-        room.guessesThisTurn += 1;
-        removeVoteForCard(room, card.id);
-
-        const pickerTeamName = team === 'blue' ? 'GOLD' : 'BLACK';
-        const cardTeamName = card.color === 'blue' ? 'GOLD' : card.color === 'red' ? 'BLACK' : card.color === 'neutral' ? 'EMPTY' : 'DANGER';
-        room.log.push(`PICK|${team}|${card.color}|${card.word}|${p.name}|${p.avatar || ''}|${p.character || ''}`);
-
-        if (card.color === 'assassin') {
-
-            finish(room, team === 'blue' ? 'red' : 'blue', `${p.name} confirmed the grey danger card.`);
-            emitRoom(room);
-            return;
-        }
-
-        const leftAfterReveal = counts(room);
-        if (leftAfterReveal.blue === 0) {
-            finish(room, 'blue', 'GOLD reached 0 remaining cards.');
-            emitRoom(room);
-            return;
-        }
-        if (leftAfterReveal.red === 0) {
-            finish(room, 'red', 'BLACK reached 0 remaining cards.');
-            emitRoom(room);
-            return;
-        }
-
-        if (card.color === 'neutral') {
-
-            switchTurn(room);
-            emitRoom(room);
-            return;
-        }
-        if (card.color !== team) {
-
-            switchTurn(room);
-            emitRoom(room);
-            return;
-        }
-
-        const maxGuesses = room.allowedGuesses || ((room.clue?.number || 0) + 1);
-        const remainingBonus = Math.max(0, maxGuesses - room.guessesThisTurn);
-
-        if (remainingBonus <= 0) {
-
-            switchTurn(room);
-        }
+        applyConfirmedGuess(room, p, card);
         emitRoom(room);
+        scheduleSinglePlayerBot(room);
     });
 
     socket.on('endTurn', () => {
@@ -1132,6 +1350,7 @@ io.on('connection', socket => {
             room.log.push(`PASS|${p.team}|${p.name}|${p.avatar || ''}|${p.character || ''}`);
             switchTurn(room);
             emitRoom(room);
+            scheduleSinglePlayerBot(room);
         }
     });
 

@@ -14040,3 +14040,59 @@ body.discordActivity #game .teamPanel .playerBody > b.adminNameLine .adminBadge.
         max-height: calc(100% - 76px) !important;
     }
 }
+
+/* v75: single-player homepage CTA. */
+.singlePlayerAction {
+    display: flex !important;
+    justify-content: center !important;
+    margin: 12px auto 0 !important;
+    width: min(100%, 520px) !important;
+}
+
+.singlePlayerBtn {
+    width: 100% !important;
+    min-height: 54px !important;
+    border-radius: 18px !important;
+    font-size: clamp(16px, 2.1vw, 24px) !important;
+    letter-spacing: .8px !important;
+    text-transform: uppercase !important;
+    color: #130b00 !important;
+    background:
+        radial-gradient(circle at 18% 20%, rgba(255, 255, 255, .72), transparent 22%),
+        linear-gradient(180deg, #fff2a8 0%, #ffd646 42%, #a56d00 100%) !important;
+    border: 1px solid rgba(255, 242, 178, .92) !important;
+    box-shadow: 0 0 22px rgba(255, 215, 108, .42), 0 12px 24px rgba(0, 0, 0, .45) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.singlePlayerBtn::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: -45% -18% !important;
+    background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .5), transparent 62%) !important;
+    transform: translateX(-78%) rotate(12deg) !important;
+    animation: singlePlayerShine 2.4s ease-in-out infinite !important;
+}
+
+@keyframes singlePlayerShine {
+    0%, 46% {
+        transform: translateX(-78%) rotate(12deg);
+    }
+    78%, 100% {
+        transform: translateX(78%) rotate(12deg);
+    }
+}
+
+@media (max-width: 980px) {
+    .singlePlayerAction {
+        margin-top: 7px !important;
+        width: 100% !important;
+    }
+
+    .singlePlayerBtn {
+        min-height: 38px !important;
+        border-radius: 13px !important;
+        font-size: 12px !important;
+    }
+}

@@ -433,6 +433,9 @@ function spymasterForTeam(team) {
 function turnStatusHtml() {
     if (!state || state.status === 'finished') return '';
     if (state.status === 'waiting-clue') {
+        if (state.singlePlayer) {
+            return state.turn === 'blue' ? 'PREPARING YOUR CLUE' : 'PREPARING BOT CLUE';
+        }
         const spy = spymasterForTeam(state.turn);
         if (!spy) return `WAITING FOR ${teamUpper(state.turn)} SPYMASTER TO GIVE A CLUE`;
         const src = safeAvatarSrc(playerAvatar(spy));
@@ -442,6 +445,9 @@ function turnStatusHtml() {
         return `WAITING FOR ${face}<strong>${escapeHtml(spy.name || 'SPYMASTER')}</strong> TO GIVE A CLUE`;
     }
     if (state.status === 'guessing') {
+        if (state.singlePlayer) {
+            return state.turn === 'blue' ? 'YOUR TURN TO PICK THE CARDS' : 'DSTY BOT IS PICKING CARDS';
+        }
         return `WAITING FOR ${teamUpper(state.turn)} TEAM OPERATIVES TO PICK THE CARDS`;
     }
     return '';
@@ -1256,6 +1262,24 @@ $('createBtn').onclick = () => {
     if (isDiscordActivity) return joinDiscordActivity($('team').value || 'spectator', $('role').value || 'spectator');
     socket.emit('createRoom', joinPayload(), acceptJoinResponse);
 };
+const singlePlayerBtn = $('singlePlayerBtn');
+if (singlePlayerBtn) {
+    singlePlayerBtn.onclick = () => {
+        localStorage.cc_name = currentDisplayName() || 'Agent';
+        singlePlayerBtn.disabled = true;
+        singlePlayerBtn.textContent = 'Starting...';
+        socket.emit('createSinglePlayerRoom', {
+            name: currentDisplayName(),
+            avatar: customAvatar || '',
+            character: outboundCharacter(),
+            playerKey
+        }, res => {
+            singlePlayerBtn.disabled = false;
+            singlePlayerBtn.textContent = 'Single Player';
+            acceptJoinResponse(res);
+        });
+    };
+}
 $('joinBtn').onclick = () => {
     if (isDiscordActivity) return joinDiscordActivity($('team').value || 'spectator', $('role').value || 'spectator');
     const roomId = roomInput.value.trim().toUpperCase();
@@ -1646,6 +1670,10 @@ function renderPlayers() {
     $('blackOperatives').innerHTML = teams.red.operative.map(playerHtml).join('') || empty('No operatives yet');
     $('blackSpymasters').innerHTML = teams.red.spymaster.map(playerHtml).join('') || empty('No spymaster yet');
     $('spectators').innerHTML = teams.spectator.spectator.map(playerHtml).join('') || empty('No spectators');
+    ['goldSpymasters', 'blackSpymasters', 'spectators'].forEach(id => {
+        const section = $(id)?.closest('section');
+        if (section) section.classList.toggle('hidden', !!state?.singlePlayer);
+    });
     document.querySelectorAll('[data-player-options]').forEach(btn => {
         btn.onclick = (ev) => {
             ev.preventDefault();
@@ -1981,7 +2009,7 @@ function renderPanels() {
     const isOp = p?.role === 'operative' && p.team === state.turn;
     const canClaim = p && p.team === state.turn && p.role !== 'spymaster' && !hasOnlineSpymaster(state.turn) && state.status === 'waiting-clue';
     $('spymasterPanel').classList.add('hidden');
-    const opActive = !!(p?.role === 'operative' && p.team === state.turn && (state.status === 'guessing' || state.status === 'waiting-clue'));
+    const opActive = !!(p?.role === 'operative' && p.team === state.turn && (state.status === 'guessing' || (!state.singlePlayer && state.status === 'waiting-clue')));
     const topActions = $('topOperativeActions');
     if (topActions) topActions.classList.toggle('hidden', !opActive);
     $('operativePanel').classList.toggle('hidden', !opActive);

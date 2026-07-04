@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>CODENAMES DSTY</title>
-    <link rel="stylesheet" href="/style.css?v=72"/>
+    <link rel="stylesheet" href="/style.css?v=76"/>
 </head>
 <body>
 <div id="app">
@@ -121,6 +121,9 @@
         <div class="actions">
             <button id="createBtn" class="primary" disabled>Create Room</button>
             <button id="joinBtn" disabled>Join Room</button>
+        </div>
+        <div class="singlePlayerAction">
+            <button id="singlePlayerBtn" class="singlePlayerBtn" type="button">Single Player</button>
         </div>
         <div id="roleOverlay" class="roleOverlay hidden" aria-live="polite">
             <div class="rolePopup glass">
@@ -274,6 +277,6 @@
 </script>
 <script type="module" src="/discord-sdk.js?v=60"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js?v=72"></script>
+<script src="/app.js?v=76"></script>
 </body>
 </html>
