@@ -15461,3 +15461,25 @@ body.discordActivity[data-lang="ar"] .letterFillTitle .fillLetter {
         font-size: 5.5px !important;
     }
 }
+@media (max-width: 980px) {
+    #landing:not(.hidden),
+    body.discordActivity #landing:not(.hidden) {
+        margin-top: max(42px, calc(env(safe-area-inset-top, 0px) + 30px)) !important;
+        padding-top: 28px !important;
+        box-sizing: border-box !important;
+    }
+
+    #landing:not(.hidden) .dstyTitleWrap,
+    body.discordActivity #landing:not(.hidden) .dstyTitleWrap {
+        margin-top: 0 !important;
+        padding-top: 4px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #landing:not(.hidden),
+    body.discordActivity #landing:not(.hidden) {
+        margin-top: max(54px, calc(env(safe-area-inset-top, 0px) + 38px)) !important;
+        padding-top: 30px !important;
+    }
+}
