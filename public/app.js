@@ -435,6 +435,9 @@ function turnStatusHtml() {
     if (!state || state.status === 'finished') return '';
     if (state.status === 'waiting-clue') {
         if (state.singlePlayer) {
+            if (state.aiClueStatus?.state === 'failed' && state.aiClueStatus?.team === state.turn) {
+                return 'AI CLUE FAILED';
+            }
             return state.turn === 'blue' ? 'PREPARING YOUR CLUE' : 'PREPARING BOT CLUE';
         }
         const spy = spymasterForTeam(state.turn);

@@ -398,6 +398,7 @@ function newRoom(id) {
         singlePlayerDifficulty: 'medium',
         singlePlayerUsedClues: {blue: [], red: []},
         singlePlayerUsedClueGroups: {blue: [], red: []},
+        singlePlayerAiClueStatus: null,
         botTimer: null,
         log: []
     };
@@ -463,6 +464,7 @@ function publicRoom(room, forPlayerKey = null) {
         winner: room.winner,
         clue: publicClue(room, player),
         singlePlayer: !!room.singlePlayer,
+        aiClueStatus: room.singlePlayer ? (room.singlePlayerAiClueStatus || null) : null,
         points: counts(room),
         adminOnline: Object.values(room.players).some(p => p.online !== false && p.isAdmin),
         guessesThisTurn: room.guessesThisTurn,
@@ -558,6 +560,7 @@ function resetRoomTable(room, message = 'Table reset with a fresh board.') {
     room.votes = {};
     room.singlePlayerUsedClues = {blue: [], red: []};
     room.singlePlayerUsedClueGroups = {blue: [], red: []};
+    room.singlePlayerAiClueStatus = null;
     room.roundStartedAt = Date.now();
     room.gameStartedAt = Date.now();
     // Reset table means a clean board + clean game log.
@@ -581,6 +584,7 @@ function switchTurn(room) {
     room.allowedGuesses = 0;
     room.hintRequested = null;
     room.votes = {};
+    room.singlePlayerAiClueStatus = null;
     room.round += 1;
     room.roundStartedAt = Date.now();
     room.board.forEach(c => c.clueTarget = false);
@@ -831,10 +835,11 @@ async function requestOllamaJson(prompt, numPredict = 700, signal = undefined) {
     return {content, candidates: normalizeAiCandidates(parsed)};
 }
 
-async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTargets = []) {
+async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTargets = [], timeoutMs = AI_CLUE_TIMEOUT_MS) {
     if (!AI_CLUES_ENABLED || AI_CLUE_PROVIDER !== 'ollama' || !OLLAMA_MODEL) return [];
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), AI_CLUE_TIMEOUT_MS);
+    const effectiveTimeoutMs = Math.max(1200, Math.min(AI_CLUE_TIMEOUT_MS, timeoutMs));
+    const timer = setTimeout(() => controller.abort(), effectiveTimeoutMs);
     const candidateCount = Math.min(AI_CLUE_CANDIDATES, mode === 'normal' ? 8 : 1);
     lastAiClueDebug = {
         at: new Date().toISOString(),
@@ -842,7 +847,7 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
         stage: 'requesting',
         mode,
         model: OLLAMA_MODEL,
-        timeoutMs: AI_CLUE_TIMEOUT_MS,
+        timeoutMs: effectiveTimeoutMs,
         rawCandidates: 0,
         validCandidates: 0,
         ownWords: aiBoardState(room, team).ownWords,
@@ -873,7 +878,7 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
         lastAiClueDebug = {
             ...lastAiClueDebug,
             stage: 'failed',
-            error: err?.name === 'AbortError' ? 'Timed out waiting for Ollama clue.' : (err?.message || 'AI clue failed.')
+            error: err?.name === 'AbortError' ? `Timed out waiting for Ollama ${mode} clue attempt.` : (err?.message || 'AI clue failed.')
         };
         if (process.env.AI_CLUE_DEBUG === '1') console.warn('AI clue failed:', err?.message || err);
         return [];
@@ -960,6 +965,8 @@ async function chooseAiBotClue(room, team) {
     const attempts = [];
     let candidates = [];
     let valid = [];
+    const deadline = Date.now() + AI_CLUE_TIMEOUT_MS;
+    const remainingMs = () => Math.max(0, deadline - Date.now());
 
     const scoreCandidates = batch => {
         const seenCandidateKeys = new Set();
@@ -975,24 +982,24 @@ async function chooseAiBotClue(room, team) {
             .sort((a, b) => b.targets.length - a.targets.length || b.score - a.score);
     };
 
-    candidates = await fetchOllamaClueCandidates(room, team, 'normal');
+    candidates = await fetchOllamaClueCandidates(room, team, 'normal', [], remainingMs());
     attempts.push({mode: 'normal', rawCandidates: candidates.length});
     valid = scoreCandidates(candidates);
 
-    if (!valid.length && candidates.length && lastAiClueDebug?.stage !== 'failed') {
+    if (!valid.length && candidates.length && lastAiClueDebug?.stage !== 'failed' && remainingMs() > 1500) {
         const repairTargets = candidates
             .map(candidate => validOwnTargetWordsFromAiCandidate(room, team, candidate))
             .filter(words => words.length)
             .sort((a, b) => b.length - a.length)[0] || [];
         if (repairTargets.length) {
-            candidates = await fetchOllamaClueCandidates(room, team, 'repair', repairTargets);
+            candidates = await fetchOllamaClueCandidates(room, team, 'repair', repairTargets, remainingMs());
             attempts.push({mode: 'repair', rawCandidates: candidates.length, repairTargets});
             valid = scoreCandidates(candidates);
         }
     }
 
-    if (!valid.length && lastAiClueDebug?.stage !== 'failed') {
-        candidates = await fetchOllamaClueCandidates(room, team, 'compact');
+    if (!valid.length && lastAiClueDebug?.stage !== 'failed' && remainingMs() > 1500) {
+        candidates = await fetchOllamaClueCandidates(room, team, 'compact', [], remainingMs());
         attempts.push({mode: 'compact', rawCandidates: candidates.length});
         valid = scoreCandidates(candidates);
     }
@@ -1146,16 +1153,42 @@ function applyConfirmedGuess(room, p, card) {
 
 async function botGiveClue(room) {
     if (!room?.singlePlayer || room.status !== 'waiting-clue' || room.winner) return;
+    const clueTeam = room.turn;
+    room.singlePlayerAiClueStatus = {
+        state: 'requesting',
+        team: clueTeam,
+        teamName: clueTeam === 'blue' ? 'GOLD' : 'BLACK',
+        at: Date.now(),
+        message: `Preparing ${clueTeam === 'blue' ? 'GOLD' : 'BLACK'} AI clue...`
+    };
+    emitRoom(room);
     const clue = AI_CLUES_ENABLED ? await chooseAiBotClue(room, room.turn) : chooseBotClue(room, room.turn);
     if (!clue) {
         const message = AI_CLUES_ENABLED
             ? `AI clue unavailable for ${room.turn === 'blue' ? 'GOLD' : 'BLACK'} turn. Check /api/ai-clue-status and Render logs.`
             : `No local clue available for ${room.turn === 'blue' ? 'GOLD' : 'BLACK'} turn.`;
+        room.singlePlayerAiClueStatus = {
+            state: 'failed',
+            team: room.turn,
+            teamName: room.turn === 'blue' ? 'GOLD' : 'BLACK',
+            at: Date.now(),
+            message,
+            debug: lastAiClueDebug
+        };
         room.log.push(message);
         if (process.env.AI_CLUE_DEBUG === '1') console.warn(message);
         emitRoom(room);
         return;
     }
+    room.singlePlayerAiClueStatus = {
+        state: 'picked',
+        team: room.turn,
+        teamName: room.turn === 'blue' ? 'GOLD' : 'BLACK',
+        at: Date.now(),
+        clue: clue.word,
+        number: clue.number,
+        targets: clue.targets.map(c => c.word)
+    };
     room.board.forEach(c => c.clueTarget = false);
     clue.targets.forEach(card => card.clueTarget = true);
     const giver = clue.ai
@@ -1351,6 +1384,7 @@ io.on('connection', socket => {
         room.singlePlayerDifficulty = ['easy', 'medium', 'extreme'].includes(difficulty) ? difficulty : 'medium';
         room.singlePlayerUsedClues = {blue: [], red: []};
         room.singlePlayerUsedClueGroups = {blue: [], red: []};
+        room.singlePlayerAiClueStatus = null;
         room.turn = 'blue';
         room.board = makeBoard('blue', 'full');
         room.status = 'waiting-clue';
@@ -1755,6 +1789,7 @@ io.on('connection', socket => {
             fresh.board = makeBoard('blue', 'full');
             fresh.singlePlayerUsedClues = {blue: [], red: []};
             fresh.singlePlayerUsedClueGroups = {blue: [], red: []};
+            fresh.singlePlayerAiClueStatus = null;
         }
         rooms.set(room.id, fresh);
         emitRoom(fresh);
