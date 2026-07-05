@@ -71,7 +71,8 @@ app.get('/api/ai-clue-status', async (_req, res) => {
         candidates: AI_CLUE_CANDIDATES,
         reachable: false,
         models: [],
-        error: ''
+        error: '',
+        lastAiClueDebug
     };
     if (!AI_CLUES_ENABLED) {
         status.error = 'AI_CLUES_ENABLED is not true.';
@@ -120,8 +121,10 @@ const AI_CLUES_ENABLED = envBool('AI_CLUES_ENABLED', false);
 const AI_CLUE_PROVIDER = String(process.env.AI_CLUE_PROVIDER || 'ollama').trim().toLowerCase();
 const OLLAMA_BASE_URL = String(process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/+$/, '');
 const OLLAMA_MODEL = String(process.env.OLLAMA_MODEL || 'qwen2.5:7b-instruct').trim();
-const AI_CLUE_TIMEOUT_MS = envInt('AI_CLUE_TIMEOUT_MS', 4500, 1200, 20000);
+const AI_CLUE_TIMEOUT_MS = envInt('AI_CLUE_TIMEOUT_MS', 4500, 1200, 120000);
 const AI_CLUE_CANDIDATES = envInt('AI_CLUE_CANDIDATES', 18, 4, 40);
+const AI_REJECT_SELF_REPORTED_UNSAFE = envBool('AI_REJECT_SELF_REPORTED_UNSAFE', false);
+let lastAiClueDebug = null;
 
 const WORDS_PATH = path.join(__dirname, 'data', 'words.json');
 let WORDS = [];
@@ -702,6 +705,15 @@ function extractJsonObject(text = '') {
     return null;
 }
 
+function normalizeAiCandidates(parsed) {
+    if (Array.isArray(parsed)) return parsed;
+    if (Array.isArray(parsed?.candidates)) return parsed.candidates;
+    if (Array.isArray(parsed?.clues)) return parsed.clues;
+    if (Array.isArray(parsed?.results)) return parsed.results;
+    if (parsed?.clue) return [parsed];
+    return [];
+}
+
 function cleanAiClueWord(word = '') {
     return String(word || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 24);
 }
@@ -729,24 +741,21 @@ function aiPromptForClues(room, team) {
         ...singlePlayerRecentClues
     ].map(w => String(w).toUpperCase()).slice(0, 80);
     return [
-        'You are a Codenames spymaster clue generator.',
-        'Return ONLY valid JSON. No markdown, no comments.',
-        'Goal: give the safest one-word clue that points to the most same-team target words.',
-        `Active team: ${info.teamName}.`,
-        `Own target words: ${info.ownWords.join(', ')}`,
-        `Opponent words to avoid: ${info.opponentWords.join(', ')}`,
-        `Neutral words to avoid: ${info.neutralWords.join(', ')}`,
-        `Danger/assassin words to avoid: ${info.dangerWords.join(', ')}`,
-        `All visible board words; clue cannot equal any of these: ${info.allBoardWords.join(', ')}`,
-        `Already used clues to avoid: ${usedClues.join(', ') || 'none'}`,
-        'Rules:',
-        '- clue must be exactly one English word, letters A-Z only',
-        '- clue must NOT be any visible board word',
-        '- target words must come only from own target words',
-        '- if a clue could reasonably point to opponent, neutral, or danger words, put those in unsafeWords or do not include that clue',
-        '- prefer 4 targets over 3, 3 over 2, 2 over 1, but never sacrifice safety',
-        `Return up to ${AI_CLUE_CANDIDATES} candidates sorted best first.`,
-        'JSON shape: {"candidates":[{"clue":"ANIMAL","targets":["DOG","CAT"],"unsafeWords":[],"confidence":0.92}]}'
+        'Return JSON only.',
+        'You are giving Codenames clues.',
+        `Team: ${info.teamName}`,
+        `Use ONLY these target words: ${info.ownWords.join(', ')}`,
+        `Avoid these enemy words: ${info.opponentWords.join(', ')}`,
+        `Avoid these neutral words: ${info.neutralWords.join(', ')}`,
+        `Avoid this danger word: ${info.dangerWords.join(', ')}`,
+        `The clue cannot be any board word: ${info.allBoardWords.join(', ')}`,
+        `Do not repeat these clues: ${usedClues.join(', ') || 'none'}`,
+        'Pick clues for the MOST target words possible. Prefer 4 targets, then 3, then 2, then 1.',
+        'Each clue must be ONE English word, A-Z letters only.',
+        'Every target must be from the target words list only.',
+        'Return this exact shape:',
+        `{"candidates":[{"clue":"PLANT","targets":["MOSS","VINE","LEAF"],"unsafeWords":[],"confidence":0.9}]}`,
+        `Return up to ${AI_CLUE_CANDIDATES} candidates, best first.`
     ].join('\n');
 }
 
@@ -754,6 +763,17 @@ async function fetchOllamaClueCandidates(room, team) {
     if (!AI_CLUES_ENABLED || AI_CLUE_PROVIDER !== 'ollama' || !OLLAMA_MODEL) return [];
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), AI_CLUE_TIMEOUT_MS);
+    lastAiClueDebug = {
+        at: new Date().toISOString(),
+        team,
+        stage: 'requesting',
+        model: OLLAMA_MODEL,
+        timeoutMs: AI_CLUE_TIMEOUT_MS,
+        rawCandidates: 0,
+        validCandidates: 0,
+        picked: null,
+        error: ''
+    };
     try {
         const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
             method: 'POST',
@@ -778,8 +798,21 @@ async function fetchOllamaClueCandidates(room, team) {
         const data = await response.json().catch(() => ({}));
         const content = data?.message?.content || data?.response || '';
         const parsed = extractJsonObject(content);
-        return Array.isArray(parsed?.candidates) ? parsed.candidates : [];
+        const candidates = normalizeAiCandidates(parsed);
+        lastAiClueDebug = {
+            ...lastAiClueDebug,
+            stage: 'responded',
+            rawCandidates: candidates.length,
+            rawPreview: String(content || '').slice(0, 900),
+            error: candidates.length ? '' : 'Ollama responded, but no candidates were parsed.'
+        };
+        return candidates;
     } catch (err) {
+        lastAiClueDebug = {
+            ...lastAiClueDebug,
+            stage: 'failed',
+            error: err?.name === 'AbortError' ? 'Timed out waiting for Ollama clue.' : (err?.message || 'AI clue failed.')
+        };
         if (process.env.AI_CLUE_DEBUG === '1') console.warn('AI clue failed:', err?.message || err);
         return [];
     } finally {
@@ -802,11 +835,15 @@ function validateAiClueCandidate(room, team, candidate) {
     ].map(w => String(w).toUpperCase()));
     if (boardWords.has(clue) || usedClues.has(clue)) return null;
 
-    const declaredTargets = [...new Set((Array.isArray(candidate?.targets) ? candidate.targets : [])
+    const targetList = Array.isArray(candidate?.targets) ? candidate.targets
+        : Array.isArray(candidate?.targetWords) ? candidate.targetWords
+            : Array.isArray(candidate?.words) ? candidate.words
+                : [];
+    const declaredTargets = [...new Set(targetList
         .map(w => String(w).toUpperCase().trim()))];
     const declaredUnsafe = [...new Set((Array.isArray(candidate?.unsafeWords) ? candidate.unsafeWords : [])
         .map(w => String(w).toUpperCase().trim()))];
-    if (declaredUnsafe.some(w => unsafeWords.has(w))) return null;
+    if (AI_REJECT_SELF_REPORTED_UNSAFE && declaredUnsafe.some(w => unsafeWords.has(w))) return null;
 
     const targets = declaredTargets.map(w => ownByWord.get(w)).filter(Boolean);
     if (!targets.length || targets.length !== declaredTargets.length) return null;
@@ -830,6 +867,14 @@ async function chooseAiBotClue(room, team) {
         .filter(Boolean)
         .sort((a, b) => b.targets.length - a.targets.length || b.score - a.score);
     const picked = valid[0] || null;
+    lastAiClueDebug = {
+        ...(lastAiClueDebug || {}),
+        stage: picked ? 'picked' : 'no-valid-candidates',
+        rawCandidates: candidates.length,
+        validCandidates: valid.length,
+        picked: picked ? {word: picked.word, number: picked.number, targets: picked.targets.map(c => c.word)} : null,
+        error: picked ? '' : ((lastAiClueDebug && lastAiClueDebug.error) || 'Ollama returned no valid same-team clue candidates.')
+    };
     if (process.env.AI_CLUE_DEBUG === '1') {
         console.log(`[AI clue] raw=${candidates.length} valid=${valid.length} picked=${picked ? `${picked.word} ${picked.number} (${picked.targets.map(c => c.word).join(', ')})` : 'none'}`);
     }

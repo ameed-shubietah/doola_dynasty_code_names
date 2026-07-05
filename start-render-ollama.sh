@@ -39,5 +39,17 @@ ollama pull "${OLLAMA_MODEL}"
 echo "Installed Ollama models:"
 ollama list || true
 
+if [ "${OLLAMA_WARMUP:-true}" = "true" ]; then
+    echo "Warming Ollama model once so the first clue is faster..."
+    warmup_payload="$(printf '{"model":"%s","prompt":"Reply with OK.","stream":false,"options":{"num_predict":4}}' "$OLLAMA_MODEL")"
+    if curl -fsS "${OLLAMA_BASE_URL}/api/generate" \
+        -H 'Content-Type: application/json' \
+        -d "$warmup_payload" >/dev/null; then
+        echo "Ollama warmup complete."
+    else
+        echo "Ollama warmup failed; continuing anyway."
+    fi
+fi
+
 echo "Starting Node server on port ${PORT}..."
 exec node server.js
