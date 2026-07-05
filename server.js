@@ -935,6 +935,49 @@ function aiRepairPromptForTargets(room, team, targetWords = []) {
     ].join('\n');
 }
 
+function clueCandidatesForTargetWord(room, team, targetWord) {
+    const boardWords = new Set(room.board.map(c => c.word));
+    const usedClues = new Set([
+        ...(room.singlePlayerUsedClues?.blue || []),
+        ...(room.singlePlayerUsedClues?.red || []),
+        ...singlePlayerRecentClues
+    ].map(w => String(w).toUpperCase()));
+    const targetGroups = semanticGroupIdsForTerm(targetWord, 'word');
+    const clues = [];
+    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
+        if (!targetGroups.has(spec.id)) return;
+        normalizeWordList(spec.clues).forEach(clue => clues.push(clue));
+    });
+    AI_EXTRA_CLUE_WORDS.forEach(clue => {
+        const clueGroups = semanticGroupIdsForTerm(clue, 'clue');
+        if ([...targetGroups].some(id => clueGroups.has(id))) clues.push(clue);
+    });
+    return [...new Set(clues)]
+        .filter(clue => {
+            const parsed = parseStrictClueWord(clue);
+            return !parsed.reason &&
+                parsed.word !== targetWord &&
+                !boardWords.has(parsed.word) &&
+                !usedClues.has(parsed.word) &&
+                clueHasSemanticSupport(parsed.word, [{word: targetWord}]);
+        })
+        .slice(0, 12);
+}
+
+function aiSingleTargetPromptForClue(room, team, targetWord, allowedClues = []) {
+    const info = aiBoardState(room, team);
+    return [
+        'Return JSON only.',
+        `Give one safe Codenames clue for team ${info.teamName}.`,
+        `Target word: ${targetWord}`,
+        `Choose clue ONLY from this allowed list: ${allowedClues.join(', ')}`,
+        `The clue cannot equal any board word: ${info.allBoardWords.join(', ')}`,
+        `Do not suggest these forbidden words: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
+        'Return exactly one candidate. No phrases. No definitions. No invented clue words.',
+        `Return exactly: {"candidates":[{"clue":"${allowedClues[0] || 'ANIMAL'}","targets":["${targetWord}"],"unsafeWords":[],"confidence":0.75}]}`
+    ].join('\n');
+}
+
 async function requestOllamaJson(prompt, numPredict = 700, signal = undefined) {
     const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
         method: 'POST',
@@ -962,7 +1005,7 @@ async function requestOllamaJson(prompt, numPredict = 700, signal = undefined) {
     return {content, candidates: normalizeAiCandidates(parsed)};
 }
 
-async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTargets = [], timeoutMs = AI_CLUE_TIMEOUT_MS) {
+async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTargets = [], timeoutMs = AI_CLUE_TIMEOUT_MS, allowedClues = []) {
     if (!AI_CLUES_ENABLED || AI_CLUE_PROVIDER !== 'ollama' || !OLLAMA_MODEL) return [];
     const controller = new AbortController();
     const effectiveTimeoutMs = Math.max(1200, Math.min(AI_CLUE_TIMEOUT_MS, timeoutMs));
@@ -983,7 +1026,9 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
         error: ''
     };
     try {
-        const prompt = mode === 'repair'
+        const prompt = mode === 'single'
+            ? aiSingleTargetPromptForClue(room, team, repairTargets[0], allowedClues)
+            : mode === 'repair'
             ? aiRepairPromptForTargets(room, team, repairTargets)
             : mode === 'compact'
                 ? aiRetryPromptForClue(room, team)
@@ -996,6 +1041,7 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
             mode,
             requestedCandidates: candidateCount,
             repairTargets,
+            allowedClues,
             rawCandidates: candidates.length,
             rawPreview: String(content || '').slice(0, 900),
             error: candidates.length ? '' : 'Ollama responded, but no candidates were parsed.'
@@ -1079,6 +1125,10 @@ function validateAiClueCandidate(room, team, candidate, rejects = []) {
     };
 }
 
+function unrevealedOwnWords(room, team) {
+    return room.board.filter(c => !c.revealed && c.color === team).map(c => c.word);
+}
+
 function validOwnTargetWordsFromAiCandidate(room, team, candidate) {
     const ownWords = new Set(room.board
         .filter(c => !c.revealed && c.color === team)
@@ -1134,6 +1184,19 @@ async function chooseAiBotClue(room, team) {
         candidates = await fetchOllamaClueCandidates(room, team, 'compact', [], remainingMs());
         attempts.push({mode: 'compact', rawCandidates: candidates.length});
         valid = scoreCandidates(candidates);
+    }
+
+    if (!valid.length && lastAiClueDebug?.stage !== 'failed' && remainingMs() > 1500) {
+        const rescueWords = shuffle(unrevealedOwnWords(room, team));
+        for (const targetWord of rescueWords) {
+            const allowedClues = clueCandidatesForTargetWord(room, team, targetWord);
+            if (!allowedClues.length) continue;
+            candidates = await fetchOllamaClueCandidates(room, team, 'single', [targetWord], remainingMs(), allowedClues);
+            attempts.push({mode: 'single', rawCandidates: candidates.length, targetWord, allowedClues});
+            valid = scoreCandidates(candidates)
+                .filter(candidate => candidate.targets.length === 1 && candidate.targets[0]?.word === targetWord && allowedClues.includes(candidate.word));
+            if (valid.length || lastAiClueDebug?.stage === 'failed' || remainingMs() <= 1500) break;
+        }
     }
     const picked = valid[0] || null;
     lastAiClueDebug = {
