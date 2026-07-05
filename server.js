@@ -60,6 +60,45 @@ app.post('/api/discord-token', async (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/api/ai-clue-status', async (_req, res) => {
+    const status = {
+        ok: false,
+        enabled: AI_CLUES_ENABLED,
+        provider: AI_CLUE_PROVIDER,
+        model: OLLAMA_MODEL,
+        baseUrl: OLLAMA_BASE_URL,
+        timeoutMs: AI_CLUE_TIMEOUT_MS,
+        candidates: AI_CLUE_CANDIDATES,
+        reachable: false,
+        models: [],
+        error: ''
+    };
+    if (!AI_CLUES_ENABLED) {
+        status.error = 'AI_CLUES_ENABLED is not true.';
+        return res.json(status);
+    }
+    if (AI_CLUE_PROVIDER !== 'ollama') {
+        status.error = `Unsupported AI_CLUE_PROVIDER: ${AI_CLUE_PROVIDER}`;
+        return res.json(status);
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), AI_CLUE_TIMEOUT_MS);
+    try {
+        const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`, {signal: controller.signal});
+        const data = await response.json().catch(() => ({}));
+        status.reachable = response.ok;
+        status.models = Array.isArray(data?.models) ? data.models.map(m => m.name).filter(Boolean) : [];
+        status.ok = response.ok && status.models.includes(OLLAMA_MODEL);
+        if (!response.ok) status.error = `Ollama HTTP ${response.status}`;
+        else if (!status.models.includes(OLLAMA_MODEL)) status.error = `Ollama is reachable, but model ${OLLAMA_MODEL} is not installed.`;
+        res.json(status);
+    } catch (err) {
+        status.error = err?.name === 'AbortError' ? 'Timed out connecting to Ollama.' : (err?.message || 'Could not connect to Ollama.');
+        res.json(status);
+    } finally {
+        clearTimeout(timer);
+    }
+});
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 const PORT = process.env.PORT || 3000;
@@ -790,7 +829,11 @@ async function chooseAiBotClue(room, team) {
         .map(candidate => validateAiClueCandidate(room, team, candidate))
         .filter(Boolean)
         .sort((a, b) => b.targets.length - a.targets.length || b.score - a.score);
-    return valid[0] || null;
+    const picked = valid[0] || null;
+    if (process.env.AI_CLUE_DEBUG === '1') {
+        console.log(`[AI clue] raw=${candidates.length} valid=${valid.length} picked=${picked ? `${picked.word} ${picked.number} (${picked.targets.map(c => c.word).join(', ')})` : 'none'}`);
+    }
+    return picked;
 }
 
 function addSinglePlayerBots(room, humanCharacter = '') {
@@ -919,11 +962,21 @@ function applyConfirmedGuess(room, p, card) {
 
 async function botGiveClue(room) {
     if (!room?.singlePlayer || room.status !== 'waiting-clue' || room.winner) return;
-    const clue = await chooseAiBotClue(room, room.turn) || chooseBotClue(room, room.turn);
-    if (!clue) return;
+    const clue = AI_CLUES_ENABLED ? await chooseAiBotClue(room, room.turn) : chooseBotClue(room, room.turn);
+    if (!clue) {
+        const message = AI_CLUES_ENABLED
+            ? `AI clue unavailable for ${room.turn === 'blue' ? 'GOLD' : 'BLACK'} turn. Check /api/ai-clue-status and Render logs.`
+            : `No local clue available for ${room.turn === 'blue' ? 'GOLD' : 'BLACK'} turn.`;
+        room.log.push(message);
+        if (process.env.AI_CLUE_DEBUG === '1') console.warn(message);
+        emitRoom(room);
+        return;
+    }
     room.board.forEach(c => c.clueTarget = false);
     clue.targets.forEach(card => card.clueTarget = true);
-    const giver = room.turn === 'blue'
+    const giver = clue.ai
+        ? {name: 'Ollama Oracle', character: 'oracle'}
+        : room.turn === 'blue'
         ? {name: 'DSTY Oracle', character: 'oracle'}
         : {name: 'Bot Oracle', character: 'ninja'};
     room.clue = {
