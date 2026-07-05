@@ -15483,3 +15483,38 @@ body.discordActivity[data-lang="ar"] .letterFillTitle .fillLetter {
         padding-top: 30px !important;
     }
 }
+
+@media (max-width: 980px) {
+    #landing:not(.hidden),
+    body.discordActivity #landing:not(.hidden) {
+        margin-top: max(72px, calc(env(safe-area-inset-top, 0px) + 58px)) !important;
+        padding-top: 36px !important;
+    }
+
+    #landing:not(.hidden) .dstyTitleWrap,
+    body.discordActivity #landing:not(.hidden) .dstyTitleWrap {
+        margin-top: max(26px, calc(env(safe-area-inset-top, 0px) + 18px)) !important;
+        padding-top: 18px !important;
+        transform: translateY(18px) !important;
+    }
+
+    #landing:not(.hidden) .joinBasics,
+    body.discordActivity #landing:not(.hidden) .joinBasics {
+        margin-top: 24px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #landing:not(.hidden),
+    body.discordActivity #landing:not(.hidden) {
+        margin-top: max(92px, calc(env(safe-area-inset-top, 0px) + 76px)) !important;
+        padding-top: 42px !important;
+    }
+
+    #landing:not(.hidden) .dstyTitleWrap,
+    body.discordActivity #landing:not(.hidden) .dstyTitleWrap {
+        margin-top: max(34px, calc(env(safe-area-inset-top, 0px) + 26px)) !important;
+        padding-top: 22px !important;
+        transform: translateY(24px) !important;
+    }
+}
