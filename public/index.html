@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>CODENAMES DSTY</title>
-    <link rel="stylesheet" href="/style.css?v=104"/>
+    <link rel="stylesheet" href="/style.css?v=105"/>
 </head>
 <body>
 <div id="app">
@@ -163,6 +163,21 @@
 
     <main id="game" class="hidden gameV9">
         <button id="backToLobbyBtn" class="backLobbyBtn" type="button">Back</button>
+        <div id="gameIntroOverlay" class="gameIntroOverlay hidden" aria-live="polite" aria-hidden="true">
+            <div class="gameIntroCard">
+                <div class="gameIntroRing">
+                    <img src="/logo.jpg" alt="Game logo"/>
+                </div>
+                <div class="gameIntroText">Get ready</div>
+            </div>
+        </div>
+        <div id="pickReactionOverlay" class="pickReactionOverlay hidden" aria-live="polite" aria-hidden="true">
+            <div id="pickReactionCard" class="pickReactionCard">
+                <img id="pickReactionImg" src="/correct.png" alt="Pick reaction"/>
+                <div class="reactionChain" aria-hidden="true"><span></span><span></span></div>
+                <div id="pickReactionText" class="reactionSpeech">YAAAY!</div>
+            </div>
+        </div>
         <header class="topbar glass">
             <div class="brandSide">
                 <div class="dstyLogo gameDstyLogo"><span>CODENAMES</span><em>DSTY</em></div>
@@ -295,6 +310,6 @@
 </script>
 <script type="module" src="/discord-sdk.js?v=60"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js?v=104"></script>
+<script src="/app.js?v=105"></script>
 </body>
 </html>

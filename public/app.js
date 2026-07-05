@@ -3,6 +3,8 @@ const socket = io({auth: {language: initialUiLanguage}});
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
 let lastWinKey = null, winDockTimer = null;
 let lastBoardKey = '', lastBoardSpawnAt = 0;
+let gameIntroTimer = null, lastIntroKey = '';
+let reactionTimer = null;
 
 function makePlayerKey() {
     return 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -722,6 +724,77 @@ function flash(cls) {
     d.className = cls;
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 850);
+}
+
+function showGameIntro(reason = 'join') {
+    const overlay = $('gameIntroOverlay');
+    if (!overlay || !state?.id) return;
+    const key = `${state.id}:${state.round}:${state.status}:${reason}`;
+    if (lastIntroKey === key) return;
+    lastIntroKey = key;
+    if (gameIntroTimer) clearTimeout(gameIntroTimer);
+    overlay.classList.remove('hidden', 'introOut');
+    overlay.setAttribute('aria-hidden', 'false');
+    void overlay.offsetWidth;
+    overlay.classList.add('introLive');
+    gameIntroTimer = setTimeout(() => {
+        overlay.classList.add('introOut');
+        gameIntroTimer = setTimeout(() => {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('introLive', 'introOut');
+            overlay.setAttribute('aria-hidden', 'true');
+        }, 420);
+    }, 1850);
+}
+
+function revealReactionForCard(card, beforeState, nowState) {
+    if (!card?.revealed) return null;
+    const revealer = card.revealedById ? nowState?.players?.[card.revealedById] : null;
+    const pickerTeam = revealer?.team || beforeState?.turn || '';
+    if (card.color === 'assassin') {
+        return {kind: 'death', img: '/death.png', text: 'BOOM! Death card!'};
+    }
+    if (card.color === 'neutral') {
+        return {kind: 'grey', img: '/grey.png', text: 'Grey zone! Turn over!'};
+    }
+    if (pickerTeam && card.color === pickerTeam) {
+        return {kind: 'correct', img: '/correct.png', text: 'YAAAY! Nice pick!'};
+    }
+    return {kind: 'wrong', img: '/wrong.png', text: 'Oops! Wrong team!'};
+}
+
+function firstRevealReaction(beforeState, nowState) {
+    if (!beforeState?.board || !nowState?.board) return null;
+    for (const card of nowState.board) {
+        const old = beforeState.board.find(x => x.id === card.id);
+        if (old && !old.revealed && card.revealed) return revealReactionForCard(card, beforeState, nowState);
+    }
+    return null;
+}
+
+function showPickReaction(reaction) {
+    if (!reaction) return;
+    const overlay = $('pickReactionOverlay');
+    const card = $('pickReactionCard');
+    const img = $('pickReactionImg');
+    const text = $('pickReactionText');
+    if (!overlay || !card || !img || !text) return;
+    if (reactionTimer) clearTimeout(reactionTimer);
+    img.src = reaction.img;
+    text.textContent = reaction.text;
+    card.className = `pickReactionCard ${reaction.kind || 'correct'}`;
+    overlay.classList.remove('hidden', 'reactionOut');
+    overlay.setAttribute('aria-hidden', 'false');
+    void overlay.offsetWidth;
+    overlay.classList.add('reactionLive');
+    reactionTimer = setTimeout(() => {
+        overlay.classList.add('reactionOut');
+        reactionTimer = setTimeout(() => {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('reactionLive', 'reactionOut');
+            overlay.setAttribute('aria-hidden', 'true');
+        }, 320);
+    }, 1750);
 }
 
 function toast(msg) {
@@ -1652,6 +1725,7 @@ function acceptJoinResponse(res) {
             landing.classList.add('hidden');
             game.classList.remove('hidden');
             render();
+            showGameIntro(state.status === 'lobby' ? 'join-lobby' : 'join-game');
         }
     }
 }
@@ -1827,6 +1901,8 @@ socket.on('state', s => {
     const turnChanged = before && before.turn !== s.turn;
     const newFinishedGame = before && before.status !== 'finished' && s.status === 'finished';
     const gameJustStarted = before?.status === 'lobby' && s.status !== 'lobby';
+    const enteredGameFromLanding = !!(landing && !landing.classList.contains('hidden') && !(isDiscordActivity && s.status === 'lobby'));
+    const pickReaction = firstRevealReaction(before, s);
     if (clueAccepted || turnChanged || newFinishedGame) {
         targetIds.clear();
         const cw = $('clueWord');
@@ -1850,15 +1926,20 @@ socket.on('state', s => {
         refreshLandingAdminControls();
         return;
     }
-    if (gameJustStarted) lastBoardKey = '';
+    if (gameJustStarted) {
+        lastBoardKey = '';
+        showGameIntro('start');
+    }
     if (landing && !landing.classList.contains('hidden')) {
         landing.classList.add('hidden');
         game.classList.remove('hidden');
     }
+    if (enteredGameFromLanding) showGameIntro(s.status === 'lobby' ? 'join-lobby' : 'join-game');
     if (before?.clue?.at !== s.clue?.at && s.clue) sound('clue');
     if (newFinishedGame) sound('gameWin');
     detectRevealSound(before, s);
     render();
+    showPickReaction(pickReaction);
     animateScoreChanges(before, s);
     animateNewReveals(before, s);
 });
