@@ -91,8 +91,10 @@ const AI_REJECT_SELF_REPORTED_UNSAFE = envBool('AI_REJECT_SELF_REPORTED_UNSAFE',
 const OLLAMA_AUTH_HEADER = String(process.env.OLLAMA_AUTH_HEADER || '').trim();
 const AI_ENGINE_OFFLINE_MESSAGE = "the host's pc where he hosts the ai engine that runs this mode is turned off at the moment";
 const MAX_CLUE_TARGETS = 4;
+const MAX_AI_CLUE_TARGETS = envInt('AI_MAX_CLUE_TARGETS', 5, 1, 5);
 const MAX_CLUE_WORD_LENGTH = 14;
 const GENERIC_BAD_CLUES = new Set(['WORD', 'WORDS', 'CLUE', 'TARGET', 'TARGETS', 'CARD', 'CARDS', 'THING', 'THINGS', 'OBJECT', 'OBJECTS', 'ITEM', 'ITEMS', 'COMMON', 'RELATED', 'ASSOCIATED', 'GENERAL']);
+const GENERIC_BAD_ARABIC_CLUES = new Set(['كلمة', 'كلمات', 'تلميح', 'بطاقة', 'بطاقات', 'شيء', 'اشياء', 'عام', 'عامة', 'مشترك', 'مرتبط']);
 const AI_EXTRA_CLUE_WORDS = [
     'ANIMAL', 'AQUATIC', 'AVIATION', 'BEAUTY', 'BUILDING', 'CURRENCY', 'EDUCATION', 'ELECTRIC',
     'FARMING', 'FINANCE', 'FLORAL', 'FORTUNE', 'GAMING', 'HEALTHCARE', 'HUNTING', 'JEWELRY',
@@ -132,6 +134,7 @@ async function checkOllamaReady(timeoutMs = AI_STATUS_TIMEOUT_MS) {
         timeoutMs: AI_CLUE_TIMEOUT_MS,
         statusTimeoutMs: timeoutMs,
         candidates: AI_CLUE_CANDIDATES,
+        maxAiTargets: MAX_AI_CLUE_TARGETS,
         reachable: false,
         models: [],
         error: '',
@@ -168,6 +171,39 @@ async function checkOllamaReady(timeoutMs = AI_STATUS_TIMEOUT_MS) {
     return status;
 }
 
+function normalizeArabicTerm(value = '') {
+    return String(value || '')
+        .trim()
+        .replace(/[ـً-ْ]/g, '')
+        .replace(/ى/g, 'ي');
+}
+
+function isArabicWord(value = '') {
+    return /^[\u0621-\u064A]{2,18}$/.test(String(value || ''));
+}
+
+function languageOfRoom(room) {
+    return room?.language === 'ar' ? 'ar' : 'en';
+}
+
+function languageFromPayload(payload = {}, socket = null) {
+    if (payload.language === 'ar') return 'ar';
+    if (payload.language === 'en') return 'en';
+    return (payload.arabicMode === true || socket?.data?.language === 'ar') ? 'ar' : 'en';
+}
+
+function normalizeGameTerm(value = '', language = 'en') {
+    return language === 'ar'
+        ? normalizeArabicTerm(value)
+        : String(value || '').toUpperCase().trim();
+}
+
+function isLegalClueWord(value = '', language = 'en') {
+    return language === 'ar'
+        ? isArabicWord(value)
+        : /^[A-Z]+$/.test(String(value || ''));
+}
+
 const WORDS_PATH = path.join(__dirname, 'data', 'words.json');
 let WORDS = [];
 try {
@@ -178,6 +214,17 @@ try {
 }
 WORDS = [...new Set(WORDS)].filter(w => /^[A-Z][A-Z-]{1,20}$/.test(w));
 if (WORDS.length < 25) throw new Error('Need at least 25 card words.');
+
+const ARABIC_WORDS_PATH = path.join(__dirname, 'data', 'words_ar.json');
+let ARABIC_WORDS = [];
+try {
+    ARABIC_WORDS = JSON.parse(fs.readFileSync(ARABIC_WORDS_PATH, 'utf8')).map(w => normalizeArabicTerm(w)).filter(Boolean);
+} catch (err) {
+    console.warn('Could not load data/words_ar.json, using fallback Arabic words.', err.message);
+    ARABIC_WORDS = ['ملك', 'ملكة', 'تاج', 'قصر', 'بحر', 'موج', 'نهر', 'جزيرة', 'طبيب', 'مستشفى', 'مدرسة', 'معلم', 'طالب', 'كتاب', 'هاتف', 'حاسوب', 'ذهب', 'فضة', 'شجرة', 'وردة', 'مطر', 'قمر', 'طائرة', 'سيارة', 'كرة'];
+}
+ARABIC_WORDS = [...new Set(ARABIC_WORDS)].filter(w => isArabicWord(w));
+if (ARABIC_WORDS.length < 25) ARABIC_WORDS = ['ملك', 'ملكة', 'تاج', 'قصر', 'بحر', 'موج', 'نهر', 'جزيرة', 'طبيب', 'مستشفى', 'مدرسة', 'معلم', 'طالب', 'كتاب', 'هاتف', 'حاسوب', 'ذهب', 'فضة', 'شجرة', 'وردة', 'مطر', 'قمر', 'طائرة', 'سيارة', 'كرة'];
 
 // Codenames-style balance: the team that starts has 9 cards, the other team has 8, plus 7 blank cards and 1 grey danger card.
 // Board words are pulled from small semantic clusters first, then filled from data/words.json.
@@ -230,9 +277,9 @@ function clueGroupKey(group) {
     return [...new Set((group?.words || []).map(w => String(w).toUpperCase()))].sort().join('|');
 }
 
-function clueGroupsForBank(bank) {
+function clueGroupsForBank(bank, language = 'en') {
     const available = new Set(bank);
-    return shuffle(BOT_CLUE_GROUPS || [])
+    return shuffle(clueGroupsForLanguage(language) || [])
         .map(group => ({
             ...group,
             key: clueGroupKey(group),
@@ -241,10 +288,10 @@ function clueGroupsForBank(bank) {
         .filter(group => group.availableWords.length >= 2 && group.clue);
 }
 
-function singlePlayerWordsForColors(bank, colors) {
+function singlePlayerWordsForColors(bank, colors, language = 'en') {
     const words = Array(colors.length).fill('');
     const used = new Set();
-    const groups = clueGroupsForBank(bank).sort((a, b) =>
+    const groups = clueGroupsForBank(bank, language).sort((a, b) =>
         singlePlayerRecentGroupPenalty(a.key) - singlePlayerRecentGroupPenalty(b.key) ||
         Math.random() - 0.5
     );
@@ -369,8 +416,10 @@ function publicPlayers(players) {
     return out;
 }
 
-function makeBoard(startingTeam = 'red', wordMode = 'themed') {
-    const playable = WORDS.slice(0, Math.min(10000, WORDS.length));
+function makeBoard(startingTeam = 'red', wordMode = 'themed', language = 'en') {
+    language = language === 'ar' ? 'ar' : 'en';
+    const bank = wordBankForLanguage(language);
+    const playable = bank.slice(0, Math.min(10000, bank.length));
     const teamCounts = {
         blue: startingTeam === 'blue' ? 9 : 8,
         red: startingTeam === 'red' ? 9 : 8,
@@ -384,8 +433,8 @@ function makeBoard(startingTeam = 'red', wordMode = 'themed') {
     colors.push('assassin');                                         // Grey danger card: instant loss
     const shuffledColors = shuffle(colors);
     const words = wordMode === 'full'
-        ? singlePlayerWordsForColors(playable, shuffledColors)
-        : themedWordsFromBank(playable, 25);
+        ? singlePlayerWordsForColors(playable, shuffledColors, language)
+        : language === 'ar' ? randomWordsFromBank(playable, 25) : themedWordsFromBank(playable, 25);
     return words.map((word, i) => ({
         id: i,
         word,
@@ -397,7 +446,8 @@ function makeBoard(startingTeam = 'red', wordMode = 'themed') {
     }));
 }
 
-function newRoom(id) {
+function newRoom(id, language = 'en') {
+    language = language === 'ar' ? 'ar' : 'en';
     const startingTeam = Math.random() > 0.5 ? 'blue' : 'red';
     return {
         id,
@@ -409,7 +459,7 @@ function newRoom(id) {
         turn: startingTeam,
         winner: null,
         players: {},
-        board: makeBoard(startingTeam),
+        board: makeBoard(startingTeam, 'themed', language),
         clue: null,
         guessesThisTurn: 0,
         allowedGuesses: 0,
@@ -423,6 +473,7 @@ function newRoom(id) {
         singlePlayerUsedClues: {blue: [], red: []},
         singlePlayerUsedClueGroups: {blue: [], red: []},
         singlePlayerAiClueStatus: null,
+        language,
         botTimer: null,
         log: []
     };
@@ -474,6 +525,14 @@ function roomLobbyInfo(room) {
 }
 
 function publicRoom(room, forPlayerKey = null) {
+    if (room.language === 'ar' && room.board.some(c => /^[A-Z]/.test(String(c.word || '')))) {
+        room.board = makeBoard(room.turn || 'blue', room.singlePlayer ? 'full' : 'themed', 'ar');
+        room.clue = null;
+        room.status = 'waiting-clue';
+        room.guessesThisTurn = 0;
+        room.allowedGuesses = 0;
+        room.votes = {};
+    }
     const player = forPlayerKey ? room.players[forPlayerKey] : null;
     const isSpy = player && player.role === 'spymaster';
     const canSeeClueTargets = !!(isSpy && player.team === room.turn);
@@ -488,6 +547,7 @@ function publicRoom(room, forPlayerKey = null) {
         winner: room.winner,
         clue: publicClue(room, player),
         singlePlayer: !!room.singlePlayer,
+        language: room.language || 'en',
         aiClueStatus: room.singlePlayer ? (room.singlePlayerAiClueStatus || null) : null,
         points: counts(room),
         adminOnline: Object.values(room.players).some(p => p.online !== false && p.isAdmin),
@@ -575,7 +635,7 @@ function resetRoomTable(room, message = 'Table reset with a fresh board.') {
     room.status = 'waiting-clue';
     room.turn = startingTeam;
     room.winner = null;
-    room.board = makeBoard(startingTeam, room.singlePlayer ? 'full' : 'themed');
+    room.board = makeBoard(startingTeam, room.singlePlayer ? 'full' : 'themed', room.language || 'en');
     room.clue = null;
     room.guessesThisTurn = 0;
     room.allowedGuesses = 0;
@@ -589,6 +649,30 @@ function resetRoomTable(room, message = 'Table reset with a fresh board.') {
     room.gameStartedAt = Date.now();
     // Reset table means a clean board + clean game log.
     room.log = [];
+}
+
+function applyRoomLanguage(room, language = 'en', actorName = 'Admin') {
+    language = language === 'ar' ? 'ar' : 'en';
+    if (!room || languageOfRoom(room) === language) return false;
+    const startingTeam = room.singlePlayer ? 'blue' : (room.turn || (Math.random() > 0.5 ? 'blue' : 'red'));
+    if (room.botTimer) clearTimeout(room.botTimer);
+    room.language = language;
+    room.turn = startingTeam;
+    room.board = makeBoard(startingTeam, room.singlePlayer ? 'full' : 'themed', language);
+    room.clue = null;
+    room.guessesThisTurn = 0;
+    room.allowedGuesses = 0;
+    room.hintUsed = {blue: false, red: false};
+    room.hintRequested = null;
+    room.votes = {};
+    room.winner = null;
+    room.status = room.status === 'lobby' ? 'lobby' : 'waiting-clue';
+    room.roundStartedAt = Date.now();
+    room.singlePlayerAiClueStatus = null;
+    room.singlePlayerUsedClues = {blue: [], red: []};
+    room.singlePlayerUsedClueGroups = {blue: [], red: []};
+    room.log.push(`${actorName} changed the room language to ${language === 'ar' ? 'Arabic' : 'English'}.`);
+    return true;
 }
 
 function removeVoteForCard(room, cardId) {
@@ -665,30 +749,77 @@ const BOT_CLUE_CATEGORY_SPECS = [
     {id: 'emotion-abstract', clues: ['ABSTRACT', 'FEELING', 'THOUGHT', 'MOOD', 'CONCEPT', 'MENTAL'], words: ['CHANCE', 'CHAOS', 'DREAM', 'IDEA', 'LUCK', 'MEMORY', 'ORDER', 'QUESTION', 'ANSWER', 'RISK', 'RULE', 'SECRET', 'SILENCE', 'SMILE', 'TRUTH', 'LIE', 'SOUND', 'TIME']}
 ];
 
+const ARABIC_CLUE_CATEGORY_SPECS = [
+    {id: 'royalty', clues: ['ملكي', 'تتويج', 'سلطة', 'عرش', 'نبل'], words: ['ملك', 'ملكة', 'امير', 'اميرة', 'تاج', 'عرش', 'قصر', 'قلعة', 'سلطان', 'قيصر']},
+    {id: 'water', clues: ['مائي', 'بحري', 'محيط', 'شاطئ', 'ابحار'], words: ['بحر', 'محيط', 'موج', 'ماء', 'نهر', 'بحيرة', 'شاطئ', 'جزيرة', 'ميناء', 'نافورة', 'شلال', 'سفينة', 'قارب', 'مرساة']},
+    {id: 'sea-life', clues: ['غوص', 'شعاب', 'اسماك', 'بحري'], words: ['سمك', 'قرش', 'حوت', 'دلفين', 'اخطبوط', 'سرطان', 'سلمون', 'سلحفاة']},
+    {id: 'animals', clues: ['حيوان', 'برية', 'قطيع', 'مزرعة'], words: ['كلب', 'قط', 'حصان', 'بقرة', 'ماعز', 'خروف', 'ارنب', 'فأر', 'اسد', 'نمر', 'ذئب', 'ثعلب', 'فيل', 'جمل', 'قرد', 'غزال']},
+    {id: 'birds', clues: ['طائر', 'ريش', 'جناح', 'تحليق'], words: ['طائر', 'ريش', 'نسر', 'صقر', 'غراب', 'ببغاء', 'بومة', 'حمامة', 'بطة', 'ديك']},
+    {id: 'bugs-reptiles', clues: ['زاحف', 'حشرة', 'سم', 'قشور'], words: ['نملة', 'نحلة', 'فراشة', 'عنكبوت', 'عقرب', 'ثعبان', 'كوبرا', 'سحلية', 'ضفدع']},
+    {id: 'food', clues: ['طعام', 'وجبة', 'مطبخ', 'نكهة'], words: ['خبز', 'جبن', 'زبدة', 'حليب', 'كعك', 'حلوى', 'بيتزا', 'ارز', 'فاصوليا', 'ذرة', 'بطاطا', 'جزر', 'بصل', 'ثوم', 'طماطم', 'فلفل', 'ملح', 'سكر', 'عسل']},
+    {id: 'fruit', clues: ['فاكهة', 'عصير', 'حلو', 'بستان'], words: ['تفاح', 'موز', 'كرز', 'عنب', 'ليمون', 'مانجو', 'بطيخ', 'برتقال', 'خوخ', 'كمثرى', 'اناناس', 'جوز', 'عصير']},
+    {id: 'kitchen', clues: ['مطبخ', 'طبخ', 'مائدة', 'ادوات'], words: ['مطبخ', 'فرن', 'موقد', 'ثلاجة', 'غلاية', 'مقلاة', 'قدر', 'وعاء', 'طبق', 'كوب', 'شوكة', 'ملعقة', 'طاه', 'مطعم', 'قهوة', 'شاي']},
+    {id: 'home', clues: ['منزل', 'اثاث', 'غرفة', 'سكن'], words: ['بيت', 'منزل', 'غرفة', 'باب', 'نافذة', 'سقف', 'جدار', 'ارض', 'درج', 'مرآب', 'مطبخ', 'حمام', 'خزانة', 'درج', 'رف', 'طاولة', 'كرسي', 'سرير', 'وسادة', 'مصباح']},
+    {id: 'clothing', clues: ['ملابس', 'ازياء', 'لباس', 'ارتداء'], words: ['حذاء', 'جزمة', 'جورب', 'قفاز', 'قبعة', 'فستان', 'بدلة', 'سترة', 'وشاح', 'حزام', 'قناع', 'درع']},
+    {id: 'body', clues: ['جسم', 'تشريح', 'انسان', 'عضو'], words: ['جسم', 'رأس', 'وجه', 'عين', 'اذن', 'انف', 'فم', 'لسان', 'سن', 'شعر', 'جلد', 'يد', 'اصبع', 'ذراع', 'كتف', 'ظهر', 'قدم', 'قلب', 'دماغ', 'دم', 'عظم']},
+    {id: 'medical', clues: ['طبي', 'صحة', 'مستشفى', 'علاج'], words: ['طبيب', 'ممرض', 'مستشفى', 'عيادة', 'صيدلية', 'فيروس', 'ابرة', 'دم', 'قلب', 'دماغ', 'عضو', 'صحة']},
+    {id: 'colors', clues: ['لون', 'صبغة', 'طلاء', 'درجات'], words: ['احمر', 'ازرق', 'اخضر', 'اصفر', 'اسود', 'ابيض', 'رمادي', 'بني', 'بنفسجي', 'وردي', 'برتقالي', 'ذهبي', 'فضي', 'برونزي']},
+    {id: 'gems-metals', clues: ['معدن', 'مجوهرات', 'كنز', 'ثمين'], words: ['ذهب', 'فضة', 'برونز', 'نحاس', 'حديد', 'فولاذ', 'معدن', 'فحم', 'حجر', 'صخر', 'رخام', 'كريستال', 'ماس', 'ياقوت', 'زمرد', 'لؤلؤ', 'كنز', 'عملة']},
+    {id: 'nature', clues: ['طبيعة', 'منظر', 'ارض', 'خارجي'], words: ['غابة', 'حديقة', 'حقل', 'وادي', 'تل', 'جبل', 'منحدر', 'كهف', 'صحراء', 'بركان', 'حمم', 'رمل', 'غبار', 'واحة', 'مستنقع', 'شلال']},
+    {id: 'plants', clues: ['نبات', 'زهور', 'اخضر', 'حديقة'], words: ['شجرة', 'غصن', 'جذر', 'ورقة', 'زهرة', 'وردة', 'عشب', 'شجيرة', 'طحلب', 'كرمة', 'ارز']},
+    {id: 'weather', clues: ['طقس', 'سماء', 'عاصفة', 'مناخ'], words: ['شمس', 'قمر', 'نجم', 'سحابة', 'مطر', 'ثلج', 'جليد', 'صقيع', 'عاصفة', 'رعد', 'برق', 'رياح', 'دخان', 'نار', 'لهب', 'ليل', 'صباح']},
+    {id: 'space', clues: ['فضاء', 'كوكب', 'مجرة', 'مدار'], words: ['فضاء', 'مجرة', 'مدار', 'كوكب', 'ارض', 'مريخ', 'مشتري', 'زحل', 'قمر', 'نجم', 'مذنب', 'نيزك', 'صاروخ', 'قمرصناعي']},
+    {id: 'travel', clues: ['سفر', 'نقل', 'مركبة', 'طريق'], words: ['سيارة', 'تاكسي', 'حافلة', 'شاحنة', 'قطار', 'محطة', 'سكة', 'محرك', 'تذكرة', 'طائرة', 'مطار', 'طيار', 'سائق', 'دراجة', 'قارب', 'سفينة', 'طريق', 'مرور', 'عجلة', 'خريطة']},
+    {id: 'places', clues: ['مكان', 'مدينة', 'عالم', 'جغرافيا'], words: ['بلد', 'دولة', 'مدينة', 'قرية', 'شارع', 'طريق', 'جسر', 'نفق', 'سوق', 'متجر', 'فندق', 'جامعة', 'مدرسة', 'مكتبة', 'متحف', 'مسرح', 'سينما', 'مسجد', 'معبد', 'سجن', 'مصنع', 'مكتب', 'مزرعة', 'ملعب']},
+    {id: 'people', clues: ['شخص', 'ناس', 'مهنة', 'عامل'], words: ['اب', 'مزارع', 'خباز', 'طاه', 'طبيب', 'ممرض', 'معلم', 'طالب', 'لاعب', 'مدرب', 'حكم', 'محامي', 'قاضي', 'شرطة', 'حارس', 'جندي', 'قبطان', 'رئيس', 'فنان', 'كاتب', 'شاعر', 'ممثل', 'راقص', 'مغني', 'بطل', 'قرصان', 'بحار', 'سائق', 'طيار']},
+    {id: 'arts', clues: ['فن', 'موسيقى', 'مسرح', 'ابداع'], words: ['موسيقى', 'اغنية', 'فرقة', 'اوركسترا', 'بيانو', 'غيتار', 'كمان', 'طبل', 'ميكروفون', 'راديو', 'صوت', 'رقص', 'مسرح', 'سينما', 'كوميديا', 'مهرجان', 'كاميرا', 'طلاء', 'تمثال', 'قصة']},
+    {id: 'sports-games', clues: ['رياضة', 'لعبة', 'فوز', 'منافسة'], words: ['رياضة', 'لاعب', 'فريق', 'هدف', 'نتيجة', 'مباراة', 'كرة', 'تنس', 'غولف', 'سباق', 'سباحة', 'تزلج', 'مضرب', 'ملعب', 'حكم', 'مدرب', 'كأس', 'ميدالية', 'شطرنج', 'نرد', 'بطاقة', 'لغز', 'لعبة']},
+    {id: 'technology', clues: ['تقنية', 'رقمي', 'حاسوب', 'جهاز'], words: ['حاسوب', 'لابتوب', 'لوحة', 'شاشة', 'هاتف', 'خادم', 'برنامج', 'رمز', 'بكسل', 'روبوت', 'طابعة', 'دائرة', 'شريحة', 'بطارية', 'كابل', 'سلك', 'مفتاح', 'ليزر', 'كاميرا', 'راديو']},
+    {id: 'tools', clues: ['اداة', 'ورشة', 'اصلاح', 'معدات'], words: ['مطرقة', 'سندان', 'ازميل', 'فأس', 'سكين', 'خنجر', 'سيف', 'رمح', 'مدفع', 'سلاح', 'سهم', 'حبل', 'سلسلة', 'سلم', 'دلو', 'شريط', 'غراء', 'ابرة', 'خيط', 'مقص']},
+    {id: 'law-danger', clues: ['خطر', 'قانون', 'جريمة', 'امن'], words: ['خطر', 'مخاطرة', 'فوضى', 'سر', 'حقيقة', 'كذب', 'قانون', 'قاعدة', 'نظام', 'محامي', 'قاضي', 'شرطة', 'حارس', 'سجن', 'لص', 'جاسوس', 'عميل', 'جيش', 'جندي', 'درع', 'خزنة']},
+    {id: 'money', clues: ['مال', 'بنك', 'دفع', 'سعر'], words: ['مال', 'نقد', 'عملة', 'دولار', 'يورو', 'دينار', 'بنك', 'خزنة', 'محفظة', 'بطاقة', 'فاتورة', 'سعر', 'ضريبة', 'تجارة', 'سوق', 'متجر', 'طلب']},
+    {id: 'time', clues: ['وقت', 'ساعة', 'تقويم', 'موسم'], words: ['وقت', 'ساعة', 'دقيقة', 'ثانية', 'يوم', 'اسبوع', 'شهر', 'سنة', 'تاريخ', 'صباح', 'مساء', 'ليل', 'ربيع', 'صيف', 'خريف', 'شتاء', 'عيد']},
+    {id: 'language', clues: ['لغة', 'كتابة', 'رسالة', 'فكرة'], words: ['كلمة', 'حرف', 'صفحة', 'ورقة', 'كتاب', 'ملاحظة', 'اسم', 'سؤال', 'جواب', 'تلميح', 'اشارة', 'رمز', 'رسالة', 'ذاكرة', 'فكرة', 'قصة', 'نكتة', 'سر']},
+    {id: 'school', clues: ['تعليم', 'مدرسة', 'دراسة', 'صف'], words: ['مدرسة', 'جامعة', 'كلية', 'معلم', 'طالب', 'كتاب', 'قلم', 'ورقة', 'صفحة', 'حرف', 'ملاحظة', 'سؤال', 'جواب', 'مكتبة', 'مختبر']},
+    {id: 'materials', clues: ['مادة', 'نسيج', 'سطح', 'صلب'], words: ['خشب', 'بلاستيك', 'مطاط', 'زجاج', 'ورق', 'قطن', 'صوف', 'حرير', 'مخمل', 'جلد', 'قماش', 'خيط', 'معدن', 'حديد', 'فولاذ', 'نحاس', 'حجر', 'رخام', 'طين', 'طوب', 'صندوق', 'زجاجة', 'صابون', 'منشفة']},
+    {id: 'objects', clues: ['غرض', 'شيء', 'ادوات', 'مستلزم'], words: ['حقيبة', 'لافتة', 'برميل', 'سلة', 'جرس', 'صندوق', 'مكنسة', 'شمعة', 'دائرة', 'بوصلة', 'خريطة', 'مرآة', 'مصباح', 'قلم', 'طبق', 'جيب', 'خاتم', 'حبل', 'رف', 'اشارة', 'شريط', 'تذكرة', 'محفظة', 'مظلة']},
+    {id: 'emotion-abstract', clues: ['شعور', 'فكرة', 'مزاج', 'معنى'], words: ['فرصة', 'فوضى', 'حلم', 'فكرة', 'حظ', 'ذاكرة', 'نظام', 'سؤال', 'جواب', 'مخاطرة', 'قاعدة', 'سر', 'صمت', 'ابتسامة', 'حقيقة', 'كذب', 'صوت', 'وقت']}
+];
+
 const BOT_EXTRA_FALLBACK_CLUES = ['KNOWN', 'ASSOCIATED', 'RELATED', 'GENERAL', 'COMMON', 'REFERENCE'];
 
-function normalizeWordList(words = []) {
-    return [...new Set(words.map(w => String(w).toUpperCase()).filter(w => /^[A-Z][A-Z-]{1,20}$/.test(w)))];
+function normalizeWordList(words = [], language = 'en') {
+    return [...new Set(words
+        .map(w => normalizeGameTerm(w, language))
+        .filter(w => language === 'ar' ? isArabicWord(w) : /^[A-Z][A-Z-]{1,20}$/.test(w)))];
 }
 
-function buildBotClueGroups() {
-    const bank = new Set(WORDS);
+function wordBankForLanguage(language = 'en') {
+    return language === 'ar' ? ARABIC_WORDS : WORDS;
+}
+
+function clueCategorySpecsForLanguage(language = 'en') {
+    return language === 'ar' ? ARABIC_CLUE_CATEGORY_SPECS : BOT_CLUE_CATEGORY_SPECS;
+}
+
+function buildBotClueGroups(language = 'en') {
+    const bank = new Set(wordBankForLanguage(language).map(w => normalizeGameTerm(w, language)));
     const covered = new Set();
     const groups = [];
 
-    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
-        const words = normalizeWordList(spec.words).filter(w => bank.has(w));
+    clueCategorySpecsForLanguage(language).forEach(spec => {
+        const words = normalizeWordList(spec.words, language).filter(w => bank.has(w));
         if (!words.length) return;
         words.forEach(w => covered.add(w));
-        normalizeWordList(spec.clues)
-            .filter(clue => /^[A-Z]+$/.test(clue))
+        normalizeWordList(spec.clues, language)
+            .filter(clue => isLegalClueWord(clue, language))
             .forEach(clue => {
                 groups.push({clue, words, key: `semantic:${spec.id}`});
             });
     });
 
-    const uncovered = WORDS.filter(w => !covered.has(w));
-    if (uncovered.length) {
+    const uncovered = wordBankForLanguage(language).filter(w => !covered.has(normalizeGameTerm(w, language)));
+    if (language === 'en' && uncovered.length) {
         BOT_EXTRA_FALLBACK_CLUES.forEach(clue => {
             groups.push({clue, words: uncovered, key: 'semantic:uncategorized'});
         });
@@ -697,26 +828,34 @@ function buildBotClueGroups() {
     return groups;
 }
 
-function clueTermMatches(clue = '', term = '') {
-    clue = String(clue || '').toUpperCase();
-    term = String(term || '').toUpperCase();
+function clueTermMatches(clue = '', term = '', language = 'en') {
+    clue = normalizeGameTerm(clue, language);
+    term = normalizeGameTerm(term, language);
+    if (language === 'ar') return clue === term;
     return clue === term ||
         `${clue}S` === term ||
         (clue.endsWith('S') && clue.slice(0, -1) === term);
 }
 
-function buildAiClueLexicon() {
+function buildAiClueLexicon(language = 'en') {
     const lexicon = new Set();
-    WORDS.filter(w => /^[A-Z]{2,14}$/.test(w)).forEach(w => lexicon.add(w));
-    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
-        normalizeWordList(spec.clues).forEach(w => lexicon.add(w));
+    wordBankForLanguage(language)
+        .map(w => normalizeGameTerm(w, language))
+        .filter(w => language === 'ar' ? isArabicWord(w) : /^[A-Z]{2,14}$/.test(w))
+        .forEach(w => lexicon.add(w));
+    clueCategorySpecsForLanguage(language).forEach(spec => {
+        normalizeWordList(spec.clues, language).forEach(w => lexicon.add(w));
     });
-    AI_EXTRA_CLUE_WORDS.forEach(w => lexicon.add(String(w).toUpperCase()));
-    GENERIC_BAD_CLUES.forEach(w => lexicon.delete(w));
+    if (language === 'en') {
+        AI_EXTRA_CLUE_WORDS.forEach(w => lexicon.add(String(w).toUpperCase()));
+        GENERIC_BAD_CLUES.forEach(w => lexicon.delete(w));
+    } else {
+        GENERIC_BAD_ARABIC_CLUES.forEach(w => lexicon.delete(normalizeArabicTerm(w)));
+    }
     return lexicon;
 }
 
-function buildSemanticFamilyLookup() {
+function buildSemanticFamilyLookup(language = 'en') {
     const lookup = new Map();
     SEMANTIC_FAMILIES.forEach(family => {
         family.forEach(id => {
@@ -724,56 +863,71 @@ function buildSemanticFamilyLookup() {
             family.forEach(other => lookup.get(id).add(other));
         });
     });
-    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
+    clueCategorySpecsForLanguage(language).forEach(spec => {
         if (!lookup.has(spec.id)) lookup.set(spec.id, new Set([spec.id]));
     });
     return lookup;
 }
 
-function expandSemanticGroupIds(ids = new Set()) {
+function expandSemanticGroupIds(ids = new Set(), language = 'en') {
     const expanded = new Set(ids);
+    const lookup = semanticFamilyLookupForLanguage(language);
     ids.forEach(id => {
-        const family = SEMANTIC_FAMILY_LOOKUP.get(id);
+        const family = lookup.get(id);
         if (family) family.forEach(x => expanded.add(x));
     });
     return expanded;
 }
 
-function semanticGroupIdsForTerm(term = '', mode = 'word') {
-    term = String(term || '').toUpperCase();
+function semanticGroupIdsForTerm(term = '', mode = 'word', language = 'en') {
+    term = normalizeGameTerm(term, language);
     const ids = new Set();
-    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
-        const words = normalizeWordList(spec.words);
-        const clues = normalizeWordList(spec.clues);
-        const matchWord = words.some(w => clueTermMatches(term, w));
-        const matchClue = clues.some(w => clueTermMatches(term, w));
+    clueCategorySpecsForLanguage(language).forEach(spec => {
+        const words = normalizeWordList(spec.words, language);
+        const clues = normalizeWordList(spec.clues, language);
+        const matchWord = words.some(w => clueTermMatches(term, w, language));
+        const matchClue = clues.some(w => clueTermMatches(term, w, language));
         if ((mode === 'clue' && (matchClue || matchWord)) || (mode !== 'clue' && matchWord)) {
             ids.add(spec.id);
         }
     });
-    if (term === 'ANIMAL') ['animals', 'birds', 'bugs-reptiles', 'sea-life'].forEach(id => ids.add(id));
-    if (term === 'ROYAL') ids.add('royalty');
-    if (term === 'SAFETY') ids.add('law-danger');
-    if (term === 'EDUCATION') ids.add('school');
-    if (term === 'TEXTILE') ids.add('materials');
-    if (term === 'TRAFFIC') ids.add('travel');
-    if (term === 'FARMING') ids.add('food');
-    return expandSemanticGroupIds(ids);
+    if (language === 'en') {
+        if (term === 'ANIMAL') ['animals', 'birds', 'bugs-reptiles', 'sea-life'].forEach(id => ids.add(id));
+        if (term === 'ROYAL') ids.add('royalty');
+        if (term === 'SAFETY') ids.add('law-danger');
+        if (term === 'EDUCATION') ids.add('school');
+        if (term === 'TEXTILE') ids.add('materials');
+        if (term === 'TRAFFIC') ids.add('travel');
+        if (term === 'FARMING') ids.add('food');
+    }
+    return expandSemanticGroupIds(ids, language);
 }
 
-function clueHasSemanticSupport(clue = '', targets = []) {
-    if (targets.length <= 1) return true;
-    const clueGroups = semanticGroupIdsForTerm(clue, 'clue');
+function clueHasSemanticSupport(clue = '', targets = [], language = 'en', requireSingleSupport = false) {
+    if (targets.length <= 1 && !requireSingleSupport) return true;
+    const clueGroups = semanticGroupIdsForTerm(clue, 'clue', language);
     if (!clueGroups.size) return false;
     return targets.every(card => {
-        const targetGroups = semanticGroupIdsForTerm(card.word, 'word');
+        const targetGroups = semanticGroupIdsForTerm(card.word, 'word', language);
         return [...targetGroups].some(id => clueGroups.has(id));
     });
 }
 
-const BOT_CLUE_GROUPS = buildBotClueGroups();
-const AI_CLUE_LEXICON = buildAiClueLexicon();
-const SEMANTIC_FAMILY_LOOKUP = buildSemanticFamilyLookup();
+const BOT_CLUE_GROUPS_BY_LANGUAGE = {en: buildBotClueGroups('en'), ar: buildBotClueGroups('ar')};
+const AI_CLUE_LEXICON_BY_LANGUAGE = {en: buildAiClueLexicon('en'), ar: buildAiClueLexicon('ar')};
+const SEMANTIC_FAMILY_LOOKUP_BY_LANGUAGE = {en: buildSemanticFamilyLookup('en'), ar: buildSemanticFamilyLookup('ar')};
+
+function clueGroupsForLanguage(language = 'en') {
+    return BOT_CLUE_GROUPS_BY_LANGUAGE[language === 'ar' ? 'ar' : 'en'];
+}
+
+function aiClueLexiconForLanguage(language = 'en') {
+    return AI_CLUE_LEXICON_BY_LANGUAGE[language === 'ar' ? 'ar' : 'en'];
+}
+
+function semanticFamilyLookupForLanguage(language = 'en') {
+    return SEMANTIC_FAMILY_LOOKUP_BY_LANGUAGE[language === 'ar' ? 'ar' : 'en'];
+}
 const SINGLE_PLAYER_RECENT_LIMIT = 44;
 const singlePlayerRecentClues = [];
 const singlePlayerRecentGroupKeys = [];
@@ -836,20 +990,33 @@ function normalizeAiCandidates(parsed) {
     return [];
 }
 
-function parseStrictClueWord(raw = '') {
+function parseStrictClueWord(raw = '', language = 'en') {
     const original = String(raw || '').trim();
+    const word = normalizeGameTerm(original, language);
+    if (language === 'ar') {
+        if (!isArabicWord(word)) return {word: '', reason: 'not-one-arabic-word', original};
+        if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
+        if (GENERIC_BAD_ARABIC_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
+        if (!aiClueLexiconForLanguage(language).has(word)) return {word, reason: 'not-in-local-arabic-clue-vocabulary', original};
+        return {word, reason: '', original};
+    }
     if (!/^[A-Za-z]+$/.test(original)) return {word: '', reason: 'not-one-raw-word', original};
-    const word = original.toUpperCase();
     if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
     if (GENERIC_BAD_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
-    if (!AI_CLUE_LEXICON.has(word)) return {word, reason: 'not-in-local-english-clue-vocabulary', original};
+    if (!aiClueLexiconForLanguage(language).has(word)) return {word, reason: 'not-in-local-english-clue-vocabulary', original};
     return {word, reason: '', original};
 }
 
-function parseHumanClueWord(raw = '') {
+function parseHumanClueWord(raw = '', language = 'en') {
     const original = String(raw || '').trim();
+    const word = normalizeGameTerm(original, language);
+    if (language === 'ar') {
+        if (!isArabicWord(word)) return {word: '', reason: 'not-one-arabic-word', original};
+        if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
+        if (GENERIC_BAD_ARABIC_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
+        return {word, reason: '', original};
+    }
     if (!/^[A-Za-z]+$/.test(original)) return {word: '', reason: 'not-one-raw-word', original};
-    const word = original.toUpperCase();
     if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
     if (GENERIC_BAD_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
     return {word, reason: '', original};
@@ -860,11 +1027,13 @@ function cleanAiClueWord(word = '') {
 }
 
 function aiBoardState(room, team) {
+    const language = languageOfRoom(room);
     const unrevealed = room.board.filter(c => !c.revealed);
     const byColor = color => unrevealed.filter(c => c.color === color).map(c => c.word);
     return {
         team,
-        teamName: team === 'blue' ? 'Gold' : 'Black',
+        language,
+        teamName: language === 'ar' ? (team === 'blue' ? 'الذهبي' : 'الأسود') : (team === 'blue' ? 'Gold' : 'Black'),
         ownWords: byColor(team),
         opponentWords: byColor(team === 'blue' ? 'red' : 'blue'),
         neutralWords: byColor('neutral'),
@@ -874,6 +1043,55 @@ function aiBoardState(room, team) {
     };
 }
 
+function cardMatchesClueGroups(card, clueGroups, language = 'en') {
+    const targetGroups = semanticGroupIdsForTerm(card.word, 'word', language);
+    return [...targetGroups].some(id => clueGroups.has(id));
+}
+
+function semanticCardsForClue(room, team, clue) {
+    const language = languageOfRoom(room);
+    const clueGroups = semanticGroupIdsForTerm(clue, 'clue', language);
+    if (!clueGroups.size) return {clueGroups, own: [], unsafe: []};
+    const matching = room.board
+        .filter(c => !c.revealed)
+        .filter(card => cardMatchesClueGroups(card, clueGroups, language));
+    return {
+        clueGroups,
+        own: matching.filter(card => card.color === team),
+        unsafe: matching.filter(card => card.color !== team)
+    };
+}
+
+function safeAiGroupHints(room, team, limit = 8) {
+    const language = languageOfRoom(room);
+    const unrevealed = room.board.filter(c => !c.revealed);
+    const hints = [];
+    clueCategorySpecsForLanguage(language).forEach(spec => {
+        const wordSet = new Set(normalizeWordList(spec.words, language));
+        const own = unrevealed.filter(c => c.color === team && wordSet.has(normalizeGameTerm(c.word, language)));
+        const unsafe = unrevealed.filter(c => c.color !== team && wordSet.has(normalizeGameTerm(c.word, language)));
+        if (own.length < 2 || unsafe.length) return;
+        const clues = normalizeWordList(spec.clues, language)
+            .filter(clue => {
+                const parsed = parseStrictClueWord(clue, language);
+                if (parsed.reason) return false;
+                if (room.board.some(c => normalizeGameTerm(c.word, language) === parsed.word)) return false;
+                return true;
+            })
+            .slice(0, 4);
+        if (!clues.length) return;
+        hints.push({
+            clueOptions: clues,
+            targets: own.slice(0, MAX_AI_CLUE_TARGETS).map(c => c.word),
+            size: Math.min(own.length, MAX_AI_CLUE_TARGETS)
+        });
+    });
+    return hints
+        .sort((a, b) => b.size - a.size || Math.random() - 0.5)
+        .slice(0, limit)
+        .map(h => `${h.clueOptions.join('/')} => ${h.targets.join(', ')}`);
+}
+
 function aiPromptForClues(room, team, candidateCount = AI_CLUE_CANDIDATES) {
     const info = aiBoardState(room, team);
     const usedClues = [
@@ -881,6 +1099,31 @@ function aiPromptForClues(room, team, candidateCount = AI_CLUE_CANDIDATES) {
         ...(room.singlePlayerUsedClues?.red || []),
         ...singlePlayerRecentClues
     ].map(w => String(w).toUpperCase()).slice(0, 80);
+    const safeGroups = safeAiGroupHints(room, team);
+    if (info.language === 'ar') {
+        return [
+            'Return JSON only.',
+            'أنت تعطي تلميحات للعبة Codenames.',
+            `الفريق: ${info.teamName}`,
+            `كلمات فريقك - اختر الأهداف فقط من هذه القائمة: ${info.ownWords.join(', ')}`,
+            `كلمات العدو الممنوعة: ${info.opponentWords.join(', ')}`,
+            `الكلمات المحايدة الممنوعة: ${info.neutralWords.join(', ')}`,
+            `كلمة الخطر الممنوعة: ${info.dangerWords.join(', ')}`,
+            `كلمات التلميح الممنوعة - لا تساوي أي كلمة على اللوحة: ${info.allBoardWords.join(', ')}`,
+            `لا تكرر هذه التلميحات: ${usedClues.join(', ') || 'none'}`,
+            `اختر أكبر عدد آمن من الأهداف، حتى ${MAX_AI_CLUE_TARGETS} فقط. فضل 5 ثم 4 ثم 3 ثم 2 ثم 1.`,
+            safeGroups.length ? `مجموعات آمنة مقترحة: ${safeGroups.join(' | ')}` : 'لا توجد مجموعات آمنة مقترحة؛ استخدم هدفا واحدا آمنا.',
+            'اجمع الكلمات فقط عندما يكون للتلميح معنى واضح يربط كل الأهداف.',
+            `التلميح يجب أن يكون كلمة عربية واحدة فقط، بدون مسافات، بطول 2-${MAX_CLUE_WORD_LENGTH}.`,
+            'لا تكتب جملة أو شرحا أو كلمات ملتصقة.',
+            'لا تستخدم كلمات عامة مثل كلمة أو تلميح أو بطاقة أو شيء أو عام.',
+            'كل هدف يجب نسخه حرفيا من كلمات فريقك.',
+            'لا تضع كلمات العدو أو المحايدة أو الخطر ضمن الأهداف.',
+            'Return this JSON shape, with real legal values:',
+            `{"candidates":[{"clue":"نبات","targets":["شجرة","وردة","عشب"],"unsafeWords":[],"confidence":0.9}]}`,
+            `Return up to ${candidateCount} candidates, best first.`
+        ].join('\n');
+    }
     return [
         'Return JSON only.',
         'You are giving Codenames clues.',
@@ -891,7 +1134,8 @@ function aiPromptForClues(room, team, candidateCount = AI_CLUE_CANDIDATES) {
         `FORBIDDEN danger word: ${info.dangerWords.join(', ')}`,
         `FORBIDDEN clue words - cannot equal any board word: ${info.allBoardWords.join(', ')}`,
         `Do not repeat these clues: ${usedClues.join(', ') || 'none'}`,
-        `Pick clues for the MOST target words possible, but never more than ${MAX_CLUE_TARGETS}. Prefer 4 targets, then 3, then 2, then 1.`,
+        `Pick clues for the MOST target words possible, but never more than ${MAX_AI_CLUE_TARGETS}. Prefer 5, then 4, then 3, then 2, then 1.`,
+        safeGroups.length ? `SAFE promising groups you may use: ${safeGroups.join(' | ')}` : 'No safe multi-card groups were found locally; use one safe target.',
         'Only group words when the clue has a clear semantic meaning that connects every target.',
         `Each clue must be ONE common English dictionary word, A-Z letters only, 2-${MAX_CLUE_WORD_LENGTH} letters.`,
         'Never return a phrase, sentence, definition, description, or words glued together.',
@@ -906,13 +1150,28 @@ function aiPromptForClues(room, team, candidateCount = AI_CLUE_CANDIDATES) {
 
 function aiRetryPromptForClue(room, team) {
     const info = aiBoardState(room, team);
+    if (info.language === 'ar') {
+        const safeGroups = safeAiGroupHints(room, team, 5);
+        return [
+            'Return JSON only.',
+            `اعط تلميحا آمنا واحدا لفريق ${info.teamName}.`,
+            `الأهداف يجب أن تنسخ فقط من: ${info.ownWords.join(', ')}`,
+            `لا تستهدف هذه الكلمات: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
+            `التلميح لا يساوي أي كلمة على اللوحة: ${info.allBoardWords.join(', ')}`,
+            `فضل أكثر من هدف إذا كان آمنا، حتى ${MAX_AI_CLUE_TARGETS} فقط.`,
+            safeGroups.length ? `مجموعات آمنة: ${safeGroups.join(' | ')}` : 'استخدم هدفا واحدا آمنا.',
+            `التلميح كلمة عربية واحدة فقط، بدون مسافات، بطول 2-${MAX_CLUE_WORD_LENGTH}.`,
+            'لا تستخدم كلمة أو تلميح أو بطاقة أو شيء أو عام.',
+            `Return exactly: {"candidates":[{"clue":"حيوان","targets":["قط"],"unsafeWords":[],"confidence":0.7}]}`
+        ].join('\n');
+    }
     return [
         'Return JSON only.',
         `Give one safe Codenames clue for team ${info.teamName}.`,
         `Targets must be copied only from: ${info.ownWords.join(', ')}`,
         `Do not target these words: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
         `The clue cannot equal any board word: ${info.allBoardWords.join(', ')}`,
-        `Prefer 2 or more targets if safe, otherwise 1 target is okay. Never use more than ${MAX_CLUE_TARGETS} targets.`,
+        `Prefer 2 or more targets if safe, otherwise 1 target is okay. Never use more than ${MAX_AI_CLUE_TARGETS} targets.`,
         `The clue must be ONE common English dictionary word, A-Z letters only, 2-${MAX_CLUE_WORD_LENGTH} letters.`,
         'Never return a phrase, sentence, definition, description, or words glued together.',
         'Do not use generic placeholder clues such as WORD, CLUE, TARGET, CARD, THING, OBJECT, RELATED, COMMON, or GENERAL.',
@@ -922,50 +1181,78 @@ function aiRetryPromptForClue(room, team) {
 
 function aiRepairPromptForTargets(room, team, targetWords = []) {
     const info = aiBoardState(room, team);
+    const maxTargets = MAX_AI_CLUE_TARGETS;
+    if (info.language === 'ar') {
+        return [
+            'Return JSON only.',
+            'التلميح السابق غير صالح.',
+            `اعط تلميحا بديلا لهذه الأهداف من فريق ${info.teamName}: ${targetWords.slice(0, maxTargets).join(', ')}`,
+            `التلميح لا يساوي أي كلمة على اللوحة: ${info.allBoardWords.join(', ')}`,
+            `التلميح لا يجب أن يشير إلى هذه الكلمات الممنوعة: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
+            `التلميح كلمة عربية واحدة فقط، بدون مسافات، بطول 2-${MAX_CLUE_WORD_LENGTH}.`,
+            'التلميح يجب أن يربط كل الأهداف بمعنى واضح. لا تستخدم كلمة أو تلميح أو بطاقة أو شيء أو عام.',
+            `Return exactly: {"candidates":[{"clue":"حيوان","targets":${JSON.stringify(targetWords.slice(0, maxTargets))},"unsafeWords":[],"confidence":0.75}]}`
+        ].join('\n');
+    }
     return [
         'Return JSON only.',
         'The previous Codenames clue was invalid.',
-        `Give ONE replacement clue for these ${info.teamName} targets: ${targetWords.slice(0, MAX_CLUE_TARGETS).join(', ')}`,
+        `Give ONE replacement clue for these ${info.teamName} targets: ${targetWords.slice(0, maxTargets).join(', ')}`,
         `The clue cannot be any board word: ${info.allBoardWords.join(', ')}`,
         `The clue must not suggest these forbidden words: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
         `The clue must be ONE common English dictionary word, A-Z letters only, 2-${MAX_CLUE_WORD_LENGTH} letters.`,
         'Never return a phrase, sentence, definition, description, or words glued together.',
         'The clue must have a clear semantic meaning that connects every target. Do not use WORD, CLUE, TARGET, CARD, THING, OBJECT, RELATED, COMMON, or GENERAL.',
-        `Return exactly: {"candidates":[{"clue":"ANIMAL","targets":${JSON.stringify(targetWords.slice(0, MAX_CLUE_TARGETS))},"unsafeWords":[],"confidence":0.75}]}`
+        `Return exactly: {"candidates":[{"clue":"ANIMAL","targets":${JSON.stringify(targetWords.slice(0, maxTargets))},"unsafeWords":[],"confidence":0.75}]}`
     ].join('\n');
 }
 
 function clueCandidatesForTargetWord(room, team, targetWord) {
+    const language = languageOfRoom(room);
     const boardWords = new Set(room.board.map(c => c.word));
     const usedClues = new Set([
         ...(room.singlePlayerUsedClues?.blue || []),
         ...(room.singlePlayerUsedClues?.red || []),
         ...singlePlayerRecentClues
-    ].map(w => String(w).toUpperCase()));
-    const targetGroups = semanticGroupIdsForTerm(targetWord, 'word');
+    ].map(w => normalizeGameTerm(w, language)));
+    const targetGroups = semanticGroupIdsForTerm(targetWord, 'word', language);
     const clues = [];
-    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
+    clueCategorySpecsForLanguage(language).forEach(spec => {
         if (!targetGroups.has(spec.id)) return;
-        normalizeWordList(spec.clues).forEach(clue => clues.push(clue));
+        normalizeWordList(spec.clues, language).forEach(clue => clues.push(clue));
     });
-    AI_EXTRA_CLUE_WORDS.forEach(clue => {
-        const clueGroups = semanticGroupIdsForTerm(clue, 'clue');
-        if ([...targetGroups].some(id => clueGroups.has(id))) clues.push(clue);
-    });
+    if (language === 'en') {
+        AI_EXTRA_CLUE_WORDS.forEach(clue => {
+            const clueGroups = semanticGroupIdsForTerm(clue, 'clue', language);
+            if ([...targetGroups].some(id => clueGroups.has(id))) clues.push(clue);
+        });
+    }
     return [...new Set(clues)]
         .filter(clue => {
-            const parsed = parseStrictClueWord(clue);
+            const parsed = parseStrictClueWord(clue, language);
             return !parsed.reason &&
-                parsed.word !== targetWord &&
-                !boardWords.has(parsed.word) &&
+                parsed.word !== normalizeGameTerm(targetWord, language) &&
+                ![...boardWords].some(w => normalizeGameTerm(w, language) === parsed.word) &&
                 !usedClues.has(parsed.word) &&
-                clueHasSemanticSupport(parsed.word, [{word: targetWord}]);
+                clueHasSemanticSupport(parsed.word, [{word: targetWord}], language, true);
         })
         .slice(0, 12);
 }
 
 function aiSingleTargetPromptForClue(room, team, targetWord, allowedClues = []) {
     const info = aiBoardState(room, team);
+    if (info.language === 'ar') {
+        return [
+            'Return JSON only.',
+            `اعط تلميحا آمنا واحدا لفريق ${info.teamName}.`,
+            `الكلمة الهدف: ${targetWord}`,
+            `اختر التلميح فقط من هذه القائمة: ${allowedClues.join(', ')}`,
+            `التلميح لا يساوي أي كلمة على اللوحة: ${info.allBoardWords.join(', ')}`,
+            `لا تشر إلى هذه الكلمات الممنوعة: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
+            'Return exactly one candidate. No phrases. No definitions. No invented clue words.',
+            `Return exactly: {"candidates":[{"clue":"${allowedClues[0] || 'حيوان'}","targets":["${targetWord}"],"unsafeWords":[],"confidence":0.75}]}`
+        ].join('\n');
+    }
     return [
         'Return JSON only.',
         `Give one safe Codenames clue for team ${info.teamName}.`,
@@ -1010,7 +1297,7 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
     const controller = new AbortController();
     const effectiveTimeoutMs = Math.max(1200, Math.min(AI_CLUE_TIMEOUT_MS, timeoutMs));
     const timer = setTimeout(() => controller.abort(), effectiveTimeoutMs);
-    const candidateCount = Math.min(AI_CLUE_CANDIDATES, mode === 'normal' ? 8 : 1);
+    const candidateCount = Math.min(AI_CLUE_CANDIDATES, mode === 'normal' ? AI_CLUE_CANDIDATES : 1);
     lastAiClueDebug = {
         at: new Date().toISOString(),
         team,
@@ -1033,7 +1320,7 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
             : mode === 'compact'
                 ? aiRetryPromptForClue(room, team)
                 : aiPromptForClues(room, team, candidateCount);
-        const numPredict = mode === 'normal' ? 360 : 160;
+        const numPredict = mode === 'normal' ? 700 : 220;
         const {content, candidates} = await requestOllamaJson(prompt, numPredict, controller.signal);
         lastAiClueDebug = {
             ...lastAiClueDebug,
@@ -1061,7 +1348,8 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
 }
 
 function validateAiClueCandidate(room, team, candidate, rejects = []) {
-    const parsedClue = parseStrictClueWord(candidate?.clue);
+    const language = languageOfRoom(room);
+    const parsedClue = parseStrictClueWord(candidate?.clue, language);
     const clue = parsedClue.word;
     if (parsedClue.reason) {
         rejects.push({clue: parsedClue.original || String(candidate?.clue || ''), cleaned: clue, reason: parsedClue.reason});
@@ -1069,14 +1357,14 @@ function validateAiClueCandidate(room, team, candidate, rejects = []) {
     }
 
     const unrevealed = room.board.filter(c => !c.revealed);
-    const boardWords = new Set(room.board.map(c => c.word));
-    const ownByWord = new Map(unrevealed.filter(c => c.color === team).map(c => [c.word, c]));
-    const unsafeWords = new Set(unrevealed.filter(c => c.color !== team).map(c => c.word));
+    const boardWords = new Set(room.board.map(c => normalizeGameTerm(c.word, language)));
+    const ownByWord = new Map(unrevealed.filter(c => c.color === team).map(c => [normalizeGameTerm(c.word, language), c]));
+    const unsafeWords = new Set(unrevealed.filter(c => c.color !== team).map(c => normalizeGameTerm(c.word, language)));
     const usedClues = new Set([
         ...(room.singlePlayerUsedClues?.blue || []),
         ...(room.singlePlayerUsedClues?.red || []),
         ...singlePlayerRecentClues
-    ].map(w => String(w).toUpperCase()));
+    ].map(w => normalizeGameTerm(w, language)));
     if (boardWords.has(clue)) {
         rejects.push({clue, reason: 'clue-is-board-word'});
         return null;
@@ -1091,22 +1379,34 @@ function validateAiClueCandidate(room, team, candidate, rejects = []) {
             : Array.isArray(candidate?.words) ? candidate.words
                 : [];
     const declaredTargets = [...new Set(targetList
-        .map(w => String(w).toUpperCase().trim()))];
+        .map(w => normalizeGameTerm(w, language))
+        .filter(Boolean))];
     const declaredUnsafe = [...new Set((Array.isArray(candidate?.unsafeWords) ? candidate.unsafeWords : [])
-        .map(w => String(w).toUpperCase().trim()))];
+        .map(w => normalizeGameTerm(w, language))
+        .filter(Boolean))];
     if (AI_REJECT_SELF_REPORTED_UNSAFE && declaredUnsafe.some(w => unsafeWords.has(w))) {
         rejects.push({clue, reason: 'self-reported-unsafe', unsafe: declaredUnsafe.filter(w => unsafeWords.has(w))});
         return null;
     }
 
-    const validWords = declaredTargets.filter(w => ownByWord.has(w)).slice(0, MAX_CLUE_TARGETS);
+    const validWords = declaredTargets.filter(w => ownByWord.has(w)).slice(0, MAX_AI_CLUE_TARGETS);
     const invalidWords = declaredTargets.filter(w => !ownByWord.has(w));
-    const targets = validWords.map(w => ownByWord.get(w)).filter(Boolean);
+    let targets = validWords.map(w => ownByWord.get(w)).filter(Boolean);
+    const semantic = semanticCardsForClue(room, team, clue);
+    if (semantic.unsafe.length) {
+        rejects.push({clue, reason: 'semantic-match-to-unsafe-card', unsafe: semantic.unsafe.map(c => c.word)});
+        return null;
+    }
+    if (semantic.own.length) {
+        const byId = new Map(targets.map(card => [card.id, card]));
+        semantic.own.forEach(card => byId.set(card.id, card));
+        targets = [...byId.values()].slice(0, MAX_AI_CLUE_TARGETS);
+    }
     if (!targets.length) {
         rejects.push({clue, reason: 'no-valid-own-targets', declaredTargets});
         return null;
     }
-    if (!clueHasSemanticSupport(clue, targets)) {
+    if (!clueHasSemanticSupport(clue, targets, language, true)) {
         rejects.push({clue, reason: 'no-local-semantic-support', targets: targets.map(c => c.word)});
         return null;
     }
@@ -1130,16 +1430,21 @@ function unrevealedOwnWords(room, team) {
 }
 
 function validOwnTargetWordsFromAiCandidate(room, team, candidate) {
+    const language = languageOfRoom(room);
     const ownWords = new Set(room.board
         .filter(c => !c.revealed && c.color === team)
-        .map(c => c.word));
+        .map(c => normalizeGameTerm(c.word, language)));
+    const ownDisplayByKey = new Map(room.board
+        .filter(c => !c.revealed && c.color === team)
+        .map(c => [normalizeGameTerm(c.word, language), c.word]));
     const targetList = Array.isArray(candidate?.targets) ? candidate.targets
         : Array.isArray(candidate?.targetWords) ? candidate.targetWords
             : Array.isArray(candidate?.words) ? candidate.words
                 : [];
     return [...new Set(targetList
-        .map(w => String(w).toUpperCase().trim())
-        .filter(w => ownWords.has(w)))];
+        .map(w => normalizeGameTerm(w, language))
+        .filter(w => ownWords.has(w)))]
+        .map(w => ownDisplayByKey.get(w) || w);
 }
 
 async function chooseAiBotClue(room, team) {
@@ -1172,7 +1477,7 @@ async function chooseAiBotClue(room, team) {
         const repairTargets = candidates
             .map(candidate => validOwnTargetWordsFromAiCandidate(room, team, candidate))
             .filter(words => words.length)
-            .sort((a, b) => b.length - a.length)[0]?.slice(0, MAX_CLUE_TARGETS) || [];
+            .sort((a, b) => b.length - a.length)[0]?.slice(0, MAX_AI_CLUE_TARGETS) || [];
         if (repairTargets.length) {
             candidates = await fetchOllamaClueCandidates(room, team, 'repair', repairTargets, remainingMs());
             attempts.push({mode: 'repair', rawCandidates: candidates.length, repairTargets});
@@ -1194,7 +1499,7 @@ async function chooseAiBotClue(room, team) {
             candidates = await fetchOllamaClueCandidates(room, team, 'single', [targetWord], remainingMs(), allowedClues);
             attempts.push({mode: 'single', rawCandidates: candidates.length, targetWord, allowedClues});
             valid = scoreCandidates(candidates)
-                .filter(candidate => candidate.targets.length === 1 && candidate.targets[0]?.word === targetWord && allowedClues.includes(candidate.word));
+                .filter(candidate => candidate.targets.some(card => card.word === targetWord) && allowedClues.includes(candidate.word));
             if (valid.length || lastAiClueDebug?.stage === 'failed' || remainingMs() <= 1500) break;
         }
     }
@@ -1242,25 +1547,26 @@ function addSinglePlayerBots(room, humanCharacter = '') {
 }
 
 function chooseBotClue(room, team) {
+    const language = languageOfRoom(room);
     const own = room.board.filter(c => !c.revealed && c.color === team);
     if (!own.length) return null;
     const boardWords = new Set(room.board.filter(c => !c.revealed).map(c => c.word));
-    const usedClues = new Set((room.singlePlayerUsedClues?.[team] || []).map(w => String(w).toUpperCase()));
+    const usedClues = new Set((room.singlePlayerUsedClues?.[team] || []).map(w => normalizeGameTerm(w, language)));
     const usedGroupKeys = new Set(room.singlePlayerUsedClueGroups?.[team] || []);
-    const buildOptions = (allowUsedGroup = false) => shuffle(BOT_CLUE_GROUPS)
+    const buildOptions = (allowUsedGroup = false) => shuffle(clueGroupsForLanguage(language))
         .filter(group => {
-            const clue = String(group.clue || '').toUpperCase();
+            const clue = normalizeGameTerm(group.clue || '', language);
             const key = clueGroupKey(group);
-            return /^[A-Z]+$/.test(clue) &&
-                !boardWords.has(clue) &&
+            return isLegalClueWord(normalizeGameTerm(clue, language), language) &&
+                ![...boardWords].some(w => normalizeGameTerm(w, language) === normalizeGameTerm(clue, language)) &&
                 !usedClues.has(clue) &&
                 (allowUsedGroup || !usedGroupKeys.has(key));
         })
         .map(group => {
-            const groupWords = new Set((group.words || []).map(w => String(w).toUpperCase()));
-            const matches = own.filter(c => groupWords.has(c.word));
-            const hazardCards = room.board.filter(c => !c.revealed && c.color !== team && groupWords.has(c.word));
-            const targetCards = matches.slice(0, 9);
+            const groupWords = new Set((group.words || []).map(w => normalizeGameTerm(w, language)));
+            const matches = own.filter(c => groupWords.has(normalizeGameTerm(c.word, language)));
+            const hazardCards = room.board.filter(c => !c.revealed && c.color !== team && groupWords.has(normalizeGameTerm(c.word, language)));
+            const targetCards = matches.slice(0, MAX_AI_CLUE_TARGETS);
             const multiBonus = targetCards.length >= 2 ? 30 : 0;
             const specificBonus = Math.max(0, 18 - Math.floor(groupWords.size / 8));
             const freshnessPenalty = (usedGroupKeys.has(clueGroupKey(group)) ? 34 : 0) +
@@ -1290,15 +1596,15 @@ function chooseBotClue(room, team) {
         };
     }
     const singleOptions = shuffle(own).map(card => {
-        const group = BOT_CLUE_GROUPS.find(group => {
-            const clue = String(group.clue || '').toUpperCase();
-            const groupWords = new Set((group.words || []).map(w => String(w).toUpperCase()));
-            const hazards = room.board.filter(c => !c.revealed && c.color !== team && groupWords.has(c.word));
-            return /^[A-Z]+$/.test(clue) &&
-                !boardWords.has(clue) &&
+        const group = clueGroupsForLanguage(language).find(group => {
+            const clue = normalizeGameTerm(group.clue || '', language);
+            const groupWords = new Set((group.words || []).map(w => normalizeGameTerm(w, language)));
+            const hazards = room.board.filter(c => !c.revealed && c.color !== team && groupWords.has(normalizeGameTerm(c.word, language)));
+            return isLegalClueWord(clue, language) &&
+                ![...boardWords].some(w => normalizeGameTerm(w, language) === clue) &&
                 !usedClues.has(clue) &&
                 !usedGroupKeys.has(clueGroupKey(group)) &&
-                groupWords.has(card.word) &&
+                groupWords.has(normalizeGameTerm(card.word, language)) &&
                 hazards.length === 0;
         });
         return {card, group};
@@ -1308,7 +1614,11 @@ function chooseBotClue(room, team) {
         return {word: picked.group.clue, groupKey: clueGroupKey(picked.group), targets: [picked.card], number: 1};
     }
     const card = shuffle(own)[0];
-    const fallback = ['TARGET', 'SOLO', 'SINGLE', 'DIRECT', 'FOCUS'].find(w => !boardWords.has(w) && !usedClues.has(w)) || 'TARGET';
+    const fallbackList = language === 'ar' ? ['منفرد', 'مباشر', 'تركيز'] : ['TARGET', 'SOLO', 'SINGLE', 'DIRECT', 'FOCUS'];
+    const fallback = fallbackList.find(w =>
+        ![...boardWords].some(word => normalizeGameTerm(word, language) === normalizeGameTerm(w, language)) &&
+        !usedClues.has(normalizeGameTerm(w, language))
+    ) || fallbackList[0];
     return {word: fallback, groupKey: `fallback:${fallback}`, targets: [card], number: 1};
 }
 
@@ -1521,6 +1831,12 @@ function emitAdminRequest(room, request) {
 }
 
 io.on('connection', socket => {
+    socket.data.language = socket.handshake?.auth?.language === 'ar' ? 'ar' : 'en';
+
+    socket.on('setLanguage', ({language = 'en'} = {}) => {
+        socket.data.language = language === 'ar' ? 'ar' : 'en';
+    });
+
     socket.on('getRoomInfo', ({roomId} = {}, cb = () => {
     }) => {
         const id = String(roomId || '').toUpperCase();
@@ -1537,11 +1853,13 @@ io.on('connection', socket => {
                                  team = 'blue',
                                  role = 'operative',
                                  character = 'raiden',
-                                 playerKey
+                                 playerKey,
+                                 language = 'en',
+                                 arabicMode = false
                              } = {}, cb = () => {
     }) => {
         const roomId = code();
-        const room = newRoom(roomId);
+        const room = newRoom(roomId, languageFromPayload({language, arabicMode}, socket));
         rooms.set(roomId, room);
         const joined = joinRoom(socket, room, {
             name,
@@ -1552,7 +1870,9 @@ io.on('connection', socket => {
             character,
             playerKey,
             forceAdmin: true,
-            adminToken: room.adminToken
+            adminToken: room.adminToken,
+            language,
+            arabicMode
         });
         if (joined?.ok === false) return cb(joined);
         cb({ok: true, roomId, playerKey: socket.data.playerKey, adminToken: room.adminToken});
@@ -1563,6 +1883,8 @@ io.on('connection', socket => {
                                              avatar = '',
                                              character = 'raiden',
                                              difficulty = 'medium',
+                                             language = 'en',
+                                             arabicMode = false,
                                              playerKey
                                          } = {}, cb = () => {
     }) => {
@@ -1574,14 +1896,15 @@ io.on('connection', socket => {
             }
         }
         const roomId = code();
-        const room = newRoom(roomId);
+        const room = newRoom(roomId, languageFromPayload({language, arabicMode}, socket));
         room.singlePlayer = true;
+        room.language = languageFromPayload({language, arabicMode}, socket);
         room.singlePlayerDifficulty = ['easy', 'medium', 'extreme'].includes(difficulty) ? difficulty : 'medium';
         room.singlePlayerUsedClues = {blue: [], red: []};
         room.singlePlayerUsedClueGroups = {blue: [], red: []};
         room.singlePlayerAiClueStatus = null;
         room.turn = 'blue';
-        room.board = makeBoard('blue', 'full');
+        room.board = makeBoard('blue', 'full', room.language);
         room.status = 'waiting-clue';
         room.roundStartedAt = Date.now();
         room.gameStartedAt = Date.now();
@@ -1596,7 +1919,9 @@ io.on('connection', socket => {
             character,
             playerKey,
             forceAdmin: true,
-            adminToken: room.adminToken
+            adminToken: room.adminToken,
+            language,
+            arabicMode
         });
         if (joined?.ok === false) return cb(joined);
         const human = room.players[socket.data.playerKey];
@@ -1616,12 +1941,14 @@ io.on('connection', socket => {
                                role = 'operative',
                                character = 'raiden',
                                playerKey,
-                               adminToken
+                               adminToken,
+                               language = 'en',
+                               arabicMode = false
                            } = {}, cb = () => {
     }) => {
         const room = rooms.get(String(roomId || '').toUpperCase());
         if (!room) return cb({ok: false, error: 'Room not found.'});
-        const joined = joinRoom(socket, room, {name, avatar, discordId, team, role, character, playerKey, adminToken});
+        const joined = joinRoom(socket, room, {name, avatar, discordId, team, role, character, playerKey, adminToken, language, arabicMode});
         if (joined?.ok === false) return cb(joined);
         cb({
             ok: true,
@@ -1641,7 +1968,9 @@ io.on('connection', socket => {
                                                role = 'operative',
                                                character = 'raiden',
                                                playerKey,
-                                               adminToken
+                                               adminToken,
+                                               language = 'en',
+                                               arabicMode = false
                                            } = {}, cb = () => {
     }) => {
         let id = String(roomId || activityId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
@@ -1650,7 +1979,7 @@ io.on('connection', socket => {
         let room = rooms.get(id);
         let created = false;
         if (!room) {
-            room = newRoom(id);
+            room = newRoom(id, languageFromPayload({language, arabicMode}, socket));
             rooms.set(id, room);
             created = true;
         }
@@ -1664,7 +1993,9 @@ io.on('connection', socket => {
             character,
             playerKey,
             adminToken: forceAdmin ? room.adminToken : adminToken,
-            forceAdmin
+            forceAdmin,
+            language,
+            arabicMode
         });
         if (joined?.ok === false) return cb(joined);
         cb({
@@ -1770,6 +2101,8 @@ io.on('connection', socket => {
         character,
         playerKey,
         adminToken,
+        language = 'en',
+        arabicMode = false,
         forceAdmin = false
     }) {
         socket.join(room.id);
@@ -1878,6 +2211,9 @@ io.on('connection', socket => {
 
         socket.data.roomId = room.id;
         socket.data.playerKey = key;
+        const requestedLanguage = languageFromPayload({language, arabicMode}, socket);
+        const mayChangeRoomLanguage = !!forceAdmin || !!(adminToken && adminToken === room.adminToken);
+        if (mayChangeRoomLanguage) applyRoomLanguage(room, requestedLanguage, incomingName || 'Admin');
 
         if (existing) {
             existing.socketId = socket.id;
@@ -1972,16 +2308,17 @@ io.on('connection', socket => {
         if (room.botTimer) clearTimeout(room.botTimer);
         const players = room.players;
         const adminToken = room.adminToken;
-        const fresh = newRoom(room.id);
+        const fresh = newRoom(room.id, room.language || 'en');
         fresh.status = 'waiting-clue';
         fresh.log = [];
         fresh.players = players;
         fresh.adminToken = adminToken;
         fresh.singlePlayer = !!room.singlePlayer;
+        fresh.language = room.language || 'en';
         fresh.singlePlayerDifficulty = room.singlePlayerDifficulty || 'medium';
         if (fresh.singlePlayer) {
             fresh.turn = 'blue';
-            fresh.board = makeBoard('blue', 'full');
+            fresh.board = makeBoard('blue', 'full', fresh.language);
             fresh.singlePlayerUsedClues = {blue: [], red: []};
             fresh.singlePlayerUsedClueGroups = {blue: [], red: []};
             fresh.singlePlayerAiClueStatus = null;
@@ -2059,35 +2396,41 @@ io.on('connection', socket => {
         }
     });
 
-    socket.on('adminUpdatePlayer', ({playerId, action, team, role, name} = {}) => {
+    socket.on('adminUpdatePlayer', ({playerId, action, team, role, name} = {}, cb = () => {
+    }) => {
         const room = getPlayerRoom(socket.id);
-        if (!room) return;
+        if (!room) return cb({ok: false, error: 'No active room.'});
         const actor = getPlayerBySocket(room, socket.id);
         const canManagePlayers = !!(actor && (actor.isAdmin || actor.role === 'spymaster'));
-        if (!canManagePlayers) return;
+        if (!canManagePlayers) return cb({ok: false, error: 'You cannot manage players.'});
         const target = room.players[String(playerId || '')];
-        if (!target) return;
-        if (target.isAdmin && target.id !== actor?.id) return socket.emit('toast', 'The room admin cannot be moved or kicked by anyone else.');
+        if (!target) return cb({ok: false, error: 'Player not found.'});
+        if ((action === 'kick' || action === 'assignAdmin') && !actor.isAdmin) {
+            return cb({ok: false, error: 'Only the room admin can use that option.'});
+        }
+        if (target.isAdmin && target.id !== actor?.id && action !== 'changeName') {
+            return cb({ok: false, error: 'The room admin cannot be moved or kicked by anyone else.'});
+        }
         if (action === 'kick') {
-            if (target.isAdmin) return socket.emit('toast', 'The room admin cannot be kicked.');
+            if (target.isAdmin) return cb({ok: false, error: 'The room admin cannot be kicked.'});
             if (target.socketId) io.to(target.socketId).emit('kicked', {
                 roomId: room.id,
                 message: 'You were kicked from the room by the admin. You can join back if you want.'
             });
+            const targetName = target.name;
             room.log.push(`Admin kicked ${target.name}.`);
             delete room.votes?.[target.id];
             delete room.players[target.id];
             emitRoom(room);
-            return;
+            return cb({ok: true, message: `${targetName} was kicked.`});
         }
         if (action === 'assignAdmin') {
             target.isAdmin = true;
             target.adminToken = room.adminToken;
             if (target.socketId) io.to(target.socketId).emit('toast', 'You are now an admin.');
-            socket.emit('toast', `${target.name} is now an admin.`);
             room.log.push(`Admin assigned admin access to ${target.name}.`);
             emitRoom(room);
-            return;
+            return cb({ok: true, message: `${target.name} is now an admin.`});
         }
         if (action === 'changeName') {
             const oldName = target.name;
@@ -2095,10 +2438,9 @@ io.on('connection', socket => {
             target.name = nextName;
             target.lastSeenAt = Date.now();
             if (target.socketId) io.to(target.socketId).emit('toast', `Your name was changed to ${nextName}.`);
-            socket.emit('toast', `${oldName} is now ${nextName}.`);
             room.log.push(`${actor?.name || 'Admin'} changed ${oldName}'s name to ${nextName}.`);
             emitRoom(room);
-            return;
+            return cb({ok: true, message: `${oldName} is now ${nextName}.`});
         }
         if (action === 'move') {
             team = ['blue', 'red', 'spectator'].includes(team) ? team : target.team;
@@ -2106,14 +2448,16 @@ io.on('connection', socket => {
             if (team === 'spectator') role = 'spectator';
             if (role === 'spymaster' && team !== 'spectator') {
                 const existingSpy = Object.values(room.players || {}).find(p => p.online !== false && p.id !== target.id && p.team === team && p.role === 'spymaster');
-                if (existingSpy) return socket.emit('toast', `${team === 'blue' ? 'Gold' : 'Black'} Team already has a spymaster.`);
+                if (existingSpy) return cb({ok: false, error: `${team === 'blue' ? 'Gold' : 'Black'} Team already has a spymaster.`});
             }
             target.team = team;
             target.role = role;
             delete room.votes?.[target.id];
             room.log.push(`Admin moved ${target.name} to ${team === 'blue' ? 'Gold' : team === 'red' ? 'Black' : 'Spectator'} ${role}.`);
             emitRoom(room);
+            return cb({ok: true, message: `${target.name} was moved.`});
         }
+        cb({ok: false, error: 'Unknown player option.'});
     });
 
     socket.on('requestHint', () => {
@@ -2126,8 +2470,10 @@ io.on('connection', socket => {
         if (!playerCanAct(room, p) || p.role !== 'spymaster') return;
         const isExtraHint = false;
         if (room.status !== 'waiting-clue') return;
-        const parsedClue = parseHumanClueWord(word);
+        const roomLanguage = languageOfRoom(room);
+        const parsedClue = parseHumanClueWord(word, roomLanguage);
         if (parsedClue.reason === 'not-one-raw-word') return socket.emit('toast', 'The clue must be one English word, not a phrase.');
+        if (parsedClue.reason === 'not-one-arabic-word') return socket.emit('toast', 'يجب أن يكون التلميح كلمة عربية واحدة فقط.');
         if (parsedClue.reason === 'bad-length') return socket.emit('toast', `The clue must be 2-${MAX_CLUE_WORD_LENGTH} letters.`);
         if (parsedClue.reason === 'generic-placeholder-clue') return socket.emit('toast', 'Use a meaningful clue word, not a generic placeholder.');
         word = parsedClue.word;
@@ -2137,7 +2483,7 @@ io.on('connection', socket => {
         const declaredNumber = Math.max(0, Math.min(MAX_CLUE_TARGETS, parseInt(number, 10) || 0));
         number = declaredNumber;
         if (!word) return socket.emit('toast', 'Write a clue word first.');
-        if (room.board.some(c => c.word === upperWord)) return socket.emit('toast', 'The clue cannot be a word on the board.');
+        if (room.board.some(c => normalizeGameTerm(c.word, roomLanguage) === upperWord)) return socket.emit('toast', 'The clue cannot be a word on the board.');
         if (!isExtraHint && number < 1) return socket.emit('toast', 'Choose at least one card from your own team color.');
         if (!isExtraHint && cleanTargets.length > MAX_CLUE_TARGETS) return socket.emit('toast', `Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
         room.board.forEach(c => c.clueTarget = false);

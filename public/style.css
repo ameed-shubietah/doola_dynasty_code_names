@@ -1119,6 +1119,226 @@ select option {
     }
 }
 
+/* v98: keep Modes clear of Discord lobby blocks and remove top turn pill. */
+#turnBadge,
+body.discordActivity #turnBadge {
+    display: none !important;
+}
+
+body.discordActivity .modesFloating {
+    position: static !important;
+    right: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    z-index: 20 !important;
+    justify-items: start !important;
+    width: min(240px, 100%) !important;
+    margin: 14px 0 0 !important;
+}
+
+body.discordActivity[data-lang="ar"] .modesFloating {
+    justify-items: start !important;
+}
+
+body.discordActivity .modesBtn {
+    min-width: 138px !important;
+    min-height: 52px !important;
+}
+
+body.discordActivity .modesMenu {
+    position: static !important;
+    width: min(230px, 100%) !important;
+}
+
+body[data-lang="ar"] #arabicModeBtn {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+}
+
+/* v103: the in-game Back button is available to every player. */
+html body #app #game #backToLobbyBtn.backLobbyBtn,
+html body.discordActivity #app #game #backToLobbyBtn.backLobbyBtn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: fixed !important;
+    top: auto !important;
+    bottom: 14px !important;
+    left: 12px !important;
+    z-index: 12000 !important;
+    min-width: 92px !important;
+    min-height: 38px !important;
+    margin: 0 10px 0 0 !important;
+    padding: 9px 18px !important;
+    pointer-events: auto !important;
+}
+
+body[data-lang="ar"] #app #game #backToLobbyBtn.backLobbyBtn {
+    margin: 0 0 0 10px !important;
+}
+
+/* v101: visible in-game back button and centered card crowns. */
+#game #backToLobbyBtn.backLobbyBtn,
+body.discordActivity #game #backToLobbyBtn.backLobbyBtn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 92px !important;
+    min-height: 38px !important;
+    padding: 9px 18px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(255, 215, 108, .72) !important;
+    background: linear-gradient(180deg, #fff2a4, #d49a09) !important;
+    color: #100b02 !important;
+    font-weight: 1000 !important;
+    letter-spacing: 0 !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .45) !important;
+    box-shadow: 0 0 18px rgba(255, 215, 108, .34), inset 0 1px 0 rgba(255, 255, 255, .54) !important;
+}
+
+#game .board.operativeBoard .card:not(.revealed):not(.originShown)::before,
+body.discordActivity #game .board.operativeBoard .card:not(.revealed):not(.originShown)::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-image: url('/crown.png') !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: 58% auto !important;
+    opacity: .18 !important;
+    transform: none !important;
+    filter: drop-shadow(0 10px 12px rgba(0, 0, 0, .36)) !important;
+    pointer-events: none !important;
+}
+
+#game .card .cardCrownLayer,
+#game.gameV9 .board .card.hasCrownLayer .cardCrownLayer,
+body.discordActivity #game .card .cardCrownLayer,
+body.discordActivity #game.gameV9 .board .card.hasCrownLayer .cardCrownLayer {
+    position: absolute !important;
+    inset: auto !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: min(62%, 120px) !important;
+    height: auto !important;
+    max-height: 78% !important;
+    transform: translate(-50%, -50%) !important;
+    transform-origin: center center !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    margin: 0 !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+}
+
+/* v97: homepage modes menu + Arabic UI mode. */
+body[data-lang="ar"] {
+    direction: rtl;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+body[data-lang="ar"] input,
+body[data-lang="ar"] select,
+body[data-lang="ar"] button {
+    font-family: inherit;
+}
+
+.modesFloating {
+    position: fixed;
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    z-index: 8500;
+    display: grid;
+    justify-items: end;
+    gap: 10px;
+}
+
+body[data-lang="ar"] .modesFloating {
+    right: auto;
+    left: max(18px, env(safe-area-inset-left));
+}
+
+.modesBtn {
+    min-width: 142px;
+    min-height: 58px;
+    border-radius: 18px;
+    padding: 15px 22px;
+    font-size: 18px;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: #130b00;
+    background: radial-gradient(circle at 18% 18%, rgba(255, 255, 255, .75), transparent 24%),
+    linear-gradient(180deg, #fff4b8, #ffd34d 45%, #9c6500);
+    border: 1px solid rgba(255, 242, 178, .92);
+    box-shadow: 0 0 26px rgba(255, 215, 108, .45), 0 16px 30px rgba(0, 0, 0, .48);
+}
+
+.modesMenu {
+    width: min(230px, calc(100vw - 34px));
+    padding: 10px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 215, 108, .36);
+    background: rgba(15, 12, 7, .94);
+    box-shadow: 0 18px 46px rgba(0, 0, 0, .56), inset 0 1px 0 rgba(255, 240, 170, .08);
+    backdrop-filter: blur(14px);
+    display: grid;
+    gap: 8px;
+}
+
+.modesMenu.hidden {
+    display: none;
+}
+
+.modeChoice {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 13px;
+    text-align: center;
+    color: #fff6d8;
+    background: linear-gradient(180deg, rgba(72, 56, 27, .98), rgba(19, 15, 9, .98));
+    border: 1px solid rgba(255, 215, 108, .24);
+}
+
+.modeChoice.primaryMode {
+    color: #150c00;
+    background: linear-gradient(180deg, #fff1a4, #cf8c05 70%, #604000);
+    border-color: rgba(255, 236, 165, .82);
+}
+
+body[data-lang="ar"] .gameV9,
+body[data-lang="ar"] .board,
+body[data-lang="ar"] .log,
+body[data-lang="ar"] .currentClueDock,
+body[data-lang="ar"] .bottomClueDock {
+    direction: rtl;
+}
+
+@media (max-width: 640px) {
+    .modesFloating {
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    body[data-lang="ar"] .modesFloating {
+        right: auto;
+        left: max(12px, env(safe-area-inset-left));
+    }
+
+    .modesBtn {
+        min-width: 118px;
+        min-height: 48px;
+        font-size: 14px;
+        border-radius: 15px;
+    }
+}
+
 @media (max-width: 430px) {
     .board {
         grid-template-columns:repeat(2, 1fr)
@@ -14359,4 +14579,40 @@ body.discordActivity #game .teamPanel .player.editingName .inlineNameEditor butt
         grid-column: 1 / -1 !important;
         width: 100% !important;
     }
+}
+
+/* v98: keep Modes clear of Discord lobby blocks and remove top turn pill. */
+#turnBadge,
+body.discordActivity #turnBadge {
+    display: none !important;
+}
+
+body.discordActivity .modesFloating {
+    position: static !important;
+    right: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    z-index: 20 !important;
+    justify-items: start !important;
+    width: min(240px, 100%) !important;
+    margin: 14px 0 0 !important;
+}
+
+body.discordActivity[data-lang="ar"] .modesFloating {
+    justify-items: start !important;
+}
+
+body.discordActivity .modesBtn {
+    min-width: 138px !important;
+    min-height: 52px !important;
+}
+
+body.discordActivity .modesMenu {
+    position: static !important;
+    width: min(230px, 100%) !important;
+}
+
+body[data-lang="ar"] #arabicModeBtn {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
 }

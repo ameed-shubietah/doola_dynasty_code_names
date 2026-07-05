@@ -1,4 +1,5 @@
-const socket = io();
+const initialUiLanguage = localStorage.cc_language === 'ar' ? 'ar' : 'en';
+const socket = io({auth: {language: initialUiLanguage}});
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
 let lastWinKey = null, winDockTimer = null;
 let lastBoardKey = '', lastBoardSpawnAt = 0;
@@ -56,7 +57,388 @@ const avatarFileInput = $('avatarFile'), avatarPreview = $('avatarPreview'), ava
     avatarClearBtn = $('avatarClearBtn');
 let customAvatar = localStorage.cc_avatar || '';
 let nameWasEditedLocally = !!localStorage.cc_name;
+let uiLanguage = initialUiLanguage;
 if (nameInput) nameInput.value = localStorage.cc_name || '';
+
+const UI_TEXT = {
+    en: {
+        modes: 'MODES',
+        singlePlayer: 'Single Player',
+        arabicMode: 'Arabic Mode',
+        englishMode: 'English Mode',
+        checkingAi: 'Checking AI...',
+        starting: 'Starting...',
+        name: 'Name',
+        roomCode: 'Room Code',
+        yourName: 'Your Name',
+        avatar: 'Avatar',
+        optional: '(optional)',
+        uploadImage: 'Upload Image',
+        remove: 'Remove',
+        chooseTeam: 'Choose your team',
+        goldTeam: 'Gold Team',
+        blackTeam: 'Black Team',
+        goldShort: 'GOLD',
+        blackShort: 'BLACK',
+        spectator: 'Spectator',
+        joinGold: 'Join the golden side',
+        joinBlack: 'Join the shadow side',
+        watchOnly: 'Watch only',
+        createRoom: 'Create Room',
+        joinRoom: 'Join Room',
+        startGame: 'Start Game',
+        options: 'Options ▾',
+        resetTable: 'Reset Table',
+        shuffleTeams: 'Shuffle Teams',
+        changeWordList: 'Change Word List',
+        chooseSingle: 'Choose Single Player Mode',
+        aiOnlineNote: 'The AI gives clues. This only starts when the host PC AI engine is online.',
+        easyMode: 'Easy Mode',
+        mediumMode: 'Medium Mode',
+        extremeMode: 'Extreme Mode',
+        easyDesc: 'Relaxed bot guesses. Better for casual solo practice.',
+        mediumDesc: 'Balanced bot guesses with a small chance to miss.',
+        extremeDesc: 'Sharp bot guesses that follow the AI clue as tightly as possible.',
+        chooseRole: 'Choose your role',
+        pickHow: 'Pick how you want to play on this team.',
+        operative: 'Operative',
+        spymaster: 'Spymaster',
+        guessCards: 'Guess cards with your team.',
+        guessCardsShort: 'Guess cards',
+        giveCluesSee: 'Give clues and see hidden colors.',
+        giveCluesShort: 'Give clues',
+        watchRoom: 'Watch the room only.',
+        hintText: 'Spymasters see hidden colors; operatives only see revealed cards.',
+        goldUpper: 'GOLD TEAM',
+        blackUpper: 'BLACK TEAM',
+        operatives: 'Operatives',
+        spymasters: 'Spymasters',
+        spectators: 'Spectators',
+        gameLog: 'Game Log',
+        clueControl: 'Clue Control',
+        generateInvite: 'Generate Invite',
+        invitePlaceholder: 'Invite link will appear here',
+        pass: 'PASS',
+        giveClue: 'Give Clue',
+        waiting: 'Waiting',
+        clueWord: 'Clue word',
+        hintPlaceholder: 'Hint',
+        number: 'Number',
+        currentClue: 'CLUE',
+        createNewGame: 'Create New Game',
+        back: 'Back',
+        confirm: '✓ Confirm',
+        round: 'Round',
+        game: 'Game',
+        teamWon: '{team} TEAM WON THE GAME!',
+        congratulations: 'Congratulations!',
+        adminRequest: 'Admin Request',
+        adminRequestText: 'A player requested an admin action.',
+        no: 'No',
+        yesApply: 'Yes, apply now',
+        empty: 'Empty',
+        danger: 'Danger',
+        turn: '{team} TURN',
+        wins: '{team} WINS',
+        aiClueFailed: 'AI CLUE FAILED',
+        preparingYourClue: 'PREPARING YOUR CLUE',
+        preparingBotClue: 'PREPARING BOT CLUE',
+        waitingSpy: 'WAITING FOR {team} SPYMASTER TO GIVE A CLUE',
+        waitingNamedSpy: 'WAITING FOR {name} TO GIVE A CLUE',
+        yourPickTurn: 'YOUR TURN TO PICK THE CARDS',
+        botPicking: 'DSTY BOT IS PICKING CARDS',
+        waitingOps: 'WAITING FOR {team} TEAM OPERATIVES TO PICK THE CARDS',
+        noGuesses: 'No guesses yet',
+        players: '{count} player{suffix}',
+        noOperatives: 'No operatives yet',
+        noSpymaster: 'No spymaster yet',
+        noSpectators: 'No spectators',
+        hideTeam: 'Hide Team',
+        showTeam: 'Show Team',
+        writeName: 'Write your name first.',
+        characterTaken: 'That character is already taken. Pick another one.',
+        characterTakenFirst: 'That character is already taken. Pick another one first.',
+        avatarUpdated: 'Avatar updated.',
+        avatarRemoved: 'Avatar removed.',
+        profileUpdateFailed: 'Could not update your profile.',
+        uploadFailed: 'Could not upload avatar.',
+        offlineAi: "the host's pc where he hosts the ai engine that runs this mode is turned off at the moment",
+        roomPreview: 'Room {room} preview',
+        roomPreviewTitle: 'Room preview',
+        roomNotFound: 'Room not found yet. Create it or check the code.',
+        full: 'Full',
+        spymasterFull: 'Spymaster Full'
+    },
+    ar: {
+        modes: 'الأوضاع',
+        singlePlayer: 'لاعب واحد',
+        arabicMode: 'الوضع العربي',
+        englishMode: 'English Mode',
+        checkingAi: 'جار فحص الذكاء...',
+        starting: 'جار البدء...',
+        name: 'الاسم',
+        roomCode: 'رمز الغرفة',
+        yourName: 'اسمك',
+        avatar: 'الصورة',
+        optional: '(اختياري)',
+        uploadImage: 'رفع صورة',
+        remove: 'إزالة',
+        chooseTeam: 'اختر فريقك',
+        goldTeam: 'الفريق الذهبي',
+        blackTeam: 'الفريق الأسود',
+        goldShort: 'ذهبي',
+        blackShort: 'أسود',
+        spectator: 'مشاهد',
+        joinGold: 'انضم للجهة الذهبية',
+        joinBlack: 'انضم للجهة السوداء',
+        watchOnly: 'مشاهدة فقط',
+        createRoom: 'إنشاء غرفة',
+        joinRoom: 'دخول الغرفة',
+        startGame: 'ابدأ اللعبة',
+        options: 'الخيارات ▾',
+        resetTable: 'إعادة الطاولة',
+        shuffleTeams: 'خلط الفرق',
+        changeWordList: 'تغيير الكلمات',
+        chooseSingle: 'اختر وضع اللاعب الواحد',
+        aiOnlineNote: 'الذكاء يعطي التلميحات. يبدأ فقط إذا كان محرك الذكاء على جهاز المضيف يعمل.',
+        easyMode: 'وضع سهل',
+        mediumMode: 'وضع متوسط',
+        extremeMode: 'وضع صعب',
+        easyDesc: 'تخمينات أسهل للتدريب الهادئ.',
+        mediumDesc: 'تخمينات متوازنة مع احتمال بسيط للخطأ.',
+        extremeDesc: 'تخمينات دقيقة تتبع تلميح الذكاء بقوة.',
+        chooseRole: 'اختر دورك',
+        pickHow: 'اختر كيف تريد اللعب في هذا الفريق.',
+        operative: 'لاعب تخمين',
+        spymaster: 'صاحب التلميح',
+        guessCards: 'خمن البطاقات مع فريقك.',
+        guessCardsShort: 'تخمين البطاقات',
+        giveCluesSee: 'أعط التلميحات وشاهد الألوان المخفية.',
+        giveCluesShort: 'إعطاء التلميحات',
+        watchRoom: 'شاهد الغرفة فقط.',
+        hintText: 'صاحب التلميح يرى الألوان المخفية؛ لاعبو التخمين يرون البطاقات المكشوفة فقط.',
+        goldUpper: 'الفريق الذهبي',
+        blackUpper: 'الفريق الأسود',
+        operatives: 'لاعبو التخمين',
+        spymasters: 'أصحاب التلميح',
+        spectators: 'المشاهدون',
+        gameLog: 'سجل اللعبة',
+        clueControl: 'التحكم بالتلميح',
+        generateInvite: 'إنشاء دعوة',
+        invitePlaceholder: 'سيظهر رابط الدعوة هنا',
+        pass: 'تمرير',
+        giveClue: 'إعطاء التلميح',
+        waiting: 'انتظار',
+        clueWord: 'كلمة التلميح',
+        hintPlaceholder: 'تلميح',
+        number: 'العدد',
+        currentClue: 'التلميح',
+        createNewGame: 'لعبة جديدة',
+        back: 'رجوع',
+        confirm: '✓ تأكيد',
+        round: 'الجولة',
+        game: 'اللعبة',
+        teamWon: 'فاز {team}!',
+        congratulations: 'مبروك!',
+        adminRequest: 'طلب إداري',
+        adminRequestText: 'طلب أحد اللاعبين إجراء إداريا.',
+        no: 'لا',
+        yesApply: 'نعم، طبق الآن',
+        empty: 'فارغ',
+        danger: 'خطر',
+        turn: 'دور {team}',
+        wins: 'فاز {team}',
+        aiClueFailed: 'فشل تلميح الذكاء',
+        preparingYourClue: 'يتم تحضير تلميحك',
+        preparingBotClue: 'يتم تحضير تلميح البوت',
+        waitingSpy: 'بانتظار صاحب تلميح {team}',
+        waitingNamedSpy: 'بانتظار {name} لإعطاء التلميح',
+        yourPickTurn: 'دورك لاختيار البطاقات',
+        botPicking: 'بوت DSTY يختار البطاقات',
+        waitingOps: 'بانتظار لاعبي {team} لاختيار البطاقات',
+        noGuesses: 'لا توجد تخمينات بعد',
+        players: '{count} لاعب',
+        noOperatives: 'لا يوجد لاعبون بعد',
+        noSpymaster: 'لا يوجد صاحب تلميح بعد',
+        noSpectators: 'لا يوجد مشاهدون',
+        hideTeam: 'إخفاء الفريق',
+        showTeam: 'إظهار الفريق',
+        writeName: 'اكتب اسمك أولا.',
+        characterTaken: 'هذه الشخصية مستخدمة. اختر شخصية أخرى.',
+        characterTakenFirst: 'هذه الشخصية مستخدمة. اختر شخصية أخرى أولا.',
+        avatarUpdated: 'تم تحديث الصورة.',
+        avatarRemoved: 'تمت إزالة الصورة.',
+        profileUpdateFailed: 'تعذر تحديث ملفك.',
+        uploadFailed: 'تعذر رفع الصورة.',
+        offlineAi: 'جهاز المضيف الذي يشغل محرك الذكاء لهذا الوضع مغلق حاليا',
+        roomPreview: 'معاينة الغرفة {room}',
+        roomPreviewTitle: 'معاينة الغرفة',
+        roomNotFound: 'الغرفة غير موجودة بعد. أنشئها أو تحقق من الرمز.',
+        full: 'ممتلئ',
+        spymasterFull: 'المكان ممتلئ'
+    }
+};
+
+function tt(key, vars = {}) {
+    const text = (UI_TEXT[uiLanguage] && UI_TEXT[uiLanguage][key]) || UI_TEXT.en[key] || key;
+    return String(text).replace(/\{(\w+)}/g, (_, name) => vars[name] ?? '');
+}
+
+function setText(selector, key, vars = {}) {
+    const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    if (el) el.textContent = tt(key, vars);
+}
+
+function setButtonText(id, key) {
+    const el = $(id);
+    if (el) el.textContent = tt(key);
+}
+
+function setLabelText(selector, key) {
+    const label = document.querySelector(selector);
+    if (!label) return;
+    const node = [...label.childNodes].find(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+    if (node) node.textContent = `${tt(key)} `;
+}
+
+function setPlaceholder(id, key) {
+    const el = $(id);
+    if (el) el.placeholder = tt(key);
+}
+
+function applyLanguage() {
+    localStorage.cc_language = uiLanguage;
+    document.documentElement.lang = uiLanguage === 'ar' ? 'ar' : 'en';
+    document.documentElement.dir = uiLanguage === 'ar' ? 'rtl' : 'ltr';
+    document.body.dataset.lang = uiLanguage;
+    const modesButton = $('modesBtn');
+    if (modesButton) modesButton.textContent = 'Modes / الأوضاع';
+    const singleModeButton = $('singlePlayerBtn');
+    if (singleModeButton) singleModeButton.textContent = 'Single Player / لاعب فردي';
+    const languageModeButton = $('arabicModeBtn');
+    if (languageModeButton) languageModeButton.textContent = uiLanguage === 'ar' ? 'English Mode' : 'Arabic Mode / الوضع العربي';
+    $('singlePlayerBtn')?.classList.add('primaryMode');
+    setLabelText('.joinBasics label:first-child', 'name');
+    setLabelText('.websiteRoomField', 'roomCode');
+    setPlaceholder('name', 'yourName');
+    setLabelText('.avatarUploadLabel', 'avatar');
+    setText('.avatarUploadLabel small', 'optional');
+    setButtonText('avatarUploadBtn', 'uploadImage');
+    setButtonText('avatarClearBtn', 'remove');
+    setText('.teamChooseTitle', 'chooseTeam');
+    const teamButtons = document.querySelectorAll('.teamPick');
+    if (teamButtons[0]) {
+        teamButtons[0].querySelector('span').textContent = tt('goldTeam');
+        teamButtons[0].querySelector('small').textContent = tt('joinGold');
+    }
+    if (teamButtons[1]) {
+        teamButtons[1].querySelector('span').textContent = tt('blackTeam');
+        teamButtons[1].querySelector('small').textContent = tt('joinBlack');
+    }
+    if (teamButtons[2]) {
+        teamButtons[2].querySelector('span').textContent = tt('spectator');
+        teamButtons[2].querySelector('small').textContent = tt('watchOnly');
+    }
+    const discordCards = document.querySelectorAll('.discordRoleGrid > section');
+    if (discordCards[0]) {
+        discordCards[0].querySelector('h2').textContent = tt('goldTeam');
+        const boxes = discordCards[0].querySelectorAll('.discordRoleBox');
+        if (boxes[0]) {
+            boxes[0].querySelector('b').textContent = tt('operatives');
+            boxes[0].querySelector('small').textContent = tt('guessCardsShort');
+        }
+        if (boxes[1]) {
+            boxes[1].querySelector('b').textContent = tt('spymasters');
+            boxes[1].querySelector('small').textContent = tt('giveCluesShort');
+        }
+    }
+    if (discordCards[1]) {
+        discordCards[1].querySelector('h2').textContent = uiLanguage === 'ar' ? 'المشاهدون 👁' : 'Spectators 👁';
+        const p = discordCards[1].querySelector('p:not(.discordHelpText)');
+        if (p) p.textContent = uiLanguage === 'ar' ? 'شاهد المباراة بدون تخمين.' : 'Watch the match without guessing.';
+        const help = discordCards[1].querySelector('.discordHelpText');
+        if (help) help.textContent = uiLanguage === 'ar' ? 'اختر أي جهة ودور، ثم تفتح غرفة Discord Activity تلقائيا.' : 'Choose any side and role, then your Discord Activity room opens automatically.';
+    }
+    if (discordCards[2]) {
+        discordCards[2].querySelector('h2').textContent = tt('blackTeam');
+        const boxes = discordCards[2].querySelectorAll('.discordRoleBox');
+        if (boxes[0]) {
+            boxes[0].querySelector('b').textContent = tt('operatives');
+            boxes[0].querySelector('small').textContent = tt('guessCardsShort');
+        }
+        if (boxes[1]) {
+            boxes[1].querySelector('b').textContent = tt('spymasters');
+            boxes[1].querySelector('small').textContent = tt('giveCluesShort');
+        }
+    }
+    document.querySelectorAll('.discordRoleJoin').forEach(btn => {
+        const role = btn.dataset.role;
+        btn.textContent = role === 'spectator'
+            ? (uiLanguage === 'ar' ? 'الدخول كمشاهد' : 'Join as Spectator')
+            : (uiLanguage === 'ar' ? 'دخول' : 'Join');
+    });
+    setButtonText('createBtn', 'createRoom');
+    setButtonText('joinBtn', 'joinRoom');
+    setButtonText('landingStartGameBtn', 'startGame');
+    document.querySelectorAll('.optionsBtn').forEach(btn => btn.textContent = tt('options'));
+    setButtonText('landingResetTableBtn', 'resetTable');
+    setButtonText('landingShuffleTeamsBtn', 'shuffleTeams');
+    setButtonText('resetTableBtn', 'resetTable');
+    setButtonText('shuffleTeamsBtn', 'shuffleTeams');
+    setText('#singleDifficultyOverlay h2', 'chooseSingle');
+    setText('#singleDifficultyOverlay p', 'aiOnlineNote');
+    const difficulty = document.querySelectorAll('[data-single-difficulty]');
+    [['easyMode', 'easyDesc'], ['mediumMode', 'mediumDesc'], ['extremeMode', 'extremeDesc']].forEach(([title, desc], i) => {
+        if (!difficulty[i]) return;
+        difficulty[i].querySelector('b').textContent = tt(title);
+        difficulty[i].querySelector('span').textContent = tt(desc);
+    });
+    setText('#rolePopupTitle', 'chooseRole');
+    setText('#rolePopupText', 'pickHow');
+    const roles = document.querySelectorAll('.rolePick');
+    [['operative', 'guessCards'], ['spymaster', 'giveCluesSee'], ['spectator', 'watchRoom']].forEach(([title, desc], i) => {
+        if (!roles[i]) return;
+        roles[i].querySelector('b').textContent = tt(title);
+        roles[i].querySelector('span').textContent = tt(desc);
+    });
+    setText('#landing > .hintText', 'hintText');
+    setButtonText('newRoundBtn', 'createNewGame');
+    setButtonText('backToLobbyBtn', 'back');
+    setButtonText('confirmVoteBtn', 'confirm');
+    setText('#goldPanel .teamHeader b', 'goldUpper');
+    setText('#blackPanel .teamHeader b', 'blackUpper');
+    setText('#goldScoreBadge b', 'goldShort');
+    setText('#blackScoreBadge b', 'blackShort');
+    const goldSections = document.querySelectorAll('#goldPanel section h3');
+    const blackSections = document.querySelectorAll('#blackPanel section h3');
+    if (goldSections[0]) goldSections[0].textContent = tt('operatives');
+    if (goldSections[1]) goldSections[1].textContent = tt('spymasters');
+    if (blackSections[0]) blackSections[0].textContent = tt('operatives');
+    if (blackSections[1]) blackSections[1].textContent = tt('spymasters');
+    if (blackSections[2]) blackSections[2].textContent = tt('spectators');
+    if (blackSections[3]) blackSections[3].textContent = tt('gameLog');
+    setText('.clueBoxSide h3', 'clueControl');
+    setButtonText('inviteBtn', 'generateInvite');
+    setPlaceholder('inviteLinkGame', 'invitePlaceholder');
+    setButtonText('endTurnBtn', 'pass');
+    setText('#dockTitle', 'giveClue');
+    setLabelText('#bottomClueDock label:first-of-type', 'clueWord');
+    setLabelText('#bottomClueDock .numberLabel', 'number');
+    setPlaceholder('clueWord', 'hintPlaceholder');
+    setButtonText('giveClueBtn', 'giveClue');
+    const timerSpans = document.querySelectorAll('.timers span');
+    if (timerSpans[0]?.firstChild) timerSpans[0].firstChild.textContent = `${tt('round')} `;
+    if (timerSpans[1]?.firstChild) timerSpans[1].firstChild.textContent = `${tt('game')} `;
+    setText('#adminRequestModal h2', 'adminRequest');
+    setText('#adminRequestText', 'adminRequestText');
+    setButtonText('adminRequestNo', 'no');
+    setButtonText('adminRequestYes', 'yesApply');
+    setText('.characterTitle', uiLanguage === 'ar' ? 'اختر شخصيتك' : 'Choose your character');
+    if (typeof setJoinButtonsReady === 'function') setJoinButtonsReady();
+    if (state) render();
+    if (socket?.connected) socket.emit('setLanguage', {language: uiLanguage});
+    if (document.body.classList.contains('discordActivity')) refreshDiscordLobbyPreview(true);
+}
 
 function lockDiscordNameField() {
     // Discord Activity no longer locks or auto-fills the player name.
@@ -252,7 +634,7 @@ function requestLobbyInfo() {
             setJoinButtonsReady();
             if (selectedTeamChoice || selectedRoleChoice) {
                 box.classList.remove('hidden');
-                box.innerHTML = `<b>Room preview</b><span class="muted">Room not found yet. Create it or check the code.</span>`;
+                box.innerHTML = `<b>${tt('roomPreviewTitle')}</b><span class="muted">${tt('roomNotFound')}</span>`;
             } else {
                 box.classList.add('hidden');
                 box.innerHTML = '';
@@ -263,11 +645,11 @@ function requestLobbyInfo() {
         renderCharacters();
         if (isDiscordActivity) paintDiscordLobby(res);
         setJoinButtonsReady();
-        const gs = (res.spymasters?.blue || []).join(', ') || 'No Gold spymaster online';
-        const bs = (res.spymasters?.red || []).join(', ') || 'No Black spymaster online';
+        const gs = (res.spymasters?.blue || []).join(', ') || (uiLanguage === 'ar' ? 'لا يوجد صاحب تلميح ذهبي متصل' : 'No Gold spymaster online');
+        const bs = (res.spymasters?.red || []).join(', ') || (uiLanguage === 'ar' ? 'لا يوجد صاحب تلميح أسود متصل' : 'No Black spymaster online');
         if (selectedTeamChoice || selectedRoleChoice || !isDiscordActivity) {
             box.classList.remove('hidden');
-            box.innerHTML = `<b>Room ${res.roomId} preview</b><div class="previewGrid"><span>Gold: <strong>${res.counts.blue}</strong></span><span>Black: <strong>${res.counts.red}</strong></span><span>Spectators: <strong>${res.counts.spectator}</strong></span><span>Total: <strong>${res.playersTotal}</strong></span></div><div class="previewSpies"><span>Gold spymaster: <strong>${gs}</strong></span><span>Black spymaster: <strong>${bs}</strong></span></div>`;
+            box.innerHTML = `<b>${tt('roomPreview', {room: res.roomId})}</b><div class="previewGrid"><span>${tt('goldTeam')}: <strong>${res.counts.blue}</strong></span><span>${tt('blackTeam')}: <strong>${res.counts.red}</strong></span><span>${tt('spectators')}: <strong>${res.counts.spectator}</strong></span><span>${uiLanguage === 'ar' ? 'المجموع' : 'Total'}: <strong>${res.playersTotal}</strong></span></div><div class="previewSpies"><span>${tt('goldTeam')} ${tt('spymaster')}: <strong>${gs}</strong></span><span>${tt('blackTeam')} ${tt('spymaster')}: <strong>${bs}</strong></span></div>`;
         } else {
             box.classList.add('hidden');
             box.innerHTML = '';
@@ -412,11 +794,11 @@ function me() {
 }
 
 function teamName(team) {
-    return team === 'blue' ? 'Gold' : team === 'red' ? 'Black' : team === 'neutral' ? 'Empty' : team === 'assassin' ? 'Danger' : 'Spectator';
+    return team === 'blue' ? tt('goldTeam') : team === 'red' ? tt('blackTeam') : team === 'neutral' ? tt('empty') : team === 'assassin' ? tt('danger') : tt('spectator');
 }
 
 function teamUpper(team) {
-    return teamName(team).toUpperCase();
+    return uiLanguage === 'ar' ? teamName(team) : teamName(team).toUpperCase();
 }
 
 function hasOnlineSpymaster(team) {
@@ -437,23 +819,25 @@ function turnStatusHtml() {
     if (state.status === 'waiting-clue') {
         if (state.singlePlayer) {
             if (state.aiClueStatus?.state === 'failed' && state.aiClueStatus?.team === state.turn) {
-                return 'AI CLUE FAILED';
+                return tt('aiClueFailed');
             }
-            return state.turn === 'blue' ? 'PREPARING YOUR CLUE' : 'PREPARING BOT CLUE';
+            return state.turn === 'blue' ? tt('preparingYourClue') : tt('preparingBotClue');
         }
         const spy = spymasterForTeam(state.turn);
-        if (!spy) return `WAITING FOR ${teamUpper(state.turn)} SPYMASTER TO GIVE A CLUE`;
+        if (!spy) return tt('waitingSpy', {team: teamUpper(state.turn)});
         const src = safeAvatarSrc(playerAvatar(spy));
         const face = src
             ? `<span class="turnStatusAvatar"><img src="${src}" alt="${escapeHtml(spy.name || 'spymaster')}"></span>`
             : `<span class="turnStatusAvatar fallback">${charEmoji(spy.character)}</span>`;
-        return `WAITING FOR ${face}<strong>${escapeHtml(spy.name || 'SPYMASTER')}</strong> TO GIVE A CLUE`;
+        return uiLanguage === 'ar'
+            ? `بانتظار ${face}<strong>${escapeHtml(spy.name || tt('spymaster'))}</strong> لإعطاء التلميح`
+            : `WAITING FOR ${face}<strong>${escapeHtml(spy.name || 'SPYMASTER')}</strong> TO GIVE A CLUE`;
     }
     if (state.status === 'guessing') {
         if (state.singlePlayer) {
-            return state.turn === 'blue' ? 'YOUR TURN TO PICK THE CARDS' : 'DSTY BOT IS PICKING CARDS';
+            return state.turn === 'blue' ? tt('yourPickTurn') : tt('botPicking');
         }
-        return `WAITING FOR ${teamUpper(state.turn)} TEAM OPERATIVES TO PICK THE CARDS`;
+        return tt('waitingOps', {team: teamUpper(state.turn)});
     }
     return '';
 }
@@ -606,16 +990,16 @@ function setupProfileControls() {
         try {
             const dataUrl = await resizeAvatarFile(file);
             setCustomAvatar(dataUrl);
-            toast('Avatar updated.');
+            toast(tt('avatarUpdated'));
         } catch (err) {
-            toast(err?.message || 'Could not upload avatar.');
+            toast(err?.message || tt('uploadFailed'));
         } finally {
             avatarFileInput.value = '';
         }
     };
     if (avatarClearBtn) avatarClearBtn.onclick = () => {
         setCustomAvatar('');
-        toast('Avatar removed.');
+        toast(tt('avatarRemoved'));
     };
 }
 
@@ -661,7 +1045,7 @@ function renderCharacters() {
         if (free) selectedCharacter = free.id;
     }
     box.innerHTML = `
-    <div class="characterTitle">Choose your character</div>
+    <div class="characterTitle">${uiLanguage === 'ar' ? 'اختر شخصيتك' : 'Choose your character'}</div>
     <div class="characterGrid">${list.map(c => {
         const disabled = !usingCustom && taken.has(c.id);
         const selected = !usingCustom && c.id === selectedCharacter;
@@ -670,7 +1054,7 @@ function renderCharacters() {
     box.querySelectorAll('.char').forEach(el => {
         el.onclick = () => {
             if (el.disabled || el.classList.contains('taken')) {
-                toast('That character is already taken. Pick another one.');
+                toast(tt('characterTaken'));
                 return;
             }
             selectedCharacter = el.dataset.char;
@@ -687,7 +1071,7 @@ function renderCharacters() {
                     character: outboundCharacter()
                 }, res => {
                     if (res?.ok === false) {
-                        toast(res.error || 'That character is already taken.');
+                        toast(res.error || tt('characterTaken'));
                         selectedCharacter = currentPlayer.character || selectedCharacter;
                         renderCharacters();
                         updateHomeAvatarPreview();
@@ -763,14 +1147,14 @@ function setJoinButtonsReady() {
             const team = b.dataset.team;
             const fullSpy = role === 'spymaster' && team !== 'spectator' && spymasterSlotFullFor(team);
             b.disabled = !characterReady || fullSpy;
-            b.textContent = fullSpy ? 'Full' : (role === 'spectator' ? 'Join as Spectator' : 'Join');
+            b.textContent = fullSpy ? tt('full') : (role === 'spectator' ? (uiLanguage === 'ar' ? 'الدخول كمشاهد' : 'Join as Spectator') : (uiLanguage === 'ar' ? 'دخول' : 'Join'));
         });
         return;
     }
     if (cb) cb.disabled = !ready;
     if (jb) {
         jb.disabled = !ready || selectedSpyFull || !roomInput.value.trim();
-        jb.textContent = selectedSpyFull ? 'Spymaster Full' : 'Join Room';
+        jb.textContent = selectedSpyFull ? tt('spymasterFull') : tt('joinRoom');
     }
 }
 
@@ -791,12 +1175,12 @@ function openRolePopup(team) {
     const title = $('rolePopupTitle');
     const text = $('rolePopupText');
     if (team === 'spectator') {
-        if (title) title.textContent = 'Join as spectator';
-        if (text) text.textContent = 'Spectators can watch the game without guessing or giving clues.';
+        if (title) title.textContent = uiLanguage === 'ar' ? 'الدخول كمشاهد' : 'Join as spectator';
+        if (text) text.textContent = uiLanguage === 'ar' ? 'المشاهدون يتابعون اللعبة بدون تخمين أو تلميحات.' : 'Spectators can watch the game without guessing or giving clues.';
         document.querySelectorAll('.rolePick').forEach(b => b.classList.toggle('hidden', b.dataset.role !== 'spectator'));
     } else {
-        if (title) title.textContent = `Choose your ${teamName(team)} role`;
-        if (text) text.textContent = 'Pick Operative to guess cards, or Spymaster to give clues.';
+        if (title) title.textContent = uiLanguage === 'ar' ? `اختر دورك في ${teamName(team)}` : `Choose your ${teamName(team)} role`;
+        if (text) text.textContent = uiLanguage === 'ar' ? 'اختر لاعب تخمين لاختيار البطاقات، أو صاحب تلميح لإعطاء التلميحات.' : 'Pick Operative to guess cards, or Spymaster to give clues.';
         document.querySelectorAll('.rolePick').forEach(b => b.classList.toggle('hidden', b.dataset.role === 'spectator'));
     }
     refreshRoleFullStates(team);
@@ -821,7 +1205,7 @@ function syncDiscordLanding() {
     const roomField = document.querySelector('.websiteRoomField');
     if (roomField) roomField.classList.toggle('hidden', !!isDiscordActivity);
     const title = document.querySelector('.teamChooseTitle');
-    if (title) title.textContent = isDiscordActivity ? 'Choose your role' : 'Choose your team';
+    if (title) title.textContent = isDiscordActivity ? tt('chooseRole') : tt('chooseTeam');
     const chars = $('characterPick');
     if (chars) chars.classList.remove('hidden');
     if (isDiscordActivity) {
@@ -863,13 +1247,15 @@ function discordJoinPayload(team, role) {
         role,
         character: outboundCharacter(),
         playerKey,
-        adminToken: getAdminToken(roomCode)
+        adminToken: getAdminToken(roomCode),
+        language: uiLanguage,
+        arabicMode: uiLanguage === 'ar'
     };
 }
 
 async function joinDiscordActivity(team, role) {
     if (!nameInput.value.trim()) {
-        toast('Write your name first.');
+        toast(tt('writeName'));
         nameInput.focus();
         return;
     }
@@ -894,7 +1280,7 @@ async function joinDiscordActivity(team, role) {
             return;
         }
         if (!characterAvailableNow()) {
-            toast('That character is already taken. Pick another one first.');
+            toast(tt('characterTakenFirst'));
             renderCharacters();
             return;
         }
@@ -951,7 +1337,7 @@ window.addEventListener('discordActivityReady', (event) => {
         if (discordLobby) discordLobby.classList.remove('hidden');
 
         const title = document.querySelector('.teamChooseTitle');
-        if (title) title.textContent = 'Choose your role';
+        if (title) title.textContent = tt('chooseRole');
     }
 
     syncDiscordLanding();
@@ -1011,7 +1397,7 @@ function withPendingLobbyPlayer(players, team, role) {
 }
 
 function roleListHtml(players) {
-    if (!players || !players.length) return '<div class="discordSeatEmpty">empty</div>';
+    if (!players || !players.length) return `<div class="discordSeatEmpty">${uiLanguage === 'ar' ? 'فارغ' : 'empty'}</div>`;
     const seen = new Set();
     const unique = [];
     for (const p of players) {
@@ -1020,7 +1406,7 @@ function roleListHtml(players) {
         seen.add(key);
         unique.push(p);
     }
-    return unique.map(p => `<div class="discordSeatMini discordSeatLarge ${p.isPreview ? 'pendingSeat' : ''}">${avatarHtml(p, 'lobbyAvatar')}<span class="seatName">${escapeHtml(p.name || 'Player')}</span>${p.isAdmin ? '<em>Admin</em>' : ''}${p.isPreview ? '<em>You</em>' : ''}</div>`).join('');
+    return unique.map(p => `<div class="discordSeatMini discordSeatLarge ${p.isPreview ? 'pendingSeat' : ''}">${avatarHtml(p, 'lobbyAvatar')}<span class="seatName">${escapeHtml(p.name || (uiLanguage === 'ar' ? 'لاعب' : 'Player'))}</span>${p.isAdmin ? `<em>${uiLanguage === 'ar' ? 'مدير' : 'Admin'}</em>` : ''}${p.isPreview ? `<em>${uiLanguage === 'ar' ? 'أنت' : 'You'}</em>` : ''}</div>`).join('');
 }
 
 function paintDiscordLobby(info) {
@@ -1047,7 +1433,11 @@ function paintDiscordLobby(info) {
         if (btn && role === 'spymaster') {
             const occupiedByOther = players.some(p => p && !p.isPreview && !sameLocalPlayer(p));
             btn.disabled = occupiedByOther;
-            btn.textContent = occupiedByOther ? 'Full' : 'Join';
+            btn.textContent = occupiedByOther ? tt('full') : (uiLanguage === 'ar' ? 'دخول' : 'Join');
+        } else if (btn) {
+            btn.textContent = role === 'spectator'
+                ? (uiLanguage === 'ar' ? 'الدخول كمشاهد' : 'Join as Spectator')
+                : (uiLanguage === 'ar' ? 'دخول' : 'Join');
         }
     }
 }
@@ -1067,6 +1457,7 @@ function refreshLandingAdminControls() {
 }
 
 let lobbyPreviewTimer = null;
+applyLanguage();
 
 function lobbyInfoFromState(s) {
     const players = Object.values(s?.players || {}).filter(p => p.online !== false);
@@ -1134,7 +1525,7 @@ function withFreshLobbyBeforeJoin(roomId, proceed) {
             // If another user took the selected character while this tab was open, do not send a stale join.
             // renderCharacters() may auto-select the next free character; if none exists, stop here.
             if (!characterAvailableNow()) {
-                toast('That character was just taken. Pick another one first.');
+                toast(tt('characterTakenFirst'));
                 renderCharacters();
                 return;
             }
@@ -1227,7 +1618,9 @@ function joinPayload() {
         role: $('role').value,
         character: outboundCharacter(),
         playerKey,
-        adminToken: getAdminToken(code)
+        adminToken: getAdminToken(code),
+        language: uiLanguage,
+        arabicMode: uiLanguage === 'ar'
     };
 }
 
@@ -1268,8 +1661,44 @@ $('createBtn').onclick = () => {
     socket.emit('createRoom', joinPayload(), acceptJoinResponse);
 };
 const singlePlayerBtn = $('singlePlayerBtn');
+const modesBtn = $('modesBtn');
+const modesMenu = $('modesMenu');
+const arabicModeBtn = $('arabicModeBtn');
+if (modesBtn && modesMenu) {
+    modesBtn.onclick = ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        modesMenu.classList.toggle('hidden');
+    };
+    document.addEventListener('click', ev => {
+        if (ev.target.closest('.modesFloating')) return;
+        modesMenu.classList.add('hidden');
+    });
+}
+if (arabicModeBtn) {
+    arabicModeBtn.onclick = ev => {
+        ev.preventDefault();
+        if (state && game && !game.classList.contains('hidden')) {
+            toast(uiLanguage === 'ar' ? 'ارجع للصفحة الرئيسية لتغيير وضع اللغة.' : 'Go back to the home page to change the room mode.');
+            modesMenu?.classList.add('hidden');
+            return;
+        }
+        const currentRoomCode = String(roomInput?.value || '').trim().toUpperCase();
+        const viewingExistingRoom = !!(currentRoomCode && lastLobbyInfo?.ok && String(lastLobbyInfo.roomId || '').toUpperCase() === currentRoomCode);
+        if (viewingExistingRoom && !getAdminToken(currentRoomCode)) {
+            toast(uiLanguage === 'ar' ? 'وضع هذه الغرفة يتحكم به منشئها فقط.' : 'Only the room creator can change this room mode.');
+            modesMenu?.classList.add('hidden');
+            return;
+        }
+        uiLanguage = uiLanguage === 'ar' ? 'en' : 'ar';
+        applyLanguage();
+        renderCharacters();
+        modesMenu?.classList.add('hidden');
+    };
+}
 if (singlePlayerBtn) {
     singlePlayerBtn.onclick = () => {
+        modesMenu?.classList.add('hidden');
         const overlay = $('singleDifficultyOverlay');
         if (overlay) {
             overlay.classList.remove('hidden');
@@ -1297,35 +1726,39 @@ async function checkAiEngineBeforeSinglePlayer() {
 
 async function startSinglePlayer(difficulty = 'medium') {
     difficulty = ['easy', 'medium', 'extreme'].includes(difficulty) ? difficulty : 'medium';
+    const selectedLanguage = localStorage.cc_language === 'ar' || uiLanguage === 'ar' ? 'ar' : 'en';
+    socket.emit('setLanguage', {language: selectedLanguage});
     if (singlePlayerBtn) {
         localStorage.cc_name = currentDisplayName() || 'Agent';
         singlePlayerBtn.disabled = true;
-        singlePlayerBtn.textContent = 'Checking AI...';
+        singlePlayerBtn.textContent = tt('checkingAi');
     }
     const aiReady = await checkAiEngineBeforeSinglePlayer();
     if (!aiReady) {
         if (singlePlayerBtn) {
             singlePlayerBtn.disabled = false;
-            singlePlayerBtn.textContent = 'Single Player';
+        singlePlayerBtn.textContent = 'Single Player / لاعب فردي';
         }
-        toast(AI_ENGINE_OFFLINE_MESSAGE);
+        toast(tt('offlineAi'));
         return;
     }
     if (singlePlayerBtn) {
-        singlePlayerBtn.textContent = 'Starting...';
+        singlePlayerBtn.textContent = tt('starting');
     }
     socket.emit('createSinglePlayerRoom', {
         name: currentDisplayName(),
         avatar: customAvatar || '',
         character: outboundCharacter(),
         difficulty,
+        language: selectedLanguage,
+        arabicMode: selectedLanguage === 'ar',
         playerKey
     }, res => {
         if (singlePlayerBtn) {
             singlePlayerBtn.disabled = false;
-            singlePlayerBtn.textContent = 'Single Player';
+            singlePlayerBtn.textContent = 'Single Player / لاعب فردي';
         }
-        if (res?.ok === false && res.error === AI_ENGINE_OFFLINE_MESSAGE) toast(AI_ENGINE_OFFLINE_MESSAGE);
+        if (res?.ok === false && res.error === AI_ENGINE_OFFLINE_MESSAGE) toast(tt('offlineAi'));
         acceptJoinResponse(res);
     });
 }
@@ -1349,7 +1782,7 @@ $('joinBtn').onclick = () => {
             return;
         }
         if (!characterAvailableNow()) {
-            toast('That character is already taken. Pick another one first.');
+            toast(tt('characterTakenFirst'));
             renderCharacters();
             return;
         }
@@ -1370,7 +1803,7 @@ socket.on('identityKey', ({playerKey: newKey} = {}) => {
         setPlayerKey(newKey);
     }
 });
-socket.on('toast', toast);
+socket.on('toast', msg => toast(msg === AI_ENGINE_OFFLINE_MESSAGE ? tt('offlineAi') : msg));
 socket.on('adminRequest', req => {
     const current = me();
     if (!current?.isAdmin || !req) return;
@@ -1402,6 +1835,10 @@ socket.on('state', s => {
         lastClueTargetCount = 0;
     }
     state = s;
+    if (s?.language && s.language !== uiLanguage) {
+        uiLanguage = s.language === 'ar' ? 'ar' : 'en';
+        applyLanguage();
+    }
     myId = playerKey;
     if (isDiscordActivity) sendDiscordIdentityToServer();
     if (isDiscordActivity && s.status === 'lobby') {
@@ -1528,8 +1965,8 @@ function renderWinModal() {
         return;
     }
     const name = teamUpper(state.winner);
-    $('winModalTitle').textContent = `${name} TEAM WON THE GAME!`;
-    $('winModalText').textContent = 'Congratulations!';
+    $('winModalTitle').textContent = tt('teamWon', {team: name});
+    $('winModalText').textContent = tt('congratulations');
     const key = `${state.id}-${state.round}-${state.winner}-${state.status}`;
     if (lastWinKey !== key) {
         lastWinKey = key;
@@ -1545,16 +1982,16 @@ function renderWinModal() {
 function render() {
     const p = me();
     const passBtn = $('endTurnBtn');
-    if (passBtn) passBtn.textContent = 'PASS';
+    if (passBtn) passBtn.textContent = tt('pass');
     const roomLbl = $('roomLabel');
     if (roomLbl) roomLbl.textContent = '';
     updateInviteFields(state.id);
-    $('turnBadge').className = `badge ${state.turn}`;
-    $('turnBadge').textContent = `${teamUpper(state.turn)} TURN`;
+    $('turnBadge').className = 'hidden';
+    $('turnBadge').textContent = '';
     $('clueBadge').className = `badge turnSubStatus ${state.turn}`;
     $('clueBadge').innerHTML = turnStatusHtml();
     $('winnerBadge').className = state.winner ? `badge ${state.winner}` : 'hidden';
-    $('winnerBadge').textContent = state.winner ? `${teamUpper(state.winner)} WINS` : '';
+    $('winnerBadge').textContent = state.winner ? tt('wins', {team: teamUpper(state.winner)}) : '';
     updateScoreDisplay(state.points?.blue ?? 9, state.points?.red ?? 9);
     const gs = $('goldSideScore'), bs = $('blackSideScore');
     if (gs) gs.textContent = state.points?.blue ?? 9;
@@ -1579,7 +2016,7 @@ function renderCurrentClueDock() {
     if (state?.clue && state.status === 'guessing') {
         const team = state.clue.team || state.turn;
         el.className = `currentClueDock glass ${team}`;
-        el.innerHTML = `<span class="currentClueLabel">CLUE</span><b>${String(state.clue.word || '').toUpperCase()}</b><strong>${Number(state.clue.number || 0)}</strong>`;
+        el.innerHTML = `<span class="currentClueLabel">${tt('currentClue')}</span><b>${String(state.clue.word || '').toUpperCase()}</b><strong>${Number(state.clue.number || 0)}</strong>`;
     } else {
         el.className = 'currentClueDock hidden';
         el.innerHTML = '';
@@ -1592,7 +2029,8 @@ function renderSeatCharacters() { /* seat editing removed from in-game UI */
 function renderMe() {
     const p = me();
     if (!p) return;
-    $('meCard').innerHTML = `<div class="player ${p.team}">${avatarHtml(p)}<div><b>${p.name}</b><span class="roleTag">${teamName(p.team)} · ${p.role}</span></div></div>`;
+    const roleLabel = p.role === 'spymaster' ? tt('spymaster') : p.role === 'operative' ? tt('operative') : tt('spectator');
+    $('meCard').innerHTML = `<div class="player ${p.team}">${avatarHtml(p)}<div><b>${p.name}</b><span class="roleTag">${teamName(p.team)} · ${roleLabel}</span></div></div>`;
 }
 
 const mobileTeamOpenState = {goldPanel: false, blackPanel: false};
@@ -1617,7 +2055,7 @@ function ensureMobileTeamToggle(panelId) {
     }
     const open = !!mobileTeamOpenState[panelId];
     panel.classList.toggle('mobileTeamOpen', open);
-    btn.textContent = open ? 'Hide Team' : 'Show Team';
+    btn.textContent = open ? tt('hideTeam') : tt('showTeam');
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
@@ -1695,11 +2133,14 @@ function renderPlayers() {
 
     function adminTools(p) {
         if (!playerOptionsMode || p.id === myId) return '';
+        const canAdminManageTarget = !!(adminMode && !p.isAdmin);
+        const kickButton = canAdminManageTarget ? `<button type="button" data-admin-kick="${p.id}">Kick</button>` : '';
+        const assignButton = canAdminManageTarget ? `<button type="button" data-admin-assign="${p.id}">Assign Admin</button>` : '';
         return `<div class="adminActions playerOptionsWrap">
-            <button class="playerOptionsBtn" type="button" data-player-options="${p.id}">Options ▾</button>
+            <button class="playerOptionsBtn" type="button" data-player-options="${p.id}">${tt('options')}</button>
             <div class="playerOptionsMenu">
-                <button type="button" data-admin-kick="${p.id}">Kick</button>
-                <button type="button" data-admin-assign="${p.id}">Assign Admin</button>
+                ${kickButton}
+                ${assignButton}
                 <button type="button" data-admin-rename="${p.id}">Edit Name</button>
             </div>
         </div>`;
@@ -1743,7 +2184,7 @@ function renderPlayers() {
         const card = playerCardById(playerId);
         const input = card?.querySelector('.inlineNameEditor input');
         const cleanName = String(input?.value || '').trim();
-        if (!cleanName) return toast('Name cannot be empty.');
+        if (!cleanName) return toast(uiLanguage === 'ar' ? 'لا يمكن أن يكون الاسم فارغا.' : 'Name cannot be empty.');
         socket.emit('adminUpdatePlayer', {playerId, action: 'changeName', name: cleanName});
         hideInlineNameEditor(playerId);
     }
@@ -1760,11 +2201,11 @@ function renderPlayers() {
         return `<div class="emptyTeamSlot">${text}</div>`;
     }
 
-    $('goldOperatives').innerHTML = teams.blue.operative.map(playerHtml).join('') || empty('No operatives yet');
-    $('goldSpymasters').innerHTML = teams.blue.spymaster.map(playerHtml).join('') || empty('No spymaster yet');
-    $('blackOperatives').innerHTML = teams.red.operative.map(playerHtml).join('') || empty('No operatives yet');
-    $('blackSpymasters').innerHTML = teams.red.spymaster.map(playerHtml).join('') || empty('No spymaster yet');
-    $('spectators').innerHTML = teams.spectator.spectator.map(playerHtml).join('') || empty('No spectators');
+    $('goldOperatives').innerHTML = teams.blue.operative.map(playerHtml).join('') || empty(tt('noOperatives'));
+    $('goldSpymasters').innerHTML = teams.blue.spymaster.map(playerHtml).join('') || empty(tt('noSpymaster'));
+    $('blackOperatives').innerHTML = teams.red.operative.map(playerHtml).join('') || empty(tt('noOperatives'));
+    $('blackSpymasters').innerHTML = teams.red.spymaster.map(playerHtml).join('') || empty(tt('noSpymaster'));
+    $('spectators').innerHTML = teams.spectator.spectator.map(playerHtml).join('') || empty(tt('noSpectators'));
     ['goldSpymasters', 'blackSpymasters', 'spectators'].forEach(id => {
         const section = $(id)?.closest('section');
         if (section) section.classList.toggle('hidden', !!state?.singlePlayer);
@@ -1785,7 +2226,10 @@ function renderPlayers() {
             ev.stopPropagation();
             closePlayerOptionsMenus();
             const target = btn.dataset.adminKick;
-            socket.emit('adminUpdatePlayer', {playerId: target, action: 'kick'});
+            socket.emit('adminUpdatePlayer', {playerId: target, action: 'kick'}, res => {
+                if (res?.ok === false) toast(res.error || 'Could not kick player.');
+                else if (res?.message) toast(res.message);
+            });
         };
     });
     document.querySelectorAll('[data-admin-assign]').forEach(btn => {
@@ -1794,7 +2238,10 @@ function renderPlayers() {
             ev.stopPropagation();
             closePlayerOptionsMenus();
             const target = btn.dataset.adminAssign;
-            socket.emit('adminUpdatePlayer', {playerId: target, action: 'assignAdmin'});
+            socket.emit('adminUpdatePlayer', {playerId: target, action: 'assignAdmin'}, res => {
+                if (res?.ok === false) toast(res.error || 'Could not assign admin.');
+                else if (res?.message) toast(res.message);
+            });
         };
     });
     document.querySelectorAll('[data-admin-rename]').forEach(btn => {
@@ -1843,8 +2290,8 @@ function renderPlayers() {
     const goldCount = teams.blue.operative.length + teams.blue.spymaster.length;
     const blackCount = teams.red.operative.length + teams.red.spymaster.length;
     const gc = $('goldPlayerCount'), bc = $('blackPlayerCount');
-    if (gc) gc.textContent = `${goldCount} player${goldCount === 1 ? '' : 's'}`;
-    if (bc) bc.textContent = `${blackCount} player${blackCount === 1 ? '' : 's'}`;
+    if (gc) gc.textContent = tt('players', {count: goldCount, suffix: goldCount === 1 ? '' : 's'});
+    if (bc) bc.textContent = tt('players', {count: blackCount, suffix: blackCount === 1 ? '' : 's'});
     ensureMobileTeamToggles();
 }
 
@@ -2005,7 +2452,7 @@ function revealHeroSvg(color) {
 function renderBoard() {
     if (state?.status === 'lobby') {
         board.classList.remove('spyBoard', 'operativeBoard');
-        board.innerHTML = '<div class="waitingBoard">Waiting for admin to start the game...</div>';
+        board.innerHTML = `<div class="waitingBoard">${uiLanguage === 'ar' ? 'بانتظار المدير لبدء اللعبة...' : 'Waiting for admin to start the game...'}</div>`;
         return;
     }
     const p = me();
@@ -2060,30 +2507,30 @@ function renderBoard() {
             if (!p || !card || card.revealed || state.status === 'finished') return;
             if (p.role === 'spymaster') {
                 if (state.status !== 'waiting-clue') {
-                    toast('Wait for the clue turn before choosing cards.');
+                    toast(uiLanguage === 'ar' ? 'انتظر دور التلميح قبل اختيار البطاقات.' : 'Wait for the clue turn before choosing cards.');
                     return;
                 }
                 if (p.team !== state.turn) {
-                    toast(`It is ${teamName(state.turn)} Team's turn, not your team.`);
+                    toast(uiLanguage === 'ar' ? `الدور لفريق ${teamName(state.turn)} وليس لفريقك.` : `It is ${teamName(state.turn)} Team's turn, not your team.`);
                     return;
                 }
                 if (state?.hintRequested && state.hintRequested.team === p.team) {
-                    toast('Extra hints do not need card selection.');
+                    toast(uiLanguage === 'ar' ? 'التلميحات الإضافية لا تحتاج اختيار بطاقات.' : 'Extra hints do not need card selection.');
                     return;
                 }
                 if (card.color == null) {
-                    toast('Card color is still loading. Try again in a second.');
+                    toast(uiLanguage === 'ar' ? 'لون البطاقة لم يجهز بعد. حاول بعد لحظة.' : 'Card color is still loading. Try again in a second.');
                     return;
                 }
                 if (card.color !== p.team) {
-                    toast('Spymasters can only choose cards from their own team color.');
+                    toast(uiLanguage === 'ar' ? 'صاحب التلميح يختار بطاقات من لون فريقه فقط.' : 'Spymasters can only choose cards from their own team color.');
                     return;
                 }
                 if (targetIds.has(id)) {
                     targetIds.delete(id);
                 } else {
                     if (targetIds.size >= MAX_CLUE_TARGETS) {
-                        toast(`Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
+                        toast(uiLanguage === 'ar' ? `اختر ${MAX_CLUE_TARGETS} بطاقات كحد أقصى للتلميح الواحد.` : `Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
                         return;
                     }
                     targetIds.add(id);
@@ -2145,10 +2592,10 @@ function renderPanels() {
         $('clueNumber').disabled = !isCurrentSpy;
         syncClueCount();
         if (isCurrentSpy) {
-            $('dockTitle').textContent = 'Give Clue';
+            $('dockTitle').textContent = tt('giveClue');
             $('dockHelp').textContent = '';
         } else if (isAnySpy) {
-            $('dockTitle').textContent = 'Waiting';
+            $('dockTitle').textContent = tt('waiting');
             $('dockHelp').textContent = '';
         }
     }
@@ -2207,7 +2654,8 @@ function renderLog() {
         const avatar = parts[5] || '';
         const character = parts[6] || characterForName(by, team);
         const face = logFace(character, by, 'logUserAvatar', avatar);
-        return `<div class="gameLogEntry pickLog ${color} ${lenClass(word)}" title="${by || 'Player'} chose ${word}"><b class="logPickWord">${face}<span>${word}</span></b></div>`;
+        const title = uiLanguage === 'ar' ? `${by || 'لاعب'} اختار ${word}` : `${by || 'Player'} chose ${word}`;
+        return `<div class="gameLogEntry pickLog ${color} ${lenClass(word)}" title="${title}"><b class="logPickWord">${face}<span>${word}</span></b></div>`;
     }
 
     function passHtml(parts) {
@@ -2216,7 +2664,8 @@ function renderLog() {
         const avatar = parts[3] || '';
         const character = parts[4] || characterForName(by, team);
         const face = logFace(character, by, 'logUserAvatar', avatar);
-        return `<div class="gameLogEntry passLog ${team}" title="${by || 'Player'} passed"><b class="logPickWord">${face}<span class="teamTick">✓</span></b></div>`;
+        const title = uiLanguage === 'ar' ? `${by || 'لاعب'} مرر الدور` : `${by || 'Player'} passed`;
+        return `<div class="gameLogEntry passLog ${team}" title="${title}"><b class="logPickWord">${face}<span class="teamTick">✓</span></b></div>`;
     }
 
     const entries = (state.log || []).filter(x => ['blue', 'red'].includes(entryTeam(x)));
@@ -2239,7 +2688,7 @@ function renderLog() {
     <div class="logRound">
       ${r.hint ? hintHtml(r.hint) : ''}
       <div class="logPicks">${r.picks.map(parts => parts[0] === 'PICK' ? pickHtml(parts) : passHtml(parts)).join('')}</div>
-    </div>`).join('')}</div>` : '<div class="gameLogEmpty">No guesses yet</div>';
+    </div>`).join('')}</div>` : `<div class="gameLogEmpty">${tt('noGuesses')}</div>`;
     const mainLog = $('log');
     if (mainLog) {
         mainLog.innerHTML = html;
@@ -2282,7 +2731,7 @@ if (randomBtn) randomBtn.onclick = () => socket.emit('randomizeTeams');
 function runOrRequestAdminAction(action, label, confirmText) {
     const current = me();
     if (!current) {
-        toast('Join the room first.');
+        toast(uiLanguage === 'ar' ? 'ادخل الغرفة أولا.' : 'Join the room first.');
         return;
     }
 
@@ -2291,7 +2740,7 @@ function runOrRequestAdminAction(action, label, confirmText) {
     if (current.isAdmin || current.role === 'spymaster') {
         targetIds.clear();
         socket.emit(action);
-        toast(`${label || 'Option'} applied.`);
+        toast(uiLanguage === 'ar' ? 'تم تطبيق الخيار.' : `${label || 'Option'} applied.`);
         return;
     }
 
@@ -2344,13 +2793,11 @@ setupOptionsToggles();
 
 wireOptionButton('resetTableBtn', 'resetTable', 'Reset Table', 'Reset the table with a fresh board but keep the same room and players?');
 wireOptionButton('shuffleTeamsBtn', 'shuffleTeams', 'Shuffle Teams', 'Shuffle online players between Gold and Black teams?');
-wireOptionButton('changeWordListBtn', 'changeWordList', 'Change Word List', 'Change the word list / deal a fresh board in this same room?');
 wireOptionButton('landingResetTableBtn', 'resetTable', 'Reset Table', 'Reset the table with a fresh board but keep the same room and players?');
 wireOptionButton('landingShuffleTeamsBtn', 'shuffleTeams', 'Shuffle Teams', 'Shuffle online players between Gold and Black teams?');
-wireOptionButton('landingChangeWordListBtn', 'changeWordList', 'Change Word List', 'Change the word list / deal a fresh board in this same room?');
 const newGameBtn = $('newGameBtn');
 if (newGameBtn) newGameBtn.onclick = () => {
-    if (confirm('Start a new board in this room?')) {
+    if (confirm(uiLanguage === 'ar' ? 'بدء لوحة جديدة في هذه الغرفة؟' : 'Start a new board in this room?')) {
         targetIds.clear();
         socket.emit('newGame');
     }
@@ -2362,15 +2809,15 @@ $('giveClueBtn').onclick = () => {
     const p = me();
     const hintMode = !!(state?.hintRequested && p && state.hintRequested.team === p.team);
     if (!clueWord) {
-        toast('Write a clue word first.');
+        toast(uiLanguage === 'ar' ? 'اكتب كلمة التلميح أولا.' : 'Write a clue word first.');
         return;
     }
     if (!hintMode && targets.length < 1) {
-        toast('Pick at least one of your team cards first.');
+        toast(uiLanguage === 'ar' ? 'اختر بطاقة واحدة على الأقل من فريقك أولا.' : 'Pick at least one of your team cards first.');
         return;
     }
     if (!hintMode && targets.length > MAX_CLUE_TARGETS) {
-        toast(`Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
+        toast(uiLanguage === 'ar' ? `اختر ${MAX_CLUE_TARGETS} بطاقات كحد أقصى للتلميح الواحد.` : `Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
         return;
     }
     socket.emit('giveClue', {word: clueWord, number: clueNumberValue, targetIds: targets});
@@ -2403,11 +2850,11 @@ if (inviteBtn) inviteBtn.onclick = async () => {
     if (link && navigator.clipboard) {
         try {
             await navigator.clipboard.writeText(link);
-            toast('Invite link copied.');
+            toast(uiLanguage === 'ar' ? 'تم نسخ رابط الدعوة.' : 'Invite link copied.');
         } catch {
-            toast('Invite link ready.');
+            toast(uiLanguage === 'ar' ? 'رابط الدعوة جاهز.' : 'Invite link ready.');
         }
-    } else toast('Invite link ready.');
+    } else toast(uiLanguage === 'ar' ? 'رابط الدعوة جاهز.' : 'Invite link ready.');
 };
 const topInviteBtn = $('topInviteBtn');
 if (topInviteBtn) topInviteBtn.onclick = async () => {
@@ -2417,11 +2864,11 @@ if (topInviteBtn) topInviteBtn.onclick = async () => {
     if (link && navigator.clipboard) {
         try {
             await navigator.clipboard.writeText(link);
-            toast('Invite link copied.');
+            toast(uiLanguage === 'ar' ? 'تم نسخ رابط الدعوة.' : 'Invite link copied.');
         } catch {
-            toast('Invite link ready.');
+            toast(uiLanguage === 'ar' ? 'رابط الدعوة جاهز.' : 'Invite link ready.');
         }
-    } else toast('Invite link ready.');
+    } else toast(uiLanguage === 'ar' ? 'رابط الدعوة جاهز.' : 'Invite link ready.');
 };
 const backToLobbyBtn = $('backToLobbyBtn');
 if (backToLobbyBtn) backToLobbyBtn.onclick = () => {
@@ -2440,7 +2887,7 @@ if (backToLobbyBtn) backToLobbyBtn.onclick = () => {
         requestLobbyInfo();
         game.classList.add('hidden');
         landing.classList.remove('hidden');
-        toast('Choose a new team or role, then join again.');
+        toast(uiLanguage === 'ar' ? 'اختر فريقا أو دورا جديدا ثم ادخل مرة أخرى.' : 'Choose a new team or role, then join again.');
     });
 };
 setInterval(() => {
