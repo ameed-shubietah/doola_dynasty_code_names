@@ -1614,7 +1614,7 @@ function chooseBotClue(room, team) {
         return {word: picked.group.clue, groupKey: clueGroupKey(picked.group), targets: [picked.card], number: 1};
     }
     const card = shuffle(own)[0];
-    const fallbackList = language === 'ar' ? ['منفرد', 'مباشر', 'تركيز'] : ['TARGET', 'SOLO', 'SINGLE', 'DIRECT', 'FOCUS'];
+    const fallbackList = language === 'ar' ? ['منفرد', 'مباشر', 'تركيز'] : ['FOCUS', 'DIRECT', 'SOLO', 'SINGLE'];
     const fallback = fallbackList.find(w =>
         ![...boardWords].some(word => normalizeGameTerm(word, language) === normalizeGameTerm(w, language)) &&
         !usedClues.has(normalizeGameTerm(w, language))
@@ -1667,7 +1667,29 @@ async function botGiveClue(room) {
         message: `Preparing ${clueTeam === 'blue' ? 'GOLD' : 'BLACK'} AI clue...`
     };
     emitRoom(room);
-    const clue = AI_CLUES_ENABLED ? await chooseAiBotClue(room, room.turn) : chooseBotClue(room, room.turn);
+    let clue = null;
+    if (AI_CLUES_ENABLED) {
+        clue = await chooseAiBotClue(room, room.turn);
+        if (!clue) {
+            const aiDebugBeforeRescue = lastAiClueDebug;
+            clue = chooseBotClue(room, room.turn);
+            if (clue) {
+                clue.aiRescue = true;
+                lastAiClueDebug = {
+                    ...(aiDebugBeforeRescue || {}),
+                    stage: 'local-rescue-picked',
+                    localRescue: {
+                        word: clue.word,
+                        number: clue.number,
+                        targets: clue.targets.map(c => c.word)
+                    },
+                    error: ''
+                };
+            }
+        }
+    } else {
+        clue = chooseBotClue(room, room.turn);
+    }
     if (!clue) {
         const message = AI_CLUES_ENABLED
             ? `AI clue unavailable for ${room.turn === 'blue' ? 'GOLD' : 'BLACK'} turn. Check /api/ai-clue-status and Render logs.`
@@ -1698,6 +1720,8 @@ async function botGiveClue(room) {
     clue.targets.forEach(card => card.clueTarget = true);
     const giver = clue.ai
         ? {name: 'Ollama Oracle', character: 'oracle'}
+        : clue.aiRescue
+        ? {name: 'DSTY Rescue', character: 'oracle'}
         : room.turn === 'blue'
         ? {name: 'DSTY Oracle', character: 'oracle'}
         : {name: 'Bot Oracle', character: 'ninja'};
