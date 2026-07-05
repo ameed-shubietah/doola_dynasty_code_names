@@ -14299,3 +14299,64 @@ body.discordActivity #game .card.hasCrownLayer.assassin {
     font-size: 10px !important;
     cursor: pointer !important;
 }
+
+#game .teamPanel .player.editingName,
+body.discordActivity #game .teamPanel .player.editingName {
+    align-items: flex-start !important;
+    gap: 8px !important;
+}
+
+#game .teamPanel .player.editingName .playerBody,
+body.discordActivity #game .teamPanel .player.editingName .playerBody {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+#game .teamPanel .player.editingName .playerBody > b,
+body.discordActivity #game .teamPanel .player.editingName .playerBody > b {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+#game .teamPanel .player.editingName .inlineNameEditor,
+body.discordActivity #game .teamPanel .player.editingName .inlineNameEditor {
+    display: grid !important;
+    grid-template-columns: minmax(120px, 1fr) auto auto !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: min(290px, calc(100vw - 44px)) !important;
+    max-width: 100% !important;
+}
+
+#game .teamPanel .player.editingName .inlineNameEditor input,
+body.discordActivity #game .teamPanel .player.editingName .inlineNameEditor input {
+    min-width: 120px !important;
+    height: 34px !important;
+    padding: 7px 9px !important;
+    font-size: 13px !important;
+}
+
+#game .teamPanel .player.editingName .inlineNameEditor button,
+body.discordActivity #game .teamPanel .player.editingName .inlineNameEditor button {
+    min-width: 54px !important;
+    min-height: 34px !important;
+    padding: 7px 9px !important;
+    font-size: 11px !important;
+    text-align: center !important;
+}
+
+@media (max-width: 720px) {
+    #game .teamPanel .player.editingName .inlineNameEditor,
+    body.discordActivity #game .teamPanel .player.editingName .inlineNameEditor {
+        grid-template-columns: 1fr 1fr !important;
+        width: 100% !important;
+    }
+
+    #game .teamPanel .player.editingName .inlineNameEditor input,
+    body.discordActivity #game .teamPanel .player.editingName .inlineNameEditor input {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+    }
+}

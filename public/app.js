@@ -34,6 +34,7 @@ let playerKey = readTabPlayerKey();
 let myId = playerKey;
 let clueNumberEdited = false;
 let lastClueTargetCount = 0;
+const MAX_CLUE_TARGETS = 4;
 const pendingRevealIds = new Set();
 
 function adminStorageKey(roomId) {
@@ -1723,6 +1724,7 @@ function renderPlayers() {
         const label = card.querySelector('.playerNameText');
         const input = editor?.querySelector('input');
         if (!editor || !label || !input) return;
+        card.classList.add('editingName');
         label.classList.add('hidden');
         editor.classList.remove('hidden');
         input.focus();
@@ -1732,6 +1734,7 @@ function renderPlayers() {
     function hideInlineNameEditor(playerId) {
         const card = playerCardById(playerId);
         if (!card) return;
+        card.classList.remove('editingName');
         card.querySelector('.playerNameText')?.classList.remove('hidden');
         card.querySelector('.inlineNameEditor')?.classList.add('hidden');
     }
@@ -1742,6 +1745,7 @@ function renderPlayers() {
         const cleanName = String(input?.value || '').trim();
         if (!cleanName) return toast('Name cannot be empty.');
         socket.emit('adminUpdatePlayer', {playerId, action: 'changeName', name: cleanName});
+        hideInlineNameEditor(playerId);
     }
 
     function hexToRgba(hex, alpha = 1) {
@@ -2075,7 +2079,15 @@ function renderBoard() {
                     toast('Spymasters can only choose cards from their own team color.');
                     return;
                 }
-                targetIds.has(id) ? targetIds.delete(id) : targetIds.add(id);
+                if (targetIds.has(id)) {
+                    targetIds.delete(id);
+                } else {
+                    if (targetIds.size >= MAX_CLUE_TARGETS) {
+                        toast(`Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
+                        return;
+                    }
+                    targetIds.add(id);
+                }
                 renderBoard();
                 syncClueCount();
                 return;
@@ -2346,7 +2358,7 @@ if (newGameBtn) newGameBtn.onclick = () => {
 $('giveClueBtn').onclick = () => {
     const targets = [...targetIds];
     const clueWord = $('clueWord').value.trim();
-    const clueNumberValue = Math.max(0, Math.min(9, parseInt($('clueNumber')?.value || targets.length, 10) || 0));
+    const clueNumberValue = Math.max(0, Math.min(MAX_CLUE_TARGETS, parseInt($('clueNumber')?.value || targets.length, 10) || 0));
     const p = me();
     const hintMode = !!(state?.hintRequested && p && state.hintRequested.team === p.team);
     if (!clueWord) {
@@ -2357,13 +2369,18 @@ $('giveClueBtn').onclick = () => {
         toast('Pick at least one of your team cards first.');
         return;
     }
+    if (!hintMode && targets.length > MAX_CLUE_TARGETS) {
+        toast(`Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
+        return;
+    }
     socket.emit('giveClue', {word: clueWord, number: clueNumberValue, targetIds: targets});
 };
 const clueNumberInput = $('clueNumber');
 if (clueNumberInput) {
+    clueNumberInput.max = String(MAX_CLUE_TARGETS);
     clueNumberInput.addEventListener('input', () => {
         clueNumberEdited = true;
-        const value = Math.max(0, Math.min(9, parseInt(clueNumberInput.value || '0', 10) || 0));
+        const value = Math.max(0, Math.min(MAX_CLUE_TARGETS, parseInt(clueNumberInput.value || '0', 10) || 0));
         clueNumberInput.value = value;
         syncClueCount();
     });

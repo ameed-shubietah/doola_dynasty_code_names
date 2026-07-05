@@ -90,6 +90,8 @@ const AI_CLUE_CANDIDATES = envInt('AI_CLUE_CANDIDATES', 18, 4, 40);
 const AI_REJECT_SELF_REPORTED_UNSAFE = envBool('AI_REJECT_SELF_REPORTED_UNSAFE', false);
 const OLLAMA_AUTH_HEADER = String(process.env.OLLAMA_AUTH_HEADER || '').trim();
 const AI_ENGINE_OFFLINE_MESSAGE = "the host's pc where he hosts the ai engine that runs this mode is turned off at the moment";
+const MAX_CLUE_TARGETS = 4;
+const GENERIC_BAD_CLUES = new Set(['WORD', 'WORDS', 'CLUE', 'TARGET', 'TARGETS', 'CARD', 'CARDS', 'THING', 'THINGS', 'OBJECT', 'OBJECTS', 'ITEM', 'ITEMS', 'COMMON', 'RELATED', 'ASSOCIATED', 'GENERAL']);
 let lastAiClueDebug = null;
 
 function ollamaHeaders(extra = {}) {
@@ -772,11 +774,13 @@ function aiPromptForClues(room, team, candidateCount = AI_CLUE_CANDIDATES) {
         `FORBIDDEN danger word: ${info.dangerWords.join(', ')}`,
         `FORBIDDEN clue words - cannot equal any board word: ${info.allBoardWords.join(', ')}`,
         `Do not repeat these clues: ${usedClues.join(', ') || 'none'}`,
-        'Pick clues for the MOST target words possible. Prefer 4 targets, then 3, then 2, then 1.',
+        `Pick clues for the MOST target words possible, but never more than ${MAX_CLUE_TARGETS}. Prefer 4 targets, then 3, then 2, then 1.`,
+        'Only group words when the clue has a clear semantic meaning that connects every target.',
         'Each clue must be ONE English word, A-Z letters only.',
+        'Do not use generic placeholder clues such as WORD, CLUE, TARGET, CARD, THING, OBJECT, RELATED, COMMON, or GENERAL.',
         'Every target must be copied exactly from TARGET WORDS. Never invent target words.',
         'Never include enemy, neutral, danger, or already revealed words in targets.',
-        'Return this exact shape:',
+        'Return this JSON shape, with real legal values:',
         `{"candidates":[{"clue":"PLANT","targets":["MOSS","VINE","LEAF"],"unsafeWords":[],"confidence":0.9}]}`,
         `Return up to ${candidateCount} candidates, best first.`
     ].join('\n');
@@ -790,8 +794,9 @@ function aiRetryPromptForClue(room, team) {
         `Targets must be copied only from: ${info.ownWords.join(', ')}`,
         `Do not target these words: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
         `The clue cannot equal any board word: ${info.allBoardWords.join(', ')}`,
-        'Prefer 2 or more targets if safe, otherwise 1 target is okay.',
-        `Return exactly: {"candidates":[{"clue":"WORD","targets":["TARGET"],"unsafeWords":[],"confidence":0.7}]}`
+        `Prefer 2 or more targets if safe, otherwise 1 target is okay. Never use more than ${MAX_CLUE_TARGETS} targets.`,
+        'Do not use generic placeholder clues such as WORD, CLUE, TARGET, CARD, THING, OBJECT, RELATED, COMMON, or GENERAL.',
+        `Return exactly: {"candidates":[{"clue":"ANIMAL","targets":["FROG"],"unsafeWords":[],"confidence":0.7}]}`
     ].join('\n');
 }
 
@@ -800,11 +805,12 @@ function aiRepairPromptForTargets(room, team, targetWords = []) {
     return [
         'Return JSON only.',
         'The previous Codenames clue was invalid.',
-        `Give ONE replacement clue for exactly these ${info.teamName} targets: ${targetWords.join(', ')}`,
+        `Give ONE replacement clue for these ${info.teamName} targets: ${targetWords.slice(0, MAX_CLUE_TARGETS).join(', ')}`,
         `The clue cannot be any board word: ${info.allBoardWords.join(', ')}`,
         `The clue must not suggest these forbidden words: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
         'The clue must be one English word, A-Z letters only.',
-        `Return exactly: {"candidates":[{"clue":"WORD","targets":${JSON.stringify(targetWords)},"unsafeWords":[],"confidence":0.75}]}`
+        'The clue must have a clear semantic meaning that connects every target. Do not use WORD, CLUE, TARGET, CARD, THING, OBJECT, RELATED, COMMON, or GENERAL.',
+        `Return exactly: {"candidates":[{"clue":"ANIMAL","targets":${JSON.stringify(targetWords.slice(0, MAX_CLUE_TARGETS))},"unsafeWords":[],"confidence":0.75}]}`
     ].join('\n');
 }
 
@@ -893,6 +899,10 @@ function validateAiClueCandidate(room, team, candidate, rejects = []) {
         rejects.push({clue: String(candidate?.clue || ''), reason: 'bad-clue'});
         return null;
     }
+    if (GENERIC_BAD_CLUES.has(clue)) {
+        rejects.push({clue, reason: 'generic-placeholder-clue'});
+        return null;
+    }
 
     const unrevealed = room.board.filter(c => !c.revealed);
     const boardWords = new Set(room.board.map(c => c.word));
@@ -925,7 +935,7 @@ function validateAiClueCandidate(room, team, candidate, rejects = []) {
         return null;
     }
 
-    const validWords = declaredTargets.filter(w => ownByWord.has(w));
+    const validWords = declaredTargets.filter(w => ownByWord.has(w)).slice(0, MAX_CLUE_TARGETS);
     const invalidWords = declaredTargets.filter(w => !ownByWord.has(w));
     const targets = validWords.map(w => ownByWord.get(w)).filter(Boolean);
     if (!targets.length) {
@@ -990,7 +1000,7 @@ async function chooseAiBotClue(room, team) {
         const repairTargets = candidates
             .map(candidate => validOwnTargetWordsFromAiCandidate(room, team, candidate))
             .filter(words => words.length)
-            .sort((a, b) => b.length - a.length)[0] || [];
+            .sort((a, b) => b.length - a.length)[0]?.slice(0, MAX_CLUE_TARGETS) || [];
         if (repairTargets.length) {
             candidates = await fetchOllamaClueCandidates(room, team, 'repair', repairTargets, remainingMs());
             attempts.push({mode: 'repair', rawCandidates: candidates.length, repairTargets});
@@ -1932,13 +1942,16 @@ io.on('connection', socket => {
         const isExtraHint = false;
         if (room.status !== 'waiting-clue') return;
         word = safeText(word, 24).replace(/\s+/g, '-');
+        const upperWord = word.toUpperCase().replace(/[^A-Z]/g, '');
         const cleanTargets = [...new Set((Array.isArray(targetIds) ? targetIds : []).map(x => parseInt(x, 10)))]
-            .filter(id => room.board.some(c => c.id === id && !c.revealed && c.color === p.team))
-            .slice(0, 9);
-        const declaredNumber = Math.max(0, Math.min(9, parseInt(number, 10) || 0));
+            .filter(id => room.board.some(c => c.id === id && !c.revealed && c.color === p.team));
+        const declaredNumber = Math.max(0, Math.min(MAX_CLUE_TARGETS, parseInt(number, 10) || 0));
         number = declaredNumber;
         if (!word) return socket.emit('toast', 'Write a clue word first.');
+        if (GENERIC_BAD_CLUES.has(upperWord)) return socket.emit('toast', 'Use a meaningful clue word, not a generic placeholder.');
+        if (room.board.some(c => c.word === upperWord)) return socket.emit('toast', 'The clue cannot be a word on the board.');
         if (!isExtraHint && number < 1) return socket.emit('toast', 'Choose at least one card from your own team color.');
+        if (!isExtraHint && cleanTargets.length > MAX_CLUE_TARGETS) return socket.emit('toast', `Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
         room.board.forEach(c => c.clueTarget = false);
         cleanTargets.forEach(id => {
             const card = room.board.find(c => c.id === id && !c.revealed && c.color === p.team);
