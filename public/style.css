@@ -15606,3 +15606,78 @@ body.discordActivity[data-lang="ar"] .letterFillTitle .fillLetter {
         padding-top: clamp(54px, 8vh, 88px) !important;
     }
 }
+@media (max-width: 980px) {
+    html body #app > #landing.landing:not(.hidden),
+    html body.discordActivity #app > #landing.landing:not(.hidden) {
+        overflow-y: auto !important;
+        overflow-x: visible !important;
+        padding-top: max(34px, calc(env(safe-area-inset-top, 0px) + 22px)) !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap,
+    html body #app > #landing.landing:not(.hidden) .dstyTitleWrap,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .dstyTitleWrap {
+        min-height: clamp(72px, 18vw, 112px) !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        align-items: center !important;
+        padding-top: clamp(18px, 5vw, 34px) !important;
+        padding-bottom: 12px !important;
+        margin-top: 0 !important;
+        margin-bottom: 12px !important;
+        transform: none !important;
+        box-sizing: border-box !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .homeDstyLogo,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .homeDstyLogo,
+    html body #app > #landing.landing:not(.hidden) .letterFillTitle,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .letterFillTitle {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        line-height: 1.16 !important;
+        overflow: visible !important;
+        padding-top: .22em !important;
+        padding-bottom: .16em !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        transform: none !important;
+        box-sizing: content-box !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .letterFillTitle .fillWord,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .letterFillTitle .fillWord,
+    html body #app > #landing.landing:not(.hidden) .letterFillTitle .fillLetter,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .letterFillTitle .fillLetter {
+        line-height: 1.16 !important;
+        overflow: visible !important;
+    }
+}
+
+@media (max-width: 480px) {
+    html body #app > #landing.landing:not(.hidden),
+    html body.discordActivity #app > #landing.landing:not(.hidden) {
+        padding-top: max(48px, calc(env(safe-area-inset-top, 0px) + 34px)) !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap,
+    html body #app > #landing.landing:not(.hidden) .dstyTitleWrap,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .dstyTitleWrap {
+        min-height: clamp(82px, 22vw, 126px) !important;
+        padding-top: clamp(24px, 7vw, 44px) !important;
+        padding-bottom: 14px !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .homeDstyLogo,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .homeDstyLogo,
+    html body #app > #landing.landing:not(.hidden) .letterFillTitle,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .letterFillTitle {
+        line-height: 1.2 !important;
+        padding-top: .28em !important;
+        padding-bottom: .18em !important;
+    }
+}
