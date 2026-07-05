@@ -15150,3 +15150,314 @@ body.discordActivity #landing .discordRoleJoin:disabled {
     filter: grayscale(.35) brightness(.75) !important;
 }
 
+
+
+@media (max-width: 980px) {
+    :root {
+        --dsty-mobile-top-safe: max(42px, calc(env(safe-area-inset-top, 0px) + 18px));
+        --dsty-mobile-bottom-safe: max(8px, env(safe-area-inset-bottom, 0px));
+    }
+
+    html,
+    body,
+    #app {
+        width: 100% !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: 100dvh !important;
+        overflow: hidden !important;
+        overscroll-behavior: none !important;
+    }
+
+    body {
+        position: fixed !important;
+        inset: 0 !important;
+        touch-action: manipulation !important;
+    }
+
+    #app {
+        position: relative !important;
+    }
+
+    #landing.hidden,
+    #game.hidden,
+    #game.hidden.gameV9,
+    main.hidden,
+    section.hidden {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+    }
+
+    #landing:not(.hidden) {
+        max-height: calc(100dvh - 14px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin-top: max(10px, env(safe-area-inset-top, 0px)) !important;
+        margin-bottom: max(10px, env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    #landing:not(.hidden) + #game.gameV9 {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+    }
+
+    #landing.hidden + #game.gameV9:not(.hidden),
+    body.discordActivity #landing.hidden + #game.gameV9:not(.hidden) {
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: 100dvh !important;
+        padding-top: var(--dsty-mobile-top-safe) !important;
+        padding-bottom: var(--dsty-mobile-bottom-safe) !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        align-content: stretch !important;
+    }
+
+    #game.gameV9:not(.hidden) .topbar,
+    body.discordActivity #game.gameV9:not(.hidden) .topbar {
+        margin-top: 0 !important;
+        min-height: 48px !important;
+    }
+
+    #game.gameV9:not(.hidden) .boardWrap,
+    body.discordActivity #game.gameV9:not(.hidden) .boardWrap {
+        min-height: 0 !important;
+    }
+
+    #backToLobbyBtn.backLobbyBtn,
+    body.discordActivity #backToLobbyBtn.backLobbyBtn {
+        bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 10px)) !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    :root {
+        --dsty-mobile-top-safe: max(24px, calc(env(safe-area-inset-top, 0px) + 12px));
+    }
+}
+
+
+body[data-lang="ar"] .dstyTitleWrap,
+body[data-lang="ar"] .dstyLogo,
+body[data-lang="ar"] .homeDstyLogo,
+body[data-lang="ar"] .gameDstyLogo,
+body.discordActivity[data-lang="ar"] .dstyTitleWrap,
+body.discordActivity[data-lang="ar"] .dstyLogo,
+body.discordActivity[data-lang="ar"] .homeDstyLogo,
+body.discordActivity[data-lang="ar"] .gameDstyLogo {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    flex-direction: row !important;
+    text-align: center !important;
+}
+
+body[data-lang="ar"] .dstyLogo span,
+body.discordActivity[data-lang="ar"] .dstyLogo span {
+    order: 1 !important;
+}
+
+body[data-lang="ar"] .dstyLogo em,
+body.discordActivity[data-lang="ar"] .dstyLogo em {
+    order: 2 !important;
+}
+
+body[data-lang="ar"] .letterFillTitle,
+body[data-lang="ar"] .letterFillTitle .fillLetter,
+body.discordActivity[data-lang="ar"] .letterFillTitle,
+body.discordActivity[data-lang="ar"] .letterFillTitle .fillLetter {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+}
+
+@media (max-width: 980px) {
+    #game.gameV9:not(.hidden) .topCenter,
+    body.discordActivity #game.gameV9:not(.hidden) .topCenter {
+        min-width: 0 !important;
+    }
+
+    #game.gameV9:not(.hidden) .topCenter .status,
+    body.discordActivity #game.gameV9:not(.hidden) .topCenter .status {
+        min-width: 0 !important;
+        gap: 3px !important;
+    }
+
+    #turnBadge,
+    body.discordActivity #turnBadge {
+        display: inline-flex !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: min(56vw, 230px) !important;
+        min-height: 22px !important;
+        height: 24px !important;
+        padding: 3px 8px !important;
+        border-radius: 999px !important;
+        font-size: clamp(7px, 2vw, 9px) !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #turnBadge *,
+    body.discordActivity #turnBadge * {
+        max-width: 100% !important;
+        min-width: 0 !important;
+        font-size: inherit !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #turnBadge img,
+    body.discordActivity #turnBadge img,
+    #turnBadge .turnStatusAvatar,
+    body.discordActivity #turnBadge .turnStatusAvatar {
+        width: 14px !important;
+        height: 14px !important;
+        min-width: 14px !important;
+        flex: 0 0 14px !important;
+    }
+
+    #game.gameV9:not(.hidden) .timers,
+    body.discordActivity #game.gameV9:not(.hidden) .timers {
+        min-width: 70px !important;
+        max-width: 84px !important;
+        gap: 2px !important;
+    }
+
+    #game.gameV9:not(.hidden) .timers span,
+    body.discordActivity #game.gameV9:not(.hidden) .timers span {
+        padding: 3px 4px !important;
+        font-size: 6.5px !important;
+    }
+}
+
+@media (max-width: 420px) {
+    #turnBadge,
+    body.discordActivity #turnBadge {
+        max-width: 52vw !important;
+        height: 22px !important;
+        padding: 3px 6px !important;
+        font-size: 7px !important;
+    }
+}
+
+
+@media (max-width: 980px) {
+    #game.gameV9:not(.hidden) .topCenter,
+    body.discordActivity #game.gameV9:not(.hidden) .topCenter {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    #game.gameV9:not(.hidden) .topCenter .status,
+    body.discordActivity #game.gameV9:not(.hidden) .topCenter .status {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        gap: 3px !important;
+        overflow: hidden !important;
+    }
+
+    #clueBadge.turnSubStatus,
+    body.discordActivity #clueBadge.turnSubStatus,
+    #game #clueBadge.turnSubStatus,
+    body.discordActivity #game #clueBadge.turnSubStatus {
+        display: inline-flex !important;
+        flex: 0 1 min(46vw, 178px) !important;
+        width: min(46vw, 178px) !important;
+        min-width: 0 !important;
+        max-width: min(46vw, 178px) !important;
+        height: 20px !important;
+        min-height: 20px !important;
+        max-height: 20px !important;
+        padding: 2px 6px !important;
+        gap: 2px !important;
+        border-radius: 999px !important;
+        font-size: clamp(5.5px, 1.45vw, 7px) !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        box-sizing: border-box !important;
+    }
+
+    #clueBadge.turnSubStatus *,
+    body.discordActivity #clueBadge.turnSubStatus *,
+    #game #clueBadge.turnSubStatus *,
+    body.discordActivity #game #clueBadge.turnSubStatus * {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        font-size: inherit !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #clueBadge.turnSubStatus strong,
+    body.discordActivity #clueBadge.turnSubStatus strong,
+    #game #clueBadge.turnSubStatus strong,
+    body.discordActivity #game #clueBadge.turnSubStatus strong {
+        flex: 0 1 auto !important;
+        max-width: 54px !important;
+        display: inline-block !important;
+    }
+
+    #clueBadge.turnSubStatus .turnStatusAvatar,
+    body.discordActivity #clueBadge.turnSubStatus .turnStatusAvatar,
+    #game #clueBadge.turnSubStatus .turnStatusAvatar,
+    body.discordActivity #game #clueBadge.turnSubStatus .turnStatusAvatar {
+        width: 12px !important;
+        height: 12px !important;
+        min-width: 12px !important;
+        flex: 0 0 12px !important;
+        font-size: 7px !important;
+    }
+
+    #game.gameV9:not(.hidden) .timers,
+    body.discordActivity #game.gameV9:not(.hidden) .timers {
+        flex: 0 0 auto !important;
+        min-width: 70px !important;
+        max-width: 84px !important;
+    }
+}
+
+@media (max-width: 420px) {
+    #clueBadge.turnSubStatus,
+    body.discordActivity #clueBadge.turnSubStatus,
+    #game #clueBadge.turnSubStatus,
+    body.discordActivity #game #clueBadge.turnSubStatus {
+        flex-basis: 44vw !important;
+        width: 44vw !important;
+        max-width: 44vw !important;
+        height: 18px !important;
+        min-height: 18px !important;
+        max-height: 18px !important;
+        padding: 2px 5px !important;
+        font-size: 5.5px !important;
+    }
+}
