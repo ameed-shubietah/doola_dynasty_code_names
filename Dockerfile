@@ -1,8 +1,8 @@
 FROM node:20-bookworm-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends bash ca-certificates curl libgomp1 \
-    && curl -fsSL https://ollama.com/download/ollama-linux-amd64.tgz | tar -xz -C /usr/local \
+    && apt-get install -y --no-install-recommends bash ca-certificates curl libgomp1 zstd \
+    && curl -fsSL https://ollama.com/download/ollama-linux-amd64.tar.zst | tar --zstd -x -C /usr \
     && ollama --version \
     && rm -rf /var/lib/apt/lists/*
 
