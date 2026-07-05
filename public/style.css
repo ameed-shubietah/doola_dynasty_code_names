@@ -14878,3 +14878,275 @@ body[data-lang="ar"] #arabicModeBtn {
     direction: ltr !important;
     unicode-bidi: isolate !important;
 }
+#landing .letterFillTitle,
+body.discordActivity #landing .letterFillTitle {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: baseline !important;
+    justify-content: center !important;
+    gap: .28em !important;
+    overflow: visible !important;
+    padding: .08em .12em .1em !important;
+    color: transparent !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    text-shadow: none !important;
+    filter: drop-shadow(0 .1em .08em rgba(0, 0, 0, .74)) !important;
+    animation: none !important;
+}
+
+#landing .letterFillTitle::before,
+#landing .letterFillTitle::after,
+body.discordActivity #landing .letterFillTitle::before,
+body.discordActivity #landing .letterFillTitle::after {
+    content: none !important;
+    display: none !important;
+}
+
+#landing .letterFillTitle .fillWord,
+body.discordActivity #landing .letterFillTitle .fillWord {
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: .015em !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: transparent !important;
+}
+
+#landing .letterFillTitle em.fillWord,
+body.discordActivity #landing .letterFillTitle em.fillWord {
+    font-style: normal !important;
+    transform: skewX(-8deg) !important;
+}
+
+#landing .letterFillTitle .fillLetter,
+body.discordActivity #landing .letterFillTitle .fillLetter {
+    position: relative !important;
+    display: inline-block !important;
+    color: rgba(0, 0, 0, .36) !important;
+    -webkit-text-fill-color: rgba(0, 0, 0, .36) !important;
+    -webkit-text-stroke: .026em rgba(255, 215, 108, .95) !important;
+    text-shadow: 0 .045em 0 rgba(0, 0, 0, .9), 0 0 .12em rgba(255, 215, 108, .26) !important;
+    animation: titleLetterPop 5.2s ease-in-out infinite !important;
+    animation-delay: calc(var(--i) * .09s) !important;
+}
+
+#landing .letterFillTitle .fillLetter::before,
+body.discordActivity #landing .letterFillTitle .fillLetter::before {
+    content: attr(data-letter) !important;
+    position: absolute !important;
+    inset: 0 !important;
+    color: #ffd84f !important;
+    -webkit-text-fill-color: #ffd84f !important;
+    -webkit-text-stroke: 0 transparent !important;
+    background: linear-gradient(180deg, #fff8c8 0%, #ffd84f 36%, #d79605 68%, #704300 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    text-shadow: 0 0 .14em rgba(255, 232, 136, .56), 0 .05em .1em rgba(0, 0, 0, .72) !important;
+    clip-path: inset(100% 0 0 0) !important;
+    animation: titleLetterFill 5.2s ease-in-out infinite !important;
+    animation-delay: calc(var(--i) * .09s) !important;
+    pointer-events: none !important;
+}
+
+@keyframes titleLetterFill {
+    0%, 10% {
+        clip-path: inset(100% 0 0 0);
+    }
+    24%, 78% {
+        clip-path: inset(0 0 0 0);
+    }
+    100% {
+        clip-path: inset(100% 0 0 0);
+    }
+}
+
+@keyframes titleLetterPop {
+    0%, 18%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    24% {
+        transform: translateY(-.035em) scale(1.04);
+    }
+    34%, 78% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 760px) {
+    #landing .letterFillTitle,
+    body.discordActivity #landing .letterFillTitle {
+        gap: .18em !important;
+        padding: .05em .04em .08em !important;
+    }
+
+    #landing .letterFillTitle .fillLetter,
+    body.discordActivity #landing .letterFillTitle .fillLetter {
+        -webkit-text-stroke: .021em rgba(255, 215, 108, .95) !important;
+    }
+}
+
+@property --dsty-letter-fill {
+    syntax: "<color>";
+    inherits: false;
+    initial-value: rgba(0, 0, 0, .36);
+}
+
+#landing .letterFillTitle,
+body.discordActivity #landing .letterFillTitle {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: baseline !important;
+    justify-content: center !important;
+    gap: .28em !important;
+    overflow: visible !important;
+    padding: .08em .12em .1em !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    text-shadow: none !important;
+    filter: drop-shadow(0 .1em .08em rgba(0, 0, 0, .74)) !important;
+    animation: none !important;
+}
+
+#landing .letterFillTitle::before,
+#landing .letterFillTitle::after,
+#landing .letterFillTitle .fillLetter::before,
+#landing .letterFillTitle .fillLetter::after,
+body.discordActivity #landing .letterFillTitle::before,
+body.discordActivity #landing .letterFillTitle::after,
+body.discordActivity #landing .letterFillTitle .fillLetter::before,
+body.discordActivity #landing .letterFillTitle .fillLetter::after {
+    content: none !important;
+    display: none !important;
+}
+
+#landing .letterFillTitle .fillWord,
+body.discordActivity #landing .letterFillTitle .fillWord {
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: .015em !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+}
+
+#landing .letterFillTitle em.fillWord,
+body.discordActivity #landing .letterFillTitle em.fillWord {
+    font-style: normal !important;
+    transform: skewX(-8deg) !important;
+}
+
+#landing .letterFillTitle .fillLetter,
+body.discordActivity #landing .letterFillTitle .fillLetter {
+    --dsty-letter-fill: rgba(0, 0, 0, .36);
+    position: relative !important;
+    display: inline-block !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: var(--dsty-letter-fill) !important;
+    -webkit-text-fill-color: var(--dsty-letter-fill) !important;
+    -webkit-text-stroke: .026em rgba(255, 215, 108, .95) !important;
+    text-shadow:
+        0 .045em 0 rgba(0, 0, 0, .9),
+        0 0 .12em rgba(255, 215, 108, .28) !important;
+    animation: dstyRealLetterFill 5.4s steps(1, end) infinite !important;
+    animation-delay: calc(var(--i) * .11s) !important;
+}
+
+@keyframes dstyRealLetterFill {
+    0%, 14% {
+        --dsty-letter-fill: rgba(0, 0, 0, .36);
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+    }
+    18%, 82% {
+        --dsty-letter-fill: #ffd84f;
+        transform: translateY(-.025em) scale(1.035);
+        filter: brightness(1.14);
+    }
+    88%, 100% {
+        --dsty-letter-fill: rgba(0, 0, 0, .36);
+        transform: translateY(0) scale(1);
+        filter: brightness(1);
+    }
+}
+
+@media (max-width: 760px) {
+    #landing .letterFillTitle,
+    body.discordActivity #landing .letterFillTitle {
+        gap: .18em !important;
+        padding: .05em .04em .08em !important;
+    }
+
+    #landing .letterFillTitle .fillLetter,
+    body.discordActivity #landing .letterFillTitle .fillLetter {
+        -webkit-text-stroke: .021em rgba(255, 215, 108, .95) !important;
+    }
+}
+#landing .discordRoleJoin[data-team="blue"]:not(:disabled),
+body.discordActivity #landing .discordRoleJoin[data-team="blue"]:not(:disabled) {
+    color: #1b1000 !important;
+    background:
+        radial-gradient(circle at 28% 18%, rgba(255, 255, 255, .68), transparent 24%),
+        linear-gradient(180deg, #fff2a5 0%, #ffd84a 42%, #c78905 72%, #6d4300 100%) !important;
+    border: 1px solid rgba(255, 237, 156, .95) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .55),
+        0 0 16px rgba(255, 215, 108, .55),
+        0 8px 16px rgba(0, 0, 0, .42) !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .46) !important;
+}
+
+#landing .discordRoleJoin[data-team="red"]:not(:disabled),
+body.discordActivity #landing .discordRoleJoin[data-team="red"]:not(:disabled) {
+    color: #fff3bf !important;
+    background:
+        radial-gradient(circle at 28% 18%, rgba(255, 215, 108, .22), transparent 26%),
+        linear-gradient(180deg, #383838 0%, #111112 54%, #020202 100%) !important;
+    border: 1px solid rgba(255, 215, 108, .7) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .12),
+        0 0 16px rgba(255, 215, 108, .26),
+        0 8px 16px rgba(0, 0, 0, .55) !important;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .85) !important;
+}
+
+#landing .discordRoleJoin[data-team="spectator"]:not(:disabled),
+body.discordActivity #landing .discordRoleJoin[data-team="spectator"]:not(:disabled) {
+    color: #fff7cd !important;
+    background:
+        linear-gradient(90deg, #050505 0 50%, #ffd84a 50% 100%) !important;
+    border: 1px solid rgba(255, 215, 108, .82) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .18),
+        0 0 16px rgba(255, 215, 108, .38),
+        0 8px 16px rgba(0, 0, 0, .48) !important;
+    text-shadow:
+        -1px 1px 0 rgba(0, 0, 0, .86),
+        1px 1px 0 rgba(0, 0, 0, .86) !important;
+}
+
+#landing .discordRoleJoin[data-team="blue"]:not(:disabled):hover,
+body.discordActivity #landing .discordRoleJoin[data-team="blue"]:not(:disabled):hover,
+#landing .discordRoleJoin[data-team="red"]:not(:disabled):hover,
+body.discordActivity #landing .discordRoleJoin[data-team="red"]:not(:disabled):hover,
+#landing .discordRoleJoin[data-team="spectator"]:not(:disabled):hover,
+body.discordActivity #landing .discordRoleJoin[data-team="spectator"]:not(:disabled):hover {
+    transform: translateY(-1px) scale(1.03) !important;
+    filter: brightness(1.08) saturate(1.08) !important;
+}
+
+#landing .discordRoleJoin:disabled,
+body.discordActivity #landing .discordRoleJoin:disabled {
+    color: rgba(255, 248, 218, .55) !important;
+    background: linear-gradient(180deg, rgba(90, 84, 62, .55), rgba(24, 22, 18, .78)) !important;
+    border-color: rgba(255, 215, 108, .22) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: grayscale(.35) brightness(.75) !important;
+}
+
