@@ -751,7 +751,7 @@ function aiBoardState(room, team) {
     };
 }
 
-function aiPromptForClues(room, team) {
+function aiPromptForClues(room, team, candidateCount = AI_CLUE_CANDIDATES) {
     const info = aiBoardState(room, team);
     const usedClues = [
         ...(room.singlePlayerUsedClues?.blue || []),
@@ -762,64 +762,108 @@ function aiPromptForClues(room, team) {
         'Return JSON only.',
         'You are giving Codenames clues.',
         `Team: ${info.teamName}`,
-        `Use ONLY these target words: ${info.ownWords.join(', ')}`,
-        `Avoid these enemy words: ${info.opponentWords.join(', ')}`,
-        `Avoid these neutral words: ${info.neutralWords.join(', ')}`,
-        `Avoid this danger word: ${info.dangerWords.join(', ')}`,
-        `The clue cannot be any board word: ${info.allBoardWords.join(', ')}`,
+        `TARGET WORDS - choose targets ONLY from this exact list: ${info.ownWords.join(', ')}`,
+        `FORBIDDEN enemy words: ${info.opponentWords.join(', ')}`,
+        `FORBIDDEN neutral words: ${info.neutralWords.join(', ')}`,
+        `FORBIDDEN danger word: ${info.dangerWords.join(', ')}`,
+        `FORBIDDEN clue words - cannot equal any board word: ${info.allBoardWords.join(', ')}`,
         `Do not repeat these clues: ${usedClues.join(', ') || 'none'}`,
         'Pick clues for the MOST target words possible. Prefer 4 targets, then 3, then 2, then 1.',
         'Each clue must be ONE English word, A-Z letters only.',
-        'Every target must be from the target words list only.',
+        'Every target must be copied exactly from TARGET WORDS. Never invent target words.',
+        'Never include enemy, neutral, danger, or already revealed words in targets.',
         'Return this exact shape:',
         `{"candidates":[{"clue":"PLANT","targets":["MOSS","VINE","LEAF"],"unsafeWords":[],"confidence":0.9}]}`,
-        `Return up to ${AI_CLUE_CANDIDATES} candidates, best first.`
+        `Return up to ${candidateCount} candidates, best first.`
     ].join('\n');
 }
 
-async function fetchOllamaClueCandidates(room, team) {
+function aiRetryPromptForClue(room, team) {
+    const info = aiBoardState(room, team);
+    return [
+        'Return JSON only.',
+        `Give one safe Codenames clue for team ${info.teamName}.`,
+        `Targets must be copied only from: ${info.ownWords.join(', ')}`,
+        `Do not target these words: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
+        `The clue cannot equal any board word: ${info.allBoardWords.join(', ')}`,
+        'Prefer 2 or more targets if safe, otherwise 1 target is okay.',
+        `Return exactly: {"candidates":[{"clue":"WORD","targets":["TARGET"],"unsafeWords":[],"confidence":0.7}]}`
+    ].join('\n');
+}
+
+function aiRepairPromptForTargets(room, team, targetWords = []) {
+    const info = aiBoardState(room, team);
+    return [
+        'Return JSON only.',
+        'The previous Codenames clue was invalid.',
+        `Give ONE replacement clue for exactly these ${info.teamName} targets: ${targetWords.join(', ')}`,
+        `The clue cannot be any board word: ${info.allBoardWords.join(', ')}`,
+        `The clue must not suggest these forbidden words: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
+        'The clue must be one English word, A-Z letters only.',
+        `Return exactly: {"candidates":[{"clue":"WORD","targets":${JSON.stringify(targetWords)},"unsafeWords":[],"confidence":0.75}]}`
+    ].join('\n');
+}
+
+async function requestOllamaJson(prompt, numPredict = 700, signal = undefined) {
+    const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: ollamaHeaders({'Content-Type': 'application/json'}),
+        signal,
+        body: JSON.stringify({
+            model: OLLAMA_MODEL,
+            stream: false,
+            format: 'json',
+            keep_alive: '10m',
+            options: {temperature: 0.2, top_p: 0.8, num_predict: numPredict},
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You generate safe Codenames clues. You always answer as strict JSON only.'
+                },
+                {role: 'user', content: prompt}
+            ]
+        })
+    });
+    if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
+    const data = await response.json().catch(() => ({}));
+    const content = data?.message?.content || data?.response || '';
+    const parsed = extractJsonObject(content);
+    return {content, candidates: normalizeAiCandidates(parsed)};
+}
+
+async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTargets = []) {
     if (!AI_CLUES_ENABLED || AI_CLUE_PROVIDER !== 'ollama' || !OLLAMA_MODEL) return [];
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), AI_CLUE_TIMEOUT_MS);
+    const candidateCount = Math.min(AI_CLUE_CANDIDATES, mode === 'normal' ? 8 : 1);
     lastAiClueDebug = {
         at: new Date().toISOString(),
         team,
         stage: 'requesting',
+        mode,
         model: OLLAMA_MODEL,
         timeoutMs: AI_CLUE_TIMEOUT_MS,
         rawCandidates: 0,
         validCandidates: 0,
+        ownWords: aiBoardState(room, team).ownWords,
         picked: null,
+        rejects: [],
         error: ''
     };
     try {
-        const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-            method: 'POST',
-            headers: ollamaHeaders({'Content-Type': 'application/json'}),
-            signal: controller.signal,
-            body: JSON.stringify({
-                model: OLLAMA_MODEL,
-                stream: false,
-                format: 'json',
-                keep_alive: '10m',
-                options: {temperature: 0.35, top_p: 0.9, num_predict: 700},
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You generate safe Codenames clues. You always answer as strict JSON only.'
-                    },
-                    {role: 'user', content: aiPromptForClues(room, team)}
-                ]
-            })
-        });
-        if (!response.ok) throw new Error(`Ollama HTTP ${response.status}`);
-        const data = await response.json().catch(() => ({}));
-        const content = data?.message?.content || data?.response || '';
-        const parsed = extractJsonObject(content);
-        const candidates = normalizeAiCandidates(parsed);
+        const prompt = mode === 'repair'
+            ? aiRepairPromptForTargets(room, team, repairTargets)
+            : mode === 'compact'
+                ? aiRetryPromptForClue(room, team)
+                : aiPromptForClues(room, team, candidateCount);
+        const numPredict = mode === 'normal' ? 360 : 160;
+        const {content, candidates} = await requestOllamaJson(prompt, numPredict, controller.signal);
         lastAiClueDebug = {
             ...lastAiClueDebug,
             stage: 'responded',
+            mode,
+            requestedCandidates: candidateCount,
+            repairTargets,
             rawCandidates: candidates.length,
             rawPreview: String(content || '').slice(0, 900),
             error: candidates.length ? '' : 'Ollama responded, but no candidates were parsed.'
@@ -838,9 +882,12 @@ async function fetchOllamaClueCandidates(room, team) {
     }
 }
 
-function validateAiClueCandidate(room, team, candidate) {
+function validateAiClueCandidate(room, team, candidate, rejects = []) {
     const clue = cleanAiClueWord(candidate?.clue);
-    if (!clue || !/^[A-Z]+$/.test(clue)) return null;
+    if (!clue || !/^[A-Z]+$/.test(clue)) {
+        rejects.push({clue: String(candidate?.clue || ''), reason: 'bad-clue'});
+        return null;
+    }
 
     const unrevealed = room.board.filter(c => !c.revealed);
     const boardWords = new Set(room.board.map(c => c.word));
@@ -851,7 +898,14 @@ function validateAiClueCandidate(room, team, candidate) {
         ...(room.singlePlayerUsedClues?.red || []),
         ...singlePlayerRecentClues
     ].map(w => String(w).toUpperCase()));
-    if (boardWords.has(clue) || usedClues.has(clue)) return null;
+    if (boardWords.has(clue)) {
+        rejects.push({clue, reason: 'clue-is-board-word'});
+        return null;
+    }
+    if (usedClues.has(clue)) {
+        rejects.push({clue, reason: 'clue-already-used'});
+        return null;
+    }
 
     const targetList = Array.isArray(candidate?.targets) ? candidate.targets
         : Array.isArray(candidate?.targetWords) ? candidate.targetWords
@@ -861,10 +915,18 @@ function validateAiClueCandidate(room, team, candidate) {
         .map(w => String(w).toUpperCase().trim()))];
     const declaredUnsafe = [...new Set((Array.isArray(candidate?.unsafeWords) ? candidate.unsafeWords : [])
         .map(w => String(w).toUpperCase().trim()))];
-    if (AI_REJECT_SELF_REPORTED_UNSAFE && declaredUnsafe.some(w => unsafeWords.has(w))) return null;
+    if (AI_REJECT_SELF_REPORTED_UNSAFE && declaredUnsafe.some(w => unsafeWords.has(w))) {
+        rejects.push({clue, reason: 'self-reported-unsafe', unsafe: declaredUnsafe.filter(w => unsafeWords.has(w))});
+        return null;
+    }
 
-    const targets = declaredTargets.map(w => ownByWord.get(w)).filter(Boolean);
-    if (!targets.length || targets.length !== declaredTargets.length) return null;
+    const validWords = declaredTargets.filter(w => ownByWord.has(w));
+    const invalidWords = declaredTargets.filter(w => !ownByWord.has(w));
+    const targets = validWords.map(w => ownByWord.get(w)).filter(Boolean);
+    if (!targets.length) {
+        rejects.push({clue, reason: 'no-valid-own-targets', declaredTargets});
+        return null;
+    }
 
     const confidence = Number(candidate?.confidence);
     const confidenceScore = Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0.5;
@@ -874,23 +936,82 @@ function validateAiClueCandidate(room, team, candidate) {
         targets,
         number: targets.length,
         ai: true,
-        score: targets.length * 1000 + Math.round(confidenceScore * 100)
+        repaired: invalidWords.length > 0,
+        droppedTargets: invalidWords,
+        score: targets.length * 1000 + Math.round(confidenceScore * 100) - invalidWords.length * 90
     };
 }
 
+function validOwnTargetWordsFromAiCandidate(room, team, candidate) {
+    const ownWords = new Set(room.board
+        .filter(c => !c.revealed && c.color === team)
+        .map(c => c.word));
+    const targetList = Array.isArray(candidate?.targets) ? candidate.targets
+        : Array.isArray(candidate?.targetWords) ? candidate.targetWords
+            : Array.isArray(candidate?.words) ? candidate.words
+                : [];
+    return [...new Set(targetList
+        .map(w => String(w).toUpperCase().trim())
+        .filter(w => ownWords.has(w)))];
+}
+
 async function chooseAiBotClue(room, team) {
-    const candidates = await fetchOllamaClueCandidates(room, team);
-    const valid = candidates
-        .map(candidate => validateAiClueCandidate(room, team, candidate))
-        .filter(Boolean)
-        .sort((a, b) => b.targets.length - a.targets.length || b.score - a.score);
+    const rejects = [];
+    const attempts = [];
+    let candidates = [];
+    let valid = [];
+
+    const scoreCandidates = batch => {
+        const seenCandidateKeys = new Set();
+        return batch
+            .map(candidate => validateAiClueCandidate(room, team, candidate, rejects))
+            .filter(Boolean)
+            .filter(candidate => {
+                const key = `${candidate.word}:${candidate.targets.map(c => c.word).sort().join('|')}`;
+                if (seenCandidateKeys.has(key)) return false;
+                seenCandidateKeys.add(key);
+                return true;
+            })
+            .sort((a, b) => b.targets.length - a.targets.length || b.score - a.score);
+    };
+
+    candidates = await fetchOllamaClueCandidates(room, team, 'normal');
+    attempts.push({mode: 'normal', rawCandidates: candidates.length});
+    valid = scoreCandidates(candidates);
+
+    if (!valid.length && candidates.length && lastAiClueDebug?.stage !== 'failed') {
+        const repairTargets = candidates
+            .map(candidate => validOwnTargetWordsFromAiCandidate(room, team, candidate))
+            .filter(words => words.length)
+            .sort((a, b) => b.length - a.length)[0] || [];
+        if (repairTargets.length) {
+            candidates = await fetchOllamaClueCandidates(room, team, 'repair', repairTargets);
+            attempts.push({mode: 'repair', rawCandidates: candidates.length, repairTargets});
+            valid = scoreCandidates(candidates);
+        }
+    }
+
+    if (!valid.length && lastAiClueDebug?.stage !== 'failed') {
+        candidates = await fetchOllamaClueCandidates(room, team, 'compact');
+        attempts.push({mode: 'compact', rawCandidates: candidates.length});
+        valid = scoreCandidates(candidates);
+    }
     const picked = valid[0] || null;
     lastAiClueDebug = {
         ...(lastAiClueDebug || {}),
         stage: picked ? 'picked' : 'no-valid-candidates',
+        attempts,
         rawCandidates: candidates.length,
         validCandidates: valid.length,
-        picked: picked ? {word: picked.word, number: picked.number, targets: picked.targets.map(c => c.word)} : null,
+        repairedCandidates: valid.filter(c => c.repaired).length,
+        rejects: rejects.slice(0, 12),
+        picked: picked ? {
+            word: picked.word,
+            number: picked.number,
+            targets: picked.targets.map(c => c.word),
+            repaired: !!picked.repaired,
+            droppedTargets: picked.droppedTargets || []
+        } : null,
         error: picked ? '' : ((lastAiClueDebug && lastAiClueDebug.error) || 'Ollama returned no valid same-team clue candidates.')
     };
     if (process.env.AI_CLUE_DEBUG === '1') {
