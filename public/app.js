@@ -2572,9 +2572,10 @@ function renderBoard() {
         const revealBadge = visuallyRevealed ? revealHeroSvg(c.color) : '';
         // Use a real centered crown layer instead of card backgrounds/pseudo-elements.
         // This avoids mobile Safari/Discord cropping the crown into the top-left corner.
+        const hiddenOperativeCrown = !!(!spy && !showOrigin && !visuallyRevealed);
         const crownSrc = neutralReveal ? '/crown-bw.png' : '/crown.png';
-        const hasCrownLayer = spyClueTarget || teamReveal || neutralReveal;
-        const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
+        const hasCrownLayer = spyClueTarget || teamReveal || neutralReveal || hiddenOperativeCrown;
+        const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''} ${hiddenOperativeCrown ? 'cardHiddenCrownLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
         const crownOnlyReveal = teamReveal || neutralReveal;
         const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>`;
         return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
