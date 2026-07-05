@@ -744,7 +744,7 @@ function showGameIntro(reason = 'join') {
             overlay.classList.remove('introLive', 'introOut');
             overlay.setAttribute('aria-hidden', 'true');
         }, 420);
-    }, 2200);
+    }, 2450);
 }
 
 function revealReactionForCard(card, beforeState, nowState) {

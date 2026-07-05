@@ -1177,7 +1177,7 @@ body[data-lang="ar"] #arabicModeBtn {
     display: grid !important;
     place-items: center !important;
     gap: 18px !important;
-    animation: introStageGlow 2.2s ease both !important;
+    animation: introStageGlow 2.45s ease both !important;
 }
 
 .gameIntroRing {
@@ -1191,14 +1191,14 @@ body[data-lang="ar"] #arabicModeBtn {
     padding: clamp(18px, 3.2vw, 34px) !important;
     background: conic-gradient(from 0deg, #ffd95d, #fff7ba 18%, #16d9cf 36%, #10100b 50%, #ffe27a 72%, #fff7ba 86%, #ffd95d) !important;
     box-shadow: 0 0 60px rgba(255, 215, 108, .6), 0 0 126px rgba(22, 217, 207, .26), 0 28px 78px rgba(0, 0, 0, .74) !important;
-    animation: introRingSpin 1.95s cubic-bezier(.2, .75, .18, 1) both !important;
+    animation: introRingSpin 2.15s cubic-bezier(.18, .82, .16, 1) both !important;
 }
 
 .gameIntroRing img {
-    width: 78% !important;
-    height: 78% !important;
+    width: 100% !important;
+    height: 100% !important;
     object-fit: contain !important;
-    border-radius: 28px !important;
+    border-radius: 50% !important;
     background: #050402 !important;
     box-shadow: inset 0 0 24px rgba(0, 0, 0, .5), 0 14px 38px rgba(0, 0, 0, .62) !important;
 }
@@ -1306,17 +1306,27 @@ body[data-lang="ar"] #arabicModeBtn {
 
 @keyframes introRingSpin {
     0% {
-        transform: rotateY(0deg) rotate(0deg) scale(.35);
+        transform: rotateY(0deg) rotate(0deg) scale(.28);
         opacity: 0;
-        filter: blur(8px) brightness(1.8);
+        filter: blur(10px) brightness(1.9);
     }
-    58% {
-        transform: rotateY(360deg) rotate(320deg) scale(1.08);
+    28% {
+        transform: rotateY(540deg) rotate(300deg) scale(1.12);
         opacity: 1;
-        filter: blur(0) brightness(1.25);
+        filter: blur(1px) brightness(1.35);
     }
-    100% {
-        transform: rotateY(360deg) rotate(360deg) scale(1);
+    48% {
+        transform: rotateY(720deg) rotate(690deg) scale(1.05);
+        opacity: 1;
+        filter: blur(0) brightness(1.18);
+    }
+    62% {
+        transform: rotateY(720deg) rotate(720deg) scale(1);
+        opacity: 1;
+        filter: blur(0) brightness(1.06);
+    }
+    76%, 100% {
+        transform: rotateY(720deg) rotate(720deg) scale(1);
         opacity: 1;
         filter: blur(0) brightness(1);
     }
@@ -1385,9 +1395,9 @@ body[data-lang="ar"] #arabicModeBtn {
     }
 
     .gameIntroRing img {
-        width: 80% !important;
-        height: 80% !important;
-        border-radius: 22px !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 50% !important;
     }
 
     .pickReactionCard {
