@@ -91,7 +91,29 @@ const AI_REJECT_SELF_REPORTED_UNSAFE = envBool('AI_REJECT_SELF_REPORTED_UNSAFE',
 const OLLAMA_AUTH_HEADER = String(process.env.OLLAMA_AUTH_HEADER || '').trim();
 const AI_ENGINE_OFFLINE_MESSAGE = "the host's pc where he hosts the ai engine that runs this mode is turned off at the moment";
 const MAX_CLUE_TARGETS = 4;
+const MAX_CLUE_WORD_LENGTH = 14;
 const GENERIC_BAD_CLUES = new Set(['WORD', 'WORDS', 'CLUE', 'TARGET', 'TARGETS', 'CARD', 'CARDS', 'THING', 'THINGS', 'OBJECT', 'OBJECTS', 'ITEM', 'ITEMS', 'COMMON', 'RELATED', 'ASSOCIATED', 'GENERAL']);
+const AI_EXTRA_CLUE_WORDS = [
+    'ANIMAL', 'AQUATIC', 'AVIATION', 'BEAUTY', 'BUILDING', 'CURRENCY', 'EDUCATION', 'ELECTRIC',
+    'FARMING', 'FINANCE', 'FLORAL', 'FORTUNE', 'GAMING', 'HEALTHCARE', 'HUNTING', 'JEWELRY',
+    'LEGAL', 'LUXURY', 'MILITARY', 'MUSICIAN', 'NATURE', 'ROYAL', 'SAFETY', 'SCIENCE',
+    'SPORTING', 'TEXTILE', 'TRAFFIC', 'WEATHER'
+];
+const SEMANTIC_FAMILIES = [
+    ['water', 'sea-life'],
+    ['animals', 'birds', 'bugs-reptiles', 'sea-life'],
+    ['food', 'fruit', 'kitchen', 'plants'],
+    ['royalty', 'history', 'people'],
+    ['places', 'school', 'travel'],
+    ['sports-games', 'arts'],
+    ['law-danger', 'people'],
+    ['money', 'objects'],
+    ['nature', 'plants', 'weather'],
+    ['technology', 'tools', 'objects'],
+    ['materials', 'clothing', 'home', 'objects'],
+    ['magic-horror', 'emotion-abstract'],
+    ['language', 'school', 'arts']
+];
 let lastAiClueDebug = null;
 
 function ollamaHeaders(extra = {}) {
@@ -675,7 +697,83 @@ function buildBotClueGroups() {
     return groups;
 }
 
+function clueTermMatches(clue = '', term = '') {
+    clue = String(clue || '').toUpperCase();
+    term = String(term || '').toUpperCase();
+    return clue === term ||
+        `${clue}S` === term ||
+        (clue.endsWith('S') && clue.slice(0, -1) === term);
+}
+
+function buildAiClueLexicon() {
+    const lexicon = new Set();
+    WORDS.filter(w => /^[A-Z]{2,14}$/.test(w)).forEach(w => lexicon.add(w));
+    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
+        normalizeWordList(spec.clues).forEach(w => lexicon.add(w));
+    });
+    AI_EXTRA_CLUE_WORDS.forEach(w => lexicon.add(String(w).toUpperCase()));
+    GENERIC_BAD_CLUES.forEach(w => lexicon.delete(w));
+    return lexicon;
+}
+
+function buildSemanticFamilyLookup() {
+    const lookup = new Map();
+    SEMANTIC_FAMILIES.forEach(family => {
+        family.forEach(id => {
+            if (!lookup.has(id)) lookup.set(id, new Set([id]));
+            family.forEach(other => lookup.get(id).add(other));
+        });
+    });
+    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
+        if (!lookup.has(spec.id)) lookup.set(spec.id, new Set([spec.id]));
+    });
+    return lookup;
+}
+
+function expandSemanticGroupIds(ids = new Set()) {
+    const expanded = new Set(ids);
+    ids.forEach(id => {
+        const family = SEMANTIC_FAMILY_LOOKUP.get(id);
+        if (family) family.forEach(x => expanded.add(x));
+    });
+    return expanded;
+}
+
+function semanticGroupIdsForTerm(term = '', mode = 'word') {
+    term = String(term || '').toUpperCase();
+    const ids = new Set();
+    BOT_CLUE_CATEGORY_SPECS.forEach(spec => {
+        const words = normalizeWordList(spec.words);
+        const clues = normalizeWordList(spec.clues);
+        const matchWord = words.some(w => clueTermMatches(term, w));
+        const matchClue = clues.some(w => clueTermMatches(term, w));
+        if ((mode === 'clue' && (matchClue || matchWord)) || (mode !== 'clue' && matchWord)) {
+            ids.add(spec.id);
+        }
+    });
+    if (term === 'ANIMAL') ['animals', 'birds', 'bugs-reptiles', 'sea-life'].forEach(id => ids.add(id));
+    if (term === 'ROYAL') ids.add('royalty');
+    if (term === 'SAFETY') ids.add('law-danger');
+    if (term === 'EDUCATION') ids.add('school');
+    if (term === 'TEXTILE') ids.add('materials');
+    if (term === 'TRAFFIC') ids.add('travel');
+    if (term === 'FARMING') ids.add('food');
+    return expandSemanticGroupIds(ids);
+}
+
+function clueHasSemanticSupport(clue = '', targets = []) {
+    if (targets.length <= 1) return true;
+    const clueGroups = semanticGroupIdsForTerm(clue, 'clue');
+    if (!clueGroups.size) return false;
+    return targets.every(card => {
+        const targetGroups = semanticGroupIdsForTerm(card.word, 'word');
+        return [...targetGroups].some(id => clueGroups.has(id));
+    });
+}
+
 const BOT_CLUE_GROUPS = buildBotClueGroups();
+const AI_CLUE_LEXICON = buildAiClueLexicon();
+const SEMANTIC_FAMILY_LOOKUP = buildSemanticFamilyLookup();
 const SINGLE_PLAYER_RECENT_LIMIT = 44;
 const singlePlayerRecentClues = [];
 const singlePlayerRecentGroupKeys = [];
@@ -738,8 +836,27 @@ function normalizeAiCandidates(parsed) {
     return [];
 }
 
+function parseStrictClueWord(raw = '') {
+    const original = String(raw || '').trim();
+    if (!/^[A-Za-z]+$/.test(original)) return {word: '', reason: 'not-one-raw-word', original};
+    const word = original.toUpperCase();
+    if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
+    if (GENERIC_BAD_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
+    if (!AI_CLUE_LEXICON.has(word)) return {word, reason: 'not-in-local-english-clue-vocabulary', original};
+    return {word, reason: '', original};
+}
+
+function parseHumanClueWord(raw = '') {
+    const original = String(raw || '').trim();
+    if (!/^[A-Za-z]+$/.test(original)) return {word: '', reason: 'not-one-raw-word', original};
+    const word = original.toUpperCase();
+    if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
+    if (GENERIC_BAD_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
+    return {word, reason: '', original};
+}
+
 function cleanAiClueWord(word = '') {
-    return String(word || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 24);
+    return parseStrictClueWord(word).word;
 }
 
 function aiBoardState(room, team) {
@@ -776,7 +893,8 @@ function aiPromptForClues(room, team, candidateCount = AI_CLUE_CANDIDATES) {
         `Do not repeat these clues: ${usedClues.join(', ') || 'none'}`,
         `Pick clues for the MOST target words possible, but never more than ${MAX_CLUE_TARGETS}. Prefer 4 targets, then 3, then 2, then 1.`,
         'Only group words when the clue has a clear semantic meaning that connects every target.',
-        'Each clue must be ONE English word, A-Z letters only.',
+        `Each clue must be ONE common English dictionary word, A-Z letters only, 2-${MAX_CLUE_WORD_LENGTH} letters.`,
+        'Never return a phrase, sentence, definition, description, or words glued together.',
         'Do not use generic placeholder clues such as WORD, CLUE, TARGET, CARD, THING, OBJECT, RELATED, COMMON, or GENERAL.',
         'Every target must be copied exactly from TARGET WORDS. Never invent target words.',
         'Never include enemy, neutral, danger, or already revealed words in targets.',
@@ -795,6 +913,8 @@ function aiRetryPromptForClue(room, team) {
         `Do not target these words: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
         `The clue cannot equal any board word: ${info.allBoardWords.join(', ')}`,
         `Prefer 2 or more targets if safe, otherwise 1 target is okay. Never use more than ${MAX_CLUE_TARGETS} targets.`,
+        `The clue must be ONE common English dictionary word, A-Z letters only, 2-${MAX_CLUE_WORD_LENGTH} letters.`,
+        'Never return a phrase, sentence, definition, description, or words glued together.',
         'Do not use generic placeholder clues such as WORD, CLUE, TARGET, CARD, THING, OBJECT, RELATED, COMMON, or GENERAL.',
         `Return exactly: {"candidates":[{"clue":"ANIMAL","targets":["FROG"],"unsafeWords":[],"confidence":0.7}]}`
     ].join('\n');
@@ -808,7 +928,8 @@ function aiRepairPromptForTargets(room, team, targetWords = []) {
         `Give ONE replacement clue for these ${info.teamName} targets: ${targetWords.slice(0, MAX_CLUE_TARGETS).join(', ')}`,
         `The clue cannot be any board word: ${info.allBoardWords.join(', ')}`,
         `The clue must not suggest these forbidden words: ${[...info.opponentWords, ...info.neutralWords, ...info.dangerWords].join(', ')}`,
-        'The clue must be one English word, A-Z letters only.',
+        `The clue must be ONE common English dictionary word, A-Z letters only, 2-${MAX_CLUE_WORD_LENGTH} letters.`,
+        'Never return a phrase, sentence, definition, description, or words glued together.',
         'The clue must have a clear semantic meaning that connects every target. Do not use WORD, CLUE, TARGET, CARD, THING, OBJECT, RELATED, COMMON, or GENERAL.',
         `Return exactly: {"candidates":[{"clue":"ANIMAL","targets":${JSON.stringify(targetWords.slice(0, MAX_CLUE_TARGETS))},"unsafeWords":[],"confidence":0.75}]}`
     ].join('\n');
@@ -894,13 +1015,10 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
 }
 
 function validateAiClueCandidate(room, team, candidate, rejects = []) {
-    const clue = cleanAiClueWord(candidate?.clue);
-    if (!clue || !/^[A-Z]+$/.test(clue)) {
-        rejects.push({clue: String(candidate?.clue || ''), reason: 'bad-clue'});
-        return null;
-    }
-    if (GENERIC_BAD_CLUES.has(clue)) {
-        rejects.push({clue, reason: 'generic-placeholder-clue'});
+    const parsedClue = parseStrictClueWord(candidate?.clue);
+    const clue = parsedClue.word;
+    if (parsedClue.reason) {
+        rejects.push({clue: parsedClue.original || String(candidate?.clue || ''), cleaned: clue, reason: parsedClue.reason});
         return null;
     }
 
@@ -940,6 +1058,10 @@ function validateAiClueCandidate(room, team, candidate, rejects = []) {
     const targets = validWords.map(w => ownByWord.get(w)).filter(Boolean);
     if (!targets.length) {
         rejects.push({clue, reason: 'no-valid-own-targets', declaredTargets});
+        return null;
+    }
+    if (!clueHasSemanticSupport(clue, targets)) {
+        rejects.push({clue, reason: 'no-local-semantic-support', targets: targets.map(c => c.word)});
         return null;
     }
 
@@ -1941,14 +2063,17 @@ io.on('connection', socket => {
         if (!playerCanAct(room, p) || p.role !== 'spymaster') return;
         const isExtraHint = false;
         if (room.status !== 'waiting-clue') return;
-        word = safeText(word, 24).replace(/\s+/g, '-');
-        const upperWord = word.toUpperCase().replace(/[^A-Z]/g, '');
+        const parsedClue = parseHumanClueWord(word);
+        if (parsedClue.reason === 'not-one-raw-word') return socket.emit('toast', 'The clue must be one English word, not a phrase.');
+        if (parsedClue.reason === 'bad-length') return socket.emit('toast', `The clue must be 2-${MAX_CLUE_WORD_LENGTH} letters.`);
+        if (parsedClue.reason === 'generic-placeholder-clue') return socket.emit('toast', 'Use a meaningful clue word, not a generic placeholder.');
+        word = parsedClue.word;
+        const upperWord = word;
         const cleanTargets = [...new Set((Array.isArray(targetIds) ? targetIds : []).map(x => parseInt(x, 10)))]
             .filter(id => room.board.some(c => c.id === id && !c.revealed && c.color === p.team));
         const declaredNumber = Math.max(0, Math.min(MAX_CLUE_TARGETS, parseInt(number, 10) || 0));
         number = declaredNumber;
         if (!word) return socket.emit('toast', 'Write a clue word first.');
-        if (GENERIC_BAD_CLUES.has(upperWord)) return socket.emit('toast', 'Use a meaningful clue word, not a generic placeholder.');
         if (room.board.some(c => c.word === upperWord)) return socket.emit('toast', 'The clue cannot be a word on the board.');
         if (!isExtraHint && number < 1) return socket.emit('toast', 'Choose at least one card from your own team color.');
         if (!isExtraHint && cleanTargets.length > MAX_CLUE_TARGETS) return socket.emit('toast', `Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
