@@ -5,6 +5,7 @@ let lastWinKey = null, winDockTimer = null;
 let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let reactionTimer = null;
+let clueSplashTimer = null, lastClueSplashKey = '';
 
 function makePlayerKey() {
     return 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -927,6 +928,124 @@ function showPickReaction(reaction) {
             overlay.setAttribute('aria-hidden', 'true');
         }, 320);
     }, 1750);
+}
+
+
+function spymasterClueSplashImageCandidates(team) {
+    const file = team === 'red' ? 'blackspymaster.png' : 'goldspymaster.png';
+    const basePath = window.location.pathname.replace(/[^/]*$/, '');
+    const rawCandidates = [
+        `/${file}`,                         // Express serves files inside /public from the site root.
+        `${basePath}${file}`,
+        `./${file}`,
+        file,
+        `${basePath}public/${file}`,        // Works if testing from the project root instead of Express.
+        `./public/${file}`,
+        `/public/${file}`
+    ];
+    return [...new Set(rawCandidates)].map(src => `${src}${src.includes('?') ? '&' : '?'}v=137`);
+}
+
+function setSpymasterClueSplashImage(img, team) {
+    if (!img) return;
+    const candidates = spymasterClueSplashImageCandidates(team);
+    img.dataset.spyTeam = team;
+    img.dataset.srcIndex = '0';
+    img.classList.remove('spymasterImageMissing');
+    img.style.opacity = '1';
+    img.style.visibility = 'visible';
+
+    img.onerror = () => {
+        const list = spymasterClueSplashImageCandidates(img.dataset.spyTeam === 'red' ? 'red' : 'blue');
+        const nextIndex = (parseInt(img.dataset.srcIndex || '0', 10) || 0) + 1;
+        if (nextIndex >= list.length) {
+            img.onerror = null;
+            img.classList.add('spymasterImageMissing');
+            return;
+        }
+        img.dataset.srcIndex = String(nextIndex);
+        img.src = list[nextIndex];
+    };
+    img.onload = () => {
+        img.classList.remove('spymasterImageMissing');
+        img.style.opacity = '1';
+        img.style.visibility = 'visible';
+    };
+    img.src = candidates[0];
+}
+
+function spymasterClueSplashAlt(team) {
+    if (uiLanguage === 'ar') return team === 'red' ? 'صاحب تلميح الفريق الأسود' : 'صاحب تلميح الفريق الذهبي';
+    return team === 'red' ? 'Black spymaster' : 'Gold spymaster';
+}
+
+function formatSplashClueWord(word) {
+    const value = String(word || '').trim();
+    return uiLanguage === 'ar' ? value : value.toUpperCase();
+}
+
+function ensureSpymasterClueSplash() {
+    let overlay = $('spymasterClueSplash');
+    if (overlay) return overlay;
+
+    overlay = document.createElement('div');
+    overlay.id = 'spymasterClueSplash';
+    overlay.className = 'spymasterClueSplash hidden';
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = `
+        <div class="spymasterClueStage" role="presentation">
+            <img id="spymasterClueImg" class="spymasterClueImg" src="" alt="" draggable="false">
+            <div class="spymasterClueBox">
+                <span class="spymasterClueLabel"></span>
+                <b id="spymasterClueWord"></b>
+                <strong class="spymasterClueNumber"><span id="spymasterClueNumber"></span><em id="spymasterClueCardsLabel"></em></strong>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function hideSpymasterClueSplash(overlay) {
+    if (!overlay) return;
+    overlay.classList.add('clueSplashOut');
+    clueSplashTimer = setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('clueSplashLive', 'clueSplashOut', 'blue', 'red');
+        overlay.setAttribute('aria-hidden', 'true');
+    }, 420);
+}
+
+function showSpymasterClueSplash(clue) {
+    if (!clue || !clue.word) return;
+    const team = clue.team === 'red' ? 'red' : 'blue';
+    const key = `${state?.id || ''}:${state?.round || 0}:${team}:${clue.at || ''}:${clue.word}:${clue.number}`;
+    if (lastClueSplashKey === key) return;
+    lastClueSplashKey = key;
+
+    const overlay = ensureSpymasterClueSplash();
+    const img = $('spymasterClueImg');
+    const label = overlay.querySelector('.spymasterClueLabel');
+    const word = $('spymasterClueWord');
+    const number = $('spymasterClueNumber');
+    const cardsLabel = $('spymasterClueCardsLabel');
+    if (!img || !label || !word || !number || !cardsLabel) return;
+
+    if (clueSplashTimer) clearTimeout(clueSplashTimer);
+    setSpymasterClueSplashImage(img, team);
+    img.alt = spymasterClueSplashAlt(team);
+    label.textContent = tt('currentClue');
+    word.textContent = formatSplashClueWord(clue.word);
+    number.textContent = String(Number(clue.number || 0));
+    cardsLabel.textContent = uiLanguage === 'ar' ? 'بطاقات' : 'CARDS';
+
+    overlay.classList.remove('hidden', 'clueSplashLive', 'clueSplashOut', 'blue', 'red');
+    overlay.classList.add(team);
+    overlay.setAttribute('aria-hidden', 'false');
+    void overlay.offsetWidth;
+    overlay.classList.add('clueSplashLive');
+
+    clueSplashTimer = setTimeout(() => hideSpymasterClueSplash(overlay), 2700);
 }
 
 function toast(msg) {
@@ -2030,7 +2149,7 @@ socket.on('kicked', ({roomId, message} = {}) => {
 });
 socket.on('state', s => {
     const before = state;
-    const clueAccepted = before?.status === 'waiting-clue' && s.status === 'guessing' && before?.clue?.at !== s.clue?.at && s.clue;
+    const clueAccepted = !!(before && s?.clue?.word && (before?.clue?.at !== s.clue.at || before?.clue?.word !== s.clue.word || before?.clue?.number !== s.clue.number || before?.clue?.team !== s.clue.team));
     const turnChanged = before && before.turn !== s.turn;
     const newFinishedGame = before && before.status !== 'finished' && s.status === 'finished';
     const gameJustStarted = before?.status === 'lobby' && s.status !== 'lobby';
@@ -2076,6 +2195,7 @@ socket.on('state', s => {
     if (newFinishedGame) sound('gameWin');
     if (!hasDelayedReveal) detectRevealSound(before, s);
     render();
+    if (clueAccepted) showSpymasterClueSplash(s.clue);
     animateScoreChanges(before, s);
     if (!hasDelayedReveal) animateNewReveals(before, s);
 });

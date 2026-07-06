@@ -1422,7 +1422,7 @@ html body #app #game #backToLobbyBtn.backLobbyBtn,
 html body.discordActivity #app #game #backToLobbyBtn.backLobbyBtn {
     display: inline-flex !important;
     visibility: visible !important;
-    opacity: 1 !important;
+    opacity: .94 !important;
     align-items: center !important;
     justify-content: center !important;
     position: fixed !important;
@@ -7503,7 +7503,7 @@ body.discordActivity #characterPick {
 }
 
 .discordIdentityCard .identityAvatar {
-    font-size: 28px !important;
+    font-size: 22px !important;
 }
 
 /* Operatives see unknown cards as silver with the crown background. */
@@ -11379,7 +11379,7 @@ body.discordActivity .blackMini strong {
     }
 
     .miniScoreCard strong, body.discordActivity .miniScoreCard strong {
-        font-size: 28px !important;
+        font-size: 22px !important;
     }
 }
 
@@ -16942,5 +16942,240 @@ body.discordActivity .cardRevealFullGhost.cardRevealLiftGhostDone {
     }
     to {
         transform: translate3d(0, 0, 0) scale(1.40);
+    }
+}
+
+/* v137: spymaster images larger and clue box lowered below the image. */
+.spymasterClueSplash,
+body.discordActivity .spymasterClueSplash {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 5200000 !important;
+    pointer-events: none !important;
+    display: block !important;
+    overflow: visible !important;
+    background:
+        radial-gradient(circle at 50% 44%, rgba(255, 215, 108, .09), transparent 36%),
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, .18), transparent 56%) !important;
+}
+
+.spymasterClueSplash.hidden,
+body.discordActivity .spymasterClueSplash.hidden {
+    display: none !important;
+}
+
+.spymasterClueStage,
+body.discordActivity .spymasterClueStage {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: max-content !important;
+    transform: translate(-50%, -50%) scale(.78);
+    opacity: 0;
+    visibility: visible;
+    transform-origin: 50% 50% !important;
+    will-change: transform, opacity, filter !important;
+}
+
+.spymasterClueSplash.clueSplashLive .spymasterClueStage,
+body.discordActivity .spymasterClueSplash.clueSplashLive .spymasterClueStage {
+    animation: dstySpymasterClueEnter 720ms cubic-bezier(.16, .92, .2, 1) both !important;
+}
+
+.spymasterClueSplash.clueSplashOut .spymasterClueStage,
+body.discordActivity .spymasterClueSplash.clueSplashOut .spymasterClueStage {
+    animation: dstySpymasterClueExit 320ms ease both !important;
+}
+
+.spymasterClueImg,
+body.discordActivity .spymasterClueImg {
+    display: block !important;
+    width: clamp(285px, 33vw, 500px) !important;
+    height: clamp(285px, 43vh, 520px) !important;
+    object-fit: contain !important;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+    position: relative !important;
+    z-index: 2 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.spymasterClueImg.spymasterImageMissing,
+body.discordActivity .spymasterClueImg.spymasterImageMissing {
+    width: clamp(285px, 33vw, 500px) !important;
+    height: clamp(285px, 43vh, 520px) !important;
+    border-radius: 34px !important;
+    background: radial-gradient(circle at 50% 34%, rgba(255, 215, 108, .40), transparent 40%), linear-gradient(145deg, rgba(40, 35, 27, .96), rgba(2, 2, 3, .96)) !important;
+    box-shadow: 0 22px 34px rgba(0, 0, 0, .62), inset 0 0 0 2px rgba(255, 215, 108, .42) !important;
+}
+
+.spymasterClueBox,
+body.discordActivity .spymasterClueBox {
+    position: absolute !important;
+    left: 50% !important;
+    top: calc(100% + 14px) !important;
+    min-width: clamp(190px, 20vw, 300px) !important;
+    transform: translateX(-50%) !important;
+    padding: 10px 14px 11px !important;
+    border-radius: 18px !important;
+    text-align: center !important;
+    border: 2px solid rgba(255, 231, 151, .66) !important;
+    box-shadow:
+        0 24px 42px rgba(0, 0, 0, .58),
+        inset 0 1px 0 rgba(255, 255, 255, .18),
+        0 0 34px rgba(255, 215, 108, .20) !important;
+    overflow: visible !important;
+    backdrop-filter: blur(14px) !important;
+}
+
+.spymasterClueBox::before,
+body.discordActivity .spymasterClueBox::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: -24px !important;
+    width: 6px !important;
+    height: 24px !important;
+    transform: translateX(-50%) !important;
+    border-radius: 999px !important;
+    background: linear-gradient(180deg, rgba(255, 242, 184, .88), rgba(255, 215, 108, .72)) !important;
+    box-shadow: 0 0 18px rgba(255, 215, 108, .42) !important;
+}
+
+.spymasterClueBox::after,
+body.discordActivity .spymasterClueBox::after {
+    content: "" !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: -10px !important;
+    width: 26px !important;
+    height: 16px !important;
+    transform: translateX(-50%) !important;
+    border-radius: 18px 18px 0 0 !important;
+    border: 2px solid rgba(255, 231, 151, .66) !important;
+    border-bottom: 0 !important;
+    background: inherit !important;
+}
+
+.spymasterClueSplash.blue .spymasterClueBox,
+body.discordActivity .spymasterClueSplash.blue .spymasterClueBox {
+    background:
+        linear-gradient(180deg, rgba(255, 232, 139, .98), rgba(164, 108, 0, .94)) !important;
+    color: #1b1000 !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .35) !important;
+}
+
+.spymasterClueSplash.red .spymasterClueBox,
+body.discordActivity .spymasterClueSplash.red .spymasterClueBox {
+    background:
+        linear-gradient(180deg, rgba(36, 36, 40, .98), rgba(4, 4, 6, .96)) !important;
+    color: #fff0b8 !important;
+    border-color: rgba(255, 215, 108, .62) !important;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .6) !important;
+}
+
+.spymasterClueLabel,
+body.discordActivity .spymasterClueLabel {
+    display: block !important;
+    margin-bottom: 3px !important;
+    font-size: 10px !important;
+    letter-spacing: 2.4px !important;
+    font-weight: 1000 !important;
+    text-transform: uppercase !important;
+    opacity: .78 !important;
+}
+
+#spymasterClueWord,
+body.discordActivity #spymasterClueWord {
+    display: block !important;
+    font-family: "Segoe UI Black", "Arial Black", "Trebuchet MS", system-ui, sans-serif !important;
+    font-size: clamp(24px, 3.4vw, 42px) !important;
+    line-height: .95 !important;
+    letter-spacing: 1px !important;
+    font-weight: 1000 !important;
+    overflow-wrap: anywhere !important;
+    text-transform: uppercase !important;
+}
+
+.spymasterClueNumber,
+body.discordActivity .spymasterClueNumber {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
+    padding: 6px 10px !important;
+    border-radius: 999px !important;
+    background: rgba(0, 0, 0, .28) !important;
+    color: #fff8df !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14) !important;
+}
+
+.spymasterClueNumber span,
+body.discordActivity .spymasterClueNumber span {
+    font-size: 22px !important;
+    line-height: 1 !important;
+    font-weight: 1000 !important;
+}
+
+.spymasterClueNumber em,
+body.discordActivity .spymasterClueNumber em {
+    font-style: normal !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    letter-spacing: 1.2px !important;
+    font-weight: 1000 !important;
+    opacity: .86 !important;
+}
+
+@keyframes dstySpymasterClueEnter {
+    0% {
+        transform: translate(-50%, calc(-50% + 34vh)) scale(.76);
+        opacity: 0;
+        filter: blur(4px) brightness(1.2);
+    }
+    70% {
+        transform: translate(-50%, calc(-50% - 2vh)) scale(1.03);
+        opacity: .94;
+        filter: blur(0) brightness(1.03);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: .94;
+        filter: blur(0) brightness(1);
+    }
+}
+
+@keyframes dstySpymasterClueExit {
+    from {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: .94;
+        filter: blur(0) brightness(1);
+    }
+    to {
+        transform: translate(-50%, -50%) scale(.96);
+        opacity: 0;
+        filter: blur(2px) brightness(1.08);
+    }
+}
+
+@media (max-width: 760px) {
+    .spymasterClueImg,
+    body.discordActivity .spymasterClueImg {
+        width: clamp(240px, 68vw, 360px) !important;
+        height: clamp(240px, 46vh, 360px) !important;
+    }
+
+    .spymasterClueBox,
+    body.discordActivity .spymasterClueBox {
+        min-width: min(72vw, 255px) !important;
+        padding: 9px 11px 10px !important;
+        border-radius: 16px !important;
+    }
+
+    #spymasterClueWord,
+    body.discordActivity #spymasterClueWord {
+        font-size: clamp(22px, 7vw, 34px) !important;
     }
 }
