@@ -38,7 +38,7 @@ let playerKey = readTabPlayerKey();
 let myId = playerKey;
 let clueNumberEdited = false;
 let lastClueTargetCount = 0;
-const MAX_CLUE_TARGETS = 4;
+const MAX_CLUE_TARGETS = 25;
 const pendingRevealIds = new Set();
 const REVEAL_ASCEND_MS = 1650;
 const delayedRevealTimers = new Map();
@@ -2737,8 +2737,14 @@ function syncClueCount() {
     const btn = $('giveClueBtn');
     const p = me();
     const hintMode = !!(state?.hintRequested && p && state.hintRequested.team === p.team && p.team === state?.turn);
-    const isCurrentSpy = p?.role === 'spymaster' && p.team === state?.turn && (state?.status === 'waiting-clue' || (hintMode && state?.status === 'guessing'));
-    if (btn) btn.disabled = !isCurrentSpy || (!hintMode && n < 1);
+    const isSpy = p?.role === 'spymaster';
+    const isCurrentSpy = isSpy && p.team === state?.turn && (state?.status === 'waiting-clue' || (hintMode && state?.status === 'guessing'));
+    // Do not disable the Give Clue button just because no target is selected yet.
+    // A disabled button creates a "does nothing" click; the click handler below now shows the proper toast.
+    if (btn) {
+        btn.disabled = !isSpy || state?.status === 'lobby' || state?.status === 'finished';
+        btn.classList.toggle('needsClueTarget', !!(isCurrentSpy && !hintMode && n < 1));
+    }
 }
 
 function teamOperativesOnline(team) {
@@ -2875,10 +2881,6 @@ function renderBoard() {
                 if (targetIds.has(id)) {
                     targetIds.delete(id);
                 } else {
-                    if (targetIds.size >= MAX_CLUE_TARGETS) {
-                        toast(uiLanguage === 'ar' ? `اختر ${MAX_CLUE_TARGETS} بطاقات كحد أقصى للتلميح الواحد.` : `Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
-                        return;
-                    }
                     targetIds.add(id);
                 }
                 renderBoard();
@@ -3148,32 +3150,36 @@ if (newGameBtn) newGameBtn.onclick = () => {
         socket.emit('newGame');
     }
 };
-$('giveClueBtn').onclick = () => {
+const giveClueButton = $('giveClueBtn');
+if (giveClueButton) giveClueButton.onclick = () => {
     const targets = [...targetIds];
-    const clueWord = $('clueWord').value.trim();
-    const clueNumberValue = Math.max(0, Math.min(MAX_CLUE_TARGETS, parseInt($('clueNumber')?.value || targets.length, 10) || 0));
+    const clueWord = String($('clueWord')?.value || '').trim();
     const p = me();
-    const hintMode = !!(state?.hintRequested && p && state.hintRequested.team === p.team);
+    const rawNumber = parseInt($('clueNumber')?.value || '', 10);
+    let clueNumberValue = Number.isFinite(rawNumber) ? Math.max(0, rawNumber) : targets.length;
+
+    if (!p || p.role !== 'spymaster') {
+        toast(uiLanguage === 'ar' ? 'صاحب التلميح فقط يمكنه إعطاء تلميح.' : 'Only the spymaster can give a clue.');
+        return;
+    }
     if (!clueWord) {
         toast(uiLanguage === 'ar' ? 'اكتب كلمة التلميح أولا.' : 'Write a clue word first.');
         return;
     }
-    if (!hintMode && targets.length < 1) {
-        toast(uiLanguage === 'ar' ? 'اختر بطاقة واحدة على الأقل من فريقك أولا.' : 'Pick at least one of your team cards first.');
+    if (clueNumberValue < 1 && targets.length > 0) clueNumberValue = targets.length;
+    if (clueNumberValue < 1) {
+        toast(uiLanguage === 'ar' ? 'اختر بطاقة واحدة على الأقل أو اكتب رقم التلميح.' : 'Pick at least one card or type a clue number.');
         return;
     }
-    if (!hintMode && targets.length > MAX_CLUE_TARGETS) {
-        toast(uiLanguage === 'ar' ? `اختر ${MAX_CLUE_TARGETS} بطاقات كحد أقصى للتلميح الواحد.` : `Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
-        return;
-    }
+
     socket.emit('giveClue', {word: clueWord, number: clueNumberValue, targetIds: targets});
 };
 const clueNumberInput = $('clueNumber');
 if (clueNumberInput) {
-    clueNumberInput.max = String(MAX_CLUE_TARGETS);
+    clueNumberInput.removeAttribute('max');
     clueNumberInput.addEventListener('input', () => {
         clueNumberEdited = true;
-        const value = Math.max(0, Math.min(MAX_CLUE_TARGETS, parseInt(clueNumberInput.value || '0', 10) || 0));
+        const value = Math.max(0, parseInt(clueNumberInput.value || '0', 10) || 0);
         clueNumberInput.value = value;
         syncClueCount();
     });

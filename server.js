@@ -90,7 +90,7 @@ const AI_CLUE_CANDIDATES = envInt('AI_CLUE_CANDIDATES', 18, 4, 40);
 const AI_REJECT_SELF_REPORTED_UNSAFE = envBool('AI_REJECT_SELF_REPORTED_UNSAFE', false);
 const OLLAMA_AUTH_HEADER = String(process.env.OLLAMA_AUTH_HEADER || '').trim();
 const AI_ENGINE_OFFLINE_MESSAGE = "the host's pc where he hosts the ai engine that runs this mode is turned off at the moment";
-const MAX_CLUE_TARGETS = 4;
+const MAX_CLUE_TARGETS = 25;
 const MAX_AI_CLUE_TARGETS = envInt('AI_MAX_CLUE_TARGETS', 5, 1, 5);
 const MAX_CLUE_WORD_LENGTH = 14;
 const GENERIC_BAD_CLUES = new Set(['WORD', 'WORDS', 'CLUE', 'TARGET', 'TARGETS', 'CARD', 'CARDS', 'THING', 'THINGS', 'OBJECT', 'OBJECTS', 'ITEM', 'ITEMS', 'COMMON', 'RELATED', 'ASSOCIATED', 'GENERAL']);
@@ -2509,7 +2509,7 @@ io.on('connection', socket => {
         if (!word) return socket.emit('toast', 'Write a clue word first.');
         if (room.board.some(c => normalizeGameTerm(c.word, roomLanguage) === upperWord)) return socket.emit('toast', 'The clue cannot be a word on the board.');
         if (!isExtraHint && number < 1) return socket.emit('toast', 'Choose at least one card from your own team color.');
-        if (!isExtraHint && cleanTargets.length > MAX_CLUE_TARGETS) return socket.emit('toast', `Choose at most ${MAX_CLUE_TARGETS} cards for one clue.`);
+        if (!isExtraHint && cleanTargets.length > MAX_CLUE_TARGETS) return socket.emit('toast', `Choose only valid unrevealed cards from your team color.`);
         room.board.forEach(c => c.clueTarget = false);
         cleanTargets.forEach(id => {
             const card = room.board.find(c => c.id === id && !c.revealed && c.color === p.team);
