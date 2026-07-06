@@ -39,6 +39,11 @@ let clueNumberEdited = false;
 let lastClueTargetCount = 0;
 const MAX_CLUE_TARGETS = 4;
 const pendingRevealIds = new Set();
+const REVEAL_ASCEND_MS = 1650;
+const delayedRevealTimers = new Map();
+const delayedRevealTokens = new Map();
+const delayedRevealReactions = new Map();
+const revealLiftGhosts = new Map();
 
 function adminStorageKey(roomId) {
     return `cc_adminToken_${String(roomId || '').toUpperCase()}`;
@@ -770,6 +775,133 @@ function firstRevealReaction(beforeState, nowState) {
         if (old && !old.revealed && card.revealed) return revealReactionForCard(card, beforeState, nowState);
     }
     return null;
+}
+
+
+
+function revealLiftSelector(id) {
+    return `.card[data-id="${String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"]`;
+}
+
+function removeRevealLiftGhost(id) {
+    const ghost = revealLiftGhosts.get(id);
+    if (!ghost) return;
+    revealLiftGhosts.delete(id);
+    ghost.classList.add('cardRevealLiftGhostDone');
+    setTimeout(() => ghost.remove(), 180);
+}
+
+function clearRevealLiftGhosts() {
+    revealLiftGhosts.forEach(ghost => ghost.remove());
+    revealLiftGhosts.clear();
+}
+
+function startRevealLiftGhost(card) {
+    if (!card || !board || !document.body) return;
+    removeRevealLiftGhost(card.id);
+    const src = board.querySelector(revealLiftSelector(card.id));
+    if (!src) return;
+    const rect = src.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    // Build a fresh full-card overlay instead of cloning only the inner word area.
+    // The overlay is fixed exactly over the picked grey card, then only scales from its center.
+    const ghost = document.createElement('div');
+    const word = document.createElement('span');
+    const wordText = String(card.word || '').trim();
+    ghost.className = 'cardRevealLiftGhost cardRevealFullGhost operativeRevealGhost';
+    word.className = `word ${cardLengthClass(wordText)}`;
+    word.style.setProperty('--letters', String(wordText.length || 1));
+    word.textContent = wordText;
+    ghost.appendChild(word);
+
+    const srcStyle = window.getComputedStyle(src);
+    ghost.style.left = `${rect.left}px`;
+    ghost.style.top = `${rect.top}px`;
+    ghost.style.width = `${rect.width}px`;
+    ghost.style.height = `${rect.height}px`;
+    ghost.style.borderRadius = srcStyle.borderRadius;
+    ghost.style.padding = srcStyle.padding || '12px';
+    ghost.style.boxSizing = 'border-box';
+    ghost.style.transformOrigin = '50% 50%';
+    ghost.style.setProperty('--reveal-ms', `${REVEAL_ASCEND_MS}ms`);
+    ghost.setAttribute('aria-hidden', 'true');
+
+    revealLiftGhosts.set(card.id, ghost);
+    document.body.appendChild(ghost);
+}
+
+function revealTokenForState(nowState, card) {
+    return `${nowState?.id || ''}:${nowState?.round ?? 0}:${card?.id ?? ''}`;
+}
+
+function clearDelayedReveals() {
+    delayedRevealTimers.forEach(timer => clearTimeout(timer));
+    delayedRevealTimers.clear();
+    delayedRevealTokens.clear();
+    delayedRevealReactions.clear();
+    pendingRevealIds.clear();
+    clearRevealLiftGhosts();
+}
+
+function newlyRevealedCards(beforeState, nowState) {
+    if (!beforeState?.board || !nowState?.board) return [];
+    const oldById = new Map(beforeState.board.map(card => [card.id, card]));
+    return nowState.board
+        .filter(card => {
+            const old = oldById.get(card.id);
+            return old && !old.revealed && card.revealed;
+        });
+}
+
+function playRevealSoundForCard(card) {
+    if (!card) return;
+    const p = me();
+    if (card.color === 'assassin') return sound('assassin');
+    if (card.color === 'neutral') return sound('neutral');
+    if (p && p.team !== 'spectator') return sound(card.color === p.team ? 'correct' : 'wrong');
+    return sound(card.color === 'blue' || card.color === 'red' ? 'correct' : 'neutral');
+}
+
+function finishDelayedReveal(id, token) {
+    if (delayedRevealTokens.get(id) !== token) return;
+    const reaction = delayedRevealReactions.get(id);
+    delayedRevealTimers.delete(id);
+    delayedRevealTokens.delete(id);
+    delayedRevealReactions.delete(id);
+    pendingRevealIds.delete(id);
+    removeRevealLiftGhost(id);
+
+    const card = state?.board?.find(c => c.id === id);
+    const stillSameRound = token === revealTokenForState(state, card);
+    if (!card || !card.revealed || !stillSameRound) return;
+
+    renderBoard();
+    playRevealSoundForCard(card);
+    if (card.color === 'blue' || card.color === 'red') {
+        requestAnimationFrame(() => flyCardToTeamScore(card));
+    }
+    showPickReaction(reaction);
+}
+
+function scheduleDelayedReveals(beforeState, nowState) {
+    const reveals = newlyRevealedCards(beforeState, nowState);
+    if (!reveals.length) return [];
+
+    for (const card of reveals) {
+        const id = card.id;
+        const token = revealTokenForState(nowState, card);
+        const existing = delayedRevealTimers.get(id);
+        if (existing) clearTimeout(existing);
+
+        pendingRevealIds.add(id);
+        delayedRevealTokens.set(id, token);
+        delayedRevealReactions.set(id, revealReactionForCard(card, beforeState, nowState));
+        startRevealLiftGhost(card);
+        delayedRevealTimers.set(id, setTimeout(() => finishDelayedReveal(id, token), REVEAL_ASCEND_MS));
+    }
+
+    return reveals;
 }
 
 function showPickReaction(reaction) {
@@ -1888,6 +2020,7 @@ socket.on('kicked', ({roomId, message} = {}) => {
     state = null;
     targetIds.clear();
     lastRevealed.clear();
+    clearDelayedReveals();
     setPlayerKey(makePlayerKey());
     if (roomId) roomInput.value = roomId;
     game.classList.add('hidden');
@@ -1902,7 +2035,10 @@ socket.on('state', s => {
     const newFinishedGame = before && before.status !== 'finished' && s.status === 'finished';
     const gameJustStarted = before?.status === 'lobby' && s.status !== 'lobby';
     const enteredGameFromLanding = !!(landing && !landing.classList.contains('hidden') && !(isDiscordActivity && s.status === 'lobby'));
-    const pickReaction = firstRevealReaction(before, s);
+    const boardChanged = !!(before?.board && s?.board && before.board.map(c => `${c.id}:${c.word}`).join('|') !== s.board.map(c => `${c.id}:${c.word}`).join('|'));
+    if (boardChanged) clearDelayedReveals();
+    const delayedReveals = scheduleDelayedReveals(before, s);
+    const hasDelayedReveal = delayedReveals.length > 0;
     if (clueAccepted || turnChanged || newFinishedGame) {
         targetIds.clear();
         const cw = $('clueWord');
@@ -1928,6 +2064,7 @@ socket.on('state', s => {
     }
     if (gameJustStarted) {
         lastBoardKey = '';
+        clearDelayedReveals();
         showGameIntro('start');
     }
     if (landing && !landing.classList.contains('hidden')) {
@@ -1937,11 +2074,10 @@ socket.on('state', s => {
     if (enteredGameFromLanding) showGameIntro(s.status === 'lobby' ? 'join-lobby' : 'join-game');
     if (before?.clue?.at !== s.clue?.at && s.clue) sound('clue');
     if (newFinishedGame) sound('gameWin');
-    detectRevealSound(before, s);
+    if (!hasDelayedReveal) detectRevealSound(before, s);
     render();
-    showPickReaction(pickReaction);
     animateScoreChanges(before, s);
-    animateNewReveals(before, s);
+    if (!hasDelayedReveal) animateNewReveals(before, s);
 });
 
 function detectRevealSound(before, now) {
@@ -2532,7 +2668,8 @@ function revealHeroSvg(color) {
 
 function renderBoard() {
     if (state?.status === 'lobby') {
-        board.classList.remove('spyBoard', 'operativeBoard');
+        board.classList.remove('spyBoard', 'operativeBoard', 'hasPendingReveal');
+        board.parentElement?.classList.remove('hasPendingRevealWrap');
         board.innerHTML = `<div class="waitingBoard">${uiLanguage === 'ar' ? 'بانتظار المدير لبدء اللعبة...' : 'Waiting for admin to start the game...'}</div>`;
         return;
     }
@@ -2541,6 +2678,8 @@ function renderBoard() {
     board.classList.toggle('spyBoard', !!spy);
     board.classList.toggle('operativeBoard', !spy);
     board.classList.toggle('finishedBoard', state.status === 'finished');
+    board.classList.toggle('hasPendingReveal', pendingRevealIds.size > 0);
+    board.parentElement?.classList.toggle('hasPendingRevealWrap', pendingRevealIds.size > 0);
     const marked = myMarkedIds();
     // Spawn animation should happen only for a truly fresh board, not for votes/reveals/turn changes.
     // Do not include visible colors, revealed state, votes, or round number here because those
@@ -2549,10 +2688,10 @@ function renderBoard() {
     const shouldSpawn = boardKey !== lastBoardKey;
     lastBoardKey = boardKey;
     board.innerHTML = state.board.map((c, i) => {
-        const showOrigin = state.status === 'finished';
-        const pendingReveal = false;
-        const visuallyRevealed = !!c.revealed;
-        const colorClass = ((visuallyRevealed || spy || showOrigin) && c.color) ? c.color : '';
+        const pendingReveal = !!(c.revealed && pendingRevealIds.has(c.id));
+        const showOrigin = state.status === 'finished' && !pendingReveal;
+        const visuallyRevealed = !!c.revealed && !pendingReveal;
+        const colorClass = pendingReveal ? '' : (((visuallyRevealed || spy || showOrigin) && c.color) ? c.color : '');
         // Spymaster clue-target selections should show the crown only, without the old cyan border/tick.
         const spyClueTarget = !c.revealed && spy && (c.clueTarget || targetIds.has(c.id));
         const voteCount = state.voteInfo?.counts?.[c.id] || 0;
@@ -2572,13 +2711,12 @@ function renderBoard() {
         const revealBadge = visuallyRevealed ? revealHeroSvg(c.color) : '';
         // Use a real centered crown layer instead of card backgrounds/pseudo-elements.
         // This avoids mobile Safari/Discord cropping the crown into the top-left corner.
-        const hiddenOperativeCrown = !!(!spy && !showOrigin && !visuallyRevealed);
         const crownSrc = neutralReveal ? '/crown-bw.png' : '/crown.png';
-        const hasCrownLayer = spyClueTarget || teamReveal || neutralReveal || hiddenOperativeCrown;
-        const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''} ${hiddenOperativeCrown ? 'cardHiddenCrownLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
+        const hasCrownLayer = spyClueTarget || teamReveal || neutralReveal;
+        const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
         const crownOnlyReveal = teamReveal || neutralReveal;
         const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>`;
-        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${c.revealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${c.revealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
+        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${visuallyRevealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${visuallyRevealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {

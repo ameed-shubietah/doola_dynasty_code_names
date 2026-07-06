@@ -15942,3 +15942,1005 @@ body.discordActivity[data-lang="ar"] .letterFillTitle .fillLetter {
         border-radius: 999px !important;
     }
 }
+
+/* v125: delayed operative reveal ascent.
+   A picked card stays visually unrevealed, rises for 1.5s, then reveals with the reaction overlay. */
+#game .boardWrap.hasPendingRevealWrap,
+body.discordActivity #game .boardWrap.hasPendingRevealWrap,
+#game .board.hasPendingReveal,
+body.discordActivity #game .board.hasPendingReveal {
+    overflow: visible !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    position: relative !important;
+    z-index: 999 !important;
+    pointer-events: none !important;
+    transform-origin: center center !important;
+    animation: dstyPendingCardAscend 1.5s cubic-bezier(.16, .92, .18, 1) both !important;
+    box-shadow: 0 28px 38px rgba(0, 0, 0, .58), 0 0 0 2px rgba(255, 229, 132, .42), 0 0 34px rgba(255, 215, 108, .28) !important;
+    filter: brightness(1.08) saturate(1.06) !important;
+}
+
+#game .card.pendingReveal .cardCrownLayer,
+body.discordActivity #game .card.pendingReveal .cardCrownLayer {
+    display: none !important;
+}
+
+#game .card.pendingReveal .word,
+body.discordActivity #game .card.pendingReveal .word {
+    z-index: 8 !important;
+}
+
+@keyframes dstyPendingCardAscend {
+    0% {
+        transform: translateY(0) scale(1) rotate(0deg);
+        filter: brightness(.92) saturate(.9);
+    }
+    18% {
+        transform: translateY(5px) scale(.98) rotate(-.35deg);
+        filter: brightness(1.05) saturate(1);
+    }
+    68% {
+        transform: translateY(-34px) scale(1.075) rotate(.6deg);
+        filter: brightness(1.22) saturate(1.12);
+    }
+    100% {
+        transform: translateY(-44px) scale(1.09) rotate(0deg);
+        filter: brightness(1.28) saturate(1.16);
+    }
+}
+
+@media (max-width: 980px) {
+    #game .card.pendingReveal,
+    body.discordActivity #game .card.pendingReveal {
+        animation-name: dstyPendingCardAscendMobile !important;
+    }
+}
+
+@keyframes dstyPendingCardAscendMobile {
+    0% {
+        transform: translateY(0) scale(1) rotate(0deg);
+        filter: brightness(.92) saturate(.9);
+    }
+    18% {
+        transform: translateY(4px) scale(.98) rotate(-.25deg);
+        filter: brightness(1.05) saturate(1);
+    }
+    68% {
+        transform: translateY(-22px) scale(1.065) rotate(.45deg);
+        filter: brightness(1.2) saturate(1.1);
+    }
+    100% {
+        transform: translateY(-28px) scale(1.075) rotate(0deg);
+        filter: brightness(1.26) saturate(1.14);
+    }
+}
+
+
+/* v126: picked-card lift toward the player's screen before reveal.
+   The board card becomes a dim placeholder while a fixed ghost copy rises and zooms forward. */
+.revealLiftLayer {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 4200000 !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+    perspective: 900px !important;
+}
+
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost {
+    position: fixed !important;
+    z-index: 4200001 !important;
+    margin: 0 !important;
+    pointer-events: none !important;
+    transform-origin: center center !important;
+    will-change: transform, filter, opacity !important;
+    animation: dstyCardLiftTowardScreen 1.5s cubic-bezier(.14, .92, .16, 1) both !important;
+    box-shadow: 0 34px 58px rgba(0, 0, 0, .72), 0 0 0 2px rgba(255, 234, 146, .62), 0 0 46px rgba(255, 215, 108, .42) !important;
+    filter: brightness(1.08) saturate(1.08) !important;
+    backface-visibility: hidden !important;
+}
+
+.cardRevealLiftGhost::before,
+body.discordActivity .cardRevealLiftGhost::before {
+    opacity: .34 !important;
+}
+
+.cardRevealLiftGhost .word,
+body.discordActivity .cardRevealLiftGhost .word {
+    z-index: 8 !important;
+}
+
+.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealLiftGhostDone {
+    animation: dstyCardLiftGhostDone .18s ease both !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    animation: dstyPendingRevealSlot 1.5s ease both !important;
+    transform: none !important;
+    opacity: .34 !important;
+    filter: grayscale(.22) brightness(.88) !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 231, 150, .16), 0 10px 18px rgba(0, 0, 0, .32) !important;
+}
+
+#game .card.pendingReveal .word,
+body.discordActivity #game .card.pendingReveal .word {
+    opacity: .56 !important;
+}
+
+@keyframes dstyCardLiftTowardScreen {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+        filter: brightness(.92) saturate(.9) blur(0);
+    }
+    14% {
+        transform: translate3d(0, 8px, 0) scale(.98) rotate(-.6deg);
+        opacity: 1;
+        filter: brightness(1.04) saturate(1);
+    }
+    52% {
+        transform: translate3d(calc(var(--reveal-lift-dx, 0px) * .52), calc(var(--reveal-lift-dy, -120px) * .58), 0) scale(calc(var(--reveal-lift-scale, 1.6) * .82)) rotate(1.1deg);
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.16);
+    }
+    82% {
+        transform: translate3d(calc(var(--reveal-lift-dx, 0px) * .9), calc(var(--reveal-lift-dy, -120px) * .94), 0) scale(calc(var(--reveal-lift-scale, 1.6) * 1.04)) rotate(-.35deg);
+        opacity: 1;
+        filter: brightness(1.32) saturate(1.22);
+    }
+    100% {
+        transform: translate3d(var(--reveal-lift-dx, 0px), var(--reveal-lift-dy, -120px), 0) scale(var(--reveal-lift-scale, 1.6)) rotate(0deg);
+        opacity: 1;
+        filter: brightness(1.42) saturate(1.26);
+    }
+}
+
+@keyframes dstyCardLiftGhostDone {
+    to {
+        opacity: 0;
+        transform: translate3d(var(--reveal-lift-dx, 0px), var(--reveal-lift-dy, -120px), 0) scale(calc(var(--reveal-lift-scale, 1.6) * 1.06));
+        filter: brightness(1.7) blur(2px);
+    }
+}
+
+@keyframes dstyPendingRevealSlot {
+    0%, 100% { opacity: .34; }
+    50% { opacity: .2; }
+}
+
+@media (max-width: 980px) {
+    .revealLiftLayer {
+        perspective: 760px !important;
+    }
+
+    .cardRevealLiftGhost,
+    body.discordActivity .cardRevealLiftGhost {
+        animation-name: dstyCardLiftTowardScreenMobile !important;
+        box-shadow: 0 24px 42px rgba(0, 0, 0, .72), 0 0 0 2px rgba(255, 234, 146, .62), 0 0 34px rgba(255, 215, 108, .36) !important;
+    }
+}
+
+@keyframes dstyCardLiftTowardScreenMobile {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+        filter: brightness(.92) saturate(.9) blur(0);
+    }
+    14% {
+        transform: translate3d(0, 5px, 0) scale(.97) rotate(-.45deg);
+        opacity: 1;
+        filter: brightness(1.04) saturate(1);
+    }
+    52% {
+        transform: translate3d(calc(var(--reveal-lift-dx, 0px) * .52), calc(var(--reveal-lift-dy, -100px) * .58), 0) scale(calc(var(--reveal-lift-scale, 1.95) * .78)) rotate(.8deg);
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.15);
+    }
+    82% {
+        transform: translate3d(calc(var(--reveal-lift-dx, 0px) * .9), calc(var(--reveal-lift-dy, -100px) * .94), 0) scale(calc(var(--reveal-lift-scale, 1.95) * 1.02)) rotate(-.25deg);
+        opacity: 1;
+        filter: brightness(1.32) saturate(1.2);
+    }
+    100% {
+        transform: translate3d(var(--reveal-lift-dx, 0px), var(--reveal-lift-dy, -100px), 0) scale(var(--reveal-lift-scale, 1.95)) rotate(0deg);
+        opacity: 1;
+        filter: brightness(1.42) saturate(1.24);
+    }
+}
+
+/* v127: full-card reveal lift, vertical only.
+   The picked operative card floats as a complete card shell straight upward from its own slot. */
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    transform-origin: center center !important;
+    animation: dstyCardLiftVerticalFullCard 1.5s cubic-bezier(.14, .9, .16, 1) both !important;
+    box-shadow: 0 34px 58px rgba(0, 0, 0, .74), 0 0 0 2px rgba(255, 234, 146, .64), 0 0 48px rgba(255, 215, 108, .44) !important;
+}
+
+.cardRevealLiftGhost .word,
+body.discordActivity .cardRevealLiftGhost .word {
+    position: relative !important;
+    z-index: 8 !important;
+    transform: none !important;
+    animation: none !important;
+}
+
+.cardRevealLiftGhost::before,
+body.discordActivity .cardRevealLiftGhost::before {
+    pointer-events: none !important;
+}
+
+.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealLiftGhostDone {
+    animation: dstyCardLiftVerticalDone .18s ease both !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    transform: none !important;
+    animation: dstyPendingRevealSlotHold 1.5s linear both !important;
+    opacity: .34 !important;
+    filter: grayscale(.22) brightness(.88) !important;
+}
+
+#game .card.pendingReveal .word,
+body.discordActivity #game .card.pendingReveal .word {
+    transform: none !important;
+    animation: none !important;
+    opacity: .48 !important;
+}
+
+@keyframes dstyCardLiftVerticalFullCard {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+        filter: brightness(.94) saturate(.92) blur(0);
+    }
+    14% {
+        transform: translate3d(0, 7px, 0) scale(.98);
+        opacity: 1;
+        filter: brightness(1.06) saturate(1);
+    }
+    58% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -150px) * .65), 0) scale(calc(var(--reveal-lift-scale, 1.5) * .84));
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.14);
+    }
+    84% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -150px) * .94), 0) scale(calc(var(--reveal-lift-scale, 1.5) * 1.03));
+        opacity: 1;
+        filter: brightness(1.34) saturate(1.2);
+    }
+    100% {
+        transform: translate3d(0, var(--reveal-lift-dy, -150px), 0) scale(var(--reveal-lift-scale, 1.5));
+        opacity: 1;
+        filter: brightness(1.44) saturate(1.25);
+    }
+}
+
+@keyframes dstyCardLiftVerticalDone {
+    to {
+        opacity: 0;
+        transform: translate3d(0, var(--reveal-lift-dy, -150px), 0) scale(calc(var(--reveal-lift-scale, 1.5) * 1.04));
+        filter: brightness(1.7) blur(2px);
+    }
+}
+
+@keyframes dstyPendingRevealSlotHold {
+    0%, 100% { opacity: .34; }
+    50% { opacity: .2; }
+}
+
+@media (max-width: 980px) {
+    .cardRevealLiftGhost,
+    body.discordActivity .cardRevealLiftGhost {
+        animation-name: dstyCardLiftVerticalFullCardMobile !important;
+        box-shadow: 0 24px 42px rgba(0, 0, 0, .72), 0 0 0 2px rgba(255, 234, 146, .62), 0 0 34px rgba(255, 215, 108, .36) !important;
+    }
+}
+
+@keyframes dstyCardLiftVerticalFullCardMobile {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+        filter: brightness(.94) saturate(.92) blur(0);
+    }
+    14% {
+        transform: translate3d(0, 5px, 0) scale(.98);
+        opacity: 1;
+        filter: brightness(1.06) saturate(1);
+    }
+    58% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -130px) * .65), 0) scale(calc(var(--reveal-lift-scale, 1.72) * .84));
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.14);
+    }
+    84% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -130px) * .94), 0) scale(calc(var(--reveal-lift-scale, 1.72) * 1.03));
+        opacity: 1;
+        filter: brightness(1.34) saturate(1.2);
+    }
+    100% {
+        transform: translate3d(0, var(--reveal-lift-dy, -130px), 0) scale(var(--reveal-lift-scale, 1.72));
+        opacity: 1;
+        filter: brightness(1.44) saturate(1.25);
+    }
+}
+
+
+/* v128: in-place card float before reveal.
+   No screen transfer/clone: the picked operative card stays in its own slot, floats lightly for 1.5s,
+   then app.js removes pendingReveal so the real color/crown and reaction appear together. */
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost,
+.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealLiftGhostDone {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    animation: none !important;
+    pointer-events: none !important;
+}
+
+#game .boardWrap.hasPendingRevealWrap,
+body.discordActivity #game .boardWrap.hasPendingRevealWrap,
+#game .board.hasPendingReveal,
+body.discordActivity #game .board.hasPendingReveal {
+    overflow: visible !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 80 !important;
+    pointer-events: none !important;
+    transform-origin: center center !important;
+    animation: dstyPendingRevealFloatInPlace 1.5s cubic-bezier(.2, .82, .2, 1) both !important;
+    filter: grayscale(.08) brightness(1.05) saturate(1.02) !important;
+    box-shadow:
+        0 16px 26px rgba(0, 0, 0, .48),
+        0 0 0 2px rgba(255, 230, 140, .40),
+        0 0 26px rgba(255, 215, 108, .26) !important;
+}
+
+#game .card.pendingReveal .word,
+body.discordActivity #game .card.pendingReveal .word {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: dstyPendingRevealWordPulse 1.5s ease-in-out both !important;
+    z-index: 9 !important;
+}
+
+#game .card.pendingReveal .cardCrownLayer,
+body.discordActivity #game .card.pendingReveal .cardCrownLayer {
+    display: none !important;
+}
+
+@keyframes dstyPendingRevealFloatInPlace {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        filter: grayscale(.18) brightness(.96) saturate(.94);
+    }
+    18% {
+        transform: translate3d(0, 3px, 0) scale(.992) rotate(-.25deg);
+        filter: grayscale(.08) brightness(1.04) saturate(1.02);
+    }
+    42% {
+        transform: translate3d(0, -8px, 0) scale(1.018) rotate(.28deg);
+        filter: grayscale(.04) brightness(1.12) saturate(1.06);
+    }
+    68% {
+        transform: translate3d(0, -4px, 0) scale(1.012) rotate(-.18deg);
+        filter: grayscale(.02) brightness(1.16) saturate(1.08);
+    }
+    86% {
+        transform: translate3d(0, -7px, 0) scale(1.02) rotate(.12deg);
+        filter: grayscale(0) brightness(1.2) saturate(1.1);
+    }
+    100% {
+        transform: translate3d(0, -2px, 0) scale(1.006) rotate(0deg);
+        filter: grayscale(0) brightness(1.24) saturate(1.12);
+    }
+}
+
+@keyframes dstyPendingRevealWordPulse {
+    0%, 100% { filter: brightness(1); }
+    45% { filter: brightness(1.18); }
+    75% { filter: brightness(1.1); }
+}
+
+@media (max-width: 980px) {
+    #game .card.pendingReveal,
+    body.discordActivity #game .card.pendingReveal {
+        animation-name: dstyPendingRevealFloatInPlaceMobile !important;
+    }
+}
+
+@keyframes dstyPendingRevealFloatInPlaceMobile {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        filter: grayscale(.18) brightness(.96) saturate(.94);
+    }
+    18% {
+        transform: translate3d(0, 2px, 0) scale(.992) rotate(-.18deg);
+        filter: grayscale(.08) brightness(1.04) saturate(1.02);
+    }
+    42% {
+        transform: translate3d(0, -5px, 0) scale(1.014) rotate(.18deg);
+        filter: grayscale(.04) brightness(1.12) saturate(1.06);
+    }
+    68% {
+        transform: translate3d(0, -3px, 0) scale(1.009) rotate(-.12deg);
+        filter: grayscale(.02) brightness(1.16) saturate(1.08);
+    }
+    86% {
+        transform: translate3d(0, -5px, 0) scale(1.014) rotate(.08deg);
+        filter: grayscale(0) brightness(1.2) saturate(1.1);
+    }
+    100% {
+        transform: translate3d(0, -1px, 0) scale(1.004) rotate(0deg);
+        filter: grayscale(0) brightness(1.24) saturate(1.12);
+    }
+}
+
+/* v129: soft card float before reveal.
+   The picked card lifts only a little from its own slot, then the real color/crown and reaction appear together. */
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost {
+    display: flex !important;
+    position: fixed !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 5005000 !important;
+    pointer-events: none !important;
+    transform-origin: center center !important;
+    will-change: transform, opacity, filter !important;
+    animation: dstySoftCardFloatBeforeReveal 1.5s cubic-bezier(.18, .82, .2, 1) both !important;
+    box-shadow:
+        0 24px 38px rgba(0, 0, 0, .64),
+        0 0 0 2px rgba(255, 235, 150, .56),
+        0 0 34px rgba(255, 215, 108, .34) !important;
+}
+
+.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealLiftGhostDone {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+    animation: dstySoftCardFloatDone .18s ease both !important;
+}
+
+.cardRevealLiftGhost .word,
+body.discordActivity .cardRevealLiftGhost .word {
+    position: relative !important;
+    z-index: 8 !important;
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+
+.cardRevealLiftGhost .cardCrownLayer,
+body.discordActivity .cardRevealLiftGhost .cardCrownLayer,
+.cardRevealLiftGhost .revealHero,
+body.discordActivity .cardRevealLiftGhost .revealHero {
+    display: none !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    transform: none !important;
+    animation: dstyPendingRevealSlotSoftHold 1.5s ease both !important;
+    opacity: .28 !important;
+    filter: grayscale(.22) brightness(.86) !important;
+    pointer-events: none !important;
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 231, 150, .14),
+        0 10px 18px rgba(0, 0, 0, .30) !important;
+}
+
+#game .card.pendingReveal .word,
+body.discordActivity #game .card.pendingReveal .word {
+    opacity: .44 !important;
+    transform: none !important;
+    animation: none !important;
+}
+
+@keyframes dstySoftCardFloatBeforeReveal {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+        filter: brightness(.96) saturate(.94) blur(0);
+    }
+    18% {
+        transform: translate3d(0, 4px, 0) scale(.992) rotate(-.25deg);
+        opacity: 1;
+        filter: brightness(1.05) saturate(1.02) blur(0);
+    }
+    48% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -24px) * .82), 0) scale(calc(var(--reveal-lift-scale, 1.055) * .992)) rotate(.25deg);
+        opacity: 1;
+        filter: brightness(1.16) saturate(1.08) blur(0);
+    }
+    72% {
+        transform: translate3d(0, var(--reveal-lift-dy, -24px), 0) scale(var(--reveal-lift-scale, 1.055)) rotate(-.12deg);
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.1) blur(0);
+    }
+    100% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -24px) * .88), 0) scale(calc(var(--reveal-lift-scale, 1.055) * .995)) rotate(0deg);
+        opacity: 1;
+        filter: brightness(1.18) saturate(1.08) blur(0);
+    }
+}
+
+@keyframes dstySoftCardFloatDone {
+    to {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -24px) * .88), 0) scale(calc(var(--reveal-lift-scale, 1.055) * .995));
+        opacity: 0;
+        filter: brightness(1.45) blur(2px);
+    }
+}
+
+@keyframes dstyPendingRevealSlotSoftHold {
+    0%, 100% { opacity: .28; }
+    45%, 70% { opacity: .16; }
+}
+
+@media (max-width: 760px) {
+    .cardRevealLiftGhost,
+    body.discordActivity .cardRevealLiftGhost {
+        box-shadow:
+            0 18px 28px rgba(0, 0, 0, .62),
+            0 0 0 2px rgba(255, 235, 150, .50),
+            0 0 24px rgba(255, 215, 108, .28) !important;
+    }
+}
+
+
+/* v130: reveal delay motion = toward the user's eye.
+   No up/down/sideways movement and no detached clone. The real grey card scales from its own center,
+   then app.js reveals the true color/crown and shows the reaction at the same moment. */
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost,
+.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealLiftGhostDone {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    animation: none !important;
+    pointer-events: none !important;
+}
+
+#game .boardWrap.hasPendingRevealWrap,
+body.discordActivity #game .boardWrap.hasPendingRevealWrap,
+#game .board.hasPendingReveal,
+body.discordActivity #game .board.hasPendingReveal {
+    overflow: visible !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 500 !important;
+    pointer-events: none !important;
+    transform-origin: center center !important;
+    will-change: transform, filter, box-shadow !important;
+    animation: dstyPendingRevealTowardEye 1.5s cubic-bezier(.16, .82, .2, 1) both !important;
+    filter: grayscale(.06) brightness(1.06) saturate(1.02) !important;
+    box-shadow:
+        0 18px 30px rgba(0, 0, 0, .52),
+        0 0 0 2px rgba(255, 231, 142, .42),
+        0 0 34px rgba(255, 215, 108, .30) !important;
+}
+
+#game .card.pendingReveal .word,
+body.discordActivity #game .card.pendingReveal .word {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    z-index: 9 !important;
+}
+
+#game .card.pendingReveal .cardCrownLayer,
+body.discordActivity #game .card.pendingReveal .cardCrownLayer {
+    display: none !important;
+}
+
+@keyframes dstyPendingRevealTowardEye {
+    0% {
+        transform: scale(1);
+        filter: grayscale(.15) brightness(.96) saturate(.94);
+    }
+    16% {
+        transform: scale(.988);
+        filter: grayscale(.10) brightness(1.02) saturate(1);
+    }
+    44% {
+        transform: scale(1.075);
+        filter: grayscale(.04) brightness(1.13) saturate(1.06);
+    }
+    72% {
+        transform: scale(1.115);
+        filter: grayscale(.02) brightness(1.20) saturate(1.10);
+    }
+    100% {
+        transform: scale(1.07);
+        filter: grayscale(0) brightness(1.17) saturate(1.08);
+    }
+}
+
+@media (max-width: 760px) {
+    #game .card.pendingReveal,
+    body.discordActivity #game .card.pendingReveal {
+        animation-name: dstyPendingRevealTowardEyeMobile !important;
+    }
+}
+
+@keyframes dstyPendingRevealTowardEyeMobile {
+    0% {
+        transform: scale(1);
+        filter: grayscale(.15) brightness(.96) saturate(.94);
+    }
+    16% {
+        transform: scale(.99);
+        filter: grayscale(.10) brightness(1.02) saturate(1);
+    }
+    44% {
+        transform: scale(1.065);
+        filter: grayscale(.04) brightness(1.13) saturate(1.06);
+    }
+    72% {
+        transform: scale(1.10);
+        filter: grayscale(.02) brightness(1.20) saturate(1.10);
+    }
+    100% {
+        transform: scale(1.06);
+        filter: grayscale(0) brightness(1.17) saturate(1.08);
+    }
+}
+
+
+/* v131: operative reveal = full grey card pushed directly toward the user's eyes.
+   No translateX/translateY: the fixed clone remains centered over its original slot and only scales/deepens. */
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost {
+    display: flex !important;
+    position: fixed !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+    z-index: 5005000 !important;
+    transform-origin: 50% 50% !important;
+    will-change: transform, opacity, filter, box-shadow !important;
+    animation: dstyCardTowardViewer 1.5s cubic-bezier(.16, .84, .18, 1) both !important;
+    background-color: #b8bcc2 !important;
+    background-image: linear-gradient(135deg, #f5f6f8 0%, #c9cdd3 42%, #777d86 100%) !important;
+    border: 2px solid rgba(242, 244, 248, .86) !important;
+    color: #111 !important;
+    box-shadow:
+        0 22px 34px rgba(0, 0, 0, .58),
+        0 0 0 2px rgba(255, 235, 150, .42),
+        0 0 34px rgba(255, 215, 108, .24) !important;
+}
+
+.cardRevealLiftGhost::before,
+body.discordActivity .cardRevealLiftGhost::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-image: url('/crown.png') !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: 82% auto !important;
+    opacity: .18 !important;
+    filter: grayscale(1) saturate(.18) contrast(.9) drop-shadow(0 7px 8px rgba(0, 0, 0, .34)) !important;
+    border: 0 !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+}
+
+.cardRevealLiftGhost::after,
+body.discordActivity .cardRevealLiftGhost::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: -45% !important;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.22), transparent 58%) !important;
+    opacity: .42 !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+}
+
+.cardRevealLiftGhost .word,
+body.discordActivity .cardRevealLiftGhost .word {
+    position: relative !important;
+    z-index: 8 !important;
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(180deg, rgba(255,255,255,.76), rgba(214,218,224,.52)) !important;
+    color: #111 !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .48) !important;
+}
+
+.cardRevealLiftGhost .cardCrownLayer,
+body.discordActivity .cardRevealLiftGhost .cardCrownLayer,
+.cardRevealLiftGhost .revealHero,
+body.discordActivity .cardRevealLiftGhost .revealHero,
+.cardRevealLiftGhost .voteFaces,
+body.discordActivity .cardRevealLiftGhost .voteFaces,
+.cardRevealLiftGhost .voteBadge,
+body.discordActivity .cardRevealLiftGhost .voteBadge,
+.cardRevealLiftGhost .cardConfirm,
+body.discordActivity .cardRevealLiftGhost .cardConfirm {
+    display: none !important;
+}
+
+.cardRevealLiftGhost.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealLiftGhost.cardRevealLiftGhostDone {
+    animation: dstyCardTowardViewerDone .18s ease both !important;
+}
+
+#game .boardWrap.hasPendingRevealWrap,
+body.discordActivity #game .boardWrap.hasPendingRevealWrap,
+#game .board.hasPendingReveal,
+body.discordActivity #game .board.hasPendingReveal {
+    overflow: visible !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    position: relative !important;
+    z-index: 5 !important;
+    pointer-events: none !important;
+    opacity: .18 !important;
+    transform: none !important;
+    animation: none !important;
+    filter: grayscale(.35) brightness(.72) !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 231, 150, .12), 0 8px 16px rgba(0, 0, 0, .25) !important;
+}
+
+#game .card.pendingReveal .word,
+body.discordActivity #game .card.pendingReveal .word {
+    opacity: .30 !important;
+    transform: none !important;
+    animation: none !important;
+}
+
+#game .card.pendingReveal .cardCrownLayer,
+body.discordActivity #game .card.pendingReveal .cardCrownLayer {
+    display: none !important;
+}
+
+@keyframes dstyCardTowardViewer {
+    0% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+        filter: grayscale(.12) brightness(.96) saturate(.94) blur(0);
+    }
+    12% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(.985);
+        opacity: 1;
+        filter: grayscale(.08) brightness(1.02) saturate(1) blur(0);
+    }
+    48% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1.22);
+        opacity: 1;
+        filter: grayscale(.03) brightness(1.13) saturate(1.06) blur(0);
+    }
+    78% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1.42);
+        opacity: .98;
+        filter: grayscale(0) brightness(1.2) saturate(1.08) blur(.1px);
+    }
+    100% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1.52);
+        opacity: 0;
+        filter: grayscale(0) brightness(1.34) saturate(1.1) blur(1.2px);
+    }
+}
+
+@keyframes dstyCardTowardViewerDone {
+    to {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1.54);
+        opacity: 0;
+        filter: brightness(1.4) blur(1.5px);
+    }
+}
+
+@media (max-width: 760px) {
+    .cardRevealLiftGhost,
+    body.discordActivity .cardRevealLiftGhost {
+        animation-name: dstyCardTowardViewerMobile !important;
+        box-shadow:
+            0 18px 28px rgba(0, 0, 0, .58),
+            0 0 0 2px rgba(255, 235, 150, .38),
+            0 0 24px rgba(255, 215, 108, .20) !important;
+    }
+}
+
+@keyframes dstyCardTowardViewerMobile {
+    0% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+        filter: grayscale(.12) brightness(.96) saturate(.94) blur(0);
+    }
+    12% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(.99);
+        opacity: 1;
+        filter: grayscale(.08) brightness(1.02) saturate(1) blur(0);
+    }
+    48% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(1.16);
+        opacity: 1;
+        filter: grayscale(.03) brightness(1.13) saturate(1.06) blur(0);
+    }
+    78% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(1.30);
+        opacity: .98;
+        filter: grayscale(0) brightness(1.2) saturate(1.08) blur(.1px);
+    }
+    100% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(1.38);
+        opacity: 0;
+        filter: grayscale(0) brightness(1.34) saturate(1.1) blur(1.2px);
+    }
+}
+
+/* v132: full operative reveal card, constant speed, no sideways/up/down travel.
+   JS now creates a full fixed overlay card instead of cloning partial inner card content. */
+.cardRevealFullGhost,
+body.discordActivity .cardRevealFullGhost {
+    position: fixed !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+    pointer-events: none !important;
+    z-index: 5005000 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform-origin: 50% 50% !important;
+    will-change: transform, opacity !important;
+    background-color: #b8bcc2 !important;
+    background-image:
+        radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .42), transparent 54%),
+        linear-gradient(135deg, #f4f5f7 0%, #c8ccd2 45%, #747a83 100%) !important;
+    border: 2px solid rgba(244, 245, 247, .88) !important;
+    color: #111 !important;
+    box-shadow:
+        0 22px 34px rgba(0, 0, 0, .58),
+        inset 0 1px 0 rgba(255, 255, 255, .50),
+        0 0 0 2px rgba(255, 235, 150, .40),
+        0 0 34px rgba(255, 215, 108, .22) !important;
+    animation:
+        dstyRevealFullCardScale var(--reveal-ms, 1650ms) linear both,
+        dstyRevealFullCardFade var(--reveal-ms, 1650ms) linear both !important;
+}
+
+.cardRevealFullGhost::before,
+body.discordActivity .cardRevealFullGhost::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 9px !important;
+    border: 2px solid rgba(35, 38, 44, .22) !important;
+    border-radius: inherit !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    background: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+.cardRevealFullGhost::after,
+body.discordActivity .cardRevealFullGhost::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: -40% !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    background: linear-gradient(115deg, transparent 42%, rgba(255, 255, 255, .30), transparent 58%) !important;
+    opacity: .34 !important;
+    transform: none !important;
+}
+
+.cardRevealFullGhost .word,
+body.discordActivity .cardRevealFullGhost .word {
+    position: relative !important;
+    z-index: 8 !important;
+    width: 100% !important;
+    min-height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(218,222,228,.56)) !important;
+    color: #111 !important;
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .48) !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.32) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhostDone {
+    animation: dstyRevealFullCardDone .18s linear both !important;
+}
+
+@keyframes dstyRevealFullCardScale {
+    from {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+        transform: translate3d(0, 0, 0) scale(1.52);
+    }
+}
+
+@keyframes dstyRevealFullCardFade {
+    0%, 86% {
+        opacity: 1;
+        filter: grayscale(.10) brightness(1) saturate(.96) blur(0);
+    }
+    100% {
+        opacity: 0;
+        filter: grayscale(0) brightness(1.22) saturate(1.04) blur(.8px);
+    }
+}
+
+@keyframes dstyRevealFullCardDone {
+    to {
+        transform: translate3d(0, 0, 0) scale(1.54);
+        opacity: 0;
+        filter: brightness(1.24) blur(1px);
+    }
+}
+
+@media (max-width: 760px) {
+    .cardRevealFullGhost,
+    body.discordActivity .cardRevealFullGhost {
+        animation:
+            dstyRevealFullCardScaleMobile var(--reveal-ms, 1650ms) linear both,
+            dstyRevealFullCardFade var(--reveal-ms, 1650ms) linear both !important;
+    }
+}
+
+@keyframes dstyRevealFullCardScaleMobile {
+    from {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+        transform: translate3d(0, 0, 0) scale(1.40);
+    }
+}
