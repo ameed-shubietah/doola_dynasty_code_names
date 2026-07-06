@@ -808,12 +808,18 @@ function startRevealLiftGhost(card) {
     // Build a fresh full-card overlay instead of cloning only the inner word area.
     // The overlay is fixed exactly over the picked grey card, then only scales from its center.
     const ghost = document.createElement('div');
+    const crown = document.createElement('img');
     const word = document.createElement('span');
     const wordText = String(card.word || '').trim();
     ghost.className = 'cardRevealLiftGhost cardRevealFullGhost operativeRevealGhost';
+    crown.className = 'cardCrownLayer cardRevealGhostCrown';
+    crown.src = '/crown-bw.png';
+    crown.alt = '';
+    crown.setAttribute('aria-hidden', 'true');
     word.className = `word ${cardLengthClass(wordText)}`;
     word.style.setProperty('--letters', String(wordText.length || 1));
     word.textContent = wordText;
+    ghost.appendChild(crown);
     ghost.appendChild(word);
 
     const srcStyle = window.getComputedStyle(src);
