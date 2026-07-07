@@ -17534,3 +17534,22 @@ body.discordActivity #giveClueBtn {
         padding: 4px 6px !important;
     }
 }
+
+
+/* v144: modes menu is visible to everyone, but only the original host/admin can change room modes or language. */
+#toast.hostOnlyModeToast,
+body.discordActivity #toast.hostOnlyModeToast {
+    color: #fff3c4 !important;
+    font-weight: 1000 !important;
+    border: 2px solid rgba(255, 215, 108, .82) !important;
+    background:
+        linear-gradient(135deg, rgba(255, 215, 108, .20), rgba(0, 0, 0, .92) 34%, rgba(255, 215, 108, .15)),
+        linear-gradient(180deg, #14110b, #050505) !important;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, .88),
+        0 18px 42px rgba(0, 0, 0, .72),
+        0 0 34px rgba(255, 215, 108, .35) !important;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .68), 0 0 12px rgba(255, 215, 108, .38) !important;
+    max-width: min(92vw, 560px) !important;
+    text-align: center !important;
+}

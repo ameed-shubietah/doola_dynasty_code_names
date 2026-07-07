@@ -1087,11 +1087,63 @@ function showSpymasterClueSplash(clue) {
     clueSplashTimer = setTimeout(() => hideSpymasterClueSplash(overlay), 2700);
 }
 
-function toast(msg) {
+function toast(msg, variant = '') {
     const t = $('toast');
+    if (!t) return;
     t.textContent = msg;
+    t.classList.remove('hostOnlyModeToast');
+    if (variant) t.classList.add(variant);
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), String(msg || '').length > 70 ? 5200 : 2200);
+    setTimeout(() => {
+        t.classList.remove('show');
+        if (variant) t.classList.remove(variant);
+    }, String(msg || '').length > 70 ? 5200 : 2600);
+}
+
+function activeModeRoomCode() {
+    const codeValue = state?.id || roomInput?.value || (isDiscordActivity ? getDiscordActivityRoomCode() : '');
+    return String(codeValue || '').trim().toUpperCase();
+}
+
+function showHostOnlyModeWarning() {
+    const msg = uiLanguage === 'ar'
+        ? 'فقط مضيف الغرفة يمكنه تغيير الوضع أو اللغة لهذه اللعبة.'
+        : 'Only the room host can change the mode or language for this game.';
+    toast(msg, 'hostOnlyModeToast');
+    modesMenu?.classList.add('hidden');
+}
+
+function hasModeHostAccess(roomCode = activeModeRoomCode()) {
+    const p = me();
+    if (p?.isAdmin) return true;
+    return !!(roomCode && getAdminToken(roomCode));
+}
+
+function withModeHostAccess(action) {
+    const roomCode = activeModeRoomCode();
+    if (!roomCode || hasModeHostAccess(roomCode)) return action();
+
+    if (state?.id) {
+        showHostOnlyModeWarning();
+        return;
+    }
+
+    const knownPreviewRoom = !!(lastLobbyInfo?.ok && String(lastLobbyInfo.roomId || '').toUpperCase() === roomCode);
+    if (knownPreviewRoom) {
+        showHostOnlyModeWarning();
+        return;
+    }
+
+    socket.emit('getRoomInfo', {roomId: roomCode}, res => {
+        if (res?.ok) {
+            applyLobbyInfo(res);
+            if (!hasModeHostAccess(roomCode)) {
+                showHostOnlyModeWarning();
+                return;
+            }
+        }
+        action();
+    });
 }
 
 function showAdminRequestPopup(req) {
@@ -2043,33 +2095,30 @@ if (modesBtn && modesMenu) {
 if (arabicModeBtn) {
     arabicModeBtn.onclick = ev => {
         ev.preventDefault();
-        if (state && game && !game.classList.contains('hidden')) {
-            toast(uiLanguage === 'ar' ? 'ارجع للصفحة الرئيسية لتغيير وضع اللغة.' : 'Go back to the home page to change the room mode.');
+        withModeHostAccess(() => {
+            if (state && game && !game.classList.contains('hidden')) {
+                toast(uiLanguage === 'ar' ? 'ارجع للصفحة الرئيسية لتغيير وضع اللغة.' : 'Go back to the home page to change the room mode.');
+                modesMenu?.classList.add('hidden');
+                return;
+            }
+            uiLanguage = uiLanguage === 'ar' ? 'en' : 'ar';
+            applyLanguage();
+            renderCharacters();
             modesMenu?.classList.add('hidden');
-            return;
-        }
-        const currentRoomCode = String(roomInput?.value || '').trim().toUpperCase();
-        const viewingExistingRoom = !!(currentRoomCode && lastLobbyInfo?.ok && String(lastLobbyInfo.roomId || '').toUpperCase() === currentRoomCode);
-        if (viewingExistingRoom && !getAdminToken(currentRoomCode)) {
-            toast(uiLanguage === 'ar' ? 'وضع هذه الغرفة يتحكم به منشئها فقط.' : 'Only the room creator can change this room mode.');
-            modesMenu?.classList.add('hidden');
-            return;
-        }
-        uiLanguage = uiLanguage === 'ar' ? 'en' : 'ar';
-        applyLanguage();
-        renderCharacters();
-        modesMenu?.classList.add('hidden');
+        });
     };
 }
 if (singlePlayerBtn) {
     singlePlayerBtn.onclick = () => {
-        modesMenu?.classList.add('hidden');
-        const overlay = $('singleDifficultyOverlay');
-        if (overlay) {
-            overlay.classList.remove('hidden');
-            return;
-        }
-        startSinglePlayer('medium');
+        withModeHostAccess(() => {
+            modesMenu?.classList.add('hidden');
+            const overlay = $('singleDifficultyOverlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                return;
+            }
+            startSinglePlayer('medium');
+        });
     };
 }
 
@@ -2133,8 +2182,10 @@ const closeSingleDifficulty = $('closeSingleDifficulty');
 if (closeSingleDifficulty) closeSingleDifficulty.onclick = () => singleDifficultyOverlay?.classList.add('hidden');
 document.querySelectorAll('[data-single-difficulty]').forEach(btn => {
     btn.onclick = () => {
-        singleDifficultyOverlay?.classList.add('hidden');
-        startSinglePlayer(btn.dataset.singleDifficulty || 'medium');
+        withModeHostAccess(() => {
+            singleDifficultyOverlay?.classList.add('hidden');
+            startSinglePlayer(btn.dataset.singleDifficulty || 'medium');
+        });
     };
 });
 $('joinBtn').onclick = () => {
