@@ -18322,3 +18322,190 @@ body.discordActivity #game .board.spyBoard .card.assassin .word {
         padding: 5px 8px !important;
     }
 }
+
+
+/* v150: mobile team panels default closed; Show Team / Hide Team works again.
+   This only overrides mobile visibility rules from the roster restore patch. */
+@media (max-width: 980px) {
+    #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) section:not(.sideLogSection),
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) section:not(.sideLogSection),
+    #game.gameV9:not(.hidden) .teamPanel[data-mobile-team-open="false"] section:not(.sideLogSection),
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel[data-mobile-team-open="false"] section:not(.sideLogSection) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        max-height: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        pointer-events: none !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen section:not(.sideLogSection),
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen section:not(.sideLogSection),
+    #game.gameV9:not(.hidden) .teamPanel[data-mobile-team-open="true"] section:not(.sideLogSection),
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel[data-mobile-team-open="true"] section:not(.sideLogSection) {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: auto !important;
+        max-height: 20svh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        margin: 6px 0 0 !important;
+        padding: 7px !important;
+        pointer-events: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) .teamList,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) .teamList,
+    #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) .player,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) .player {
+        display: none !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel .mobileTeamToggle {
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        position: relative !important;
+        z-index: 10020 !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) .mobileTeamToggle {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen section:not(.sideLogSection),
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen section:not(.sideLogSection),
+    #game.gameV9:not(.hidden) .teamPanel[data-mobile-team-open="true"] section:not(.sideLogSection),
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel[data-mobile-team-open="true"] section:not(.sideLogSection) {
+        max-height: 28svh !important;
+    }
+}
+
+
+/* v151: mobile expanded team Hide Team button stays above the board/game layer. */
+@media (max-width: 980px) {
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen {
+        position: relative !important;
+        z-index: 30000 !important;
+        overflow: visible !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .teamHeader,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .teamHeader {
+        position: relative !important;
+        z-index: 30010 !important;
+        overflow: visible !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle {
+        position: fixed !important;
+        top: auto !important;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 78px) !important;
+        transform: none !important;
+        z-index: 999999 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 102px !important;
+        height: 36px !important;
+        padding: 0 14px !important;
+        border-radius: 999px !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        color: #201100 !important;
+        background: linear-gradient(180deg, #fff2ae, #d9a324 58%, #875600) !important;
+        border: 1px solid rgba(255, 236, 165, .92) !important;
+        box-shadow: 0 0 0 2px rgba(0,0,0,.55), 0 0 28px rgba(255,215,108,.55), 0 12px 28px rgba(0,0,0,.62) !important;
+    }
+
+    #game.gameV9:not(.hidden) #goldPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) #goldPanel.mobileTeamOpen .mobileTeamToggle {
+        left: max(12px, env(safe-area-inset-left)) !important;
+        right: auto !important;
+    }
+
+    #game.gameV9:not(.hidden) #blackPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) #blackPanel.mobileTeamOpen .mobileTeamToggle {
+        right: max(12px, env(safe-area-inset-right)) !important;
+        left: auto !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle {
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 50px) !important;
+        min-width: 86px !important;
+        height: 30px !important;
+        padding: 0 10px !important;
+        font-size: 9px !important;
+    }
+}
+
+
+/* v152: mobile expanded Hide Team button is always pinned at the top-right for both teams. */
+@media (max-width: 980px) {
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle,
+    #game.gameV9:not(.hidden) #goldPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) #goldPanel.mobileTeamOpen .mobileTeamToggle,
+    #game.gameV9:not(.hidden) #blackPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) #blackPanel.mobileTeamOpen .mobileTeamToggle {
+        position: fixed !important;
+        top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
+        right: max(12px, env(safe-area-inset-right)) !important;
+        left: auto !important;
+        bottom: auto !important;
+        transform: none !important;
+        z-index: 2147483000 !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    #game.gameV9:not(.hidden) #blackPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) #blackPanel.mobileTeamOpen .mobileTeamToggle {
+        right: max(12px, env(safe-area-inset-right)) !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle,
+    #game.gameV9:not(.hidden) #goldPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) #goldPanel.mobileTeamOpen .mobileTeamToggle,
+    #game.gameV9:not(.hidden) #blackPanel.mobileTeamOpen .mobileTeamToggle,
+    body.discordActivity #game.gameV9:not(.hidden) #blackPanel.mobileTeamOpen .mobileTeamToggle {
+        top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+        right: max(10px, env(safe-area-inset-right)) !important;
+        left: auto !important;
+        bottom: auto !important;
+        min-width: 86px !important;
+        height: 30px !important;
+        padding: 0 10px !important;
+        font-size: 9px !important;
+    }
+}

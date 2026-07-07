@@ -2565,7 +2565,7 @@ function renderMe() {
     $('meCard').innerHTML = `<div class="player ${p.team}">${avatarHtml(p)}<div><b>${p.name}</b><span class="roleTag">${teamName(p.team)} · ${roleLabel}</span></div></div>`;
 }
 
-const mobileTeamOpenState = {goldPanel: true, blackPanel: true};
+const mobileTeamOpenState = {goldPanel: false, blackPanel: false};
 
 function ensureMobileTeamToggle(panelId) {
     const panel = $(panelId);
@@ -2587,6 +2587,7 @@ function ensureMobileTeamToggle(panelId) {
     }
     const open = !!mobileTeamOpenState[panelId];
     panel.classList.toggle('mobileTeamOpen', open);
+    panel.dataset.mobileTeamOpen = open ? 'true' : 'false';
     btn.textContent = open ? tt('hideTeam') : tt('showTeam');
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
