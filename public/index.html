@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>CODENAMES DSTY</title>
-    <link rel="stylesheet" href="/style.css?v=144"/>
+    <link rel="stylesheet" href="/style.css?v=145"/>
 </head>
 <body>
 <div id="app">
@@ -144,6 +144,15 @@
             <div id="modesMenu" class="modesMenu hidden">
                 <button id="singlePlayerBtn" class="modeChoice" type="button">Single Player / لاعب فردي</button>
                 <button id="arabicModeBtn" class="modeChoice" type="button">Arabic Mode / الوضع العربي</button>
+            </div>
+            <button id="backgroundBtn" class="modesBtn backgroundBtn" type="button">Backgrounds</button>
+            <div id="backgroundMenu" class="modesMenu hidden backgroundMenu">
+                <button class="modeChoice bgChoice" type="button" data-bg-theme="royal-noir">Royal Gold</button>
+                <button class="modeChoice bgChoice" type="button" data-bg-theme="violet-crown">Violet Crown</button>
+                <button class="modeChoice bgChoice" type="button" data-bg-theme="ember-royal">Ember Royal</button>
+                <button class="modeChoice bgChoice" type="button" data-bg-theme="emerald-night">Emerald Night</button>
+                <button class="modeChoice bgChoice" type="button" data-bg-theme="azure-luxe">Azure Luxe</button>
+                <button class="modeChoice bgChoice" type="button" data-bg-theme="obsidian-rose">Obsidian Rose</button>
             </div>
         </div>
         <div id="singleDifficultyOverlay" class="singleDifficultyOverlay hidden" aria-live="polite">
@@ -328,6 +337,6 @@
 </script>
 <script type="module" src="/discord-sdk.js?v=60"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js?v=144"></script>
+<script src="/app.js?v=145"></script>
 </body>
 </html>

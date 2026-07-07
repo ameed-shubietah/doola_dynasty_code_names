@@ -68,6 +68,36 @@ let nameWasEditedLocally = !!localStorage.cc_name;
 let uiLanguage = initialUiLanguage;
 if (nameInput) nameInput.value = localStorage.cc_name || '';
 
+const BACKGROUND_THEMES = [
+    {id: 'royal-noir', en: 'Royal Gold', ar: 'ذهبي ملكي'},
+    {id: 'violet-crown', en: 'Violet Crown', ar: 'تاج بنفسجي'},
+    {id: 'ember-royal', en: 'Ember Royal', ar: 'جمرة ملكية'},
+    {id: 'emerald-night', en: 'Emerald Night', ar: 'ليلة زمردية'},
+    {id: 'azure-luxe', en: 'Azure Luxe', ar: 'أزرق فاخر'},
+    {id: 'obsidian-rose', en: 'Obsidian Rose', ar: 'وردة أوبسيديان'}
+];
+
+function getSavedBackgroundTheme() {
+    const saved = String(localStorage.cc_bgTheme || '').trim();
+    return BACKGROUND_THEMES.some(t => t.id === saved) ? saved : 'royal-noir';
+}
+
+function applyBackgroundTheme(themeId) {
+    const next = BACKGROUND_THEMES.some(t => t.id === themeId) ? themeId : 'royal-noir';
+    document.body.dataset.bgTheme = next;
+    localStorage.cc_bgTheme = next;
+    document.querySelectorAll('.bgChoice').forEach(btn => btn.classList.toggle('selected', btn.dataset.bgTheme === next));
+}
+
+function refreshBackgroundChooserText() {
+    const bgButton = $('backgroundBtn');
+    if (bgButton) bgButton.textContent = uiLanguage === 'ar' ? 'الخلفيات' : 'Backgrounds';
+    document.querySelectorAll('.bgChoice').forEach(btn => {
+        const meta = BACKGROUND_THEMES.find(t => t.id === btn.dataset.bgTheme);
+        if (meta) btn.textContent = uiLanguage === 'ar' ? meta.ar : meta.en;
+    });
+}
+
 const UI_TEXT = {
     en: {
         modes: 'MODES',
@@ -326,6 +356,8 @@ function applyLanguage() {
     const languageModeButton = $('arabicModeBtn');
     if (languageModeButton) languageModeButton.textContent = uiLanguage === 'ar' ? 'English Mode' : 'Arabic Mode / الوضع العربي';
     $('singlePlayerBtn')?.classList.add('primaryMode');
+    refreshBackgroundChooserText();
+    applyBackgroundTheme(getSavedBackgroundTheme());
     setLabelText('.joinBasics label:first-child', 'name');
     setLabelText('.websiteRoomField', 'roomCode');
     setPlaceholder('name', 'yourName');
@@ -2086,11 +2118,32 @@ if (modesBtn && modesMenu) {
         ev.preventDefault();
         ev.stopPropagation();
         modesMenu.classList.toggle('hidden');
+        $('backgroundMenu')?.classList.add('hidden');
     };
     document.addEventListener('click', ev => {
         if (ev.target.closest('.modesFloating')) return;
         modesMenu.classList.add('hidden');
+        $('backgroundMenu')?.classList.add('hidden');
     });
+}
+const backgroundBtn = $('backgroundBtn');
+const backgroundMenu = $('backgroundMenu');
+if (backgroundBtn && backgroundMenu) {
+    backgroundBtn.onclick = ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        backgroundMenu.classList.toggle('hidden');
+        modesMenu?.classList.add('hidden');
+    };
+    document.querySelectorAll('.bgChoice').forEach(btn => {
+        btn.onclick = ev => {
+            ev.preventDefault();
+            applyBackgroundTheme(btn.dataset.bgTheme);
+            backgroundMenu.classList.add('hidden');
+        };
+    });
+    applyBackgroundTheme(getSavedBackgroundTheme());
+    refreshBackgroundChooserText();
 }
 if (arabicModeBtn) {
     arabicModeBtn.onclick = ev => {
@@ -2734,6 +2787,7 @@ function activeRoleForTurn() {
 function applyActiveTurnHighlight() {
     const activeRole = activeRoleForTurn();
     const activeTeam = state?.turn || '';
+    document.body.dataset.turnTeam = activeTeam;
     const goldPanel = $('goldPanel'), blackPanel = $('blackPanel');
     [goldPanel, blackPanel].forEach(panel => panel?.classList.remove('activeTurnPanel', 'dimTurnPanel'));
     if (activeRole && activeTeam) {

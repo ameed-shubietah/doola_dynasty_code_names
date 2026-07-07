@@ -17553,3 +17553,375 @@ body.discordActivity #toast.hostOnlyModeToast {
     max-width: min(92vw, 560px) !important;
     text-align: center !important;
 }
+
+
+/* v145: premium shared page backgrounds + personal background chooser + richer side panels + team-colored vote selection. */
+:root {
+    --page-bg-1: #120d05;
+    --page-bg-2: #050505;
+    --page-bg-3: rgba(255, 215, 108, .18);
+    --page-bg-4: rgba(255, 255, 255, .05);
+    --page-grid: rgba(255, 215, 108, .06);
+    --page-accent: rgba(255, 215, 108, .72);
+}
+
+body {
+    position: relative;
+    min-height: 100vh;
+    background: #050505 !important;
+    overflow-x: hidden;
+}
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+}
+
+body::before {
+    z-index: -3;
+    background:
+        radial-gradient(circle at 16% 18%, var(--page-bg-3) 0%, transparent 26%),
+        radial-gradient(circle at 82% 14%, rgba(255, 248, 214, .10) 0%, transparent 24%),
+        radial-gradient(circle at 50% 120%, rgba(255, 175, 48, .14) 0%, transparent 34%),
+        linear-gradient(135deg, var(--page-bg-1) 0%, var(--page-bg-2) 55%, #000000 100%);
+}
+
+body::after {
+    z-index: -2;
+    opacity: .82;
+    background:
+        linear-gradient(var(--page-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--page-grid) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.05), transparent 56%);
+    background-size: 80px 80px, 80px 80px, cover;
+    mix-blend-mode: screen;
+}
+
+body[data-bg-theme="royal-noir"] {
+    --page-bg-1: #241703;
+    --page-bg-2: #060606;
+    --page-bg-3: rgba(255, 215, 108, .20);
+    --page-bg-4: rgba(255, 244, 199, .07);
+    --page-grid: rgba(255, 215, 108, .055);
+    --page-accent: rgba(255, 215, 108, .88);
+}
+
+body[data-bg-theme="violet-crown"] {
+    --page-bg-1: #17061f;
+    --page-bg-2: #050507;
+    --page-bg-3: rgba(203, 128, 255, .22);
+    --page-bg-4: rgba(255, 211, 106, .07);
+    --page-grid: rgba(190, 144, 255, .055);
+    --page-accent: rgba(208, 154, 255, .8);
+}
+
+body[data-bg-theme="ember-royal"] {
+    --page-bg-1: #2b0905;
+    --page-bg-2: #070707;
+    --page-bg-3: rgba(255, 114, 66, .22);
+    --page-bg-4: rgba(255, 215, 108, .06);
+    --page-grid: rgba(255, 115, 58, .045);
+    --page-accent: rgba(255, 157, 92, .78);
+}
+
+body[data-bg-theme="emerald-night"] {
+    --page-bg-1: #07160d;
+    --page-bg-2: #040505;
+    --page-bg-3: rgba(80, 214, 142, .20);
+    --page-bg-4: rgba(255, 215, 108, .05);
+    --page-grid: rgba(90, 224, 152, .045);
+    --page-accent: rgba(125, 240, 177, .75);
+}
+
+body[data-bg-theme="azure-luxe"] {
+    --page-bg-1: #071423;
+    --page-bg-2: #050607;
+    --page-bg-3: rgba(72, 173, 255, .22);
+    --page-bg-4: rgba(255, 215, 108, .05);
+    --page-grid: rgba(99, 189, 255, .045);
+    --page-accent: rgba(118, 205, 255, .8);
+}
+
+body[data-bg-theme="obsidian-rose"] {
+    --page-bg-1: #19070f;
+    --page-bg-2: #040404;
+    --page-bg-3: rgba(255, 96, 148, .18);
+    --page-bg-4: rgba(255, 215, 108, .05);
+    --page-grid: rgba(255, 96, 148, .04);
+    --page-accent: rgba(255, 140, 184, .72);
+}
+
+#app,
+body.discordActivity #app,
+#landing,
+#game.gameV9 {
+    position: relative;
+    z-index: 1;
+    background: transparent !important;
+}
+
+#landing,
+#game.gameV9 {
+    backdrop-filter: none !important;
+}
+
+.backgroundBtn {
+    min-width: 142px;
+}
+
+.backgroundMenu {
+    width: min(250px, calc(100vw - 34px));
+}
+
+.bgChoice {
+    position: relative;
+    overflow: hidden;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 800;
+    letter-spacing: .4px;
+    min-height: 50px;
+}
+
+.bgChoice::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: .55;
+    pointer-events: none;
+}
+
+.bgChoice[data-bg-theme="royal-noir"]::before {
+    background: linear-gradient(135deg, #e9d37a, #704400 55%, #050505);
+}
+.bgChoice[data-bg-theme="violet-crown"]::before {
+    background: linear-gradient(135deg, #c37bff, #3b185e 52%, #050505);
+}
+.bgChoice[data-bg-theme="ember-royal"]::before {
+    background: linear-gradient(135deg, #ff8b49, #7a1e00 52%, #050505);
+}
+.bgChoice[data-bg-theme="emerald-night"]::before {
+    background: linear-gradient(135deg, #4fdd92, #0b3821 52%, #050505);
+}
+.bgChoice[data-bg-theme="azure-luxe"]::before {
+    background: linear-gradient(135deg, #59bfff, #123a74 52%, #050505);
+}
+.bgChoice[data-bg-theme="obsidian-rose"]::before {
+    background: linear-gradient(135deg, #ff75ab, #65142f 52%, #050505);
+}
+
+.bgChoice > *,
+.bgChoice {
+    position: relative;
+    z-index: 1;
+}
+
+.bgChoice.selected {
+    border-color: rgba(255,255,255,.72) !important;
+    box-shadow: 0 0 0 2px rgba(255, 215, 108, .68), 0 0 20px rgba(255, 215, 108, .34) !important;
+}
+
+#game .teamPanel,
+body.discordActivity #game .teamPanel {
+    background:
+        linear-gradient(180deg, rgba(10, 9, 8, .95), rgba(5, 5, 5, .94)),
+        linear-gradient(130deg, rgba(255,255,255,.03), transparent 55%) !important;
+    border-width: 1px !important;
+}
+
+#game .teamPanelGold,
+body.discordActivity #game .teamPanelGold {
+    border-color: rgba(255, 215, 108, .55) !important;
+    box-shadow: 0 24px 54px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,244,199,.08), 0 0 0 1px rgba(255, 215, 108, .12) !important;
+}
+
+#game .teamPanelBlack,
+body.discordActivity #game .teamPanelBlack {
+    border-color: rgba(25, 25, 25, .96) !important;
+    box-shadow: 0 24px 54px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(255, 215, 108, .08) !important;
+}
+
+#game .teamPanel section,
+body.discordActivity #game .teamPanel section {
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015)) !important;
+    border: 1px solid rgba(255, 215, 108, .16) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 10px 24px rgba(0,0,0,.22) !important;
+}
+
+#game .teamPanel section h3,
+body.discordActivity #game .teamPanel section h3,
+#game .teamPanel h3,
+body.discordActivity #game .teamPanel h3 {
+    color: #ffe39a !important;
+    text-shadow: 0 0 16px rgba(255, 215, 108, .28), 0 1px 0 rgba(0,0,0,.8) !important;
+    letter-spacing: .8px !important;
+}
+
+#game .teamPanel .player,
+body.discordActivity #game .teamPanel .player {
+    background:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,.08), transparent 24%),
+        linear-gradient(145deg, rgba(255, 215, 108, .15), rgba(24, 19, 13, .94) 52%, rgba(6,6,6,.98)) !important;
+    border: 1px solid rgba(255, 215, 108, .36) !important;
+    box-shadow: 0 10px 22px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+#game .teamPanelBlack .player,
+body.discordActivity #game .teamPanelBlack .player,
+#game .teamPanel .player.red,
+#game .teamPanel .player.spectator {
+    background:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,.05), transparent 24%),
+        linear-gradient(145deg, rgba(255, 215, 108, .08), rgba(16, 16, 16, .95) 46%, rgba(4,4,4,.99)) !important;
+}
+
+#game .teamPanel .playerBody > b,
+body.discordActivity #game .teamPanel .playerBody > b,
+#game .teamPanel .playerNameText,
+body.discordActivity #game .teamPanel .playerNameText {
+    color: #fff5cf !important;
+    text-shadow: 0 0 14px rgba(255, 215, 108, .30), 0 1px 0 rgba(0,0,0,.95) !important;
+    letter-spacing: .25px !important;
+}
+
+#game .teamPanel .playerBody,
+body.discordActivity #game .teamPanel .playerBody,
+#game .teamPanel .roleTag,
+body.discordActivity #game .teamPanel .roleTag,
+#game .teamPanel .offlineIcon,
+body.discordActivity #game .teamPanel .offlineIcon,
+#game .emptyTeamSlot,
+body.discordActivity #game .emptyTeamSlot {
+    color: rgba(255, 244, 210, .82) !important;
+    text-shadow: 0 1px 0 rgba(0,0,0,.82) !important;
+}
+
+#game .teamPanel.activeTurnPanel,
+body.discordActivity #game .teamPanel.activeTurnPanel {
+    filter: none !important;
+}
+
+#game #goldPanel.activeTurnPanel,
+body.discordActivity #game #goldPanel.activeTurnPanel {
+    border-color: rgba(255, 215, 108, .96) !important;
+    box-shadow: 0 0 0 1px rgba(255, 215, 108, .35), 0 0 28px rgba(255, 215, 108, .28), 0 28px 70px rgba(0,0,0,.58) !important;
+}
+
+#game #blackPanel.activeTurnPanel,
+body.discordActivity #game #blackPanel.activeTurnPanel {
+    border-color: rgba(8, 8, 10, .98) !important;
+    box-shadow: 0 0 0 1px rgba(255, 215, 108, .18), 0 0 28px rgba(0, 0, 0, .52), 0 28px 70px rgba(0,0,0,.66) !important;
+}
+
+#game .teamPanel.dimTurnPanel,
+body.discordActivity #game .teamPanel.dimTurnPanel {
+    filter: grayscale(.32) saturate(.62) brightness(.68) !important;
+}
+
+#game .player.activeTurnPlayer,
+body.discordActivity #game .player.activeTurnPlayer {
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+#game #goldPanel .player.activeTurnPlayer,
+body.discordActivity #game #goldPanel .player.activeTurnPlayer {
+    border-color: rgba(255, 223, 118, .95) !important;
+    box-shadow: 0 0 0 1px rgba(255, 241, 196, .46), 0 0 22px rgba(255, 215, 108, .34), inset 0 0 24px rgba(255, 215, 108, .10) !important;
+}
+
+#game #blackPanel .player.activeTurnPlayer,
+body.discordActivity #game #blackPanel .player.activeTurnPlayer {
+    border-color: rgba(20, 20, 20, .98) !important;
+    box-shadow: 0 0 0 1px rgba(255, 215, 108, .18), 0 0 20px rgba(0,0,0,.62), inset 0 0 22px rgba(255, 215, 108, .08) !important;
+}
+
+#game .player.dimTurnPlayer,
+body.discordActivity #game .player.dimTurnPlayer {
+    opacity: .45 !important;
+    filter: grayscale(.76) brightness(.7) !important;
+}
+
+body[data-turn-team="blue"] .card.myVote:not(.revealed),
+body.discordActivity[data-turn-team="blue"] .card.myVote:not(.revealed) {
+    outline: 3px solid #f4c546 !important;
+    outline-offset: -3px;
+    box-shadow: 0 0 24px rgba(255, 215, 108, .42), 0 16px 24px rgba(0, 0, 0, .42) !important;
+}
+
+body[data-turn-team="red"] .card.myVote:not(.revealed),
+body.discordActivity[data-turn-team="red"] .card.myVote:not(.revealed) {
+    outline: 3px solid #050505 !important;
+    outline-offset: -3px;
+    box-shadow: 0 0 0 2px rgba(255, 215, 108, .16), 0 16px 24px rgba(0, 0, 0, .55) !important;
+}
+
+body[data-turn-team="blue"] .card.myVote:not(.revealed)::before,
+body.discordActivity[data-turn-team="blue"] .card.myVote:not(.revealed)::before {
+    border-color: rgba(255, 230, 151, .72) !important;
+}
+
+body[data-turn-team="red"] .card.myVote:not(.revealed)::before,
+body.discordActivity[data-turn-team="red"] .card.myVote:not(.revealed)::before {
+    border-color: rgba(13, 13, 13, .95) !important;
+}
+
+body[data-turn-team="blue"] .cardConfirm,
+body.discordActivity[data-turn-team="blue"] .cardConfirm {
+    background: linear-gradient(180deg, #fff1ad, #d39a12 72%, #6f4700) !important;
+    color: #180f00 !important;
+    box-shadow: 0 0 18px rgba(255, 215, 108, .52), 0 8px 18px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255,255,255,.58) !important;
+}
+
+body[data-turn-team="red"] .cardConfirm,
+body.discordActivity[data-turn-team="red"] .cardConfirm {
+    background: linear-gradient(180deg, #303030, #0a0a0b 75%, #000000) !important;
+    color: #ffe7a1 !important;
+    border: 1px solid rgba(255, 215, 108, .28) !important;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.88), 0 0 18px rgba(255, 215, 108, .16), 0 8px 18px rgba(0,0,0,.46) !important;
+}
+
+body[data-turn-team="blue"] .cardConfirm:hover,
+body[data-turn-team="red"] .cardConfirm:hover,
+body.discordActivity[data-turn-team="blue"] .cardConfirm:hover,
+body.discordActivity[data-turn-team="red"] .cardConfirm:hover {
+    filter: brightness(1.1) !important;
+}
+
+body[data-turn-team="blue"] .card.voted:not(.revealed),
+body[data-turn-team="blue"] .card.pickedByOperative:not(.revealed),
+body.discordActivity[data-turn-team="blue"] .card.voted:not(.revealed),
+body.discordActivity[data-turn-team="blue"] .card.pickedByOperative:not(.revealed) {
+    box-shadow: 0 0 0 2px rgba(244, 197, 70, .42), 0 14px 24px rgba(0,0,0,.38) !important;
+}
+
+body[data-turn-team="red"] .card.voted:not(.revealed),
+body[data-turn-team="red"] .card.pickedByOperative:not(.revealed),
+body.discordActivity[data-turn-team="red"] .card.voted:not(.revealed),
+body.discordActivity[data-turn-team="red"] .card.pickedByOperative:not(.revealed) {
+    box-shadow: 0 0 0 2px rgba(8, 8, 10, .95), 0 0 0 4px rgba(255, 215, 108, .14), 0 14px 24px rgba(0,0,0,.46) !important;
+}
+
+@media (max-width: 640px) {
+    .backgroundBtn,
+    .modesBtn {
+        min-width: 118px;
+        min-height: 48px;
+        font-size: 14px;
+    }
+
+    .backgroundMenu,
+    .modesMenu {
+        width: min(210px, calc(100vw - 28px));
+    }
+
+    #game .player.dimTurnPlayer,
+    body.discordActivity #game .player.dimTurnPlayer {
+        opacity: .58 !important;
+    }
+}
