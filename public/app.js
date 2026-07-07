@@ -1,7 +1,7 @@
 const initialUiLanguage = localStorage.cc_language === 'ar' ? 'ar' : 'en';
 const socket = io({auth: {language: initialUiLanguage}});
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
-let lastWinKey = null, winDockTimer = null;
+let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null;
 let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let reactionTimer = null;
@@ -935,6 +935,17 @@ function playRevealSoundForCard(card) {
     return sound(card.color === 'blue' || card.color === 'red' ? 'correct' : 'neutral');
 }
 
+function playGameWinSoundOnce() {
+    if (!(state?.status === 'finished' && state?.winner)) {
+        lastGameWinSoundKey = null;
+        return;
+    }
+    const key = `${state.id || ''}-${state.round || 0}-${state.winner}-gameWinSound`;
+    if (lastGameWinSoundKey === key) return;
+    lastGameWinSoundKey = key;
+    sound('gameWin');
+}
+
 function finishDelayedReveal(id, token) {
     if (delayedRevealTokens.get(id) !== token) return;
     const reaction = delayedRevealReactions.get(id);
@@ -954,6 +965,10 @@ function finishDelayedReveal(id, token) {
         requestAnimationFrame(() => flyCardToTeamScore(card));
     }
     showPickReaction(reaction);
+    if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
+        playGameWinSoundOnce();
+        renderWinModal();
+    }
 }
 
 function scheduleDelayedReveals(beforeState, nowState) {
@@ -2336,7 +2351,7 @@ socket.on('state', s => {
     }
     if (enteredGameFromLanding) showGameIntro(s.status === 'lobby' ? 'join-lobby' : 'join-game');
     if (before?.clue?.at !== s.clue?.at && s.clue) sound('clue');
-    if (newFinishedGame) sound('gameWin');
+    if (newFinishedGame && !hasDelayedReveal) playGameWinSoundOnce();
     if (!hasDelayedReveal) detectRevealSound(before, s);
     render();
     if (clueAccepted) showSpymasterClueSplash(s.clue);
@@ -2435,6 +2450,15 @@ function renderWinModal() {
     const modal = $('winModal');
     if (!modal) return;
     const won = state?.status === 'finished' && state?.winner;
+    if (won && pendingRevealIds.size > 0) {
+        modal.classList.add('hidden');
+        modal.classList.remove('docked', 'winBlue', 'winRed');
+        if (winDockTimer) {
+            clearTimeout(winDockTimer);
+            winDockTimer = null;
+        }
+        return;
+    }
     modal.classList.toggle('hidden', !won);
     if (!won) {
         modal.classList.remove('docked', 'winBlue', 'winRed');
@@ -2514,7 +2538,7 @@ function renderMe() {
     $('meCard').innerHTML = `<div class="player ${p.team}">${avatarHtml(p)}<div><b>${p.name}</b><span class="roleTag">${teamName(p.team)} · ${roleLabel}</span></div></div>`;
 }
 
-const mobileTeamOpenState = {goldPanel: false, blackPanel: false};
+const mobileTeamOpenState = {goldPanel: true, blackPanel: true};
 
 function ensureMobileTeamToggle(panelId) {
     const panel = $(panelId);
@@ -2881,7 +2905,9 @@ function syncClueCount() {
     // Do not disable the Give Clue button just because no target is selected yet.
     // A disabled button creates a "does nothing" click; the click handler below now shows the proper toast.
     if (btn) {
-        btn.disabled = !isSpy || state?.status === 'lobby' || state?.status === 'finished';
+        // Keep the button clickable so the user gets a toast instead of a dead button.
+        // The click handler and server still enforce spymaster/turn rules.
+        btn.disabled = state?.status === 'lobby' || state?.status === 'finished';
         btn.classList.toggle('needsClueTarget', !!(isCurrentSpy && !hintMode && n < 1));
     }
 }

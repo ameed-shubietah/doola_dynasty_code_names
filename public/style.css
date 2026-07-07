@@ -17925,3 +17925,262 @@ body.discordActivity[data-turn-team="red"] .card.pickedByOperative:not(.revealed
         opacity: .58 !important;
     }
 }
+
+
+/* v146: delay winner popup until reveal animation ends, clean grey reveal card, and center black-team/red-word text. */
+.cardRevealFullGhost.cardRevealLiftGhost,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost {
+    background-color: #adb3bb !important;
+    background-image: linear-gradient(145deg, #d7dbe1 0%, #b5bbc4 48%, #858d98 100%) !important;
+    border: 2px solid #c9ced6 !important;
+    outline: none !important;
+    box-shadow:
+        0 22px 34px rgba(0, 0, 0, .58),
+        inset 0 1px 0 rgba(255,255,255,.34),
+        inset 0 0 0 1px rgba(142, 150, 160, .38),
+        0 0 0 1px rgba(89, 96, 106, .35) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost::before,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost::before {
+    content: "" !important;
+    display: block !important;
+    inset: 9px !important;
+    border: 2px solid rgba(116, 125, 136, .62) !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    opacity: 1 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost::after,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost::after {
+    display: none !important;
+    content: none !important;
+    opacity: 0 !important;
+    background: none !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown {
+    display: block !important;
+    opacity: .82 !important;
+    filter: grayscale(1) brightness(.88) contrast(1.12) drop-shadow(0 4px 6px rgba(0,0,0,.28)) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost .word,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .word {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    background: linear-gradient(180deg, rgba(238,241,245,.82), rgba(205,211,219,.72)) !important;
+    border: 1px solid rgba(127, 136, 147, .42) !important;
+    color: #2b3036 !important;
+}
+
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    min-height: 50px !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    line-height: 1.02 !important;
+    transform: none !important;
+}
+
+
+/* v148: restore roster visibility safely and keep Give Clue clickable. Built from the working v146 reveal files. */
+#landing #lobbyPreview:not(.hidden),
+body.discordActivity #landing #lobbyPreview:not(.hidden),
+#landing .lobbyPreview:not(.hidden),
+body.discordActivity #landing .lobbyPreview:not(.hidden) {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#landing .previewRoster,
+body.discordActivity #landing .previewRoster,
+#landing .previewTeam,
+body.discordActivity #landing .previewTeam,
+#landing .previewTeam > div,
+body.discordActivity #landing .previewTeam > div {
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#landing .previewRoster,
+body.discordActivity #landing .previewRoster {
+    display: grid !important;
+}
+
+#landing .previewTeam > div,
+body.discordActivity #landing .previewTeam > div {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+}
+
+#landing .previewSeat,
+body.discordActivity #landing .previewSeat,
+#landing .previewEmpty,
+body.discordActivity #landing .previewEmpty {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Discord homepage role cards: the old mobile CSS hid these; force them back on. */
+#landing .discordSeatList,
+body.discordActivity #landing .discordSeatList,
+body.discordActivity .discordRoleBox .discordSeatList,
+body.discordActivity .discordSpectatorCard .discordSeatList,
+#landing .discordRoleBox .discordSeatList,
+#landing .discordSpectatorCard .discordSeatList {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-top: 6px !important;
+    height: auto !important;
+    min-height: 22px !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#landing .discordSeatMini,
+body.discordActivity #landing .discordSeatMini,
+#landing .discordSeatMini.discordSeatLarge,
+body.discordActivity #landing .discordSeatMini.discordSeatLarge,
+#landing .discordSeatEmpty,
+body.discordActivity #landing .discordSeatEmpty {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 22px !important;
+    overflow: visible !important;
+}
+
+/* Game page side rosters: show players/slots, but do not stretch panels over the Give Clue dock. */
+#game.gameV9:not(.hidden) .teamPanel,
+body.discordActivity #game.gameV9:not(.hidden) .teamPanel,
+#game.gameV9:not(.hidden) .teamPanel section:not(.sideLogSection),
+body.discordActivity #game.gameV9:not(.hidden) .teamPanel section:not(.sideLogSection),
+#game.gameV9:not(.hidden) .teamPanel .teamList,
+body.discordActivity #game.gameV9:not(.hidden) .teamPanel .teamList,
+#game.gameV9:not(.hidden) .teamPanel .player,
+body.discordActivity #game.gameV9:not(.hidden) .teamPanel .player,
+#game.gameV9:not(.hidden) .teamPanel .emptyTeamSlot,
+body.discordActivity #game.gameV9:not(.hidden) .teamPanel .emptyTeamSlot {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#game.gameV9:not(.hidden) .teamPanel section:not(.sideLogSection),
+body.discordActivity #game.gameV9:not(.hidden) .teamPanel section:not(.sideLogSection),
+#game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) section:not(.sideLogSection),
+body.discordActivity #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) section:not(.sideLogSection) {
+    display: block !important;
+}
+
+#game.gameV9:not(.hidden) .teamPanel .teamList,
+body.discordActivity #game.gameV9:not(.hidden) .teamPanel .teamList {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#game.gameV9:not(.hidden) .teamPanel .player,
+body.discordActivity #game.gameV9:not(.hidden) .teamPanel .player {
+    display: grid !important;
+    pointer-events: auto !important;
+}
+
+#bottomClueDock,
+body.discordActivity #bottomClueDock,
+#bottomClueDock *,
+body.discordActivity #bottomClueDock * {
+    pointer-events: auto !important;
+}
+
+#bottomClueDock,
+body.discordActivity #bottomClueDock {
+    z-index: 100050 !important;
+}
+
+#giveClueBtn,
+body.discordActivity #giveClueBtn {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 100052 !important;
+}
+
+@media (max-width: 980px) {
+    #landing .discordSeatList,
+    body.discordActivity #landing .discordSeatList,
+    #landing .discordSeatMini,
+    body.discordActivity #landing .discordSeatMini,
+    #landing .discordSeatEmpty,
+    body.discordActivity #landing .discordSeatEmpty {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    #landing .discordSeatList,
+    body.discordActivity #landing .discordSeatList {
+        display: flex !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel section:not(.sideLogSection),
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel section:not(.sideLogSection),
+    #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) section:not(.sideLogSection),
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) section:not(.sideLogSection),
+    #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen section:not(.sideLogSection),
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen section:not(.sideLogSection) {
+        display: block !important;
+        max-height: 20svh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel .teamList,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel .teamList {
+        display: grid !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    #game.gameV9:not(.hidden) .teamPanel .player,
+    body.discordActivity #game.gameV9:not(.hidden) .teamPanel .player {
+        display: grid !important;
+    }
+
+    #bottomClueDock,
+    body.discordActivity #bottomClueDock {
+        z-index: 100050 !important;
+    }
+}
