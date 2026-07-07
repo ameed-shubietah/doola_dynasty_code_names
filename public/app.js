@@ -1,7 +1,7 @@
 const initialUiLanguage = localStorage.cc_language === 'ar' ? 'ar' : 'en';
 const socket = io({auth: {language: initialUiLanguage}});
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
-let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null;
+let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null, winRevealHoldUntil = 0;
 let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let reactionTimer = null;
@@ -876,7 +876,8 @@ function startRevealLiftGhost(card) {
     const crown = document.createElement('img');
     const word = document.createElement('span');
     const wordText = String(card.word || '').trim();
-    ghost.className = 'cardRevealLiftGhost cardRevealFullGhost operativeRevealGhost';
+    const revealGhostColor = String(card.color || '').replace(/[^a-z0-9_-]/gi, '');
+    ghost.className = `cardRevealLiftGhost cardRevealFullGhost operativeRevealGhost ${revealGhostColor ? `revealGhost-${revealGhostColor}` : ''}`;
     crown.className = 'cardCrownLayer cardRevealGhostCrown';
     crown.src = '/crown-bw.png';
     crown.alt = '';
@@ -908,6 +909,11 @@ function revealTokenForState(nowState, card) {
 }
 
 function clearDelayedReveals() {
+    if (delayedWinRevealTimer) {
+        clearTimeout(delayedWinRevealTimer);
+        delayedWinRevealTimer = null;
+    }
+    winRevealHoldUntil = 0;
     delayedRevealTimers.forEach(timer => clearTimeout(timer));
     delayedRevealTimers.clear();
     delayedRevealTokens.clear();
@@ -966,8 +972,19 @@ function finishDelayedReveal(id, token) {
     }
     showPickReaction(reaction);
     if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
-        playGameWinSoundOnce();
-        renderWinModal();
+        if (delayedWinRevealTimer) clearTimeout(delayedWinRevealTimer);
+        // Let the final reveal/reaction graphic appear first, then show the winner popup.
+        // This keeps assassin/death and wrong-team reactions from overlapping the win modal.
+        const delay = reaction ? (reaction.kind === 'death' ? 1350 : 950) : 500;
+        winRevealHoldUntil = Date.now() + delay;
+        delayedWinRevealTimer = setTimeout(() => {
+            delayedWinRevealTimer = null;
+            winRevealHoldUntil = 0;
+            if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
+                playGameWinSoundOnce();
+                renderWinModal();
+            }
+        }, delay);
     }
 }
 
@@ -2459,6 +2476,15 @@ function renderWinModal() {
         }
         return;
     }
+    if (won && winRevealHoldUntil && Date.now() < winRevealHoldUntil) {
+        modal.classList.add('hidden');
+        modal.classList.remove('docked', 'winBlue', 'winRed');
+        if (winDockTimer) {
+            clearTimeout(winDockTimer);
+            winDockTimer = null;
+        }
+        return;
+    }
     modal.classList.toggle('hidden', !won);
     if (!won) {
         modal.classList.remove('docked', 'winBlue', 'winRed');
@@ -2467,6 +2493,7 @@ function renderWinModal() {
             winDockTimer = null;
         }
         lastWinKey = null;
+        winRevealHoldUntil = 0;
         return;
     }
     const name = teamUpper(state.winner);

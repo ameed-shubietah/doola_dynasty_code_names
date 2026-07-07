@@ -18184,3 +18184,141 @@ body.discordActivity #giveClueBtn {
         z-index: 100050 !important;
     }
 }
+
+
+/* v149: reveal visual polish only — keep v148 Give Clue and roster logic untouched. */
+.cardRevealFullGhost.cardRevealLiftGhost,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost {
+    overflow: visible !important;
+    background-color: #aeb4bc !important;
+    background-image:
+        radial-gradient(circle at 50% 44%, rgba(255,255,255,.30), transparent 58%),
+        linear-gradient(145deg, #d8dce2 0%, #b8bec7 48%, #858d97 100%) !important;
+    border: 0 !important;
+    outline: 3px solid rgba(128, 136, 146, .95) !important;
+    outline-offset: 3px !important;
+    box-shadow:
+        0 24px 38px rgba(0, 0, 0, .58),
+        0 0 0 6px rgba(198, 204, 212, .34),
+        0 0 24px rgba(112, 120, 130, .26) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost::before,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost::before,
+.cardRevealFullGhost.cardRevealLiftGhost::after,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost::after {
+    display: none !important;
+    content: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: none !important;
+    opacity: 0 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown {
+    display: block !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 68% !important;
+    max-width: none !important;
+    height: auto !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 4 !important;
+    opacity: .34 !important;
+    filter: grayscale(1) brightness(.92) contrast(1.08) drop-shadow(0 5px 7px rgba(0,0,0,.30)) !important;
+    pointer-events: none !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost .word,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .word {
+    position: relative !important;
+    z-index: 8 !important;
+    width: min(84%, calc(100% - 32px)) !important;
+    max-width: min(84%, calc(100% - 32px)) !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 38px !important;
+    margin: 0 auto !important;
+    padding: 6px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    border-radius: 10px !important;
+    border: 2px solid rgba(110, 118, 128, .78) !important;
+    background: linear-gradient(180deg, rgba(238,241,245,.90), rgba(201,207,216,.78)) !important;
+    color: #20262c !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,.55) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.42) !important;
+}
+
+/* Keep every unrevealed word plaque the same size, including Black-team cards and danger cards. */
+#game .board .card:not(.revealed):not(.crownOnlyReveal) .word,
+body.discordActivity #game .board .card:not(.revealed):not(.crownOnlyReveal) .word,
+#game .board.spyBoard .card:not(.revealed):not(.crownOnlyReveal) .word,
+body.discordActivity #game .board.spyBoard .card:not(.revealed):not(.crownOnlyReveal) .word,
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+#game .card.assassin .word,
+#game .board.spyBoard .card.assassin .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.assassin .word,
+body.discordActivity #game .board.spyBoard .card.assassin .word {
+    width: min(84%, calc(100% - 34px)) !important;
+    max-width: min(84%, calc(100% - 34px)) !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 38px !important;
+    margin: 0 auto !important;
+    padding: 6px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    border-radius: 10px !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+}
+
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word {
+    background: rgba(255, 215, 108, .12) !important;
+    border: 2px solid rgba(255, 221, 143, .58) !important;
+    color: #fff !important;
+    text-shadow: 0 2px 0 rgba(0,0,0,.62) !important;
+}
+
+#game .card.assassin .word,
+#game .board.spyBoard .card.assassin .word,
+body.discordActivity #game .card.assassin .word,
+body.discordActivity #game .board.spyBoard .card.assassin .word {
+    background: rgba(92, 0, 0, .62) !important;
+    border: 2px solid rgba(45, 0, 0, .92) !important;
+    color: #fff7d6 !important;
+    text-shadow: 0 2px 0 rgba(0,0,0,.70) !important;
+}
+
+@media (max-width: 760px) {
+    .cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown,
+    body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown {
+        width: 66% !important;
+    }
+
+    .cardRevealFullGhost.cardRevealLiftGhost .word,
+    body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .word,
+    #game .board .card:not(.revealed):not(.crownOnlyReveal) .word,
+    body.discordActivity #game .board .card:not(.revealed):not(.crownOnlyReveal) .word {
+        width: min(86%, calc(100% - 24px)) !important;
+        max-width: min(86%, calc(100% - 24px)) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 5px 8px !important;
+    }
+}
