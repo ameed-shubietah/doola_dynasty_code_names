@@ -17409,3 +17409,128 @@ body.discordActivity #giveClueBtn:disabled {
 body.discordActivity #giveClueBtn {
     pointer-events: auto !important;
 }
+
+
+/* v143: restore lobby/homepage player roster visibility and show FULL for occupied spymaster slots. */
+.previewRoster {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.previewTeam {
+    min-width: 0;
+    border: 1px solid rgba(255, 215, 108, .16);
+    border-radius: 13px;
+    padding: 8px;
+    background: rgba(0, 0, 0, .22);
+}
+
+.previewTeam h4 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    color: #ffe39a;
+}
+
+.previewTeam > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.previewSeat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .10);
+    color: #fff8e5;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.previewSeat .avatar {
+    width: 25px;
+    height: 25px;
+    min-width: 25px;
+    border-radius: 999px;
+    font-size: 13px;
+    margin: 0;
+}
+
+.previewSeat em {
+    font-style: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.previewEmpty {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .045);
+    color: rgba(255, 239, 190, .68);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity .discordSeatList,
+    #landing .discordSeatList {
+        display: flex !important;
+        min-height: 20px !important;
+        margin-top: 5px !important;
+        gap: 4px !important;
+        flex-wrap: wrap !important;
+    }
+
+    body.discordActivity .discordSeatMini,
+    #landing .discordSeatMini {
+        display: inline-flex !important;
+        max-width: 100% !important;
+        min-height: 21px !important;
+        padding: 2px 5px !important;
+        gap: 4px !important;
+        font-size: 8.5px !important;
+        line-height: 1 !important;
+    }
+
+    body.discordActivity .discordSeatMini .avatar,
+    #landing .discordSeatMini .avatar {
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        font-size: 10px !important;
+    }
+
+    body.discordActivity .discordSeatMini .seatName,
+    #landing .discordSeatMini .seatName {
+        max-width: 58px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .previewRoster {
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+    }
+
+    .previewTeam {
+        padding: 6px !important;
+    }
+
+    .previewSeat {
+        font-size: 10px !important;
+        padding: 4px 6px !important;
+    }
+}

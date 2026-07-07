@@ -2172,8 +2172,7 @@ io.on('connection', socket => {
                 old.team === team &&
                 old.role === 'spymaster' &&
                 old.id !== key &&
-                old.socketId !== socket.id &&
-                (!discordId || old.discordId !== discordId)
+                old.socketId !== socket.id
             );
             if (occupyingSpy) {
                 return {ok: false, error: `${team === 'blue' ? 'Gold' : 'Black'} Team already has a spymaster.`};

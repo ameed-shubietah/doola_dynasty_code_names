@@ -622,6 +622,47 @@ function updateInviteFields(roomId) {
     if (l3) l3.value = link;
 }
 
+
+function previewRolePlayersHtml(res, team, role) {
+    const players = res?.roles?.[team]?.[role] || [];
+    if (!players.length) return `<span class="previewEmpty">${uiLanguage === 'ar' ? 'فارغ' : 'Empty'}</span>`;
+    return players.map(p => `<span class="previewSeat">${avatarHtml(p, 'lobbyAvatar')}<em>${escapeHtml(p.name || (uiLanguage === 'ar' ? 'لاعب' : 'Player'))}</em></span>`).join('');
+}
+
+function renderHomepageLobbyPreview(res, allowHidden = false) {
+    const box = $('lobbyPreview');
+    if (!box) return;
+    if (!res?.ok) {
+        if (allowHidden) box.classList.add('hidden');
+        return;
+    }
+    if (isDiscordActivity) {
+        // Discord lobby uses the role cards themselves; paintDiscordLobby renders the seats there.
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+    }
+    const shouldShow = selectedTeamChoice || selectedRoleChoice || !isDiscordActivity;
+    if (!shouldShow && allowHidden) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+    }
+    const gs = (res.spymasters?.blue || []).join(', ') || (uiLanguage === 'ar' ? 'لا يوجد صاحب تلميح ذهبي متصل' : 'No Gold spymaster online');
+    const bs = (res.spymasters?.red || []).join(', ') || (uiLanguage === 'ar' ? 'لا يوجد صاحب تلميح أسود متصل' : 'No Black spymaster online');
+    box.classList.remove('hidden');
+    box.innerHTML = `<b>${tt('roomPreview', {room: res.roomId})}</b>
+        <div class="previewGrid"><span>${tt('goldTeam')}: <strong>${res.counts.blue}</strong></span><span>${tt('blackTeam')}: <strong>${res.counts.red}</strong></span><span>${tt('spectators')}: <strong>${res.counts.spectator}</strong></span><span>${uiLanguage === 'ar' ? 'المجموع' : 'Total'}: <strong>${res.playersTotal}</strong></span></div>
+        <div class="previewSpies"><span>${tt('goldTeam')} ${tt('spymaster')}: <strong>${gs}</strong></span><span>${tt('blackTeam')} ${tt('spymaster')}: <strong>${bs}</strong></span></div>
+        <div class="previewRoster">
+            <section class="previewTeam previewGold"><h4>${tt('goldTeam')} ${tt('operatives')}</h4><div>${previewRolePlayersHtml(res, 'blue', 'operative')}</div></section>
+            <section class="previewTeam previewGold"><h4>${tt('goldTeam')} ${tt('spymasters')}</h4><div>${previewRolePlayersHtml(res, 'blue', 'spymaster')}</div></section>
+            <section class="previewTeam previewBlack"><h4>${tt('blackTeam')} ${tt('operatives')}</h4><div>${previewRolePlayersHtml(res, 'red', 'operative')}</div></section>
+            <section class="previewTeam previewBlack"><h4>${tt('blackTeam')} ${tt('spymasters')}</h4><div>${previewRolePlayersHtml(res, 'red', 'spymaster')}</div></section>
+            <section class="previewTeam previewSpectators"><h4>${tt('spectators')}</h4><div>${previewRolePlayersHtml(res, 'spectator', 'spectator')}</div></section>
+        </div>`;
+}
+
 function requestLobbyInfo() {
     const code = roomInput.value.trim().toUpperCase();
     updateInviteFields(code);
@@ -653,15 +694,7 @@ function requestLobbyInfo() {
         renderCharacters();
         if (isDiscordActivity) paintDiscordLobby(res);
         setJoinButtonsReady();
-        const gs = (res.spymasters?.blue || []).join(', ') || (uiLanguage === 'ar' ? 'لا يوجد صاحب تلميح ذهبي متصل' : 'No Gold spymaster online');
-        const bs = (res.spymasters?.red || []).join(', ') || (uiLanguage === 'ar' ? 'لا يوجد صاحب تلميح أسود متصل' : 'No Black spymaster online');
-        if (selectedTeamChoice || selectedRoleChoice || !isDiscordActivity) {
-            box.classList.remove('hidden');
-            box.innerHTML = `<b>${tt('roomPreview', {room: res.roomId})}</b><div class="previewGrid"><span>${tt('goldTeam')}: <strong>${res.counts.blue}</strong></span><span>${tt('blackTeam')}: <strong>${res.counts.red}</strong></span><span>${tt('spectators')}: <strong>${res.counts.spectator}</strong></span><span>${uiLanguage === 'ar' ? 'المجموع' : 'Total'}: <strong>${res.playersTotal}</strong></span></div><div class="previewSpies"><span>${tt('goldTeam')} ${tt('spymaster')}: <strong>${gs}</strong></span><span>${tt('blackTeam')} ${tt('spymaster')}: <strong>${bs}</strong></span></div>`;
-        } else {
-            box.classList.add('hidden');
-            box.innerHTML = '';
-        }
+        renderHomepageLobbyPreview(res, true);
     });
 }
 
@@ -1443,7 +1476,7 @@ function lobbyRolePlayers(team, role) {
 }
 
 function spymasterSlotFullFor(team) {
-    return lobbyRolePlayers(team, 'spymaster').some(p => !sameLocalPlayer(p));
+    return lobbyRolePlayers(team, 'spymaster').some(p => p && !p.isPreview);
 }
 
 function selectedSpymasterSlotFull() {
@@ -1761,9 +1794,9 @@ function paintDiscordLobby(info) {
         const players = withPendingLobbyPlayer(lobbyRolePlayers(team, role), team, role);
         list.innerHTML = roleListHtml(players);
         if (btn && role === 'spymaster') {
-            const occupiedByOther = players.some(p => p && !p.isPreview && !sameLocalPlayer(p));
-            btn.disabled = occupiedByOther;
-            btn.textContent = occupiedByOther ? tt('full') : (uiLanguage === 'ar' ? 'دخول' : 'Join');
+            const occupied = players.some(p => p && !p.isPreview);
+            btn.disabled = occupied;
+            btn.textContent = occupied ? tt('full') : (uiLanguage === 'ar' ? 'دخول' : 'Join');
         } else if (btn) {
             btn.textContent = role === 'spectator'
                 ? (uiLanguage === 'ar' ? 'الدخول كمشاهد' : 'Join as Spectator')
@@ -1827,6 +1860,7 @@ function applyLobbyInfo(res) {
     renderCharacters();
     if (isDiscordActivity) paintDiscordLobby(res);
     setJoinButtonsReady();
+    renderHomepageLobbyPreview(res, true);
 }
 
 function characterAvailableNow() {
