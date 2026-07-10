@@ -1,7 +1,7 @@
 const initialUiLanguage = localStorage.cc_language === 'ar' ? 'ar' : 'en';
 const socket = io({auth: {language: initialUiLanguage}});
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
-let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null, winRevealHoldUntil = 0;
+let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null, winRevealHoldUntil = 0, hiddenWinEffectKey = '';
 let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let reactionTimer = null;
@@ -168,7 +168,7 @@ const UI_TEXT = {
         confirm: '✓ Confirm',
         round: 'Round',
         game: 'Game',
-        teamWon: '{team} TEAM WON THE GAME!',
+        teamWon: '{team} WON THE GAME!',
         congratulations: 'Congratulations!',
         adminRequest: 'Admin Request',
         adminRequestText: 'A player requested an admin action.',
@@ -966,6 +966,7 @@ function finishDelayedReveal(id, token) {
     if (!card || !card.revealed || !stillSameRound) return;
 
     renderBoard();
+    renderLog();
     playRevealSoundForCard(card);
     if (card.color === 'blue' || card.color === 'red') {
         requestAnimationFrame(() => flyCardToTeamScore(card));
@@ -973,16 +974,17 @@ function finishDelayedReveal(id, token) {
     showPickReaction(reaction);
     if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
         if (delayedWinRevealTimer) clearTimeout(delayedWinRevealTimer);
-        // Let the final reveal/reaction graphic appear first, then show the winner popup.
-        // This keeps assassin/death and wrong-team reactions from overlapping the win modal.
-        const delay = reaction ? (reaction.kind === 'death' ? 1350 : 950) : 500;
+        // Final win effects must wait until the picked card has finished its reveal and the reaction image has appeared.
+        // Death/assassin needs a longer pause so the death PNG is seen first, then the winner popup appears.
+        const delay = reaction ? (reaction.kind === 'death' ? 3600 : 2300) : 1400;
         winRevealHoldUntil = Date.now() + delay;
+        hideWinEffectsForCurrentView();
         delayedWinRevealTimer = setTimeout(() => {
             delayedWinRevealTimer = null;
             winRevealHoldUntil = 0;
             if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
                 playGameWinSoundOnce();
-                renderWinModal();
+                render();
             }
         }, delay);
     }
@@ -2334,6 +2336,9 @@ socket.on('state', s => {
     if (boardChanged) clearDelayedReveals();
     const delayedReveals = scheduleDelayedReveals(before, s);
     const hasDelayedReveal = delayedReveals.length > 0;
+    if (hasDelayedReveal && s?.status === 'finished' && s?.winner) {
+        hideWinEffectsForCurrentView();
+    }
     if (clueAccepted || turnChanged || newFinishedGame) {
         targetIds.clear();
         const cw = $('clueWord');
@@ -2463,10 +2468,37 @@ function flyCardToTeamScore(card) {
     });
 }
 
+
+function currentWinEffectKey() {
+    if (!(state?.status === 'finished' && state?.winner)) return '';
+    return `${state.id || ''}-${state.round || 0}-${state.winner}-${state.status}`;
+}
+
+function hideWinEffectsForCurrentView(options = {}) {
+    const keepCup = !!options.keepCup;
+    const modal = $('winModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('docked', 'winBlue', 'winRed');
+    }
+    const badge = $('winnerBadge');
+    if (badge) {
+        badge.className = 'hidden';
+        badge.textContent = '';
+    }
+    $('goldPanel')?.classList.remove('winnerPanel');
+    $('blackPanel')?.classList.remove('winnerPanel');
+    if (!keepCup) {
+        $('goldPanel')?.classList.remove('winnerCupPanel');
+        $('blackPanel')?.classList.remove('winnerCupPanel');
+    }
+}
+
 function renderWinModal() {
     const modal = $('winModal');
     if (!modal) return;
-    const won = state?.status === 'finished' && state?.winner;
+    const key = currentWinEffectKey();
+    const won = !!key;
     if (won && pendingRevealIds.size > 0) {
         modal.classList.add('hidden');
         modal.classList.remove('docked', 'winBlue', 'winRed');
@@ -2485,28 +2517,39 @@ function renderWinModal() {
         }
         return;
     }
-    modal.classList.toggle('hidden', !won);
     if (!won) {
+        modal.classList.add('hidden');
         modal.classList.remove('docked', 'winBlue', 'winRed');
         if (winDockTimer) {
             clearTimeout(winDockTimer);
             winDockTimer = null;
         }
         lastWinKey = null;
+        hiddenWinEffectKey = '';
         winRevealHoldUntil = 0;
         return;
     }
+
+    if (hiddenWinEffectKey === key) {
+        hideWinEffectsForCurrentView({keepCup: true});
+        return;
+    }
+
     const name = teamUpper(state.winner);
     $('winModalTitle').textContent = tt('teamWon', {team: name});
     $('winModalText').textContent = tt('congratulations');
-    const key = `${state.id}-${state.round}-${state.winner}-${state.status}`;
+    modal.classList.remove('hidden', 'docked', 'winBlue', 'winRed');
+
     if (lastWinKey !== key) {
         lastWinKey = key;
-        modal.classList.remove('docked', 'winBlue', 'winRed');
         if (winDockTimer) clearTimeout(winDockTimer);
+        // Show the congratulations/winner effects briefly, then hide them automatically.
         winDockTimer = setTimeout(() => {
-            modal.classList.add('docked', state.winner === 'blue' ? 'winBlue' : 'winRed');
-        }, 2000);
+            winDockTimer = null;
+            if (currentWinEffectKey() !== key) return;
+            hiddenWinEffectKey = key;
+            hideWinEffectsForCurrentView({keepCup: true});
+        }, 3200);
     }
 }
 
@@ -2522,15 +2565,25 @@ function render() {
     $('turnBadge').textContent = '';
     $('clueBadge').className = `badge turnSubStatus ${state.turn}`;
     $('clueBadge').innerHTML = turnStatusHtml();
-    $('winnerBadge').className = state.winner ? `badge ${state.winner}` : 'hidden';
-    $('winnerBadge').textContent = state.winner ? tt('wins', {team: teamUpper(state.winner)}) : '';
+    const activeWinKey = currentWinEffectKey();
+    const winEffectsBlocked = pendingRevealIds.size > 0 || !!(winRevealHoldUntil && Date.now() < winRevealHoldUntil);
+    const showWinEffects = !!(state.winner && hiddenWinEffectKey !== activeWinKey && !winEffectsBlocked);
+    const showWinnerCup = !!(state.winner && !winEffectsBlocked);
+    $('winnerBadge').className = showWinEffects ? `badge ${state.winner}` : 'hidden';
+    $('winnerBadge').textContent = showWinEffects ? tt('wins', {team: teamUpper(state.winner)}) : '';
     updateScoreDisplay(state.points?.blue ?? 9, state.points?.red ?? 9);
     const gs = $('goldSideScore'), bs = $('blackSideScore');
     if (gs) gs.textContent = state.points?.blue ?? 9;
     if (bs) bs.textContent = state.points?.red ?? 9;
     const gp = $('goldPanel'), bp = $('blackPanel');
-    if (gp) gp.classList.toggle('winnerPanel', state.winner === 'blue');
-    if (bp) bp.classList.toggle('winnerPanel', state.winner === 'red');
+    if (gp) {
+        gp.classList.toggle('winnerPanel', showWinEffects && state.winner === 'blue');
+        gp.classList.toggle('winnerCupPanel', showWinnerCup && state.winner === 'blue');
+    }
+    if (bp) {
+        bp.classList.toggle('winnerPanel', showWinEffects && state.winner === 'red');
+        bp.classList.toggle('winnerCupPanel', showWinnerCup && state.winner === 'red');
+    }
     renderMe();
     renderPlayers();
     renderSeatControls();
@@ -3040,7 +3093,8 @@ function renderBoard() {
         const hasCrownLayer = spyClueTarget || teamReveal || neutralReveal;
         const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
         const crownOnlyReveal = teamReveal || neutralReveal;
-        const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)}" style="--letters:${String(c.word).length}">${c.word}</span>`;
+        const finalWordStyle = `--letters:${String(c.word).length}`;
+        const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)} ${showOrigin ? 'finalWordBox' : ''}" style="${finalWordStyle}">${c.word}</span>`;
         return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${visuallyRevealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${visuallyRevealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     board.querySelectorAll('.card').forEach(el => {
@@ -3056,7 +3110,7 @@ function renderBoard() {
                     return;
                 }
                 if (p.team !== state.turn) {
-                    toast(uiLanguage === 'ar' ? `الدور لفريق ${teamName(state.turn)} وليس لفريقك.` : `It is ${teamName(state.turn)} Team's turn, not your team.`);
+                    toast(uiLanguage === 'ar' ? `الدور لفريق ${teamName(state.turn)} وليس لفريقك.` : `It is ${teamName(state.turn)}'s turn, not your team.`);
                     return;
                 }
                 if (state?.hintRequested && state.hintRequested.team === p.team) {
@@ -3209,7 +3263,16 @@ function renderLog() {
         return `<div class="gameLogEntry passLog ${team}" title="${title}"><b class="logPickWord">${face}<span class="teamTick">✓</span></b></div>`;
     }
 
-    const entries = (state.log || []).filter(x => ['blue', 'red'].includes(entryTeam(x)));
+    const pendingPickKeys = new Set([...pendingRevealIds].map(id => {
+        const c = state?.board?.find(card => card.id === id);
+        return c ? `${c.color}|${String(c.word || '').toUpperCase()}` : '';
+    }).filter(Boolean));
+    const entries = (state.log || []).filter(x => {
+        if (!['blue', 'red'].includes(entryTeam(x))) return false;
+        const parts = String(x || '').split('|');
+        if (parts[0] === 'PICK' && pendingPickKeys.has(`${parts[2]}|${String(parts[3] || '').toUpperCase()}`)) return false;
+        return true;
+    });
     const rounds = [];
     let current = null;
     for (const raw of entries) {
@@ -3422,6 +3485,13 @@ if (backToLobbyBtn) backToLobbyBtn.onclick = () => {
         state = null;
         targetIds.clear();
         lastRevealed.clear();
+        if (winDockTimer) {
+            clearTimeout(winDockTimer);
+            winDockTimer = null;
+        }
+        lastWinKey = null;
+        hiddenWinEffectKey = '';
+        hideWinEffectsForCurrentView();
         setPlayerKey(makePlayerKey());
         if (currentRoom) roomInput.value = currentRoom;
         selectedTeamChoice = '';

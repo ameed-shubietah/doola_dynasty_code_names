@@ -18509,3 +18509,840 @@ body.discordActivity #game .board.spyBoard .card.assassin .word {
         font-size: 9px !important;
     }
 }
+
+
+/* v153: final win/log timing, compact clue dock, consistent final card word boxes. */
+#game .board.finishedBoard .card.finalOriginShown,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown {
+    display: grid !important;
+    place-items: center !important;
+    align-content: center !important;
+    justify-content: center !important;
+    padding: 10px !important;
+    overflow: hidden !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word,
+#game .board.finishedBoard .card.finalOriginShown.red .word,
+#game .board.finishedBoard .card.finalOriginShown.blue .word,
+#game .board.finishedBoard .card.finalOriginShown.neutral .word,
+#game .board.finishedBoard .card.finalOriginShown.assassin .word,
+#game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+#game .board.finishedBoard.operativeBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.red .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.blue .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.neutral .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.assassin .word,
+body.discordActivity #game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard.operativeBoard .card.finalOriginShown .word {
+    position: relative !important;
+    inset: auto !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    translate: none !important;
+    width: min(84%, calc(100% - 34px)) !important;
+    max-width: min(84%, calc(100% - 34px)) !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    margin: 0 auto !important;
+    padding: 6px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    font-size: clamp(13px, 1.25vw, 22px) !important;
+    letter-spacing: .65px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word.longWord,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.longWord {
+    font-size: clamp(11px, 1.02vw, 17px) !important;
+    letter-spacing: .35px !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.mediumWord {
+    font-size: clamp(12px, 1.12vw, 19px) !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown.red .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.red .word,
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word {
+    width: min(84%, calc(100% - 34px)) !important;
+    max-width: min(84%, calc(100% - 34px)) !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+}
+
+#currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #currentClueDock.currentClueDock:not(.hidden),
+#game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden) {
+    width: fit-content !important;
+    min-width: 0 !important;
+    max-width: min(78vw, 265px) !important;
+    padding: 8px 10px !important;
+    border-radius: 18px !important;
+    display: inline-grid !important;
+    grid-template-columns: auto minmax(42px, 1fr) 34px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+#currentClueDock.currentClueDock:not(.hidden) .currentClueLabel,
+body.discordActivity #currentClueDock.currentClueDock:not(.hidden) .currentClueLabel {
+    font-size: 10px !important;
+    letter-spacing: .8px !important;
+    opacity: .82 !important;
+}
+
+#currentClueDock.currentClueDock:not(.hidden) b,
+body.discordActivity #currentClueDock.currentClueDock:not(.hidden) b {
+    max-width: 145px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: clamp(15px, 1.6vw, 22px) !important;
+    line-height: 1 !important;
+}
+
+#currentClueDock.currentClueDock:not(.hidden) strong,
+body.discordActivity #currentClueDock.currentClueDock:not(.hidden) strong {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    display: grid !important;
+    place-items: center !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    box-shadow: 0 0 18px rgba(255,215,108,.34), inset 0 1px 0 rgba(255,255,255,.34) !important;
+}
+
+.winModal.hidden,
+body.discordActivity .winModal.hidden {
+    display: none !important;
+}
+
+@media (max-width: 760px) {
+    #game .board.finishedBoard .card.finalOriginShown .word,
+    body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word,
+    #game .card.red .word,
+    body.discordActivity #game .card.red .word {
+        width: min(86%, calc(100% - 24px)) !important;
+        max-width: min(86%, calc(100% - 24px)) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
+        padding: 5px 8px !important;
+        font-size: clamp(10px, 2.8vw, 15px) !important;
+        letter-spacing: .35px !important;
+    }
+
+    #currentClueDock.currentClueDock:not(.hidden),
+    body.discordActivity #currentClueDock.currentClueDock:not(.hidden),
+    #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
+    body.discordActivity #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden) {
+        max-width: min(78vw, 220px) !important;
+        padding: 7px 9px !important;
+        grid-template-columns: auto minmax(34px, 1fr) 30px !important;
+        gap: 6px !important;
+    }
+
+    #currentClueDock.currentClueDock:not(.hidden) b,
+    body.discordActivity #currentClueDock.currentClueDock:not(.hidden) b {
+        max-width: 112px !important;
+        font-size: 15px !important;
+    }
+
+    #currentClueDock.currentClueDock:not(.hidden) strong,
+    body.discordActivity #currentClueDock.currentClueDock:not(.hidden) strong {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        font-size: 16px !important;
+    }
+}
+
+/* v154: only change the BEFORE-GIVING-CLUE input dock. Do not touch the current clue display after a clue is given. */
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+#game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 44px) !important;
+    transform: translateX(-50%) !important;
+    width: min(430px, calc(100vw - 32px)) !important;
+    min-width: 0 !important;
+    max-width: min(430px, calc(100vw - 32px)) !important;
+    height: auto !important;
+    min-height: 58px !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 8px 9px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 56px 92px !important;
+    gap: 8px !important;
+    align-items: end !important;
+    justify-content: center !important;
+    border-radius: 18px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    pointer-events: auto !important;
+    z-index: 100080 !important;
+    background:
+        radial-gradient(circle at 18% 12%, rgba(255, 240, 174, .16), transparent 34%),
+        linear-gradient(180deg, rgba(18, 13, 4, .96), rgba(4, 4, 4, .98)) !important;
+    border: 1px solid rgba(255, 215, 108, .45) !important;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, .78),
+        0 12px 30px rgba(0, 0, 0, .58),
+        0 0 24px rgba(255, 215, 108, .18) !important;
+}
+
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .dockText,
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .dockText,
+#game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .dockText,
+body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .dockText {
+    display: none !important;
+}
+
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) label,
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) label,
+#game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) label,
+body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) label {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    width: auto !important;
+    margin: 0 !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    color: rgba(255, 232, 157, .92) !important;
+    font-weight: 900 !important;
+    letter-spacing: .25px !important;
+    text-transform: none !important;
+    overflow: visible !important;
+    pointer-events: auto !important;
+}
+
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .numberLabel,
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .numberLabel,
+#game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .numberLabel,
+body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .numberLabel {
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    text-align: center !important;
+}
+
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+#game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+#game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber {
+    width: 100% !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    max-height: 31px !important;
+    margin: 0 !important;
+    padding: 5px 9px !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    pointer-events: auto !important;
+}
+
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+#game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber {
+    text-align: center !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-size: 15px !important;
+    color: #fff0a8 !important;
+    background: rgba(0, 0, 0, .68) !important;
+    border-color: rgba(255, 215, 108, .35) !important;
+}
+
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn,
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn,
+#game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn,
+body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn {
+    width: 92px !important;
+    min-width: 92px !important;
+    max-width: 92px !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    max-height: 31px !important;
+    margin: 14px 0 0 0 !important;
+    padding: 0 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+}
+
+@media (max-width: 760px) {
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+    #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
+        width: min(340px, calc(100vw - 24px)) !important;
+        max-width: min(340px, calc(100vw - 24px)) !important;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 50px) !important;
+        padding: 7px !important;
+        grid-template-columns: minmax(0, 1fr) 48px 78px !important;
+        gap: 6px !important;
+        border-radius: 16px !important;
+    }
+
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) label,
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) label,
+    #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) label,
+    body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) label {
+        font-size: 8px !important;
+        gap: 3px !important;
+    }
+
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .numberLabel,
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .numberLabel,
+    #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .numberLabel,
+    body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) .numberLabel {
+        width: 48px !important;
+        min-width: 48px !important;
+        max-width: 48px !important;
+    }
+
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+    #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+    #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+    body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+    body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber {
+        height: 28px !important;
+        min-height: 28px !important;
+        max-height: 28px !important;
+        padding: 4px 7px !important;
+        font-size: 11px !important;
+        border-radius: 10px !important;
+    }
+
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn,
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn,
+    #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn,
+    body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn {
+        width: 78px !important;
+        min-width: 78px !important;
+        max-width: 78px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        max-height: 28px !important;
+        margin-top: 11px !important;
+        font-size: 9px !important;
+        padding: 0 6px !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+    #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
+        width: min(330px, calc(100vw - 160px)) !important;
+        max-width: min(330px, calc(100vw - 160px)) !important;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 34px) !important;
+        grid-template-columns: minmax(0, 1fr) 46px 76px !important;
+    }
+}
+
+
+/* v155: finished-board words stay centered with identical boxes on every color. */
+#game .board.finishedBoard .card.finalOriginShown,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown {
+    position: relative !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word,
+#game .board.finishedBoard .card.finalOriginShown.red .word,
+#game .board.finishedBoard .card.finalOriginShown.blue .word,
+#game .board.finishedBoard .card.finalOriginShown.neutral .word,
+#game .board.finishedBoard .card.finalOriginShown.assassin .word,
+#game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+#game .board.finishedBoard.operativeBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.red .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.blue .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.neutral .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.assassin .word,
+body.discordActivity #game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard.operativeBoard .card.finalOriginShown .word {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: auto !important;
+    transform: translate(-50%, -50%) !important;
+    translate: none !important;
+    width: min(74%, 260px) !important;
+    max-width: min(74%, 260px) !important;
+    min-width: 0 !important;
+    height: clamp(30px, 2.1vw, 38px) !important;
+    min-height: clamp(30px, 2.1vw, 38px) !important;
+    max-height: clamp(30px, 2.1vw, 38px) !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    font-size: clamp(14px, 1.12vw, 20px) !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-weight: 1000 !important;
+    letter-spacing: .72px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    text-indent: 0 !important;
+    isolation: isolate !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+#game .board.finishedBoard .card.finalOriginShown .word.longWord,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.longWord {
+    font-size: clamp(13px, 1.02vw, 18px) !important;
+    letter-spacing: .45px !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .cardCrownLayer,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .cardCrownLayer {
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+@media (max-width: 760px) {
+    #game .board.finishedBoard .card.finalOriginShown .word,
+    body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word {
+        width: min(78%, 190px) !important;
+        max-width: min(78%, 190px) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
+        padding: 0 8px !important;
+        font-size: clamp(10px, 2.6vw, 15px) !important;
+        letter-spacing: .35px !important;
+    }
+
+    #game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+    #game .board.finishedBoard .card.finalOriginShown .word.longWord,
+    body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+    body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.longWord {
+        font-size: clamp(9px, 2.3vw, 13px) !important;
+        letter-spacing: .22px !important;
+    }
+}
+
+
+/* v156: finished board word boxes, centered current clue dock, and bottom winner cup. */
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown {
+    position: relative !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: auto !important;
+    transform: translate(-50%, -50%) !important;
+    translate: none !important;
+    width: min(72%, 260px) !important;
+    max-width: min(72%, 260px) !important;
+    min-width: 0 !important;
+    height: clamp(30px, 2.1vw, 38px) !important;
+    min-height: clamp(30px, 2.1vw, 38px) !important;
+    max-height: clamp(30px, 2.1vw, 38px) !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-weight: 1000 !important;
+    font-size: clamp(13px, 1.02vw, 19px) !important;
+    letter-spacing: .55px !important;
+    box-sizing: border-box !important;
+    border-radius: 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-indent: 0 !important;
+    z-index: 9 !important;
+}
+
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord {
+    font-size: clamp(12px, .94vw, 17px) !important;
+    letter-spacing: .32px !important;
+}
+
+/* The clue shown after a clue is given should sit centered at the bottom, not pinned left. */
+html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
+html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
+html body #game:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
+html body.discordActivity #game:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 54px) !important;
+    transform: translateX(-50%) !important;
+    width: fit-content !important;
+    min-width: 0 !important;
+    max-width: min(86vw, 330px) !important;
+    margin: 0 !important;
+    padding: 8px 11px !important;
+    display: inline-grid !important;
+    grid-template-columns: auto minmax(42px, max-content) 34px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    border-radius: 18px !important;
+    z-index: 100060 !important;
+    pointer-events: none !important;
+}
+
+html body #currentClueDock.currentClueDock:not(.hidden) b,
+html body.discordActivity #currentClueDock.currentClueDock:not(.hidden) b {
+    max-width: 185px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Winner side effect: bottom cup appears only after win effects are allowed by JS. */
+html body #game #goldPanel.teamPanel.winnerPanel,
+html body #game #blackPanel.teamPanel.winnerPanel,
+html body.discordActivity #game #goldPanel.teamPanel.winnerPanel,
+html body.discordActivity #game #blackPanel.teamPanel.winnerPanel {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+html body #game #goldPanel.teamPanel.winnerPanel::before,
+html body #game #blackPanel.teamPanel.winnerPanel::before,
+html body.discordActivity #game #goldPanel.teamPanel.winnerPanel::before,
+html body.discordActivity #game #blackPanel.teamPanel.winnerPanel::before {
+    content: "WINNER" !important;
+    position: absolute !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 98px !important;
+    width: min(86%, 150px) !important;
+    height: auto !important;
+    transform: translateX(-50%) !important;
+    display: block !important;
+    padding: 7px 10px !important;
+    border-radius: 999px !important;
+    font-size: clamp(14px, 1.2vw, 22px) !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    letter-spacing: 1px !important;
+    color: #1b1000 !important;
+    background: linear-gradient(180deg, #fff1a8, #d19a15 72%, #6e4600) !important;
+    border: 1px solid rgba(255, 240, 176, .86) !important;
+    box-shadow: 0 0 20px rgba(255, 215, 108, .38), 0 8px 18px rgba(0,0,0,.42) !important;
+    pointer-events: none !important;
+    z-index: 80 !important;
+}
+
+html body #game #goldPanel.teamPanel.winnerPanel::after,
+html body #game #blackPanel.teamPanel.winnerPanel::after,
+html body.discordActivity #game #goldPanel.teamPanel.winnerPanel::after,
+html body.discordActivity #game #blackPanel.teamPanel.winnerPanel::after {
+    content: "🏆" !important;
+    position: absolute !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 24px !important;
+    transform: translateX(-50%) !important;
+    font-size: clamp(48px, 4vw, 76px) !important;
+    line-height: 1 !important;
+    z-index: 81 !important;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,.58)) drop-shadow(0 0 15px rgba(255,215,108,.35)) !important;
+    animation: miniCardFloat 1.35s ease-in-out infinite !important;
+    pointer-events: none !important;
+}
+
+@media (max-width: 760px) {
+    html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+    html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+    html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+    html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox {
+        width: min(76%, 190px) !important;
+        max-width: min(76%, 190px) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
+        padding: 0 8px !important;
+        font-size: clamp(10px, 2.5vw, 14px) !important;
+        letter-spacing: .25px !important;
+    }
+
+    html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
+    html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
+    html body #game:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
+    html body.discordActivity #game:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) {
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 76px) !important;
+        max-width: min(84vw, 250px) !important;
+        padding: 7px 9px !important;
+        grid-template-columns: auto minmax(34px, max-content) 30px !important;
+        gap: 6px !important;
+    }
+
+    html body #currentClueDock.currentClueDock:not(.hidden) b,
+    html body.discordActivity #currentClueDock.currentClueDock:not(.hidden) b {
+        max-width: 130px !important;
+        font-size: 15px !important;
+    }
+
+    html body #game #goldPanel.teamPanel.winnerPanel::before,
+    html body #game #blackPanel.teamPanel.winnerPanel::before,
+    html body.discordActivity #game #goldPanel.teamPanel.winnerPanel::before,
+    html body.discordActivity #game #blackPanel.teamPanel.winnerPanel::before {
+        bottom: 78px !important;
+        font-size: 12px !important;
+        padding: 6px 8px !important;
+    }
+
+    html body #game #goldPanel.teamPanel.winnerPanel::after,
+    html body #game #blackPanel.teamPanel.winnerPanel::after,
+    html body.discordActivity #game #goldPanel.teamPanel.winnerPanel::after,
+    html body.discordActivity #game #blackPanel.teamPanel.winnerPanel::after {
+        bottom: 18px !important;
+        font-size: 46px !important;
+    }
+}
+
+/* v157: only requested fixes - centered finished-card words + sticky winner-side cup. */
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox {
+    position: absolute !important;
+    inset: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    translate: none !important;
+    width: min(74%, 250px) !important;
+    max-width: min(74%, 250px) !important;
+    min-width: 0 !important;
+    height: clamp(31px, 2.15vw, 39px) !important;
+    min-height: clamp(31px, 2.15vw, 39px) !important;
+    max-height: clamp(31px, 2.15vw, 39px) !important;
+    margin: auto !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-weight: 1000 !important;
+    font-size: clamp(13px, 1.02vw, 19px) !important;
+    letter-spacing: .55px !important;
+    box-sizing: border-box !important;
+    border-radius: 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-indent: 0 !important;
+    z-index: 12 !important;
+}
+
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord {
+    font-size: clamp(12px, .94vw, 17px) !important;
+    letter-spacing: .32px !important;
+}
+
+html body #game #goldPanel.teamPanel.winnerCupPanel,
+html body #game #blackPanel.teamPanel.winnerCupPanel,
+html body.discordActivity #game #goldPanel.teamPanel.winnerCupPanel,
+html body.discordActivity #game #blackPanel.teamPanel.winnerCupPanel {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+html body #game #goldPanel.teamPanel.winnerCupPanel::before,
+html body #game #blackPanel.teamPanel.winnerCupPanel::before,
+html body.discordActivity #game #goldPanel.teamPanel.winnerCupPanel::before,
+html body.discordActivity #game #blackPanel.teamPanel.winnerCupPanel::before {
+    content: "WINNER" !important;
+    position: absolute !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 98px !important;
+    width: min(86%, 150px) !important;
+    transform: translateX(-50%) !important;
+    display: block !important;
+    padding: 7px 10px !important;
+    border-radius: 999px !important;
+    font-size: clamp(14px, 1.2vw, 22px) !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    letter-spacing: 1px !important;
+    color: #1b1000 !important;
+    background: linear-gradient(180deg, #fff1a8, #d19a15 72%, #6e4600) !important;
+    border: 1px solid rgba(255, 240, 176, .86) !important;
+    box-shadow: 0 0 20px rgba(255, 215, 108, .38), 0 8px 18px rgba(0,0,0,.42) !important;
+    pointer-events: none !important;
+    z-index: 80 !important;
+}
+
+html body #game #goldPanel.teamPanel.winnerCupPanel::after,
+html body #game #blackPanel.teamPanel.winnerCupPanel::after,
+html body.discordActivity #game #goldPanel.teamPanel.winnerCupPanel::after,
+html body.discordActivity #game #blackPanel.teamPanel.winnerCupPanel::after {
+    content: "🏆" !important;
+    position: absolute !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 24px !important;
+    transform: translateX(-50%) !important;
+    font-size: clamp(48px, 4vw, 76px) !important;
+    line-height: 1 !important;
+    z-index: 81 !important;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,.58)) drop-shadow(0 0 15px rgba(255,215,108,.35)) !important;
+    animation: miniCardFloat 1.35s ease-in-out infinite !important;
+    pointer-events: none !important;
+}
+
+@media (max-width: 760px) {
+    html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+    html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+    html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+    html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox {
+        width: min(76%, 190px) !important;
+        max-width: min(76%, 190px) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
+        padding: 0 8px !important;
+        font-size: clamp(10px, 2.5vw, 14px) !important;
+        letter-spacing: .25px !important;
+    }
+
+    html body #game #goldPanel.teamPanel.winnerCupPanel::before,
+    html body #game #blackPanel.teamPanel.winnerCupPanel::before,
+    html body.discordActivity #game #goldPanel.teamPanel.winnerCupPanel::before,
+    html body.discordActivity #game #blackPanel.teamPanel.winnerCupPanel::before {
+        bottom: 78px !important;
+        font-size: 12px !important;
+        padding: 6px 8px !important;
+    }
+
+    html body #game #goldPanel.teamPanel.winnerCupPanel::after,
+    html body #game #blackPanel.teamPanel.winnerCupPanel::after,
+    html body.discordActivity #game #goldPanel.teamPanel.winnerCupPanel::after,
+    html body.discordActivity #game #blackPanel.teamPanel.winnerCupPanel::after {
+        bottom: 18px !important;
+        font-size: 46px !important;
+    }
+}
+

@@ -296,13 +296,14 @@ function singlePlayerWordsForColors(bank, colors, language = 'en') {
         Math.random() - 0.5
     );
     const teamSlots = team => shuffle(colors.map((color, i) => color === team ? i : -1).filter(i => i >= 0));
+    const globalTeamGroupKeys = new Set();
 
     const placeTeamClusters = team => {
         const slots = teamSlots(team);
         const usedGroupKeys = new Set();
         for (const group of groups) {
             if (slots.length < 2) break;
-            if (usedGroupKeys.has(group.key)) continue;
+            if (usedGroupKeys.has(group.key) || globalTeamGroupKeys.has(group.key)) continue;
             const candidates = shuffle(group.availableWords.filter(w => !used.has(w)));
             if (candidates.length < 2) continue;
             const take = Math.min(slots.length, candidates.length, 2 + Math.floor(Math.random() * 3));
@@ -313,6 +314,7 @@ function singlePlayerWordsForColors(bank, colors, language = 'en') {
                 used.add(word);
             }
             usedGroupKeys.add(group.key);
+            globalTeamGroupKeys.add(group.key);
             if (Math.random() < .42) break;
         }
     };
@@ -432,9 +434,9 @@ function makeBoard(startingTeam = 'red', wordMode = 'themed', language = 'en') {
     for (let i = 0; i < teamCounts.neutral; i++) colors.push('neutral'); // Blank cards: skip turn only
     colors.push('assassin');                                         // Grey danger card: instant loss
     const shuffledColors = shuffle(colors);
-    const words = wordMode === 'full'
-        ? singlePlayerWordsForColors(playable, shuffledColors, language)
-        : language === 'ar' ? randomWordsFromBank(playable, 25) : themedWordsFromBank(playable, 25);
+    const words = wordMode === 'random'
+        ? randomWordsFromBank(playable, 25)
+        : singlePlayerWordsForColors(playable, shuffledColors, language);
     return words.map((word, i) => ({
         id: i,
         word,
@@ -579,10 +581,7 @@ function activeOperatives(room, team) {
 function voteInfo(room, viewer = null) {
     const ops = activeOperatives(room, room.turn);
     const votes = room.votes || {};
-    if (room.singlePlayer && viewer && viewer.team !== room.turn) {
-        return {votes: {}, counts: {}, totalOperatives: ops.length, agreedCardId: null};
-    }
-    if (viewer?.role === 'spymaster') {
+    if (room.singlePlayer && viewer && viewer.team !== room.turn && viewer.role !== 'spymaster') {
         return {votes: {}, counts: {}, totalOperatives: ops.length, agreedCardId: null};
     }
     const counts = {};
@@ -1013,12 +1012,10 @@ function parseHumanClueWord(raw = '', language = 'en') {
     if (language === 'ar') {
         if (!isArabicWord(word)) return {word: '', reason: 'not-one-arabic-word', original};
         if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
-        if (GENERIC_BAD_ARABIC_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
         return {word, reason: '', original};
     }
     if (!/^[A-Za-z]+$/.test(original)) return {word: '', reason: 'not-one-raw-word', original};
     if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
-    if (GENERIC_BAD_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
     return {word, reason: '', original};
 }
 
@@ -2498,7 +2495,6 @@ io.on('connection', socket => {
         if (parsedClue.reason === 'not-one-raw-word') return socket.emit('toast', 'The clue must be one English word, not a phrase.');
         if (parsedClue.reason === 'not-one-arabic-word') return socket.emit('toast', 'يجب أن يكون التلميح كلمة عربية واحدة فقط.');
         if (parsedClue.reason === 'bad-length') return socket.emit('toast', `The clue must be 2-${MAX_CLUE_WORD_LENGTH} letters.`);
-        if (parsedClue.reason === 'generic-placeholder-clue') return socket.emit('toast', 'Use a meaningful clue word, not a generic placeholder.');
         word = parsedClue.word;
         const upperWord = word;
         const cleanTargets = [...new Set((Array.isArray(targetIds) ? targetIds : []).map(x => parseInt(x, 10)))]
