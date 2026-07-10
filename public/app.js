@@ -1353,21 +1353,75 @@ function playerNameFromDiscord() {
     return '';
 }
 
+const ACTIVITY_SEAT_STORAGE_KEY = 'cc_discordActivitySeat_v2';
+const ACTIVITY_SEAT_MAX_AGE_MS = 1000 * 60 * 60 * 12;
+
+function discordScopeKey() {
+    const d = window.DD_DISCORD || {};
+    return [d.guildId || '', d.channelId || ''].filter(Boolean).join(':') || 'activity';
+}
+
+function readSavedDiscordActivitySeat() {
+    try {
+        const raw = localStorage.getItem(ACTIVITY_SEAT_STORAGE_KEY);
+        if (!raw) return null;
+        const seat = JSON.parse(raw);
+        if (!seat || typeof seat !== 'object') return null;
+        const savedAt = Number(seat.savedAt || 0);
+        if (!savedAt || Date.now() - savedAt > ACTIVITY_SEAT_MAX_AGE_MS) return null;
+        return seat;
+    } catch {
+        return null;
+    }
+}
+
+function saveDiscordActivitySeat(extra = {}) {
+    if (!isDiscordActivity) return;
+    const roomId = String(extra.roomId || roomInput?.value || discordActivityRoomCode || getDiscordActivityRoomCode?.() || '').trim().toUpperCase();
+    const team = String(extra.team || $('team')?.value || selectedTeamChoice || '').trim();
+    const role = String(extra.role || $('role')?.value || selectedRoleChoice || '').trim();
+    if (!roomId || !team || !role) return;
+    const seat = {
+        roomId,
+        team,
+        role,
+        playerKey: String(extra.playerKey || playerKey || '').trim(),
+        character: String(extra.character || outboundCharacter?.() || selectedCharacter || '').trim(),
+        name: currentDisplayName?.() || nameInput?.value?.trim() || 'Agent',
+        scopeKey: discordScopeKey(),
+        adminToken: getAdminToken(roomId),
+        savedAt: Date.now()
+    };
+    try {
+        localStorage.setItem(ACTIVITY_SEAT_STORAGE_KEY, JSON.stringify(seat));
+    } catch {
+    }
+}
+
+function clearSavedDiscordActivitySeat() {
+    try {
+        localStorage.removeItem(ACTIVITY_SEAT_STORAGE_KEY);
+    } catch {
+    }
+}
+
 function stableDiscordFallbackKey(roomCode = '') {
+    const room = String(roomCode || getDiscordActivityRoomCode?.() || 'room').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12) || 'room';
+    const storageKey = `cc_activitySeatSeed_${room}`;
     const base = (() => {
         try {
-            let seed = sessionStorage.getItem('cc_activityTabSeatSeed') || '';
-            if (!seed) {
-                seed = makePlayerKey();
-                sessionStorage.setItem('cc_activityTabSeatSeed', seed);
-            }
+            let seed = localStorage.getItem(storageKey) || localStorage.getItem('cc_activitySeatSeed') || '';
+            if (!seed) seed = sessionStorage.getItem('cc_activityTabSeatSeed') || '';
+            if (!seed) seed = makePlayerKey();
+            localStorage.setItem(storageKey, seed);
+            localStorage.setItem('cc_activitySeatSeed', seed);
+            sessionStorage.setItem('cc_activityTabSeatSeed', seed);
             return seed;
         } catch {
             return playerKey || makePlayerKey();
         }
     })();
     const safe = String(base).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 48) || 'local';
-    const room = String(roomCode || getDiscordActivityRoomCode?.() || 'room').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12) || 'room';
     return `d_local_${room}_${safe}`;
 }
 
@@ -1702,7 +1756,60 @@ function syncDiscordLanding() {
 
 function getDiscordActivityRoomCode() {
     const seed = window.DD_DISCORD?.instanceId || localDiscordSeed || discordActivityRoomCode || 'local-discord-test';
-    return roomCodeFromSeed(seed);
+    const generated = roomCodeFromSeed(seed);
+    const saved = readSavedDiscordActivitySeat();
+    const currentScope = discordScopeKey();
+    const sameScope = !saved?.scopeKey || saved.scopeKey === currentScope || currentScope === 'activity';
+    if (saved?.roomId && sameScope) return String(saved.roomId).toUpperCase();
+    return generated;
+}
+
+let activityRestoreInFlight = false;
+let lastActivityRestoreAt = 0;
+
+function restoreDiscordActivitySeat(reason = '', options = {}) {
+    if (!isDiscordActivity || !socket?.connected) return false;
+    const force = !!options.force;
+    const saved = readSavedDiscordActivitySeat();
+    const current = me();
+    if (!force && state && current && current.online !== false) return false;
+    if (!saved?.team || !saved?.role) return false;
+    if (activityRestoreInFlight) return true;
+    if (Date.now() - lastActivityRestoreAt < 900) return true;
+
+    const roomCode = String(saved.roomId || getDiscordActivityRoomCode()).trim().toUpperCase();
+    if (!roomCode) return false;
+
+    activityRestoreInFlight = true;
+    lastActivityRestoreAt = Date.now();
+    roomInput.value = roomCode;
+    discordActivityRoomCode = roomCode;
+    selectedTeamChoice = saved.team;
+    selectedRoleChoice = saved.role;
+    const teamSel = $('team'), roleSel = $('role');
+    if (teamSel) teamSel.value = saved.team;
+    if (roleSel) roleSel.value = saved.role;
+    if (saved.character && !hasCustomAvatar()) selectedCharacter = saved.character;
+    if (saved.playerKey) setPlayerKey(saved.playerKey);
+
+    socket.emit('getRoomInfo', {roomId: roomCode}, res => {
+        if (!res?.ok) {
+            activityRestoreInFlight = false;
+            refreshDiscordLobbyPreview(true);
+            return;
+        }
+        applyLobbyInfo(res);
+        const payload = discordJoinPayload(saved.team, saved.role);
+        payload.roomId = roomCode;
+        payload.activityId = roomCode;
+        payload.playerKey = saved.playerKey || payload.playerKey;
+        payload.adminToken = getAdminToken(roomCode) || saved.adminToken || payload.adminToken;
+        socket.emit('joinOrCreateActivityRoom', {...payload, resume: true, restoreReason: reason}, joinRes => {
+            activityRestoreInFlight = false;
+            acceptJoinResponse(joinRes || {ok: false, error: 'Could not restore Discord activity seat.'});
+        });
+    });
+    return true;
 }
 
 function discordJoinPayload(team, role) {
@@ -1842,6 +1949,14 @@ window.addEventListener('discordIdentityError', () => {
     applyDiscordNameToInput(true);
     renderDiscordIdentity();
     setJoinButtonsReady();
+});
+
+window.addEventListener('pageshow', () => {
+    restoreDiscordActivitySeat('pageshow', {force: true});
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') restoreDiscordActivitySeat('visible', {force: true});
 });
 
 
@@ -2122,6 +2237,14 @@ function acceptJoinResponse(res) {
     if (res.playerKey) {
         setPlayerKey(res.playerKey);
     }
+    if (isDiscordActivity) {
+        saveDiscordActivitySeat({
+            roomId: res.roomId || roomInput?.value,
+            playerKey: res.playerKey || playerKey,
+            team: $('team')?.value || selectedTeamChoice,
+            role: $('role')?.value || selectedRoleChoice
+        });
+    }
     // joinRoom can broadcast the room state before this callback reaches the tab.
     // Re-render immediately after receiving the real seat key so a new tab shows
     // its own chosen team/role instead of the old tab's saved seat.
@@ -2296,8 +2419,11 @@ $('joinBtn').onclick = () => {
 
 socket.on('connect', () => {
     myId = playerKey;
+    if (isDiscordActivity) {
+        if (!restoreDiscordActivitySeat('socket-connect', {force: true})) refreshDiscordLobbyPreview(true);
+        return;
+    }
     requestLobbyInfo();
-    if (isDiscordActivity) refreshDiscordLobbyPreview(true);
 });
 socket.on('lobbyInfo', res => {
     applyLobbyInfo(res);
@@ -2315,6 +2441,7 @@ socket.on('adminRequest', req => {
 });
 socket.on('kicked', ({roomId, message} = {}) => {
     toast(message || 'You were kicked from the room. You can join back if you want.');
+    if (isDiscordActivity) clearSavedDiscordActivitySeat();
     state = null;
     targetIds.clear();
     lastRevealed.clear();
@@ -3239,7 +3366,7 @@ function renderPanels() {
 
     const newRound = $('newRoundBtn');
     if (newRound) {
-        const waitingForWinningReveal = pendingRevealIds.size > 0 || !!(winRevealHoldUntil && Date.now() < winRevealHoldUntil);
+        const waitingForWinningReveal = pendingRevealIds.size > 0 || !!delayedWinRevealTimer || !!(winRevealHoldUntil && Date.now() < winRevealHoldUntil);
         newRound.classList.toggle('hidden', state.status !== 'finished' || waitingForWinningReveal);
     }
     const cs = $('clueStatus');
@@ -3540,6 +3667,7 @@ if (backToLobbyBtn) backToLobbyBtn.onclick = () => {
         hideWinEffectsForCurrentView();
         setPlayerKey(makePlayerKey());
         if (currentRoom) roomInput.value = currentRoom;
+        if (isDiscordActivity) clearSavedDiscordActivitySeat();
         selectedTeamChoice = '';
         selectedRoleChoice = '';
         document.querySelectorAll('.teamPick,.rolePick').forEach(b => b.classList.remove('selected'));

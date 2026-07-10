@@ -19452,3 +19452,61 @@ html body.discordActivity #game #board.board.operativeBoard > button.card.localW
     text-align: center !important;
     line-height: 1.02 !important;
 }
+
+/* v159: iPad-only layout patch. This is intentionally at the bottom and targets iPad/tablet touch screens only, so desktop PC and phone rules stay untouched. */
+@supports (-webkit-touch-callout: none) {
+    @media (min-width: 768px) and (max-width: 1366px) and (hover: none) and (pointer: coarse) {
+        html body #game.gameV9,
+        html body.discordActivity #game.gameV9 {
+            padding: 10px !important;
+            gap: 10px !important;
+            min-height: 100svh !important;
+            overflow-x: hidden !important;
+        }
+
+        html body #game.gameV9 .topbar,
+        html body.discordActivity #game.gameV9 .topbar {
+            min-height: 52px !important;
+            padding: 7px 10px !important;
+            border-radius: 16px !important;
+        }
+
+        html body #game.gameV9 .board,
+        html body.discordActivity #game.gameV9 .board {
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        html body #game.gameV9 .card,
+        html body.discordActivity #game.gameV9 .card {
+            height: clamp(88px, 11.2vw, 124px) !important;
+            min-width: 0 !important;
+            padding: 8px !important;
+            border-radius: 17px !important;
+        }
+
+        html body #game.gameV9 .word,
+        html body.discordActivity #game.gameV9 .word {
+            min-height: 38px !important;
+            padding: 6px 8px !important;
+            font-size: clamp(12px, 1.9vw, 22px) !important;
+            line-height: 1.02 !important;
+        }
+
+        html body #game.gameV9 .teamPanel,
+        html body.discordActivity #game.gameV9 .teamPanel {
+            border-radius: 17px !important;
+            padding: 10px !important;
+        }
+
+        html body #game.gameV9 .bottomClueDock,
+        html body.discordActivity #game.gameV9 .bottomClueDock {
+            bottom: 8px !important;
+            max-width: 760px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+    }
+}

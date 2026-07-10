@@ -67,6 +67,8 @@ app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.h
 
 const PORT = process.env.PORT || 3000;
 const rooms = new Map();
+const WEB_OFFLINE_SEAT_TTL_MS = 10000;
+const DISCORD_ACTIVITY_OFFLINE_SEAT_TTL_MS = 1000 * 60 * 30;
 
 function envBool(name, fallback = false) {
     const value = String(process.env[name] ?? '').trim().toLowerCase();
@@ -2608,13 +2610,16 @@ io.on('connection', socket => {
             p.lastSeenAt = Date.now();
             room.log.push(`${p.name} disconnected. The room stays alive and they can rejoin with code ${room.id}.`);
             emitRoom(room);
+            const offlineSeatTtl = String(offlinePlayerId || '').startsWith('d_local_') || p.discordId
+                ? DISCORD_ACTIVITY_OFFLINE_SEAT_TTL_MS
+                : WEB_OFFLINE_SEAT_TTL_MS;
             setTimeout(() => {
                 const latest = room.players?.[offlinePlayerId];
                 if (!latest || latest.online !== false) return;
                 delete room.votes?.[offlinePlayerId];
                 delete room.players[offlinePlayerId];
                 emitRoom(room);
-            }, 10000);
+            }, offlineSeatTtl);
         }
     });
 });
