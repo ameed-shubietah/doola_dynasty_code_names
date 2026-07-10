@@ -1,6 +1,7 @@
 const initialUiLanguage = localStorage.cc_language === 'ar' ? 'ar' : 'en';
 const socket = io({auth: {language: initialUiLanguage}});
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
+const localFlippedPickedCards = new Set();
 let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null, winRevealHoldUntil = 0, hiddenWinEffectKey = '';
 let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
@@ -2318,6 +2319,7 @@ socket.on('kicked', ({roomId, message} = {}) => {
     targetIds.clear();
     lastRevealed.clear();
     clearDelayedReveals();
+    clearLocalPickedFlips();
     setPlayerKey(makePlayerKey());
     if (roomId) roomInput.value = roomId;
     game.classList.add('hidden');
@@ -2333,7 +2335,10 @@ socket.on('state', s => {
     const gameJustStarted = before?.status === 'lobby' && s.status !== 'lobby';
     const enteredGameFromLanding = !!(landing && !landing.classList.contains('hidden') && !(isDiscordActivity && s.status === 'lobby'));
     const boardChanged = !!(before?.board && s?.board && before.board.map(c => `${c.id}:${c.word}`).join('|') !== s.board.map(c => `${c.id}:${c.word}`).join('|'));
-    if (boardChanged) clearDelayedReveals();
+    if (boardChanged) {
+        clearDelayedReveals();
+        clearLocalPickedFlips();
+    }
     const delayedReveals = scheduleDelayedReveals(before, s);
     const hasDelayedReveal = delayedReveals.length > 0;
     if (hasDelayedReveal && s?.status === 'finished' && s?.winner) {
@@ -2365,6 +2370,7 @@ socket.on('state', s => {
     if (gameJustStarted) {
         lastBoardKey = '';
         clearDelayedReveals();
+        clearLocalPickedFlips();
         showGameIntro('start');
     }
     if (landing && !landing.classList.contains('hidden')) {
@@ -3040,6 +3046,32 @@ function cardLengthClass(word) {
     return 'longWord';
 }
 
+function localPickedFlipKey(card) {
+    return `${state?.id || ''}:${state?.round ?? 0}:${card?.id ?? ''}`;
+}
+
+function isLocalPickedFlipEligible(card) {
+    if (!card || !card.revealed) return false;
+    if (state?.status === 'finished') return false;
+    if (pendingRevealIds.has(card.id)) return false;
+    return card.color === 'blue' || card.color === 'red' || card.color === 'neutral';
+}
+
+function clearLocalPickedFlips() {
+    localFlippedPickedCards.clear();
+}
+
+function pruneLocalPickedFlips() {
+    if (!state?.board?.length) {
+        clearLocalPickedFlips();
+        return;
+    }
+    const liveKeys = new Set(state.board.filter(isLocalPickedFlipEligible).map(localPickedFlipKey));
+    for (const key of Array.from(localFlippedPickedCards)) {
+        if (!liveKeys.has(key)) localFlippedPickedCards.delete(key);
+    }
+}
+
 function revealHeroSvg(color) {
     return '';
 }
@@ -3053,6 +3085,7 @@ function renderBoard() {
     }
     const p = me();
     const spy = p?.role === 'spymaster';
+    pruneLocalPickedFlips();
     board.classList.toggle('spyBoard', !!spy);
     board.classList.toggle('operativeBoard', !spy);
     board.classList.toggle('finishedBoard', state.status === 'finished');
@@ -3078,9 +3111,11 @@ function renderBoard() {
         const voted = voteCount > 0;
         const revealer = c.revealedById ? state?.players?.[c.revealedById] : null;
         // During play, revealed team/grey cards become crown-only. After the win, show every real word/color.
+        // Clicking a crown-only revealed card flips it locally for this browser only, without emitting to the server.
         const teamReveal = !!(!showOrigin && visuallyRevealed && (c.color === 'blue' || c.color === 'red'));
         const correctReveal = teamReveal;
         const neutralReveal = !!(!showOrigin && visuallyRevealed && c.color === 'neutral');
+        const localFlippedReveal = (teamReveal || neutralReveal) && localFlippedPickedCards.has(localPickedFlipKey(c));
         const playableSpyTarget = spy && p?.team === state.turn && state.status === 'waiting-clue' && c.color === p.team && !c.revealed;
         const canConfirmThis = p?.role === 'operative' && p.team === state.turn && state.status === 'guessing' && myVote && !c.revealed;
         const voteBadge = '';
@@ -3090,18 +3125,25 @@ function renderBoard() {
         // Use a real centered crown layer instead of card backgrounds/pseudo-elements.
         // This avoids mobile Safari/Discord cropping the crown into the top-left corner.
         const crownSrc = neutralReveal ? '/crown-bw.png' : '/crown.png';
-        const hasCrownLayer = spyClueTarget || teamReveal || neutralReveal;
+        const hasCrownLayer = spyClueTarget || ((teamReveal || neutralReveal) && !localFlippedReveal);
         const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
-        const crownOnlyReveal = teamReveal || neutralReveal;
+        const crownOnlyReveal = (teamReveal || neutralReveal) && !localFlippedReveal;
         const finalWordStyle = `--letters:${String(c.word).length}`;
         const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)} ${showOrigin ? 'finalWordBox' : ''}" style="${finalWordStyle}">${c.word}</span>`;
-        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${visuallyRevealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${visuallyRevealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
+        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${visuallyRevealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${localFlippedReveal ? 'localWordFlipped' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${visuallyRevealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {
             if (ev.target.closest('.cardConfirm')) return;
             const id = Number(el.dataset.id);
             const card = state.board.find(c => c.id === id);
+            if (isLocalPickedFlipEligible(card)) {
+                const key = localPickedFlipKey(card);
+                if (localFlippedPickedCards.has(key)) localFlippedPickedCards.delete(key);
+                else localFlippedPickedCards.add(key);
+                renderBoard();
+                return;
+            }
             const p = me();
             if (!p || !card || card.revealed || state.status === 'finished') return;
             if (p.role === 'spymaster') {
@@ -3196,7 +3238,10 @@ function renderPanels() {
     }
 
     const newRound = $('newRoundBtn');
-    if (newRound) newRound.classList.toggle('hidden', state.status !== 'finished');
+    if (newRound) {
+        const waitingForWinningReveal = pendingRevealIds.size > 0 || !!(winRevealHoldUntil && Date.now() < winRevealHoldUntil);
+        newRound.classList.toggle('hidden', state.status !== 'finished' || waitingForWinningReveal);
+    }
     const cs = $('clueStatus');
     if (cs) cs.innerHTML = '';
 }
@@ -3443,6 +3488,7 @@ if (clueNumberInput) {
 const newRoundBtn = $('newRoundBtn');
 if (newRoundBtn) newRoundBtn.onclick = () => {
     targetIds.clear();
+    clearLocalPickedFlips();
     socket.emit('newGame');
 };
 const requestHintBtn = $('requestHintBtn');
