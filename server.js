@@ -67,6 +67,9 @@ app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.h
 
 const PORT = process.env.PORT || 3000;
 const rooms = new Map();
+// Discord clients in the same channel must resolve to one server room even if
+// one client briefly sends a different Activity instance-derived room id.
+const discordActivityRooms = new Map();
 const WEB_OFFLINE_SEAT_TTL_MS = 10000;
 const DISCORD_ACTIVITY_OFFLINE_SEAT_TTL_MS = 1000 * 60 * 30;
 
@@ -1860,12 +1863,19 @@ io.on('connection', socket => {
         socket.data.language = language === 'ar' ? 'ar' : 'en';
     });
 
-    socket.on('getRoomInfo', ({roomId} = {}, cb = () => {
+    socket.on('getRoomInfo', ({roomId, activityScope = '', channelId = ''} = {}, cb = () => {
     }) => {
-        const id = String(roomId || '').toUpperCase();
+        let id = String(roomId || '').toUpperCase();
+        const cleanChannelId = String(channelId || '').trim().replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100);
+        let scopeKey = String(activityScope || '').trim().toLowerCase().replace(/[^a-z0-9:_-]/g, '').slice(0, 220);
+        if (!scopeKey && cleanChannelId) scopeKey = `channel:${cleanChannelId}`.toLowerCase();
+        const mappedRoomId = scopeKey ? discordActivityRooms.get(scopeKey) : '';
+        if (mappedRoomId && rooms.has(mappedRoomId)) id = mappedRoomId;
+        else if (mappedRoomId) discordActivityRooms.delete(scopeKey);
+
         const room = rooms.get(id);
         if (!room) return cb({ok: false, error: 'Room not found.'});
-        socket.join(`preview:${id}`);
+        socket.join(`preview:${room.id}`);
         cb(roomLobbyInfo(room));
     });
 
@@ -1984,6 +1994,9 @@ io.on('connection', socket => {
     socket.on('joinOrCreateActivityRoom', ({
                                                roomId,
                                                activityId,
+                                               activityScope = '',
+                                               channelId = '',
+                                               guildId = '',
                                                name,
                                                avatar = '',
                                                discordId = '',
@@ -1996,9 +2009,20 @@ io.on('connection', socket => {
                                                arabicMode = false
                                            } = {}, cb = () => {
     }) => {
+        const cleanChannelId = String(channelId || '').trim().replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100);
+        let scopeKey = String(activityScope || '').trim().toLowerCase().replace(/[^a-z0-9:_-]/g, '').slice(0, 220);
+        if (!scopeKey && cleanChannelId) scopeKey = `channel:${cleanChannelId}`.toLowerCase();
+
         let id = String(roomId || activityId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         if (!id) id = code();
         if (id.length > 5) id = id.slice(0, 5);
+
+        // The first participant binds the shared Discord scope to a room. Every
+        // later participant in that channel is forced into the same room.
+        const mappedRoomId = scopeKey ? discordActivityRooms.get(scopeKey) : '';
+        if (mappedRoomId && rooms.has(mappedRoomId)) id = mappedRoomId;
+        else if (mappedRoomId) discordActivityRooms.delete(scopeKey);
+
         let room = rooms.get(id);
         let created = false;
         if (!room) {
@@ -2006,6 +2030,7 @@ io.on('connection', socket => {
             rooms.set(id, room);
             created = true;
         }
+        if (scopeKey) discordActivityRooms.set(scopeKey, room.id);
         const forceAdmin = created;
         const joined = joinRoom(socket, room, {
             name,
@@ -2025,7 +2050,8 @@ io.on('connection', socket => {
             ok: true,
             roomId: room.id,
             playerKey: socket.data.playerKey,
-            adminToken: forceAdmin ? room.adminToken : ((adminToken && adminToken === room.adminToken) ? room.adminToken : undefined)
+            adminToken: forceAdmin ? room.adminToken : ((adminToken && adminToken === room.adminToken) ? room.adminToken : undefined),
+            activityScope: scopeKey || undefined
         });
     });
 

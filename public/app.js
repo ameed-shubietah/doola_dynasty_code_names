@@ -604,10 +604,46 @@ function roomCodeFromSeed(seed) {
     return Math.abs(h >>> 0).toString(36).toUpperCase().padStart(5, '0').slice(0, 5);
 }
 
-const localDiscordSeed = params.get('instance_id') || params.get('instanceId') || params.get('activity_instance_id') || params.get('activityInstanceId');
+const localDiscordChannelId = params.get('channel_id') || params.get('channelId') || '';
+const localDiscordGuildId = params.get('guild_id') || params.get('guildId') || '';
+const localDiscordSeed = params.get('instance_id') || params.get('instanceId') || params.get('activity_instance_id') || params.get('activityInstanceId') || '';
+
+function discordChannelId() {
+    return String(window.DD_DISCORD?.channelId || window.DD_DISCORD_EARLY?.channelId || localDiscordChannelId || '').trim();
+}
+
+function discordGuildId() {
+    return String(window.DD_DISCORD?.guildId || window.DD_DISCORD_EARLY?.guildId || localDiscordGuildId || '').trim();
+}
+
+function discordInstanceId() {
+    return String(window.DD_DISCORD?.instanceId || window.DD_DISCORD_EARLY?.instanceId || localDiscordSeed || '').trim();
+}
+
+function discordActivityScopeId() {
+    const channelId = discordChannelId();
+    if (channelId) return `channel:${channelId}`;
+    const instanceId = discordInstanceId();
+    return instanceId ? `instance:${instanceId}` : '';
+}
+
+function canonicalDiscordActivityRoomCode() {
+    const scope = discordActivityScopeId();
+    return scope ? roomCodeFromSeed(scope) : '';
+}
+
+function roomInfoPayload(roomId) {
+    const payload = {roomId: String(roomId || '').trim().toUpperCase()};
+    if (isDiscordActivity) {
+        payload.activityScope = discordActivityScopeId();
+        payload.channelId = discordChannelId();
+    }
+    return payload;
+}
+
 let discordActivityInfo = null;
-let isDiscordActivity = isDiscordForced || Boolean(localDiscordSeed || safeContains(location.hostname, 'discordsays.com'));
-let discordActivityRoomCode = localDiscordSeed ? roomCodeFromSeed(localDiscordSeed) : '';
+let isDiscordActivity = isDiscordForced || Boolean(localDiscordSeed || localDiscordChannelId || safeContains(location.hostname, 'discordsays.com'));
+let discordActivityRoomCode = canonicalDiscordActivityRoomCode();
 if (isDiscordActivity) document.body.classList.add('discordActivity');
 if (isDiscordActivity) setTimeout(() => applyDiscordNameToInput(true), 0);
 window.DD_MODE_DIAGNOSTIC = {
@@ -617,7 +653,12 @@ window.DD_MODE_DIAGNOSTIC = {
     path: location.pathname,
     host: location.hostname,
     referrer: document.referrer,
-    userAgent: navigator.userAgent
+    userAgent: navigator.userAgent,
+    channelId: discordChannelId(),
+    guildId: discordGuildId(),
+    instanceId: discordInstanceId(),
+    activityScope: discordActivityScopeId(),
+    roomCode: discordActivityRoomCode
 };
 console.log('DD mode diagnostic', window.DD_MODE_DIAGNOSTIC);
 const inviteRoom = (params.get('room') || params.get('r') || '').trim().toUpperCase();
@@ -708,7 +749,7 @@ function requestLobbyInfo() {
         renderCharacters();
         return;
     }
-    socket.emit('getRoomInfo', {roomId: code}, res => {
+    socket.emit('getRoomInfo', roomInfoPayload(code), res => {
         if (roomInput.value.trim().toUpperCase() !== code) return;
         if (!res || !res.ok) {
             lastLobbyInfo = null;
@@ -1201,7 +1242,7 @@ function withModeHostAccess(action) {
         return;
     }
 
-    socket.emit('getRoomInfo', {roomId: roomCode}, res => {
+    socket.emit('getRoomInfo', roomInfoPayload(roomCode), res => {
         if (res?.ok) {
             applyLobbyInfo(res);
             if (!hasModeHostAccess(roomCode)) {
@@ -1357,8 +1398,7 @@ const ACTIVITY_SEAT_STORAGE_KEY = 'cc_discordActivitySeat_v2';
 const ACTIVITY_SEAT_MAX_AGE_MS = 1000 * 60 * 60 * 12;
 
 function discordScopeKey() {
-    const d = window.DD_DISCORD || {};
-    return [d.guildId || '', d.channelId || ''].filter(Boolean).join(':') || 'activity';
+    return discordActivityScopeId() || 'activity';
 }
 
 function readSavedDiscordActivitySeat() {
@@ -1755,20 +1795,46 @@ function syncDiscordLanding() {
 }
 
 function getDiscordActivityRoomCode() {
-    const seed = window.DD_DISCORD?.instanceId || localDiscordSeed || discordActivityRoomCode || 'local-discord-test';
-    const generated = roomCodeFromSeed(seed);
+    // A Discord voice/text channel is shared by every participant, while an
+    // Activity instance id can be absent or briefly differ during startup.
+    // Always prefer the live channel scope so every participant reaches one room.
+    const canonical = canonicalDiscordActivityRoomCode();
+    if (canonical) return canonical;
+
     const saved = readSavedDiscordActivitySeat();
     const currentScope = discordScopeKey();
     const sameScope = !saved?.scopeKey || saved.scopeKey === currentScope || currentScope === 'activity';
     if (saved?.roomId && sameScope) return String(saved.roomId).toUpperCase();
-    return generated;
+
+    const fallbackSeed = discordInstanceId() || discordActivityRoomCode || 'local-discord-test';
+    return roomCodeFromSeed(fallbackSeed);
+}
+
+async function waitForDiscordSharedScope(timeoutMs = 3200) {
+    if (!isDiscordActivity || discordChannelId()) return;
+    const startedAt = Date.now();
+    while (!discordChannelId() && Date.now() - startedAt < timeoutMs) {
+        await new Promise(resolve => setTimeout(resolve, 80));
+    }
 }
 
 let activityRestoreInFlight = false;
 let lastActivityRestoreAt = 0;
+let activityScopeWaitTimer = null;
 
 function restoreDiscordActivitySeat(reason = '', options = {}) {
     if (!isDiscordActivity || !socket?.connected) return false;
+    // Do not restore into a temporary instance-derived room while the SDK is
+    // still loading the shared Discord channel id. Retry as soon as it is ready.
+    if (!discordChannelId() && !window.DD_DISCORD && !localDiscordChannelId) {
+        if (!activityScopeWaitTimer) {
+            activityScopeWaitTimer = setTimeout(() => {
+                activityScopeWaitTimer = null;
+                restoreDiscordActivitySeat('scope-ready-retry', {force: true});
+            }, 450);
+        }
+        return true;
+    }
     const force = !!options.force;
     const saved = readSavedDiscordActivitySeat();
     const current = me();
@@ -1777,8 +1843,11 @@ function restoreDiscordActivitySeat(reason = '', options = {}) {
     if (activityRestoreInFlight) return true;
     if (Date.now() - lastActivityRestoreAt < 900) return true;
 
-    const roomCode = String(saved.roomId || getDiscordActivityRoomCode()).trim().toUpperCase();
+    const canonicalRoomCode = canonicalDiscordActivityRoomCode();
+    const savedRoomCode = String(saved.roomId || '').trim().toUpperCase();
+    const roomCode = String(canonicalRoomCode || savedRoomCode || getDiscordActivityRoomCode()).trim().toUpperCase();
     if (!roomCode) return false;
+    const sameSavedRoom = !canonicalRoomCode || !savedRoomCode || canonicalRoomCode === savedRoomCode;
 
     activityRestoreInFlight = true;
     lastActivityRestoreAt = Date.now();
@@ -1790,20 +1859,17 @@ function restoreDiscordActivitySeat(reason = '', options = {}) {
     if (teamSel) teamSel.value = saved.team;
     if (roleSel) roleSel.value = saved.role;
     if (saved.character && !hasCustomAvatar()) selectedCharacter = saved.character;
-    if (saved.playerKey) setPlayerKey(saved.playerKey);
+    if (saved.playerKey && sameSavedRoom) setPlayerKey(saved.playerKey);
 
-    socket.emit('getRoomInfo', {roomId: roomCode}, res => {
-        if (!res?.ok) {
-            activityRestoreInFlight = false;
-            refreshDiscordLobbyPreview(true);
-            return;
-        }
-        applyLobbyInfo(res);
+    socket.emit('getRoomInfo', roomInfoPayload(roomCode), res => {
+        if (res?.ok) applyLobbyInfo(res);
         const payload = discordJoinPayload(saved.team, saved.role);
         payload.roomId = roomCode;
-        payload.activityId = roomCode;
-        payload.playerKey = saved.playerKey || payload.playerKey;
-        payload.adminToken = getAdminToken(roomCode) || saved.adminToken || payload.adminToken;
+        payload.activityId = discordInstanceId() || roomCode;
+        if (sameSavedRoom && saved.playerKey) payload.playerKey = saved.playerKey;
+        payload.adminToken = sameSavedRoom
+            ? (getAdminToken(roomCode) || saved.adminToken || payload.adminToken)
+            : getAdminToken(roomCode);
         socket.emit('joinOrCreateActivityRoom', {...payload, resume: true, restoreReason: reason}, joinRes => {
             activityRestoreInFlight = false;
             acceptJoinResponse(joinRes || {ok: false, error: 'Could not restore Discord activity seat.'});
@@ -1827,7 +1893,10 @@ function discordJoinPayload(team, role) {
     discordActivityRoomCode = roomCode;
 
     return {
-        activityId: window.DD_DISCORD?.instanceId || localDiscordSeed || roomCode,
+        activityId: discordInstanceId() || roomCode,
+        activityScope: discordActivityScopeId(),
+        channelId: discordChannelId(),
+        guildId: discordGuildId(),
         roomId: roomCode,
         name: finalName,
         avatar: finalAvatar,
@@ -1848,6 +1917,11 @@ async function joinDiscordActivity(team, role) {
         nameInput.focus();
         return;
     }
+
+    // Let the Discord SDK expose the shared channel id before deciding the room.
+    // This prevents two clients from hashing different temporary instance ids.
+    await waitForDiscordSharedScope();
+
     selectedTeamChoice = team;
     selectedRoleChoice = role;
     const teamSel = $('team'), roleSel = $('role');
@@ -1930,6 +2004,7 @@ window.addEventListener('discordActivityReady', (event) => {
     }
 
     syncDiscordLanding();
+    if (discordActivityInfo?.enabled) restoreDiscordActivitySeat('discord-ready', {force: true});
 });
 window.addEventListener('discordParticipantsChanged', () => {
     applyDiscordNameToInput(true);
@@ -2109,7 +2184,7 @@ function refreshDiscordLobbyPreview(force = false) {
     lobbyPreviewTimer = setTimeout(() => {
         lobbyPreviewTimer = null;
     }, 650);
-    socket.emit('getRoomInfo', {roomId: code}, res => {
+    socket.emit('getRoomInfo', roomInfoPayload(code), res => {
         if (res?.ok) applyLobbyInfo(res);
     });
 }
@@ -2117,7 +2192,7 @@ function refreshDiscordLobbyPreview(force = false) {
 function withFreshLobbyBeforeJoin(roomId, proceed) {
     const code = String(roomId || '').trim().toUpperCase();
     if (!code) return proceed();
-    socket.emit('getRoomInfo', {roomId: code}, res => {
+    socket.emit('getRoomInfo', roomInfoPayload(code), res => {
         if (res?.ok) {
             applyLobbyInfo(res);
             // If another user took the selected character while this tab was open, do not send a stale join.
