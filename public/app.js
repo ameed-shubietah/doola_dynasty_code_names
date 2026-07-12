@@ -111,8 +111,8 @@ const UI_TEXT = {
         name: 'Name',
         roomCode: 'Room Code',
         yourName: 'Your Name',
-        avatar: 'Avatar',
-        optional: '(optional)',
+        avatar: 'Upload your image or choose an avatar.',
+        optional: '',
         uploadImage: 'Upload Image',
         remove: 'Remove',
         chooseTeam: 'Choose your team',
@@ -219,8 +219,8 @@ const UI_TEXT = {
         name: 'الاسم',
         roomCode: 'رمز الغرفة',
         yourName: 'اسمك',
-        avatar: 'الصورة',
-        optional: '(اختياري)',
+        avatar: 'ارفع صورتك أو اختر صورة رمزية.',
+        optional: '',
         uploadImage: 'رفع صورة',
         remove: 'إزالة',
         chooseTeam: 'اختر فريقك',
@@ -411,9 +411,7 @@ function applyLanguage() {
     }
     document.querySelectorAll('.discordRoleJoin').forEach(btn => {
         const role = btn.dataset.role;
-        btn.textContent = role === 'spectator'
-            ? (uiLanguage === 'ar' ? 'الدخول كمشاهد' : 'Join as Spectator')
-            : (uiLanguage === 'ar' ? 'دخول' : 'Join');
+        btn.textContent = uiLanguage === 'ar' ? 'دخول' : 'Join';
     });
     setButtonText('createBtn', 'createRoom');
     setButtonText('joinBtn', 'joinRoom');
@@ -1737,7 +1735,7 @@ function setJoinButtonsReady() {
             const team = b.dataset.team;
             const fullSpy = role === 'spymaster' && team !== 'spectator' && spymasterSlotFullFor(team);
             b.disabled = !characterReady || fullSpy;
-            b.textContent = fullSpy ? tt('full') : (role === 'spectator' ? (uiLanguage === 'ar' ? 'الدخول كمشاهد' : 'Join as Spectator') : (uiLanguage === 'ar' ? 'دخول' : 'Join'));
+            b.textContent = fullSpy ? tt('full') : (uiLanguage === 'ar' ? 'دخول' : 'Join');
         });
         return;
     }
@@ -2087,7 +2085,7 @@ function withPendingLobbyPlayer(players, team, role) {
 }
 
 function roleListHtml(players) {
-    if (!players || !players.length) return `<div class="discordSeatEmpty">${uiLanguage === 'ar' ? 'فارغ' : 'empty'}</div>`;
+    if (!players || !players.length) return '';
     const seen = new Set();
     const unique = [];
     for (const p of players) {
@@ -2116,8 +2114,8 @@ function paintDiscordLobby(info) {
         if (!list) {
             list = document.createElement('div');
             list.className = 'discordSeatList';
-            box.appendChild(list);
         }
+        if (btn && list.nextElementSibling !== btn) box.insertBefore(list, btn);
         const players = withPendingLobbyPlayer(lobbyRolePlayers(team, role), team, role);
         list.innerHTML = roleListHtml(players);
         if (btn && role === 'spymaster') {
@@ -2125,9 +2123,7 @@ function paintDiscordLobby(info) {
             btn.disabled = occupied;
             btn.textContent = occupied ? tt('full') : (uiLanguage === 'ar' ? 'دخول' : 'Join');
         } else if (btn) {
-            btn.textContent = role === 'spectator'
-                ? (uiLanguage === 'ar' ? 'الدخول كمشاهد' : 'Join as Spectator')
-                : (uiLanguage === 'ar' ? 'دخول' : 'Join');
+            btn.textContent = uiLanguage === 'ar' ? 'دخول' : 'Join';
         }
     }
 }
@@ -3836,6 +3832,16 @@ if (giveClueButton) giveClueButton.onclick = () => {
 
     if (!p || p.role !== 'spymaster') {
         toast(uiLanguage === 'ar' ? 'صاحب التلميح فقط يمكنه إعطاء تلميح.' : 'Only the spymaster can give a clue.');
+        return;
+    }
+    if (p.team !== state?.turn) {
+        const currentTeam = state?.turn === 'blue' ? 'Gold' : 'Black';
+        const currentTeamArabic = state?.turn === 'blue' ? 'الذهبي' : 'الأسود';
+        toast(
+            uiLanguage === 'ar'
+                ? `الدور الآن لصاحب تلميح الفريق ${currentTeamArabic}.`
+                : `It is the ${currentTeam} spymaster's turn.`
+        );
         return;
     }
     if (!clueWord) {

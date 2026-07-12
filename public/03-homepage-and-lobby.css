@@ -2465,3 +2465,61 @@ body.discordActivity #landing .modesMenu {
         width: 150px !important;
     }
 }
+
+#landing .discordRoleBox,
+body.discordActivity #landing .discordRoleBox {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+}
+
+#landing .discordRoleBox > div:first-child,
+body.discordActivity #landing .discordRoleBox > div:first-child {
+    order: 1 !important;
+    width: 100% !important;
+    text-align: center !important;
+}
+
+#landing .discordRoleBox .discordSeatList,
+body.discordActivity #landing .discordRoleBox .discordSeatList,
+#landing .discordSpectatorCard .discordSeatList,
+body.discordActivity #landing .discordSpectatorCard .discordSeatList {
+    order: 2 !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 7px 0 0 !important;
+    justify-content: center !important;
+    align-content: center !important;
+}
+
+#landing .discordRoleBox .discordSeatList:empty,
+body.discordActivity #landing .discordRoleBox .discordSeatList:empty,
+#landing .discordSpectatorCard .discordSeatList:empty,
+body.discordActivity #landing .discordSpectatorCard .discordSeatList:empty {
+    display: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+}
+
+#landing .discordRoleBox .discordRoleJoin,
+body.discordActivity #landing .discordRoleBox .discordRoleJoin,
+#landing .discordSpectatorCard .discordRoleJoin,
+body.discordActivity #landing .discordSpectatorCard .discordRoleJoin {
+    order: 3 !important;
+    align-self: center !important;
+    margin-top: 8px !important;
+}
+
+#landing .discordSpectatorCard,
+body.discordActivity #landing .discordSpectatorCard {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+}
+
+#landing .discordSpectatorCard h2,
+body.discordActivity #landing .discordSpectatorCard h2 {
+    order: 1 !important;
+}
+

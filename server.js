@@ -99,7 +99,7 @@ const OLLAMA_AUTH_HEADER = String(process.env.OLLAMA_AUTH_HEADER || '').trim();
 const AI_ENGINE_OFFLINE_MESSAGE = "the host's pc where he hosts the ai engine that runs this mode is turned off at the moment";
 const MAX_CLUE_TARGETS = 25;
 const MAX_AI_CLUE_TARGETS = envInt('AI_MAX_CLUE_TARGETS', 5, 1, 5);
-const MAX_CLUE_WORD_LENGTH = 14;
+const MAX_CLUE_WORD_LENGTH = 20;
 const GENERIC_BAD_CLUES = new Set(['WORD', 'WORDS', 'CLUE', 'TARGET', 'TARGETS', 'CARD', 'CARDS', 'THING', 'THINGS', 'OBJECT', 'OBJECTS', 'ITEM', 'ITEMS', 'COMMON', 'RELATED', 'ASSOCIATED', 'GENERAL']);
 const GENERIC_BAD_ARABIC_CLUES = new Set(['كلمة', 'كلمات', 'تلميح', 'بطاقة', 'بطاقات', 'شيء', 'اشياء', 'عام', 'عامة', 'مشترك', 'مرتبط']);
 const AI_EXTRA_CLUE_WORDS = [
@@ -2568,7 +2568,18 @@ io.on('connection', socket => {
         const room = getPlayerRoom(socket.id);
         if (!room) return;
         const p = getPlayerBySocket(room, socket.id);
-        if (!playerCanAct(room, p) || p.role !== 'spymaster') return;
+        if (!p || p.role !== 'spymaster') return;
+        if (p.team !== room.turn) {
+            const currentTeam = room.turn === 'blue' ? 'Gold' : 'Black';
+            const currentTeamArabic = room.turn === 'blue' ? 'الذهبي' : 'الأسود';
+            return socket.emit(
+                'toast',
+                languageOfRoom(room) === 'ar'
+                    ? `الدور الآن لصاحب تلميح الفريق ${currentTeamArabic}.`
+                    : `It is the ${currentTeam} spymaster's turn.`
+            );
+        }
+        if (!playerCanAct(room, p)) return;
         const isExtraHint = false;
         if (room.status !== 'waiting-clue') return;
         const roomLanguage = languageOfRoom(room);

@@ -1988,3 +1988,164 @@ html body.discordActivity #spectatorMenuWrap.spectatorMenuWrap {
     grid-area: auto !important;
     z-index: 12050 !important;
 }
+
+#game .teamPanel .teamHeader > div:first-child,
+body.discordActivity #game .teamPanel .teamHeader > div:first-child {
+    display: none !important;
+}
+
+#game .teamPanel .teamHeader,
+body.discordActivity #game .teamPanel .teamHeader {
+    width: 100% !important;
+    align-items: stretch !important;
+}
+
+#game .teamPanel .miniScoreCard,
+body.discordActivity #game .teamPanel .miniScoreCard {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+#game .teamPanel section > h3,
+body.discordActivity #game .teamPanel section > h3 {
+    width: 100% !important;
+    min-height: 30px !important;
+    margin: 8px 0 6px !important;
+    padding: 7px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    background: rgba(0, 0, 0, .38) !important;
+    border: 1px solid rgba(255, 255, 255, .08) !important;
+    text-align: center !important;
+    line-height: 1 !important;
+}
+
+body:not([data-lang="ar"]) #goldPanel section:nth-of-type(2) > h3,
+body:not([data-lang="ar"]) #blackPanel section:nth-of-type(2) > h3,
+body.discordActivity:not([data-lang="ar"]) #goldPanel section:nth-of-type(2) > h3,
+body.discordActivity:not([data-lang="ar"]) #blackPanel section:nth-of-type(2) > h3,
+body[data-lang="ar"] #goldPanel section:nth-of-type(2) > h3,
+body[data-lang="ar"] #blackPanel section:nth-of-type(2) > h3 {
+    font-size: 0 !important;
+}
+
+body:not([data-lang="ar"]) #goldPanel section:nth-of-type(2) > h3::after,
+body:not([data-lang="ar"]) #blackPanel section:nth-of-type(2) > h3::after,
+body.discordActivity:not([data-lang="ar"]) #goldPanel section:nth-of-type(2) > h3::after,
+body.discordActivity:not([data-lang="ar"]) #blackPanel section:nth-of-type(2) > h3::after {
+    content: "SPYMASTER" !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+}
+
+body[data-lang="ar"] #goldPanel section:nth-of-type(2) > h3::after,
+body[data-lang="ar"] #blackPanel section:nth-of-type(2) > h3::after {
+    content: "صاحب التلميح" !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+}
+
+#game .teamPanel .player,
+body.discordActivity #game .teamPanel .player {
+    position: relative !important;
+}
+
+#game .teamPanel .player:not(.editingName) .playerBody,
+body.discordActivity #game .teamPanel .player:not(.editingName) .playerBody {
+    position: static !important;
+}
+
+#game .teamPanel .player:not(.editingName) .playerBody > b,
+body.discordActivity #game .teamPanel .player:not(.editingName) .playerBody > b {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    text-align: center !important;
+}
+
+#game .teamPanel .player:not(.editingName) .playerNameText,
+body.discordActivity #game .teamPanel .player:not(.editingName) .playerNameText {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: auto !important;
+    max-width: calc(100% - 126px) !important;
+    transform: translate(-50%, -50%) !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+@media (max-width: 980px) {
+    #game .teamPanel .miniScoreCard,
+    body.discordActivity #game .teamPanel .miniScoreCard {
+        min-height: 76px !important;
+    }
+
+    #game .teamPanel .player:not(.editingName) .playerNameText,
+    body.discordActivity #game .teamPanel .player:not(.editingName) .playerNameText {
+        max-width: calc(100% - 112px) !important;
+    }
+}
+
+#game .teamPanel .player:not(.editingName) .playerBody,
+body.discordActivity #game .teamPanel .player:not(.editingName) .playerBody {
+    position: relative !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    align-self: stretch !important;
+}
+
+#game .teamPanel .player:not(.editingName) .playerNameText,
+body.discordActivity #game .teamPanel .player:not(.editingName) .playerNameText {
+    left: 50% !important;
+    width: calc(100% - 12px) !important;
+    max-width: calc(100% - 12px) !important;
+    transform: translate(-50%, -50%) !important;
+    text-align: center !important;
+}
+
+#game #goldPanel section > h3,
+body.discordActivity #game #goldPanel section > h3,
+#game #goldPanel section > h3::after,
+body.discordActivity #game #goldPanel section > h3::after {
+    color: #0d0902 !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .2) !important;
+}
+
+#game #goldPanel section:nth-of-type(2) > h3,
+#game #blackPanel section:nth-of-type(2) > h3,
+body.discordActivity #game #goldPanel section:nth-of-type(2) > h3,
+body.discordActivity #game #blackPanel section:nth-of-type(2) > h3 {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    place-items: center !important;
+    justify-content: center !important;
+    align-content: center !important;
+    text-align: center !important;
+}
+
+#game #goldPanel section:nth-of-type(2) > h3::after,
+#game #blackPanel section:nth-of-type(2) > h3::after,
+body.discordActivity #game #goldPanel section:nth-of-type(2) > h3::after,
+body.discordActivity #game #blackPanel section:nth-of-type(2) > h3::after {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    justify-self: stretch !important;
+    align-self: center !important;
+    text-align: center !important;
+    transform: none !important;
+}
