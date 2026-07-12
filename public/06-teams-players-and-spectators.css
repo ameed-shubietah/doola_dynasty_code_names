@@ -2149,3 +2149,27 @@ body.discordActivity #game #blackPanel section:nth-of-type(2) > h3::after {
     text-align: center !important;
     transform: none !important;
 }
+
+/* Final positioning-only fix: center the SPYMASTER label inside its side heading. */
+#game #goldPanel section:nth-of-type(2) > h3,
+#game #blackPanel section:nth-of-type(2) > h3,
+body.discordActivity #game #goldPanel section:nth-of-type(2) > h3,
+body.discordActivity #game #blackPanel section:nth-of-type(2) > h3 {
+    position: relative !important;
+}
+
+#game #goldPanel section:nth-of-type(2) > h3::after,
+#game #blackPanel section:nth-of-type(2) > h3::after,
+body.discordActivity #game #goldPanel section:nth-of-type(2) > h3::after,
+body.discordActivity #game #blackPanel section:nth-of-type(2) > h3::after {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    text-align: center !important;
+    line-height: 1 !important;
+}
+
