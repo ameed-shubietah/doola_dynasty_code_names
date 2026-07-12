@@ -1684,6 +1684,8 @@ function lobbyRolePlayers(team, role) {
     const seen = new Set();
     const add = p => {
         if (!p) return;
+        if (optimisticDiscordJoin && sameLocalPlayer(p) &&
+            (team !== optimisticDiscordJoin.team || role !== optimisticDiscordJoin.role)) return;
         const key = p.discordId || p.id || p.socketId || `${p.name || 'player'}_${merged.length}`;
         if (seen.has(key)) return;
         seen.add(key);
@@ -1837,15 +1839,22 @@ async function waitForDiscordSharedScope(timeoutMs = 3200) {
 let activityRestoreInFlight = false;
 let lastActivityRestoreAt = 0;
 let activityScopeWaitTimer = null;
+let activityRestoreGeneration = 0;
+let suppressActivityRestoreUntil = 0;
+let instantJoinAttempt = 0;
+let optimisticDiscordJoin = null;
 
 function restoreDiscordActivitySeat(reason = '', options = {}) {
     if (!isDiscordActivity || !socket?.connected) return false;
+    if (Date.now() < suppressActivityRestoreUntil) return false;
 
+    const restoreGeneration = activityRestoreGeneration;
 
     if (!discordChannelId() && !window.DD_DISCORD && !localDiscordChannelId) {
         if (!activityScopeWaitTimer) {
             activityScopeWaitTimer = setTimeout(() => {
                 activityScopeWaitTimer = null;
+                if (restoreGeneration !== activityRestoreGeneration || Date.now() < suppressActivityRestoreUntil) return;
                 restoreDiscordActivitySeat('scope-ready-retry', {force: true});
             }, 450);
         }
@@ -1878,6 +1887,10 @@ function restoreDiscordActivitySeat(reason = '', options = {}) {
     if (saved.playerKey && sameSavedRoom) setPlayerKey(saved.playerKey);
 
     socket.emit('getRoomInfo', roomInfoPayload(roomCode), res => {
+        if (restoreGeneration !== activityRestoreGeneration || Date.now() < suppressActivityRestoreUntil) {
+            activityRestoreInFlight = false;
+            return;
+        }
         if (res?.ok) applyLobbyInfo(res);
         const payload = discordJoinPayload(saved.team, saved.role);
         payload.roomId = roomCode;
@@ -1888,6 +1901,7 @@ function restoreDiscordActivitySeat(reason = '', options = {}) {
             : getAdminToken(roomCode);
         socket.emit('joinOrCreateActivityRoom', {...payload, resume: true, restoreReason: reason}, joinRes => {
             activityRestoreInFlight = false;
+            if (restoreGeneration !== activityRestoreGeneration || Date.now() < suppressActivityRestoreUntil) return;
             acceptJoinResponse(joinRes || {ok: false, error: 'Could not restore Discord activity seat.'});
         });
     });
@@ -1927,45 +1941,51 @@ function discordJoinPayload(team, role) {
     };
 }
 
-async function joinDiscordActivity(team, role) {
+function joinDiscordActivity(team, role) {
     if (!nameInput.value.trim()) {
         toast(tt('writeName'));
         nameInput.focus();
         return;
     }
 
-
-
-    await waitForDiscordSharedScope();
+    suppressActivityRestoreUntil = 0;
+    activityRestoreGeneration += 1;
+    activityRestoreInFlight = false;
 
     selectedTeamChoice = team;
     selectedRoleChoice = role;
     const teamSel = $('team'), roleSel = $('role');
     if (teamSel) teamSel.value = team;
     if (roleSel) roleSel.value = role;
-    updateJoinSummary();
-    setJoinButtonsReady();
+
     if (role === 'spymaster' && spymasterSlotFullFor(team)) {
         toast(`${teamName(team)} Team already has a spymaster.`);
+        setJoinButtonsReady();
+        return;
+    }
+    if (!characterAvailableNow()) {
+        toast(tt('characterTakenFirst'));
+        renderCharacters();
         return;
     }
 
     const roomCode = getDiscordActivityRoomCode();
     roomInput.value = roomCode;
-    withFreshLobbyBeforeJoin(roomCode, () => {
-        if (role === 'spymaster' && spymasterSlotFullFor(team)) {
-            toast(`${teamName(team)} Team already has a spymaster.`);
-            setJoinButtonsReady();
-            return;
+
+    const attempt = ++instantJoinAttempt;
+    optimisticDiscordJoin = {team, role, attempt};
+    updateJoinSummary();
+    setJoinButtonsReady();
+    if (lastLobbyInfo?.ok) paintDiscordLobby(lastLobbyInfo);
+
+    const payload = discordJoinPayload(team, role);
+    socket.emit('joinOrCreateActivityRoom', payload, res => {
+        if (attempt !== instantJoinAttempt) return;
+        if (!res?.ok) {
+            optimisticDiscordJoin = null;
+            if (lastLobbyInfo?.ok) paintDiscordLobby(lastLobbyInfo);
         }
-        if (!characterAvailableNow()) {
-            toast(tt('characterTakenFirst'));
-            renderCharacters();
-            return;
-        }
-        const payload = discordJoinPayload(team, role);
-        if (!payload) return;
-        socket.emit('joinOrCreateActivityRoom', payload, acceptJoinResponse);
+        acceptJoinResponse(res || {ok: false, error: 'Could not join the room.'});
     });
 }
 
@@ -2052,8 +2072,10 @@ document.addEventListener('visibilitychange', () => {
 
 
 function pendingLobbyPlayerFor(team, role) {
-    if (!selectedTeamChoice || !selectedRoleChoice) return null;
-    if (selectedTeamChoice !== team || selectedRoleChoice !== role) return null;
+    const targetTeam = optimisticDiscordJoin?.team || selectedTeamChoice;
+    const targetRole = optimisticDiscordJoin?.role || selectedRoleChoice;
+    if (!targetTeam || !targetRole) return null;
+    if (targetTeam !== team || targetRole !== role) return null;
     const name = currentDisplayName();
     if (!name) return null;
     return {
@@ -2314,6 +2336,8 @@ function joinPayload() {
 
 function acceptJoinResponse(res) {
     if (!res.ok) {
+        optimisticDiscordJoin = null;
+        if (lastLobbyInfo?.ok && isDiscordActivity) paintDiscordLobby(lastLobbyInfo);
         toast(res.error);
         if (isDiscordActivity) refreshDiscordLobbyPreview(true);
         else requestLobbyInfo();
@@ -2529,21 +2553,63 @@ socket.on('adminRequest', req => {
     if (!current?.isAdmin || !req) return;
     showAdminRequestPopup(req);
 });
+function refreshLobbyAfterKick(roomId) {
+    const code = String(roomId || getDiscordActivityRoomCode() || roomInput?.value || '').trim().toUpperCase();
+    if (!code) return;
+    roomInput.value = code;
+
+    const refresh = () => {
+        if (!socket?.connected) return;
+        socket.emit('getRoomInfo', roomInfoPayload(code), res => {
+            if (!res?.ok) return;
+            lastLobbyInfo = res;
+            renderCharacters();
+            if (isDiscordActivity) paintDiscordLobby(res);
+            else renderHomepageLobbyPreview(res, true);
+            setJoinButtonsReady();
+        });
+    };
+
+    refresh();
+    [140, 480, 1100].forEach(delay => setTimeout(refresh, delay));
+}
+
 socket.on('kicked', ({roomId, message} = {}) => {
     toast(message || 'You were kicked from the room. You can join back if you want.');
+
+    suppressActivityRestoreUntil = Date.now() + 15000;
+    activityRestoreGeneration += 1;
+    activityRestoreInFlight = false;
+    optimisticDiscordJoin = null;
+    instantJoinAttempt += 1;
+
+    if (activityScopeWaitTimer) {
+        clearTimeout(activityScopeWaitTimer);
+        activityScopeWaitTimer = null;
+    }
     if (isDiscordActivity) clearSavedDiscordActivitySeat();
+
     state = null;
+    lastLobbyInfo = null;
+    selectedTeamChoice = '';
+    selectedRoleChoice = '';
     targetIds.clear();
     lastRevealed.clear();
     clearDelayedReveals();
     clearLocalPickedFlips();
     setPlayerKey(makePlayerKey());
+
+    const teamSel = $('team'), roleSel = $('role');
+    if (teamSel) teamSel.value = 'spectator';
+    if (roleSel) roleSel.value = 'spectator';
     if (roomId) roomInput.value = roomId;
+
     game.classList.add('hidden');
     landing.classList.remove('hidden');
-    requestLobbyInfo();
-    setJoinButtonsReady();
+    syncDiscordLanding();
+    refreshLobbyAfterKick(roomId);
 });
+
 socket.on('state', s => {
     const before = state;
     const clueAccepted = !!(before && s?.clue?.word && (before?.clue?.at !== s.clue.at || before?.clue?.word !== s.clue.word || before?.clue?.number !== s.clue.number || before?.clue?.team !== s.clue.team));
@@ -2569,6 +2635,14 @@ socket.on('state', s => {
         lastClueTargetCount = 0;
     }
     state = s;
+    if (optimisticDiscordJoin) {
+        const joinedPlayer = s?.players?.[myId];
+        if (joinedPlayer &&
+            joinedPlayer.team === optimisticDiscordJoin.team &&
+            joinedPlayer.role === optimisticDiscordJoin.role) {
+            optimisticDiscordJoin = null;
+        }
+    }
     if (s?.language && s.language !== uiLanguage) {
         uiLanguage = s.language === 'ar' ? 'ar' : 'en';
         applyLanguage();
