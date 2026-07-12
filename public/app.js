@@ -1813,25 +1813,54 @@ function syncDiscordLanding() {
 }
 
 function getDiscordActivityRoomCode() {
+    const explicitRoom = String(inviteRoom || '').trim().toUpperCase();
 
-
+    if (!expectsDiscordSharedScope()) {
+        return explicitRoom || roomCodeFromSeed('local-discord-test');
+    }
 
     const canonical = canonicalDiscordActivityRoomCode();
     if (canonical) return canonical;
 
     const saved = readSavedDiscordActivitySeat();
     const currentScope = discordScopeKey();
-    const sameScope = !saved?.scopeKey || saved.scopeKey === currentScope || currentScope === 'activity';
+    const sameScope = !saved?.scopeKey || saved.scopeKey === currentScope;
     if (saved?.roomId && sameScope) return String(saved.roomId).toUpperCase();
 
-    const fallbackSeed = discordInstanceId() || discordActivityRoomCode || 'local-discord-test';
+    const fallbackSeed = discordInstanceId() || discordActivityRoomCode || 'discord-activity';
     return roomCodeFromSeed(fallbackSeed);
 }
 
+function expectsDiscordSharedScope() {
+    const liveDiscord = window.DD_DISCORD;
+    const earlyDiscord = window.DD_DISCORD_EARLY;
+    const liveScopeReady = !!(
+        liveDiscord?.enabled === true &&
+        (String(liveDiscord.channelId || '').trim() || String(liveDiscord.instanceId || '').trim())
+    );
+    const earlyScopeReady = !!(
+        String(earlyDiscord?.channelId || '').trim() ||
+        String(earlyDiscord?.instanceId || '').trim()
+    );
+
+    return !!(
+        isInsideIframe ||
+        hasDiscordQuerySignal() ||
+        localDiscordChannelId ||
+        localDiscordSeed ||
+        liveScopeReady ||
+        earlyScopeReady ||
+        safeContains(location.hostname, 'discordsays.com') ||
+        safeContains(location.hostname, 'discord.com') ||
+        safeContains(document.referrer, 'discord') ||
+        safeContains(navigator.userAgent, 'discord')
+    );
+}
+
 async function waitForDiscordSharedScope(timeoutMs = 3200) {
-    if (!isDiscordActivity || discordChannelId()) return;
+    if (!isDiscordActivity || discordActivityScopeId() || !expectsDiscordSharedScope()) return;
     const startedAt = Date.now();
-    while (!discordChannelId() && Date.now() - startedAt < timeoutMs) {
+    while (!discordActivityScopeId() && Date.now() - startedAt < timeoutMs) {
         await new Promise(resolve => setTimeout(resolve, 80));
     }
 }
@@ -1868,11 +1897,14 @@ function restoreDiscordActivitySeat(reason = '', options = {}) {
     if (activityRestoreInFlight) return true;
     if (Date.now() - lastActivityRestoreAt < 900) return true;
 
+    const localBrowserRoomCode = !expectsDiscordSharedScope()
+        ? String(getDiscordActivityRoomCode() || '').trim().toUpperCase()
+        : '';
     const canonicalRoomCode = canonicalDiscordActivityRoomCode();
     const savedRoomCode = String(saved.roomId || '').trim().toUpperCase();
-    const roomCode = String(canonicalRoomCode || savedRoomCode || getDiscordActivityRoomCode()).trim().toUpperCase();
+    const roomCode = String(localBrowserRoomCode || canonicalRoomCode || savedRoomCode || getDiscordActivityRoomCode()).trim().toUpperCase();
     if (!roomCode) return false;
-    const sameSavedRoom = !canonicalRoomCode || !savedRoomCode || canonicalRoomCode === savedRoomCode;
+    const sameSavedRoom = !savedRoomCode || roomCode === savedRoomCode;
 
     activityRestoreInFlight = true;
     lastActivityRestoreAt = Date.now();
@@ -1969,24 +2001,30 @@ function joinDiscordActivity(team, role) {
         return;
     }
 
-    const roomCode = getDiscordActivityRoomCode();
-    roomInput.value = roomCode;
-
     const attempt = ++instantJoinAttempt;
     optimisticDiscordJoin = {team, role, attempt};
     updateJoinSummary();
     setJoinButtonsReady();
     if (lastLobbyInfo?.ok) paintDiscordLobby(lastLobbyInfo);
 
-    const payload = discordJoinPayload(team, role);
-    socket.emit('joinOrCreateActivityRoom', payload, res => {
+    (async () => {
+        await waitForDiscordSharedScope();
+
         if (attempt !== instantJoinAttempt) return;
-        if (!res?.ok) {
-            optimisticDiscordJoin = null;
-            if (lastLobbyInfo?.ok) paintDiscordLobby(lastLobbyInfo);
-        }
-        acceptJoinResponse(res || {ok: false, error: 'Could not join the room.'});
-    });
+
+        const roomCode = getDiscordActivityRoomCode();
+        roomInput.value = roomCode;
+
+        const payload = discordJoinPayload(team, role);
+        socket.emit('joinOrCreateActivityRoom', payload, res => {
+            if (attempt !== instantJoinAttempt) return;
+            if (!res?.ok) {
+                optimisticDiscordJoin = null;
+                if (lastLobbyInfo?.ok) paintDiscordLobby(lastLobbyInfo);
+            }
+            acceptJoinResponse(res || {ok: false, error: 'Could not join the room.'});
+        });
+    })();
 }
 
 function sendDiscordIdentityToServer() {
@@ -2040,7 +2078,10 @@ window.addEventListener('discordActivityReady', (event) => {
     }
 
     syncDiscordLanding();
-    if (discordActivityInfo?.enabled) restoreDiscordActivitySeat('discord-ready', {force: true});
+    if (discordActivityInfo?.enabled) {
+        refreshDiscordLobbyPreview(true);
+        restoreDiscordActivitySeat('discord-ready', {force: true});
+    }
 });
 window.addEventListener('discordParticipantsChanged', () => {
     applyDiscordNameToInput(true);
@@ -2063,11 +2104,15 @@ window.addEventListener('discordIdentityError', () => {
 });
 
 window.addEventListener('pageshow', () => {
+    refreshDiscordLobbyPreview(true);
     restoreDiscordActivitySeat('pageshow', {force: true});
 });
 
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') restoreDiscordActivitySeat('visible', {force: true});
+    if (document.visibilityState === 'visible') {
+        refreshDiscordLobbyPreview(true);
+        restoreDiscordActivitySeat('visible', {force: true});
+    }
 });
 
 
@@ -2165,6 +2210,8 @@ function refreshLandingAdminControls() {
 }
 
 let lobbyPreviewTimer = null;
+let lastLobbyPreviewRoomCode = '';
+let lobbyPreviewRequestId = 0;
 applyLanguage();
 
 function lobbyInfoFromState(s) {
@@ -2213,15 +2260,51 @@ function characterAvailableNow() {
 }
 
 function refreshDiscordLobbyPreview(force = false) {
-    if (!isDiscordActivity || !roomInput) return;
-    const code = getDiscordActivityRoomCode();
-    if (code) roomInput.value = code;
-    if (!force && lobbyPreviewTimer) return;
+    if (!isDiscordActivity || !roomInput || !socket?.connected) return;
+
+    if (expectsDiscordSharedScope() && !discordActivityScopeId()) {
+        if (lobbyPreviewTimer) clearTimeout(lobbyPreviewTimer);
+        lobbyPreviewTimer = setTimeout(() => {
+            lobbyPreviewTimer = null;
+            refreshDiscordLobbyPreview(true);
+        }, 120);
+        return;
+    }
+
+    const code = String(getDiscordActivityRoomCode() || '').trim().toUpperCase();
+    if (!code) return;
+
+    const roomChanged = code !== lastLobbyPreviewRoomCode;
+    roomInput.value = code;
+
+    if (!force && !roomChanged && lobbyPreviewTimer) return;
+
+    lastLobbyPreviewRoomCode = code;
+    const requestId = ++lobbyPreviewRequestId;
+
+    if (lobbyPreviewTimer) clearTimeout(lobbyPreviewTimer);
     lobbyPreviewTimer = setTimeout(() => {
         lobbyPreviewTimer = null;
-    }, 650);
+    }, 450);
+
     socket.emit('getRoomInfo', roomInfoPayload(code), res => {
-        if (res?.ok) applyLobbyInfo(res);
+        if (requestId !== lobbyPreviewRequestId) return;
+        const currentCode = String(getDiscordActivityRoomCode() || '').trim().toUpperCase();
+        if (currentCode && currentCode !== code) {
+            refreshDiscordLobbyPreview(true);
+            return;
+        }
+        if (res?.ok) {
+            applyLobbyInfo(res);
+            return;
+        }
+
+        setTimeout(() => {
+            if (requestId === lobbyPreviewRequestId &&
+                landing && !landing.classList.contains('hidden')) {
+                refreshDiscordLobbyPreview(true);
+            }
+        }, 350);
     });
 }
 
@@ -2244,8 +2327,10 @@ function withFreshLobbyBeforeJoin(roomId, proceed) {
 }
 
 setInterval(() => {
-    if (isDiscordActivity && !state) refreshDiscordLobbyPreview(true);
-}, 1200);
+    if (!isDiscordActivity) return;
+    if (!landing || landing.classList.contains('hidden')) return;
+    refreshDiscordLobbyPreview(true);
+}, 1000);
 setInterval(() => {
     if (isDiscordActivity) return;
     if (!landing || landing.classList.contains('hidden')) return;
@@ -2534,7 +2619,8 @@ $('joinBtn').onclick = () => {
 socket.on('connect', () => {
     myId = playerKey;
     if (isDiscordActivity) {
-        if (!restoreDiscordActivitySeat('socket-connect', {force: true})) refreshDiscordLobbyPreview(true);
+        refreshDiscordLobbyPreview(true);
+        restoreDiscordActivitySeat('socket-connect', {force: true});
         return;
     }
     requestLobbyInfo();
@@ -2591,6 +2677,8 @@ socket.on('kicked', ({roomId, message} = {}) => {
 
     state = null;
     lastLobbyInfo = null;
+    lastLobbyPreviewRoomCode = '';
+    lobbyPreviewRequestId += 1;
     selectedTeamChoice = '';
     selectedRoleChoice = '';
     targetIds.clear();
