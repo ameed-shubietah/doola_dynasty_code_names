@@ -2150,26 +2150,62 @@ body.discordActivity #game #blackPanel section:nth-of-type(2) > h3::after {
     transform: none !important;
 }
 
-/* Final positioning-only fix: center the SPYMASTER label inside its side heading. */
-#game #goldPanel section:nth-of-type(2) > h3,
-#game #blackPanel section:nth-of-type(2) > h3,
-body.discordActivity #game #goldPanel section:nth-of-type(2) > h3,
-body.discordActivity #game #blackPanel section:nth-of-type(2) > h3 {
-    position: relative !important;
+/* Position-only drag target fix:
+   show RELEASE TO PLACE exactly in the center of the OPERATIVES / SPYMASTER heading. */
+#game .teamPanel section.dropTargetActive::after,
+body.discordActivity #game .teamPanel section.dropTargetActive::after {
+    display: none !important;
 }
 
-#game #goldPanel section:nth-of-type(2) > h3::after,
-#game #blackPanel section:nth-of-type(2) > h3::after,
-body.discordActivity #game #goldPanel section:nth-of-type(2) > h3::after,
-body.discordActivity #game #blackPanel section:nth-of-type(2) > h3::after {
+#game .teamPanel section.dropTargetActive > h3,
+body.discordActivity #game .teamPanel section.dropTargetActive > h3 {
+    position: relative !important;
+    color: transparent !important;
+    text-shadow: none !important;
+}
+
+#game .teamPanel section.dropTargetActive > h3::after,
+body.discordActivity #game .teamPanel section.dropTargetActive > h3::after {
+    visibility: hidden !important;
+}
+
+#game .teamPanel section.dropTargetActive > h3::before,
+body.discordActivity #game .teamPanel section.dropTargetActive > h3::before {
+    content: "RELEASE TO PLACE" !important;
     position: absolute !important;
-    left: 50% !important;
-    top: 50% !important;
+    inset: 0 !important;
+    z-index: 50 !important;
+    display: grid !important;
+    place-items: center !important;
     width: 100% !important;
+    height: 100% !important;
     margin: 0 !important;
-    padding: 0 !important;
-    transform: translate(-50%, -50%) !important;
-    text-align: center !important;
+    padding: 0 6px !important;
+    border-radius: inherit !important;
+    box-sizing: border-box !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-size: 10px !important;
     line-height: 1 !important;
+    letter-spacing: .45px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    animation: releaseTargetPulse .78s ease-in-out infinite !important;
+}
+
+#game #goldPanel section.dropTargetActive > h3::before,
+body.discordActivity #game #goldPanel section.dropTargetActive > h3::before {
+    color: #241400 !important;
+    background: linear-gradient(115deg, rgba(255,250,200,.96), rgba(255,201,43,.92), rgba(255,245,174,.96)) !important;
+    border: 2px solid rgba(91,55,0,.62) !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,.55) !important;
+}
+
+#game #blackPanel section.dropTargetActive > h3::before,
+body.discordActivity #game #blackPanel section.dropTargetActive > h3::before {
+    color: #fff0b0 !important;
+    background: linear-gradient(115deg, rgba(52,52,56,.97), rgba(4,4,5,.97), rgba(43,43,46,.97)) !important;
+    border: 2px solid rgba(255,215,108,.66) !important;
+    text-shadow: 0 0 12px rgba(255,215,108,.46), 0 1px 0 #000 !important;
 }
 

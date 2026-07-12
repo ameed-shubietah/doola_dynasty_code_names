@@ -3371,6 +3371,29 @@ function setupSectionJoinButtons() {
 function setupAdminDragAndDrop(adminMode) {
     const zones = [...document.querySelectorAll('[data-drop-team]')];
 
+    function headingForZone(zone) {
+        return zone?.closest('section')?.querySelector(':scope > h3') || null;
+    }
+
+    // Placement is intentionally detected from the role heading, not the player list.
+    // This keeps the mouse/finger directly over the centered role word when release is allowed.
+    function zoneAtHeadingPoint(clientX, clientY) {
+        return zones.find(zone => {
+            const heading = headingForZone(zone);
+            if (!heading) return false;
+            const rect = heading.getBoundingClientRect();
+            if (!rect.width || !rect.height) return false;
+
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const horizontalRadius = Math.max(42, rect.width * .42);
+            const verticalRadius = Math.max(12, rect.height * .5);
+
+            return Math.abs(clientX - centerX) <= horizontalRadius &&
+                Math.abs(clientY - centerY) <= verticalRadius;
+        }) || null;
+    }
+
     // Clear every placement preview so stale glows cannot remain after a cancelled drag.
     function clearDropPreview() {
         zones.forEach(zone => {
@@ -3449,7 +3472,7 @@ function setupAdminDragAndDrop(adminMode) {
                 moveEv.preventDefault();
                 ghost.style.left = `${moveEv.clientX}px`;
                 ghost.style.top = `${moveEv.clientY}px`;
-                activeZone = document.elementFromPoint(moveEv.clientX, moveEv.clientY)?.closest('[data-drop-team]') || null;
+                activeZone = zoneAtHeadingPoint(moveEv.clientX, moveEv.clientY);
                 showDropPreview(activeZone);
             };
 
@@ -3470,18 +3493,39 @@ function setupAdminDragAndDrop(adminMode) {
     });
 
     zones.forEach(zone => {
-        zone.ondragover = (ev) => {
+        // Remove the old list-based drop hotspot.
+        zone.ondragover = null;
+        zone.ondragleave = null;
+        zone.ondrop = null;
+
+        const heading = headingForZone(zone);
+        if (!heading) return;
+
+        heading.ondragover = (ev) => {
             if (!adminMode) return;
+            const activeZone = zoneAtHeadingPoint(ev.clientX, ev.clientY);
+            if (activeZone !== zone) {
+                clearDropPreview();
+                return;
+            }
             ev.preventDefault();
             ev.dataTransfer.dropEffect = 'move';
             showDropPreview(zone);
         };
-        zone.ondragleave = (ev) => {
-            if (zone.contains(ev.relatedTarget)) return;
+
+        heading.ondragleave = (ev) => {
+            const nextZone = zoneAtHeadingPoint(ev.clientX, ev.clientY);
+            if (nextZone === zone) return;
             clearDropPreview();
         };
-        zone.ondrop = (ev) => {
+
+        heading.ondrop = (ev) => {
             if (!adminMode) return;
+            const activeZone = zoneAtHeadingPoint(ev.clientX, ev.clientY);
+            if (activeZone !== zone) {
+                clearDropPreview();
+                return;
+            }
             ev.preventDefault();
             const playerId = ev.dataTransfer.getData('text/plain');
             movePlayer(playerId, zone);
