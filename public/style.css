@@ -719,7 +719,7 @@ button:disabled, input:disabled {
     }
 }
 
-/* v5 card readability + auto clue count refinements */
+
 .card {
     height: 124px;
     padding: 12px;
@@ -817,7 +817,7 @@ button:disabled, input:disabled {
 }
 
 
-/* final Doola Dynasty fixes: only Gold / Black / Grey danger, high-contrast selected borders */
+
 .card.neutral {
     background: linear-gradient(145deg, #3c3d40, #0a0a0c 70%);
     border-color: rgba(255, 215, 108, .44)
@@ -891,7 +891,7 @@ button:disabled, input:disabled {
     letter-spacing: .05px
 }
 
-/* v6: blank cards restored, cleaner selections, responsive polish */
+
 .scoreBadge {
     background: linear-gradient(180deg, rgba(255, 248, 210, .18), rgba(0, 0, 0, .28));
     border: 1px solid rgba(255, 215, 108, .25);
@@ -1119,7 +1119,7 @@ select option {
     }
 }
 
-/* v98: keep Modes clear of Discord lobby blocks and remove top turn pill. */
+
 #turnBadge,
 body.discordActivity #turnBadge {
     display: none !important;
@@ -1155,7 +1155,7 @@ body[data-lang="ar"] #arabicModeBtn {
     unicode-bidi: isolate !important;
 }
 
-/* v105: join/start logo splash and card-pick reaction overlays. */
+
 .gameIntroOverlay,
 .pickReactionOverlay {
     position: fixed !important;
@@ -1417,7 +1417,7 @@ body[data-lang="ar"] #arabicModeBtn {
     }
 }
 
-/* v103: the in-game Back button is available to every player. */
+
 html body #app #game #backToLobbyBtn.backLobbyBtn,
 html body.discordActivity #app #game #backToLobbyBtn.backLobbyBtn {
     display: inline-flex !important;
@@ -1441,7 +1441,7 @@ body[data-lang="ar"] #app #game #backToLobbyBtn.backLobbyBtn {
     margin: 0 0 0 10px !important;
 }
 
-/* v101: visible in-game back button and centered card crowns. */
+
 #game #backToLobbyBtn.backLobbyBtn,
 body.discordActivity #game #backToLobbyBtn.backLobbyBtn {
     display: inline-flex !important;
@@ -1500,7 +1500,7 @@ body.discordActivity #game.gameV9 .board .card.hasCrownLayer .cardCrownLayer {
     pointer-events: none !important;
 }
 
-/* v97: homepage modes menu + Arabic UI mode. */
+
 body[data-lang="ar"] {
     direction: rtl;
     font-family: "Segoe UI", Tahoma, Arial, sans-serif;
@@ -1624,7 +1624,7 @@ body[data-lang="ar"] .bottomClueDock {
     }
 }
 
-/* v7 consensus voting + cleaner confirm UI */
+
 .confirmVote {
     border: 0;
     border-radius: 999px;
@@ -1722,7 +1722,7 @@ body[data-lang="ar"] .bottomClueDock {
 }
 
 
-/* v8 animated score placement around turn/clue badges */
+
 .status {
     justify-content: center;
     flex: 1;
@@ -1968,7 +1968,7 @@ body[data-lang="ar"] .bottomClueDock {
     }
 }
 
-/* v9 full table reframing + invite flow */
+
 .brandMark {
     display: none !important
 }
@@ -2286,7 +2286,7 @@ body[data-lang="ar"] .bottomClueDock {
     }
 }
 
-/* v73: mobile turn subtitle must fit; keep only the avatar crown, not the admin-name crown. */
+
 #game .teamPanel .playerBody > b.adminNameLine,
 body.discordActivity #game .teamPanel .playerBody > b.adminNameLine {
     padding-top: 0 !important;
@@ -2449,7 +2449,7 @@ body.discordActivity #game .teamPanel .playerBody > b.adminNameLine .adminBadge.
     }
 }
 
-/* v10 compact table layout: animated brand left, CODE NAMES center, no desktop scroll */
+
 html, body, #app {
     min-height: 100%;
 }
@@ -2779,7 +2779,7 @@ html, body, #app {
     }
 }
 
-/* v12 homepage title split + restored game header */
+
 .homeTitleSplit {
     display: grid;
     grid-template-columns:minmax(260px, .95fr) minmax(260px, 1.05fr);
@@ -2830,7 +2830,7 @@ html, body, #app {
     }
 }
 
-/* Game page title back to normal: full logo on the left, status stays in the middle */
+
 #game .codeNamesTitle {
     display: none !important;
 }
@@ -2870,7 +2870,7 @@ html, body, #app {
     }
 }
 
-/* Fix homepage logo: keep Doola's visible, no transparent child span issue */
+
 .homeDynasty span {
     color: inherit;
     background: inherit;
@@ -2878,7 +2878,7 @@ html, body, #app {
     background-clip: text;
 }
 
-/* v14 one-screen game fit + visible invite/tools */
+
 #game .topLogo span {
     color: inherit;
     background: inherit;
@@ -3107,7 +3107,7 @@ html, body, #app {
     }
 }
 
-/* vInviteLogic: hide spymaster target marks from operatives; revealed cards use full animated SVG agent */
+
 .sideClueSection, .sideLogSection {
     margin-top: 14px
 }
@@ -3337,7 +3337,7 @@ html, body, #app {
     }
 }
 
-/* vFinal polish: stronger animated turn/clue badges, pulsing pass button, and live log visibility */
+
 #turnBadge,
 #clueBadge {
     position: relative;
@@ -3524,7 +3524,7 @@ html, body, #app {
     }
 }
 
-/* vWin polish: invite above game logo, winner modal, panel winner badge, flying card animation */
+
 .brandSide {
     display: flex;
     flex-direction: column;
@@ -3794,8 +3794,8 @@ html, body, #app {
     }
 }
 
-/* vFinal-2: requested final UX refinements */
-/* Remove the small center score badges; side panels already show remaining cards. */
+
+
 #goldScoreBadge,
 #blackScoreBadge {
     display: none !important;
@@ -3805,7 +3805,7 @@ html, body, #app {
     gap: 14px !important;
 }
 
-/* Move operative action buttons down so they do not cover status badges. */
+
 @media (min-width: 981px) {
     .topActionBar {
         position: absolute !important;
@@ -3823,7 +3823,7 @@ html, body, #app {
     }
 }
 
-/* Better turn/clue animation: shimmer + soft glow instead of heavy pulsing. */
+
 #turnBadge,
 #clueBadge {
     animation: badgeGlowBreath 2.35s ease-in-out infinite !important;
@@ -3870,7 +3870,7 @@ html, body, #app {
     }
 }
 
-/* Winning popup: show in the center, then docks to the winning team's side. */
+
 .winModal.docked {
     background: transparent !important;
     backdrop-filter: none !important;
@@ -3937,7 +3937,7 @@ html, body, #app {
     }
 }
 
-/* Confirm now appears after your own vote, not after unanimous team agreement. */
+
 .confirmVote {
     box-shadow: 0 0 22px rgba(57, 225, 255, .25), 0 10px 24px rgba(0, 0, 0, .34) !important;
 }
@@ -3957,13 +3957,13 @@ html, body, #app {
 }
 
 
-/* vNext final interaction/layout fixes */
-/* Hide the old large confirm control. Cards now have their own confirm buttons. */
+
+
 #confirmVoteBtn {
     display: none !important;
 }
 
-/* Each selected operative card gets a small confirm button at the top-right. */
+
 .cardConfirm {
     position: absolute;
     top: 7px;
@@ -4020,7 +4020,7 @@ html, body, #app {
     box-shadow: 0 5px 12px rgba(0, 0, 0, .35)
 }
 
-/* End-game origin reveal: unrevealed cards show their real origin color without the hero overlay. */
+
 .card.originShown:not(.revealed) {
     filter: saturate(.96) brightness(.94);
     cursor: default;
@@ -4042,7 +4042,7 @@ html, body, #app {
     box-shadow: 0 0 24px rgba(220, 230, 245, .25), 0 12px 22px rgba(0, 0, 0, .42)
 }
 
-/* Winner side badge: fit inside the panel instead of overflowing. */
+
 .teamPanel.winnerPanel:before {
     content: "WINNER" !important;
     font-size: clamp(28px, 2.6vw, 46px) !important;
@@ -4059,7 +4059,7 @@ html, body, #app {
     top: 62% !important;
 }
 
-/* Re-center the main status badges and keep action buttons lower and away from the card-confirm controls. */
+
 @media (min-width: 981px) {
     .gameV9 .topbar {
         grid-template-columns:minmax(390px, .95fr) minmax(620px, 1.25fr) minmax(150px, .45fr) !important;
@@ -4097,7 +4097,7 @@ html, body, #app {
     }
 }
 
-/* Homepage no longer needs an invite-link readonly box. */
+
 .inviteLine {
     display: none !important;
 }
@@ -4124,7 +4124,7 @@ html, body, #app {
     }
 }
 
-/* vHome flow polish: pick team first, then role popup, then room preview */
+
 .joinBasics {
     margin-top: 8px;
 }
@@ -4369,7 +4369,7 @@ html, body, #app {
     }
 }
 
-/* Final homepage cleanup: room code is invite-link/back-end only, not a visible choice. */
+
 .nameOnlyJoin {
     display: block !important;
     margin-top: 8px;
@@ -4384,7 +4384,7 @@ html, body, #app {
     display: none !important;
 }
 
-/* Back-to-lobby button for changing seat/team/role inside the same room */
+
 .backLobbyBtn {
     padding: 9px 13px;
     border-radius: 999px;
@@ -4420,7 +4420,7 @@ html, body, #app {
     }
 }
 
-/* Admin + flexible seat controls */
+
 .seatControlBar {
     display: flex;
     align-items: center;
@@ -4533,7 +4533,7 @@ html, body, #app {
 }
 
 
-/* Admin + self-join controls added on latest merge */
+
 .teamPanel h3 {
     display: flex;
     align-items: center;
@@ -4635,7 +4635,7 @@ html, body, #app {
     }
 }
 
-/* Admin request controls: visible to everyone, active for admin, request-only for others */
+
 .adminControlBar.nonAdminControls button {
     opacity: .92;
     border: 1px solid rgba(255, 215, 108, .25);
@@ -4660,7 +4660,7 @@ html, body, #app {
 }
 
 
-/* Final admin request modal + removed in-game self-join buttons */
+
 .sectionJoin {
     display: none !important
 }
@@ -4764,7 +4764,7 @@ html, body, #app {
     }
 }
 
-/* Discord Activity lobby: role board instead of create/join room form */
+
 .discordLobby {
     margin: 18px auto 8px;
     max-width: 1120px;
@@ -4940,7 +4940,7 @@ body.discordActivity .hintText {
     margin-top: 10px;
 }
 
-/* Discord iframe compact game overrides */
+
 body.discordActivity {
     background: radial-gradient(circle at 20% 5%, #2a1a05 0, #0b0905 45%, #020202 100%);
     overflow: hidden;
@@ -5218,7 +5218,7 @@ body.discordActivity .dockText span {
 }
 
 
-/* Discord lobby + requested game fixes */
+
 body.discordActivity #name {
     pointer-events: none;
     opacity: .82
@@ -5581,7 +5581,7 @@ body.discordActivity .joinBasics {
 }
 
 
-/* v13 requested fixes: lobby start, options dropdown, stable cards, crown cards */
+
 #backToLobbyBtn, .backLobbyBtn, #roomLabel, .sideClueSection, #requestHintBtn {
     display: none !important
 }
@@ -5904,7 +5904,7 @@ body.discordActivity .topLogo {
     font-size: 24px !important
 }
 
-/* v14 final color mapping: black team cards are black, danger cards are red, empty cards are silver */
+
 .card.red {
     background-color: #0b0b0d !important;
     background-image: url('/crown.png'), linear-gradient(90deg, #050506, #2e2e31 58%, #050506) !important;
@@ -5956,7 +5956,7 @@ body.discordActivity .topLogo {
 }
 
 
-/* v15 fine tuning: no lobby options, better top controls, smaller red/silver crowns, clean side score */
+
 #landingOptionsWrap {
     display: none !important;
 }
@@ -6116,7 +6116,7 @@ body.discordActivity .adminControlBar {
     }
 }
 
-/* v16 fixes: clean crown scaling, dropdown above board, compact log chips */
+
 #game.gameV9,
 .gameV9,
 body.discordActivity #game.gameV9 {
@@ -6162,7 +6162,7 @@ body.discordActivity .adminControlBar {
     display: flex !important;
 }
 
-/* avoid cropped/duplicate crown edges on silver/red cards */
+
 .card {
     background-repeat: no-repeat, no-repeat !important;
     background-clip: border-box !important;
@@ -6192,7 +6192,7 @@ body.discordActivity .adminControlBar {
     z-index: 5 !important;
 }
 
-/* compact game log: color shows team/card color, no color text needed */
+
 .log {
     gap: 8px !important;
     justify-content: center !important;
@@ -6257,7 +6257,7 @@ body.discordActivity .adminControlBar {
     }
 }
 
-/* v17 final fixes: render crown as one centered layer and make spymaster selection border always visible */
+
 .card,
 .card.blue,
 .card.red,
@@ -6344,7 +6344,7 @@ body.discordActivity .adminControlBar {
     content: none !important;
 }
 
-/* Make selected clue targets look the same for gold and black spymasters */
+
 .card.target,
 .card.blue.target,
 .card.red.target,
@@ -6400,7 +6400,7 @@ body.discordActivity .adminControlBar {
 }
 
 
-/* v20: show operative selections clearly to all players/spymasters without respawning cards */
+
 .card.voted:not(.revealed),
 .card.agreed:not(.revealed),
 .card.myVote:not(.revealed) {
@@ -6459,7 +6459,7 @@ body.discordActivity .adminControlBar {
     z-index: 21 !important
 }
 
-/* v20: compact game log with player avatars */
+
 .log {
     max-height: none !important;
     overflow: visible !important;
@@ -6524,7 +6524,7 @@ body.discordActivity .adminControlBar {
     padding-right: 10px !important;
 }
 
-/* v20: more resilient Discord iframe resizing when chat/sidebar changes size */
+
 body.discordActivity #game.gameV9 {
     width: 100vw !important;
     max-width: 100vw !important;
@@ -6617,7 +6617,7 @@ body.discordActivity .playerBody b {
     }
 }
 
-/* v21: clearer operative confirm and spymaster picked marker */
+
 .cardConfirm {
     top: 6px !important;
     right: 6px !important;
@@ -6652,7 +6652,7 @@ body.discordActivity .playerBody b {
     box-shadow: 0 0 0 2px rgba(255, 255, 255, .7), 0 0 28px rgba(50, 223, 255, .65), 0 16px 24px rgba(0, 0, 0, .42) !important;
 }
 
-/* Keep the vote count away from the confirm button. */
+
 .voteBadge {
     left: 8px !important;
     right: auto !important;
@@ -6703,7 +6703,7 @@ body.discordActivity .playerBody b {
     }
 }
 
-/* v22: persistent picked marker, smaller separated game-log lanes, and stronger black-card gold border */
+
 .card.red {
     border-color: #ffd76c !important;
     box-shadow: 0 16px 24px rgba(0, 0, 0, .42), 0 0 0 1px rgba(255, 215, 108, .55), inset 0 1px 0 rgba(255, 255, 255, .12) !important;
@@ -6839,7 +6839,7 @@ body.discordActivity .playerBody b {
     }
 }
 
-/* v23: unified compact game log, clearer marked/picked state */
+
 .log,
 .gameLogBox,
 #log {
@@ -6963,7 +6963,7 @@ body.discordActivity .playerBody b {
     display: none !important;
 }
 
-/* v24: fix game-log picked card names + avatars visibility */
+
 .gameLogBox,
 #log,
 .log {
@@ -7075,7 +7075,7 @@ body.discordActivity .playerBody b {
     max-width: 78px !important;
 }
 
-/* v25: game log chips fit fully, clue expands, picks show two per row */
+
 .teamPanelBlack .log,
 #log.log,
 .log {
@@ -7219,7 +7219,7 @@ body.discordActivity .playerBody b {
     }
 }
 
-/* v26: vertically center game-log pick/pass words inside their pill */
+
 .gameLogEntry.pickLog,
 .gameLogEntry.passLog {
     display: flex !important;
@@ -7313,7 +7313,7 @@ body.discordActivity .playerBody b {
     }
 }
 
-/* v27 Discord lobby identity + no duplicate seats polish */
+
 .discordLobby .discordSeatList {
     gap: 10px;
     align-items: center;
@@ -7380,7 +7380,7 @@ body.discordActivity .playerBody b {
     display: block;
 }
 
-/* v28 Discord authenticated profile fix: larger real lobby avatars */
+
 .discordLobby .discordSeatMini.discordSeatLarge {
     min-height: 76px !important;
     padding: 8px 12px 8px 8px !important;
@@ -7419,7 +7419,7 @@ body.discordActivity .playerBody b {
 }
 
 
-/* v33 requested fixes: character selection, spy/operative card views, bottom controls, clue dock, log sizing */
+
 body.discordActivity #characterPick {
     display: block !important;
     max-width: 980px;
@@ -7506,7 +7506,7 @@ body.discordActivity #characterPick {
     font-size: 22px !important;
 }
 
-/* Operatives see unknown cards as silver with the crown background. */
+
 .board.operativeBoard .card:not(.revealed):not(.originShown) {
     background: linear-gradient(135deg, #f3f3f5, #aeb2b8 45%, #6d7178 100%) !important;
     border-color: rgba(235, 238, 242, .72) !important;
@@ -7528,7 +7528,7 @@ body.discordActivity #characterPick {
     filter: drop-shadow(0 10px 12px rgba(0, 0, 0, .42));
 }
 
-/* Spymasters see clean solid colors; crown appears only after an operative marks/picks/reveals a card. */
+
 .board.spyBoard .card:before {
     background-image: none !important;
     opacity: 0 !important;
@@ -7603,7 +7603,7 @@ body.discordActivity #characterPick {
     color: #fff !important;
 }
 
-/* Big centered turn badge */
+
 #turnBadge {
     min-width: 260px !important;
     padding: 16px 38px !important;
@@ -7628,7 +7628,7 @@ body.discordActivity #characterPick {
     }
 }
 
-/* Options button lives at the bottom and opens upward. */
+
 #adminControlBar {
     position: fixed !important;
     left: 50% !important;
@@ -7648,7 +7648,7 @@ body.discordActivity #characterPick {
     min-width: 140px !important;
 }
 
-/* Start Game stays obvious above Discord's lower controls/footer. */
+
 .landingAdminBar {
     z-index: 500 !important;
 }
@@ -7678,7 +7678,7 @@ body.discordActivity .landingStartGameBtn {
     box-shadow: 0 0 38px rgba(255, 215, 108, .62), 0 16px 32px rgba(0, 0, 0, .5) !important;
 }
 
-/* Centered bottom current clue for all players. */
+
 .currentClueDock {
     position: fixed;
     left: 260px;
@@ -7746,7 +7746,7 @@ body.discordActivity .currentClueDock {
     height: 58px;
 }
 
-/* Clean clue input bar: no helper text, just the controls. */
+
 #dockHelp {
     display: none !important;
 }
@@ -7760,7 +7760,7 @@ body.discordActivity .currentClueDock {
     padding-bottom: 10px !important;
 }
 
-/* Game log: fixed equal sizes, characters instead of Discord image. */
+
 .logFlow {
     display: flex !important;
     flex-wrap: wrap !important;
@@ -7865,7 +7865,7 @@ body.discordActivity .currentClueDock {
     padding: 8px !important;
 }
 
-/* Winner banner/docked card no side clipping. */
+
 .winModal.docked .winModalCard {
     width: min(320px, calc(100vw - 28px)) !important;
     max-width: 320px !important;
@@ -7923,8 +7923,8 @@ body.discordActivity .currentClueDock {
     }
 }
 
-/* v34 final polish: compact lobby, character avatars, bottom controls, clean game log */
-/* No profile-loading card and no invite buttons in Discord Activity. */
+
+
 #discordIdentityCard,
 #discordInviteBtn,
 #topInviteBtn,
@@ -7953,7 +7953,7 @@ body.discordActivity .currentClueDock {
     justify-self: end !important;
 }
 
-/* Homepage should fit its panel and not overflow into neighboring blocks. */
+
 body.discordActivity .landing {
     width: min(1180px, calc(100vw - 24px)) !important;
     max-height: calc(100vh - 26px);
@@ -8018,7 +8018,7 @@ body.discordActivity #characterPick {
     display: none !important;
 }
 
-/* Bigger character picker; taken characters are simply greyed out, no confusing label. */
+
 .characterGrid {
     gap: 11px !important;
 }
@@ -8077,7 +8077,7 @@ body.discordActivity #characterPick {
     font-size: 16px !important;
 }
 
-/* Start Game: fixed bottom center, lower than role cards, visible with screen resizing. */
+
 body.discordActivity .landingAdminBar {
     position: fixed !important;
     left: 50% !important;
@@ -8102,7 +8102,7 @@ body.discordActivity .landingStartGameBtn {
     border-radius: 999px !important;
 }
 
-/* Spymaster: strong crown only after operative marks/picks/reveals. */
+
 .board.spyBoard .card:before {
     background-image: none !important;
     opacity: 0 !important;
@@ -8135,7 +8135,7 @@ body.discordActivity .landingStartGameBtn {
     display: none !important;
 }
 
-/* Bottom current clue is centered and big. Put options under it and make the menu visible. */
+
 .currentClueDock {
     left: 260px !important;
     right: 260px !important;
@@ -8174,7 +8174,7 @@ body.discordActivity .landingStartGameBtn {
     height: 40px !important;
 }
 
-/* Keep the spymaster clue input low, but not covering the options. */
+
 .bottomClueDock {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 54px) !important;
     z-index: 130 !important;
@@ -8188,7 +8188,7 @@ body.discordActivity .bottomClueDock {
     display: none !important;
 }
 
-/* Game log grouped by clue: two picked cards per row; bigger avatar alone beside word. */
+
 .sideLogSection .log {
     padding: 8px !important;
     overflow: visible !important;
@@ -8308,7 +8308,7 @@ body.discordActivity .bottomClueDock {
     font-size: 11px !important;
 }
 
-/* Winner banner/card: no side clipping. */
+
 .winModalCard {
     width: min(680px, calc(100vw - 42px)) !important;
     overflow: visible !important;
@@ -8335,7 +8335,7 @@ body.discordActivity .bottomClueDock {
     word-break: keep-all !important;
 }
 
-/* Mobile/sidechat responsive: scale without needing scroll where possible. */
+
 @media (max-width: 980px) {
     body.discordActivity {
         overflow: hidden !important;
@@ -8598,7 +8598,7 @@ body.discordActivity .bottomClueDock {
 }
 
 
-/* v36 profile/avatar sync + lobby fitting fixes */
+
 .joinBasics {
     grid-template-columns:minmax(260px, 1fr) 180px !important;
     max-width: 760px !important;
@@ -8882,7 +8882,7 @@ body.discordActivity .teamList {
 }
 
 
-/* v37 final requested fixes: visible editable name input, clean lobby names, bottom-only options, compact log avatars */
+
 body.discordActivity .joinBasics,
 .joinBasics.nameVisibleFix {
     display: grid !important;
@@ -8938,7 +8938,7 @@ body.discordActivity .teamChooseTitle {
     margin: 8px auto 10px !important;
 }
 
-/* Lobby role rows: keep uploaded avatar + name organized and prevent vertical letter stacking. */
+
 .discordRoleBox {
     display: grid !important;
     grid-template-columns:minmax(120px, 1fr) auto !important;
@@ -9024,7 +9024,7 @@ body.discordActivity .teamChooseTitle {
     padding: 4px 6px !important;
 }
 
-/* Keep the game Options control out of the topbar. It is moved to #game by app.js and fixed at the bottom. */
+
 #adminControlBar.bottomOptionsBar,
 body.discordActivity #adminControlBar.bottomOptionsBar {
     position: fixed !important;
@@ -9070,7 +9070,7 @@ body.discordActivity #adminControlBar.bottomOptionsBar {
     z-index: 900002 !important;
 }
 
-/* Game log: avatar/image must stay inside each word chip and never stretch into a long photo bar. */
+
 .sideLogSection .log,
 #log.log,
 #log {
@@ -9322,7 +9322,7 @@ body.discordActivity #adminControlBar.bottomOptionsBar {
     }
 }
 
-/* v38 custom uploaded avatars do not reserve character slots + larger rectangular game-log images. */
+
 .char.usingUploadedImage,
 body.hasCustomAvatar .char.selected {
     box-shadow: none !important;
@@ -9488,7 +9488,7 @@ body.discordActivity #adminControlBar.bottomOptionsBar {
 }
 
 
-/* v39 lobby live sync + taller two-column game log */
+
 .sideLogSection {
     flex: 1 1 auto !important;
     display: flex !important;
@@ -9722,7 +9722,7 @@ body.discordActivity #log {
     }
 }
 
-/* v41: game log returns to a real scrollbar, one picked card per row, full card names visible. */
+
 .sideLogSection {
     flex: 1 1 auto !important;
     display: flex !important;
@@ -9958,7 +9958,7 @@ body.discordActivity #log {
 }
 
 
-/* v43 Discord desktop stage fixes: keep lobby above Discord voice tile and unstack the right panel. */
+
 body.discordActivity {
     overflow: hidden !important;
 }
@@ -10153,7 +10153,7 @@ body.discordActivity .landingStartGameBtn {
     font-size: 19px !important;
 }
 
-/* Discord game board: give the right side panel enough breathing room and keep its sections from piling up. */
+
 body.discordActivity #game.gameV9 {
     height: 100dvh !important;
     max-height: 100dvh !important;
@@ -10465,7 +10465,7 @@ body.discordActivity .gameOptionsWrap .optionsBtn {
     }
 }
 
-/* v44: full game-log clue/card names + spymaster crown floats above player cards. */
+
 .sideLogSection .log,
 .teamPanelBlack .log,
 #log.log,
@@ -10721,17 +10721,17 @@ body.discordActivity .currentClueDock b {
 }
 
 
-/* v48 safe fixes on top of the uploaded working files:
-   - Keep existing join/game/give-clue logic intact.
-   - Show crown image on spymaster clue-target selections.
-   - Hide revealed card words so remaining cards are easier to scan.
-   - Improve active turn highlighting, pass button, and compact log ticks. */
+
+
+
+
+
 #name::placeholder {
     color: #d7c390 !important;
     opacity: .82 !important;
 }
 
-/* Spymaster-selected target cards: visible crown + cyan selection ring. */
+
 .board.spyBoard .card.target::before,
 .board.spyBoard .card.spyPickable.target::before,
 .card.target::before {
@@ -10764,7 +10764,7 @@ body.discordActivity .currentClueDock b {
     box-shadow: 0 0 0 4px rgba(46, 231, 255, .9), 0 0 32px rgba(46, 231, 255, .55), 0 14px 28px rgba(0, 0, 0, .48) !important;
 }
 
-/* Once a card is actually revealed/chosen, hide the word and leave only the team color + crown. */
+
 .card.revealed .word {
     opacity: 0 !important;
     visibility: hidden !important;
@@ -10797,7 +10797,7 @@ body.discordActivity .currentClueDock b {
     content: none !important;
 }
 
-/* Turn focus: highlight the active team/role and dim the rest without removing anyone. */
+
 .teamPanel.activeTurnPanel {
     border-color: rgba(46, 231, 255, .85) !important;
     box-shadow: 0 0 26px rgba(46, 231, 255, .22), 0 22px 70px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 240, 170, .09) !important;
@@ -10818,7 +10818,7 @@ body.discordActivity .currentClueDock b {
     filter: grayscale(.55);
 }
 
-/* PASS button: bottom control only, shorter label, glowing. */
+
 #endTurnBtn {
     min-width: 92px !important;
     font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
@@ -10826,7 +10826,7 @@ body.discordActivity .currentClueDock b {
     animation: passPulse 1.1s ease-in-out infinite !important;
 }
 
-/* Game log pass is a tick, not the word PASS. */
+
 .passLog .teamTick {
     font-size: 18px !important;
     line-height: 1 !important;
@@ -10846,7 +10846,7 @@ body.discordActivity .currentClueDock b {
     text-shadow: 0 0 8px rgba(255, 215, 108, .45) !important;
 }
 
-/* Keep game-log chips readable without stretching images. */
+
 .gameLogEntry.hintLog b,
 .logPickWord span {
     white-space: nowrap !important;
@@ -10876,8 +10876,8 @@ body.discordActivity .currentClueDock b {
     }
 }
 
-/* v49: keep working logic; bottom PASS control + compact flexible game log */
-/* Move PASS beside the bottom Options control without touching JS/game logic. */
+
+
 #topOperativeActions:not(.hidden),
 body.discordActivity #topOperativeActions:not(.hidden) {
     position: fixed !important;
@@ -10955,7 +10955,7 @@ body.discordActivity #endTurnBtn:disabled {
     }
 }
 
-/* Compact game log: small chips, two picked cards per row when they fit, long words stay on one line. */
+
 .sideLogSection .log,
 #log.log,
 #log,
@@ -11209,7 +11209,7 @@ body.discordActivity .passLog .teamTick {
     }
 }
 
-/* v50: keep working game/log logic; move PASS beside Options + larger remaining-card crowns */
+
 #topOperativeActions.bottomPassBar:not(.hidden),
 body.discordActivity #topOperativeActions.bottomPassBar:not(.hidden) {
     position: fixed !important;
@@ -11299,7 +11299,7 @@ body.discordActivity #topOperativeActions.bottomPassBar #endTurnBtn:disabled {
     }
 }
 
-/* Bigger remaining-card crown cards on both side panels. */
+
 .teamHeader,
 body.discordActivity .teamHeader {
     align-items: flex-start !important;
@@ -11383,7 +11383,7 @@ body.discordActivity .blackMini strong {
     }
 }
 
-/* v51: keep current logic; remove clue-target cyan tick/ring, show operative avatars on voted cards, and only crown-hide correct reveals. */
+
 .card.spyClueTarget,
 .board.spyBoard .card.spyClueTarget,
 .board.spyBoard .card.spyPickable.spyClueTarget {
@@ -11425,7 +11425,7 @@ body.discordActivity .blackMini strong {
     z-index: 5 !important;
 }
 
-/* Operative selections are shown by the picker avatars only, not by blue borders/rings. */
+
 .card.voted:not(.revealed),
 .card.agreed:not(.revealed),
 .card.myVote:not(.revealed),
@@ -11503,7 +11503,7 @@ body.discordActivity .blackMini strong {
     z-index: 55 !important;
 }
 
-/* Correct guesses become crown-only. Wrong/neutral/danger revealed cards keep their word visible. */
+
 .card.revealed:not(.correctReveal) .word,
 .board.spyBoard .card.revealed:not(.correctReveal) .word,
 .board.operativeBoard .card.revealed:not(.correctReveal) .word {
@@ -11570,7 +11570,7 @@ body.discordActivity .blackMini strong {
     }
 }
 
-/* v56: admin assignment + cleaner side member cards */
+
 #game .teamPanel .player {
     display: grid !important;
     grid-template-columns: 42px minmax(0, 1fr) !important;
@@ -11708,7 +11708,7 @@ body.discordActivity #game .teamPanel .player .crownMark {
     font-size: 20px !important;
 }
 
-/* v57: bigger side member cards with team-colored role/member cards */
+
 #game .teamPanel section {
     position: relative !important;
     border: 1px solid rgba(255, 215, 108, .24) !important;
@@ -11961,7 +11961,7 @@ body.discordActivity #game .teamPanel .player .crownMark {
     }
 }
 
-/* v58: mobile-only compact play layout with collapsible team member cards */
+
 .mobileTeamToggle {
     display: none;
 }
@@ -12491,7 +12491,7 @@ body.discordActivity #name[readonly] {
     }
 }
 
-/* v71 last override: crown reveal cards use exactly one centered image layer. */
+
 #game .card.hasCrownLayer::before,
 #game .card.hasCrownLayer::after,
 #game .board.spyBoard .card.hasCrownLayer::before,
@@ -12518,7 +12518,7 @@ body.discordActivity #game .board.operativeBoard .card.crownOnlyReveal .word {
     display: none !important;
 }
 
-/* v71 final guard: revealed crown cards use only the real centered image layer. */
+
 #game .card.hasCrownLayer::before,
 #game .card.hasCrownLayer::after,
 #game .board.spyBoard .card.hasCrownLayer::before,
@@ -12545,7 +12545,7 @@ body.discordActivity #game .board.operativeBoard .card.crownOnlyReveal .word {
     display: none !important;
 }
 
-/* v59: mobile cards a bit shorter, keep the game log visible + scrollable, preserve desktop */
+
 @media (max-width: 980px) and (orientation: portrait) {
     body.discordActivity #game.gameV9,
     #game.gameV9 {
@@ -12677,7 +12677,7 @@ body.discordActivity #game .board.operativeBoard .card.crownOnlyReveal .word {
     }
 }
 
-/* v60: manual player names again + new CODENAMES DSTY branding */
+
 .dstyTitleWrap,
 body.discordActivity .dstyTitleWrap,
 .homeTitleSplit.dstyTitleWrap {
@@ -12819,18 +12819,18 @@ body.discordActivity #name[readonly] {
         flex-wrap: wrap;
     }
 
-    /* Keep the mobile game header compact; the new game logo remains desktop/tablet-wide only. */
+
     #game .gameDstyLogo {
         display: none !important;
     }
 }
 
 
-/* v61: mobile crown centering fix for portrait + landscape.
-   Keep the existing mobile layout and game logic. The actual crown is now drawn
-   by one centered pseudo-layer instead of relying on cropped card backgrounds. */
+
+
+
 @media (max-width: 980px) {
-    /* Mobile cards keep their team color, but the crown image itself is handled below. */
+
     body.discordActivity #game .card.blue,
     #game .card.blue {
         background-image: linear-gradient(145deg, #fff3a6, #ffd04b 55%, #b87900) !important;
@@ -12863,14 +12863,14 @@ body.discordActivity #name[readonly] {
         background-repeat: no-repeat !important;
     }
 
-    /* No accidental old crown layers on normal mobile cards. */
+
     body.discordActivity #game .card:not(.spyClueTarget):not(.target):not(.correctReveal):not(.revealed)::before,
     #game .card:not(.spyClueTarget):not(.target):not(.correctReveal):not(.revealed)::before {
         background-image: none !important;
         opacity: 0 !important;
     }
 
-    /* Spymaster-picked clue cards and correct revealed cards: one perfectly centered crown. */
+
     body.discordActivity #game .card.spyClueTarget::before,
     body.discordActivity #game .card.target::before,
     body.discordActivity #game .card.revealed.correctReveal::before,
@@ -12915,7 +12915,7 @@ body.discordActivity #name[readonly] {
         visibility: hidden !important;
     }
 
-    /* Keep non-correct/wrong revealed words visible. */
+
     body.discordActivity #game .card.revealed:not(.correctReveal) .word,
     #game .card.revealed:not(.correctReveal) .word {
         opacity: 1 !important;
@@ -12937,9 +12937,9 @@ body.discordActivity #name[readonly] {
 }
 
 
-/* v62: final crown positioning fix.
-   Draw selected/correct crowns as a real centered image layer, not as a background
-   or ::before layer, so mobile portrait/landscape cannot crop it into a corner. */
+
+
+
 #game .card.hasCrownLayer,
 body.discordActivity #game .card.hasCrownLayer {
     background-repeat: no-repeat !important;
@@ -13028,7 +13028,7 @@ body.discordActivity #game .card.hasCrownLayer.correctReveal .word {
     }
 }
 
-/* v63: compact mobile homepage only. Keep game/mobile board logic unchanged. */
+
 @media (max-width: 980px) {
     body.discordActivity #landing.landing,
     #landing.landing {
@@ -13398,7 +13398,7 @@ body.discordActivity #game .card.hasCrownLayer.correctReveal .word {
 }
 
 
-/* v64: keep mobile team hide button visible when an expanded team panel grows over the bottom area. */
+
 @media (max-width: 980px) {
     body.discordActivity #game .teamPanel.mobileTeamOpen,
     #game .teamPanel.mobileTeamOpen {
@@ -13457,7 +13457,7 @@ body.discordActivity #game .card.hasCrownLayer.correctReveal .word {
     }
 }
 
-/* v65: one crown layer only, grey reveals use crown-bw.png, and mobile log stays usable. */
+
 #game .card.hasCrownLayer::before,
 #game .card.hasCrownLayer::after,
 #game .board.spyBoard .card.hasCrownLayer::before,
@@ -13579,7 +13579,7 @@ body.discordActivity #game .card.neutralReveal .word {
     }
 }
 
-/* v66: grey reveal is crown-only, and mobile team crowns cannot double-render. */
+
 #game .card.neutralReveal .word,
 #game .board.spyBoard .card.neutralReveal .word,
 #game .board.operativeBoard .card.neutralReveal .word,
@@ -13654,7 +13654,7 @@ body.discordActivity #game .board.operativeBoard .card.neutralReveal .word {
     }
 }
 
-/* v67: Options is click-toggle only, PASS is bottom-center, Options is far bottom-right. */
+
 .optionsWrap .optionsMenu,
 .optionsWrap:hover .optionsMenu,
 .optionsWrap:focus-within .optionsMenu,
@@ -13761,7 +13761,7 @@ body.discordActivity #topOperativeActions.bottomPassBar #endTurnBtn {
     }
 }
 
-/* v68: desktop spymaster Full state + visible disconnected/no-wifi players. */
+
 .rolePick.fullRole,
 .rolePick:disabled,
 .discordRoleJoin:disabled {
@@ -13859,7 +13859,7 @@ body.discordActivity #game .teamPanel .offlineIcon {
     }
 }
 
-/* v69: one per-player Options menu for admins/spymasters. */
+
 #game .teamPanel .playerOptionsWrap,
 body.discordActivity #game .teamPanel .playerOptionsWrap {
     position: relative !important;
@@ -13959,7 +13959,7 @@ body.discordActivity #game .teamPanel .playerOptionsMenu [data-admin-rename] {
     }
 }
 
-/* v70: float player Options above all cards/log panels so every item is visible. */
+
 body > .playerOptionsMenu.floatingPlayerOptions,
 body.discordActivity > .playerOptionsMenu.floatingPlayerOptions {
     position: fixed !important;
@@ -14018,7 +14018,7 @@ body.discordActivity > .playerOptionsMenu.floatingPlayerOptions [data-admin-rena
     }
 }
 
-/* v71: iPhone safe areas, editable clue number, delayed reveal rise, admin crown placement. */
+
 .neutralFlash {
     position: fixed;
     inset: 0;
@@ -14185,7 +14185,7 @@ body.discordActivity #clueNumber {
     }
 }
 
-/* v71 EOF override: crown reveal cards use exactly one centered image layer. */
+
 #game .card.hasCrownLayer::before,
 #game .card.hasCrownLayer::after,
 #game .board.spyBoard .card.hasCrownLayer::before,
@@ -14212,7 +14212,7 @@ body.discordActivity #game .board.operativeBoard .card.crownOnlyReveal .word {
     display: none !important;
 }
 
-/* v72: no reveal rise animation, turn status line, and desktop board fit. */
+
 #game .card.pendingReveal,
 body.discordActivity #game .card.pendingReveal {
     animation: none !important;
@@ -14356,7 +14356,7 @@ body.discordActivity .turnStatusAvatar img {
     }
 }
 
-/* v73 EOF: mobile turn subtitle must fit; keep only the avatar crown, not the admin-name crown. */
+
 #game .teamPanel .playerBody > b.adminNameLine,
 body.discordActivity #game .teamPanel .playerBody > b.adminNameLine {
     padding-top: 0 !important;
@@ -14455,7 +14455,7 @@ body.discordActivity #game .teamPanel .playerBody > b.adminNameLine .adminBadge.
     }
 }
 
-/* v74: remove mobile board dead space and keep the clue dock off the card rows. */
+
 @media (max-width: 980px) {
     body.discordActivity #game.gameV9,
     #game.gameV9 {
@@ -14523,7 +14523,7 @@ body.discordActivity #game .teamPanel .playerBody > b.adminNameLine .adminBadge.
     }
 }
 
-/* v75: single-player homepage CTA. */
+
 .singlePlayerAction {
     display: flex !important;
     justify-content: center !important;
@@ -14578,7 +14578,7 @@ body.discordActivity #game .teamPanel .playerBody > b.adminNameLine .adminBadge.
     }
 }
 
-/* v78: single-player difficulty chooser. */
+
 .singleDifficultyOverlay {
     position: fixed !important;
     inset: 0 !important;
@@ -14661,7 +14661,7 @@ body.discordActivity #game .teamPanel .playerBody > b.adminNameLine .adminBadge.
     }
 }
 
-/* v84: final single-player board reveal + red crown cards. */
+
 #game .card.red,
 #game .board.spyBoard .card.red,
 body.discordActivity #game .card.red,
@@ -14712,7 +14712,7 @@ body.discordActivity #game .board.finishedBoard.operativeBoard .card.finalOrigin
     visibility: visible !important;
 }
 
-/* v91: internal "red" is the Black team. Only danger/assassin cards should be visually red. */
+
 #game .card.red,
 #game .board.spyBoard .card.red,
 body.discordActivity #game .card.red,
@@ -14843,7 +14843,7 @@ body.discordActivity #game .teamPanel .player.editingName .inlineNameEditor butt
     }
 }
 
-/* v98: keep Modes clear of Discord lobby blocks and remove top turn pill. */
+
 #turnBadge,
 body.discordActivity #turnBadge {
     display: none !important;
@@ -15681,9 +15681,9 @@ body.discordActivity[data-lang="ar"] .letterFillTitle .fillLetter {
         padding-bottom: .18em !important;
     }
 }
-/* Mobile patch: offset the whole app only while the homepage is visible.
-   This is stronger than moving #landing because older CSS fixes body to inset: 0.
-   Paste this at the very bottom of public/style.css. */
+
+
+
 
 @media (max-width: 980px) {
     @supports selector(#app:has(> #landing:not(.hidden))) {
@@ -15761,8 +15761,8 @@ body.discordActivity[data-lang="ar"] .letterFillTitle .fillLetter {
     }
 }
 
-/* v120: final mobile operative hidden-card crown fix.
-   Keep exactly one centered grey crown on unrevealed operative cards. */
+
+
 @media (max-width: 980px) {
     #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown),
     body.discordActivity #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown),
@@ -15832,7 +15832,7 @@ body.discordActivity[data-lang="ar"] .letterFillTitle .fillLetter {
     }
 }
 
-/* v124: mobile current clue and PASS sit above the Back bar, not on top of it. */
+
 @media (max-width: 980px) {
     #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
     body.discordActivity #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
@@ -15943,8 +15943,8 @@ body.discordActivity[data-lang="ar"] .letterFillTitle .fillLetter {
     }
 }
 
-/* v125: delayed operative reveal ascent.
-   A picked card stays visually unrevealed, rises for 1.5s, then reveals with the reaction overlay. */
+
+
 #game .boardWrap.hasPendingRevealWrap,
 body.discordActivity #game .boardWrap.hasPendingRevealWrap,
 #game .board.hasPendingReveal,
@@ -16019,8 +16019,8 @@ body.discordActivity #game .card.pendingReveal .word {
 }
 
 
-/* v126: picked-card lift toward the player's screen before reveal.
-   The board card becomes a dim placeholder while a fixed ghost copy rises and zooms forward. */
+
+
 .revealLiftLayer {
     position: fixed !important;
     inset: 0 !important;
@@ -16154,8 +16154,8 @@ body.discordActivity #game .card.pendingReveal .word {
     }
 }
 
-/* v127: full-card reveal lift, vertical only.
-   The picked operative card floats as a complete card shell straight upward from its own slot. */
+
+
 .cardRevealLiftGhost,
 body.discordActivity .cardRevealLiftGhost {
     display: flex !important;
@@ -16281,9 +16281,9 @@ body.discordActivity #game .card.pendingReveal .word {
 }
 
 
-/* v128: in-place card float before reveal.
-   No screen transfer/clone: the picked operative card stays in its own slot, floats lightly for 1.5s,
-   then app.js removes pendingReveal so the real color/crown and reaction appear together. */
+
+
+
 .cardRevealLiftGhost,
 body.discordActivity .cardRevealLiftGhost,
 .cardRevealLiftGhostDone,
@@ -16397,8 +16397,8 @@ body.discordActivity #game .card.pendingReveal .cardCrownLayer {
     }
 }
 
-/* v129: soft card float before reveal.
-   The picked card lifts only a little from its own slot, then the real color/crown and reaction appear together. */
+
+
 .cardRevealLiftGhost,
 body.discordActivity .cardRevealLiftGhost {
     display: flex !important;
@@ -16515,9 +16515,9 @@ body.discordActivity #game .card.pendingReveal .word {
 }
 
 
-/* v130: reveal delay motion = toward the user's eye.
-   No up/down/sideways movement and no detached clone. The real grey card scales from its own center,
-   then app.js reveals the true color/crown and shows the reaction at the same moment. */
+
+
+
 .cardRevealLiftGhost,
 body.discordActivity .cardRevealLiftGhost,
 .cardRevealLiftGhostDone,
@@ -16619,8 +16619,8 @@ body.discordActivity #game .card.pendingReveal .cardCrownLayer {
 }
 
 
-/* v131: operative reveal = full grey card pushed directly toward the user's eyes.
-   No translateX/translateY: the fixed clone remains centered over its original slot and only scales/deepens. */
+
+
 .cardRevealLiftGhost,
 body.discordActivity .cardRevealLiftGhost {
     display: flex !important;
@@ -16815,8 +16815,8 @@ body.discordActivity #game .card.pendingReveal .cardCrownLayer {
     }
 }
 
-/* v132: full operative reveal card, constant speed, no sideways/up/down travel.
-   JS now creates a full fixed overlay card instead of cloning partial inner card content. */
+
+
 .cardRevealFullGhost,
 body.discordActivity .cardRevealFullGhost {
     position: fixed !important;
@@ -16945,7 +16945,7 @@ body.discordActivity .cardRevealFullGhost.cardRevealLiftGhostDone {
     }
 }
 
-/* v137: spymaster images larger and clue box lowered below the image. */
+
 .spymasterClueSplash,
 body.discordActivity .spymasterClueSplash {
     position: fixed !important;
@@ -17181,7 +17181,7 @@ body.discordActivity .spymasterClueNumber em {
 }
 
 
-/* v138: keep the exact operative reveal motion, but polish the floating grey card look and show the crown inside it. */
+
 .cardRevealFullGhost.cardRevealLiftGhost,
 body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost {
     background-color: #aeb4bc !important;
@@ -17264,8 +17264,8 @@ body.discordActivity #game .card.pendingReveal::before {
 }
 
 
-/* v140: mobile spymaster Give Clue dock visibility, CSS-only.
-   Do not touch app.js or the button click handler. JS still controls .hidden normally. */
+
+
 @media (max-width: 980px) {
     #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
     body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
@@ -17390,7 +17390,7 @@ body.discordActivity #game .card.pendingReveal::before {
 }
 
 
-/* v141: Give Clue button stays clickable for spymasters; validation happens in JS with toasts. */
+
 #giveClueBtn.needsClueTarget,
 body.discordActivity #giveClueBtn.needsClueTarget {
     opacity: .92 !important;
@@ -17404,14 +17404,14 @@ body.discordActivity #giveClueBtn:disabled {
 }
 
 
-/* v142: clue giving restored. The mobile dock remains visible/clickable; clue count is no longer capped at 4. */
+
 #giveClueBtn,
 body.discordActivity #giveClueBtn {
     pointer-events: auto !important;
 }
 
 
-/* v143: restore lobby/homepage player roster visibility and show FULL for occupied spymaster slots. */
+
 .previewRoster {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -17536,7 +17536,7 @@ body.discordActivity #giveClueBtn {
 }
 
 
-/* v144: modes menu is visible to everyone, but only the original host/admin can change room modes or language. */
+
 #toast.hostOnlyModeToast,
 body.discordActivity #toast.hostOnlyModeToast {
     color: #fff3c4 !important;
@@ -17555,7 +17555,7 @@ body.discordActivity #toast.hostOnlyModeToast {
 }
 
 
-/* v145: premium shared page backgrounds + personal background chooser + richer side panels + team-colored vote selection. */
+
 :root {
     --page-bg-1: #120d05;
     --page-bg-2: #050505;
@@ -17927,7 +17927,7 @@ body.discordActivity[data-turn-team="red"] .card.pickedByOperative:not(.revealed
 }
 
 
-/* v146: delay winner popup until reveal animation ends, clean grey reveal card, and center black-team/red-word text. */
+
 .cardRevealFullGhost.cardRevealLiftGhost,
 body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost {
     background-color: #adb3bb !important;
@@ -17996,7 +17996,7 @@ body.discordActivity #game .board.spyBoard .card.red .word {
 }
 
 
-/* v148: restore roster visibility safely and keep Give Clue clickable. Built from the working v146 reveal files. */
+
 #landing #lobbyPreview:not(.hidden),
 body.discordActivity #landing #lobbyPreview:not(.hidden),
 #landing .lobbyPreview:not(.hidden),
@@ -18044,7 +18044,7 @@ body.discordActivity #landing .previewEmpty {
     opacity: 1 !important;
 }
 
-/* Discord homepage role cards: the old mobile CSS hid these; force them back on. */
+
 #landing .discordSeatList,
 body.discordActivity #landing .discordSeatList,
 body.discordActivity .discordRoleBox .discordSeatList,
@@ -18081,7 +18081,7 @@ body.discordActivity #landing .discordSeatEmpty {
     overflow: visible !important;
 }
 
-/* Game page side rosters: show players/slots, but do not stretch panels over the Give Clue dock. */
+
 #game.gameV9:not(.hidden) .teamPanel,
 body.discordActivity #game.gameV9:not(.hidden) .teamPanel,
 #game.gameV9:not(.hidden) .teamPanel section:not(.sideLogSection),
@@ -18186,7 +18186,7 @@ body.discordActivity #giveClueBtn {
 }
 
 
-/* v149: reveal visual polish only — keep v148 Give Clue and roster logic untouched. */
+
 .cardRevealFullGhost.cardRevealLiftGhost,
 body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost {
     overflow: visible !important;
@@ -18255,7 +18255,7 @@ body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .word {
     box-shadow: 0 4px 10px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.42) !important;
 }
 
-/* Keep every unrevealed word plaque the same size, including Black-team cards and danger cards. */
+
 #game .board .card:not(.revealed):not(.crownOnlyReveal) .word,
 body.discordActivity #game .board .card:not(.revealed):not(.crownOnlyReveal) .word,
 #game .board.spyBoard .card:not(.revealed):not(.crownOnlyReveal) .word,
@@ -18324,8 +18324,8 @@ body.discordActivity #game .board.spyBoard .card.assassin .word {
 }
 
 
-/* v150: mobile team panels default closed; Show Team / Hide Team works again.
-   This only overrides mobile visibility rules from the roster restore patch. */
+
+
 @media (max-width: 980px) {
     #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) section:not(.sideLogSection),
     body.discordActivity #game.gameV9:not(.hidden) .teamPanel:not(.mobileTeamOpen) section:not(.sideLogSection),
@@ -18400,7 +18400,7 @@ body.discordActivity #game .board.spyBoard .card.assassin .word {
 }
 
 
-/* v151: mobile expanded team Hide Team button stays above the board/game layer. */
+
 @media (max-width: 980px) {
     #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen,
     body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen {
@@ -18465,7 +18465,7 @@ body.discordActivity #game .board.spyBoard .card.assassin .word {
 }
 
 
-/* v152: mobile expanded Hide Team button is always pinned at the top-right for both teams. */
+
 @media (max-width: 980px) {
     #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle,
     body.discordActivity #game.gameV9:not(.hidden) .teamPanel.mobileTeamOpen .mobileTeamToggle,
@@ -18511,7 +18511,7 @@ body.discordActivity #game .board.spyBoard .card.assassin .word {
 }
 
 
-/* v153: final win/log timing, compact clue dock, consistent final card word boxes. */
+
 #game .board.finishedBoard .card.finalOriginShown,
 body.discordActivity #game .board.finishedBoard .card.finalOriginShown {
     display: grid !important;
@@ -18689,7 +18689,7 @@ body.discordActivity .winModal.hidden {
     }
 }
 
-/* v154: only change the BEFORE-GIVING-CLUE input dock. Do not touch the current clue display after a clue is given. */
+
 #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
 body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
 #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
@@ -18898,7 +18898,7 @@ body.discordActivity #game:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidd
 }
 
 
-/* v155: finished-board words stay centered with identical boxes on every color. */
+
 #game .board.finishedBoard .card.finalOriginShown,
 body.discordActivity #game .board.finishedBoard .card.finalOriginShown {
     position: relative !important;
@@ -18994,7 +18994,7 @@ body.discordActivity #game .board.finishedBoard .card.finalOriginShown .cardCrow
 }
 
 
-/* v156: finished board word boxes, centered current clue dock, and bottom winner cup. */
+
 html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
 html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
 html body #game #board.board.finishedBoard > button.card.finalOriginShown,
@@ -19052,7 +19052,7 @@ html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.
     letter-spacing: .32px !important;
 }
 
-/* The clue shown after a clue is given should sit centered at the bottom, not pinned left. */
+
 html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
 html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
 html body #game:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
@@ -19087,7 +19087,7 @@ html body.discordActivity #currentClueDock.currentClueDock:not(.hidden) b {
     white-space: nowrap !important;
 }
 
-/* Winner side effect: bottom cup appears only after win effects are allowed by JS. */
+
 html body #game #goldPanel.teamPanel.winnerPanel,
 html body #game #blackPanel.teamPanel.winnerPanel,
 html body.discordActivity #game #goldPanel.teamPanel.winnerPanel,
@@ -19193,7 +19193,7 @@ html body.discordActivity #game #blackPanel.teamPanel.winnerPanel::after {
     }
 }
 
-/* v157: only requested fixes - centered finished-card words + sticky winner-side cup. */
+
 html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
 html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
 html body #game #board.board.finishedBoard > button.card.finalOriginShown,
@@ -19347,7 +19347,7 @@ html body.discordActivity #game #blackPanel.teamPanel.winnerCupPanel::after {
 }
 
 
-/* v157: local-only flip for revealed operative-picked crown cards. */
+
 #game .board .card.localWordFlipped,
 body.discordActivity #game .board .card.localWordFlipped {
     cursor: pointer !important;
@@ -19429,7 +19429,7 @@ body.discordActivity #game .board.operativeBoard .card.localWordFlipped.correctR
     }
 }
 
-/* v158: keep the locally flipped picked-card word exactly centered. */
+
 html body #game #board.board > button.card.localWordFlipped > span.word,
 html body.discordActivity #game #board.board > button.card.localWordFlipped > span.word,
 html body #game #board.board > button.card.localWordFlipped.correctReveal > span.word,
@@ -19453,7 +19453,7 @@ html body.discordActivity #game #board.board.operativeBoard > button.card.localW
     line-height: 1.02 !important;
 }
 
-/* v159: iPad-only layout patch. This is intentionally at the bottom and targets iPad/tablet touch screens only, so desktop PC and phone rules stay untouched. */
+
 @supports (-webkit-touch-callout: none) {
     @media (min-width: 768px) and (max-width: 1366px) and (hover: none) and (pointer: coarse) {
         html body #game.gameV9,
@@ -19509,4 +19509,2203 @@ html body.discordActivity #game #board.board.operativeBoard > button.card.localW
             margin-right: auto !important;
         }
     }
+}
+
+body.discordActivity #landing .teamChooseTitle {
+    position: relative !important;
+    width: min(100%, 1120px) !important;
+    height: 66px !important;
+    margin: 12px auto 10px !important;
+    padding: 0 150px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 2px solid #ffd84f !important;
+    border-radius: 999px !important;
+    background: linear-gradient(180deg, rgba(65, 62, 57, .98), rgba(35, 33, 29, .98)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 12px 24px rgba(0, 0, 0, .34) !important;
+    color: #fff8d6 !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-size: clamp(22px, 2.2vw, 34px) !important;
+    line-height: 1 !important;
+    letter-spacing: .055em !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+    overflow: visible !important;
+}
+
+body.discordActivity #landing .teamChooseTitle::before,
+body.discordActivity #landing .teamChooseTitle::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+}
+
+body.discordActivity #landing .teamChooseTitle::before {
+    left: 18.9% !important;
+    border-top: 19px solid transparent !important;
+    border-bottom: 19px solid transparent !important;
+    border-right: 24px solid #ffd84f !important;
+    filter: drop-shadow(0 0 7px rgba(255, 216, 79, .28)) !important;
+}
+
+body.discordActivity #landing .teamChooseTitle::after {
+    left: 81.1% !important;
+    border-top: 19px solid transparent !important;
+    border-bottom: 19px solid transparent !important;
+    border-left: 24px solid #080808 !important;
+    filter: drop-shadow(1px 0 0 #ffd84f) drop-shadow(-1px 0 0 #ffd84f) drop-shadow(0 1px 0 #ffd84f) drop-shadow(0 -1px 0 #ffd84f) !important;
+}
+
+body.discordActivity #landing #discordLobby {
+    width: min(100%, 1120px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+#landing .discordRoleBox small,
+body.discordActivity #landing .discordRoleBox small,
+#landing .discordSpectatorCard > p,
+body.discordActivity #landing .discordSpectatorCard > p,
+#landing > .hintText,
+body.discordActivity #landing > .hintText {
+    display: none !important;
+}
+
+#landing .discordRoleJoin[data-team="spectator"]:not(:disabled),
+body.discordActivity #landing .discordRoleJoin[data-team="spectator"]:not(:disabled) {
+    color: #f5f5f5 !important;
+    background: linear-gradient(180deg, #86898e 0%, #5b5e63 52%, #34363a 100%) !important;
+    border: 1px solid rgba(235, 238, 242, .72) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), 0 8px 16px rgba(0, 0, 0, .38) !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .72) !important;
+}
+
+#landing .modesFloating,
+body.discordActivity #landing .modesFloating {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    margin: 14px auto 0 !important;
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    grid-template-rows: auto auto !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    align-items: start !important;
+    gap: 8px 10px !important;
+    z-index: 20 !important;
+}
+
+#landing #modesBtn,
+body.discordActivity #landing #modesBtn {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+}
+
+#landing #backgroundBtn,
+body.discordActivity #landing #backgroundBtn {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+}
+
+#landing #modesMenu,
+body.discordActivity #landing #modesMenu {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+}
+
+#landing #backgroundMenu,
+body.discordActivity #landing #backgroundMenu {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+}
+
+#landing .modesBtn,
+body.discordActivity #landing .modesBtn {
+    min-width: 166px !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 9px 16px !important;
+    border-radius: 15px !important;
+    font-size: 15px !important;
+    letter-spacing: .06em !important;
+}
+
+#landing .modesMenu,
+body.discordActivity #landing .modesMenu {
+    position: static !important;
+    width: 190px !important;
+    max-width: calc(50vw - 20px) !important;
+}
+
+@media (max-width: 760px) {
+    body.discordActivity #landing .teamChooseTitle {
+        height: 48px !important;
+        margin: 8px auto 7px !important;
+        padding: 0 72px !important;
+        font-size: clamp(14px, 4vw, 20px) !important;
+        letter-spacing: .035em !important;
+    }
+
+    body.discordActivity #landing .teamChooseTitle::before {
+        left: 17.5% !important;
+        border-top-width: 13px !important;
+        border-bottom-width: 13px !important;
+        border-right-width: 17px !important;
+    }
+
+    body.discordActivity #landing .teamChooseTitle::after {
+        left: 82.5% !important;
+        border-top-width: 13px !important;
+        border-bottom-width: 13px !important;
+        border-left-width: 17px !important;
+    }
+
+    #landing .modesFloating,
+    body.discordActivity #landing .modesFloating {
+        gap: 7px !important;
+        margin-top: 10px !important;
+    }
+
+    #landing .modesBtn,
+    body.discordActivity #landing .modesBtn {
+        min-width: 132px !important;
+        min-height: 40px !important;
+        height: 40px !important;
+        padding: 7px 11px !important;
+        font-size: 12px !important;
+    }
+
+    #landing .modesMenu,
+    body.discordActivity #landing .modesMenu {
+        width: 150px !important;
+    }
+}
+
+
+
+/* Game-page redesign patch: role cards, spectator dropdown, clue shell, active glow, and disconnect state. */
+.visuallyHidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Team role areas now read as fully themed cards instead of grey containers. */
+#game #goldPanel > section:not(.sideLogSection),
+body.discordActivity #game #goldPanel > section:not(.sideLogSection) {
+    position: relative !important;
+    overflow: visible !important;
+    padding: 10px !important;
+    border-radius: 16px !important;
+    background:
+        radial-gradient(circle at 18% 10%, rgba(255,255,255,.50), transparent 28%),
+        linear-gradient(145deg, #ffe98d 0%, #e7ae21 50%, #8c5900 100%) !important;
+    border: 1px solid rgba(255, 244, 181, .92) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.62), 0 10px 22px rgba(0,0,0,.34), 0 0 16px rgba(255,215,108,.18) !important;
+}
+
+#game #blackPanel > section:not(.sideLogSection),
+body.discordActivity #game #blackPanel > section:not(.sideLogSection) {
+    position: relative !important;
+    overflow: visible !important;
+    padding: 10px !important;
+    border-radius: 16px !important;
+    background:
+        radial-gradient(circle at 18% 10%, rgba(255,255,255,.09), transparent 28%),
+        linear-gradient(145deg, #353538 0%, #111113 52%, #000 100%) !important;
+    border: 1px solid rgba(255, 215, 108, .38) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.11), 0 12px 24px rgba(0,0,0,.56) !important;
+}
+
+#game #goldPanel > section:not(.sideLogSection) h3,
+body.discordActivity #game #goldPanel > section:not(.sideLogSection) h3 {
+    color: #241400 !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,.48) !important;
+}
+
+#game #blackPanel > section:not(.sideLogSection) h3,
+body.discordActivity #game #blackPanel > section:not(.sideLogSection) h3 {
+    color: #ffe9a8 !important;
+    text-shadow: 0 0 12px rgba(255,215,108,.24), 0 1px 0 #000 !important;
+}
+
+#game #goldPanel .player,
+body.discordActivity #game #goldPanel .player {
+    min-height: 58px !important;
+    padding: 7px 8px !important;
+    background: linear-gradient(180deg, rgba(255,255,255,.36), rgba(116,72,0,.18)) !important;
+    border: 1px solid rgba(91,55,0,.34) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.44), 0 7px 14px rgba(88,54,0,.20) !important;
+}
+
+#game #blackPanel .player,
+body.discordActivity #game #blackPanel .player {
+    min-height: 58px !important;
+    padding: 7px 8px !important;
+    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.30)) !important;
+    border: 1px solid rgba(255,215,108,.25) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 8px 16px rgba(0,0,0,.42) !important;
+}
+
+#game .teamPanel .player .avatar,
+body.discordActivity #game .teamPanel .player .avatar {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    border-radius: 14px !important;
+    font-size: 27px !important;
+}
+
+#game .teamPanel .player .avatar img,
+body.discordActivity #game .teamPanel .player .avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+#game #goldPanel .emptyTeamSlot,
+body.discordActivity #game #goldPanel .emptyTeamSlot {
+    color: rgba(48,28,0,.78) !important;
+    border-color: rgba(76,44,0,.34) !important;
+    background: rgba(255,255,255,.20) !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,.35) !important;
+}
+
+#game #blackPanel .emptyTeamSlot,
+body.discordActivity #game #blackPanel .emptyTeamSlot {
+    color: rgba(255,234,174,.72) !important;
+    border-color: rgba(255,215,108,.22) !important;
+    background: rgba(255,255,255,.035) !important;
+}
+
+/* Spectators moved from the side panel to a compact top-left dropdown. */
+#game .topbar,
+body.discordActivity #game .topbar {
+    position: relative !important;
+}
+
+.spectatorMenuWrap {
+    position: absolute !important;
+    left: 8px !important;
+    top: 7px !important;
+    z-index: 12050 !important;
+}
+
+.spectatorToggleBtn {
+    min-width: 122px !important;
+    height: 30px !important;
+    padding: 5px 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    border-radius: 999px !important;
+    color: #f1f3f5 !important;
+    background: linear-gradient(180deg, #70747a, #3a3d42 62%, #25272b) !important;
+    border: 1px solid rgba(235,238,242,.54) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.20), 0 6px 14px rgba(0,0,0,.34) !important;
+    font-size: 10px !important;
+    letter-spacing: .2px !important;
+    white-space: nowrap !important;
+}
+
+.spectatorToggleBtn.open {
+    filter: brightness(1.13) !important;
+    box-shadow: 0 0 14px rgba(190,196,205,.25), inset 0 1px 0 rgba(255,255,255,.24) !important;
+}
+
+.spectatorEye {
+    font-size: 14px !important;
+    line-height: 1 !important;
+}
+
+.spectatorDropdown {
+    position: absolute !important;
+    left: 0 !important;
+    top: 36px !important;
+    width: 220px !important;
+    max-height: min(340px, 55vh) !important;
+    padding: 9px !important;
+    overflow: auto !important;
+    border-radius: 15px !important;
+    background: linear-gradient(180deg, rgba(53,56,61,.98), rgba(15,16,18,.98)) !important;
+    border: 1px solid rgba(225,229,235,.34) !important;
+    box-shadow: 0 18px 38px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.09) !important;
+}
+
+.spectatorDropdownList .player,
+body.discordActivity .spectatorDropdownList .player {
+    min-height: 54px !important;
+    padding: 6px !important;
+    background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(0,0,0,.22)) !important;
+    border: 1px solid rgba(235,238,242,.16) !important;
+}
+
+.spectatorDropdownList .avatar {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+}
+
+/* The active side glows; inactive panels and people remain fully visible. */
+#game .teamPanel.dimTurnPanel,
+body.discordActivity #game .teamPanel.dimTurnPanel,
+#game .player.dimTurnPlayer,
+body.discordActivity #game .player.dimTurnPlayer {
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+#game .teamPanel section.activeRoleSection,
+body.discordActivity #game .teamPanel section.activeRoleSection {
+    animation: activeRoleCardGlow 1.2s ease-in-out infinite !important;
+}
+
+#game .player.activeTurnPlayer,
+body.discordActivity #game .player.activeTurnPlayer {
+    animation: activePlayerGlow 1.05s ease-in-out infinite !important;
+}
+
+@keyframes activeRoleCardGlow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.18); }
+}
+
+@keyframes activePlayerGlow {
+    0%, 100% { transform: translateZ(0) scale(1); }
+    50% { transform: translateZ(0) scale(1.025); }
+}
+
+/* Game log stays bright and continuously glowing, independent of the active turn. */
+#game .sideLogSection,
+body.discordActivity #game .sideLogSection {
+    opacity: 1 !important;
+    filter: none !important;
+    background: linear-gradient(180deg, rgba(255,215,108,.10), rgba(0,0,0,.30)) !important;
+    border-color: rgba(255,215,108,.46) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 18px rgba(255,215,108,.18), 0 10px 24px rgba(0,0,0,.34) !important;
+    animation: gameLogGlow 1.8s ease-in-out infinite !important;
+}
+
+#game .sideLogSection .log,
+body.discordActivity #game .sideLogSection .log,
+#game .sideLogSection .log div,
+body.discordActivity #game .sideLogSection .log div {
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+@keyframes gameLogGlow {
+    0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 12px rgba(255,215,108,.12), 0 10px 24px rgba(0,0,0,.34); }
+    50% { box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 0 24px rgba(255,215,108,.30), 0 10px 24px rgba(0,0,0,.34); }
+}
+
+/* Compact avatar + action instruction at the top of the board. */
+#clueBadge.turnSubStatus,
+body.discordActivity #clueBadge.turnSubStatus {
+    min-width: 0 !important;
+    width: fit-content !important;
+    max-width: min(92vw, 430px) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 6px 14px !important;
+    white-space: nowrap !important;
+}
+
+#clueBadge.turnSubStatus strong,
+body.discordActivity #clueBadge.turnSubStatus strong {
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    font-size: 12px !important;
+    letter-spacing: .45px !important;
+}
+
+.turnStatusAvatarGroup {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding-left: 4px !important;
+}
+
+.turnStatusAvatarGroup .turnStatusAvatar {
+    margin-left: -5px !important;
+    box-shadow: 0 0 0 2px rgba(255,244,191,.78), 0 3px 8px rgba(0,0,0,.40) !important;
+}
+
+#clueBadge .turnStatusAvatar,
+body.discordActivity #clueBadge .turnStatusAvatar {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    font-size: 15px !important;
+}
+
+/* Responsive clue shell used both while entering a clue and while operatives see it. */
+#bottomClueDock.bottomClueDock:not(.hidden),
+body.discordActivity #bottomClueDock.bottomClueDock:not(.hidden) {
+    --clue-chars: 4;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: fit-content !important;
+    min-width: min(460px, calc(100vw - 28px)) !important;
+    max-width: min(760px, calc(100vw - 28px)) !important;
+    grid-template-columns: auto minmax(240px, calc(13px * var(--clue-chars) + 150px)) 54px 42px !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+    border-radius: 18px !important;
+}
+
+#bottomClueDock .dockText.cluePromptText,
+body.discordActivity #bottomClueDock .dockText.cluePromptText {
+    display: grid !important;
+    place-items: center !important;
+    min-width: 62px !important;
+    margin: 0 !important;
+}
+
+#bottomClueDock .dockText.cluePromptText b,
+body.discordActivity #bottomClueDock .dockText.cluePromptText b {
+    color: #ffe89b !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    letter-spacing: .6px !important;
+    text-align: center !important;
+}
+
+#bottomClueDock .clueWordLabel,
+#bottomClueDock .numberLabel,
+body.discordActivity #bottomClueDock .clueWordLabel,
+body.discordActivity #bottomClueDock .numberLabel {
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+#bottomClueDock #clueWord,
+body.discordActivity #bottomClueDock #clueWord {
+    width: 100% !important;
+    min-width: 240px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    margin: 0 !important;
+    padding: 7px 13px !important;
+    border-radius: 13px !important;
+    font-size: 16px !important;
+    text-align: center !important;
+}
+
+#bottomClueDock #clueNumber,
+body.discordActivity #bottomClueDock #clueNumber {
+    width: 54px !important;
+    min-width: 54px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    margin: 0 !important;
+    border-radius: 13px !important;
+    text-align: center !important;
+}
+
+#bottomClueDock #giveClueBtn.clueSubmitTick,
+body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 13px !important;
+    font-size: 23px !important;
+    line-height: 1 !important;
+}
+
+#giveClueBtn.goldTick,
+body.discordActivity #giveClueBtn.goldTick {
+    color: #211300 !important;
+    background: linear-gradient(180deg, #fff1a5, #d79e12 68%, #774b00) !important;
+    border: 1px solid rgba(255,244,184,.90) !important;
+    box-shadow: 0 0 16px rgba(255,215,108,.44), inset 0 1px 0 rgba(255,255,255,.58) !important;
+}
+
+#giveClueBtn.blackTick,
+body.discordActivity #giveClueBtn.blackTick {
+    color: #ffeaa7 !important;
+    background: linear-gradient(180deg, #333337, #09090a 72%, #000) !important;
+    border: 1px solid rgba(255,215,108,.34) !important;
+    box-shadow: 0 0 14px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+
+#currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #currentClueDock.currentClueDock:not(.hidden) {
+    --clue-chars: 4;
+    width: fit-content !important;
+    min-width: min(330px, calc(100vw - 28px)) !important;
+    max-width: min(650px, calc(100vw - 28px)) !important;
+    grid-template-columns: auto minmax(180px, calc(13px * var(--clue-chars) + 110px)) 42px !important;
+    gap: 8px !important;
+    padding: 8px 11px !important;
+    border-radius: 18px !important;
+}
+
+#currentClueDock .currentClueLabel,
+body.discordActivity #currentClueDock .currentClueLabel {
+    font-size: 13px !important;
+    letter-spacing: .6px !important;
+    text-align: center !important;
+}
+
+#currentClueDock b,
+body.discordActivity #currentClueDock b {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 180px !important;
+    padding: 7px 12px !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 16px !important;
+}
+
+/* Red crossed Wi-Fi icon for the five-second reconnect grace period. */
+#game .offlineIcon,
+body.discordActivity #game .offlineIcon {
+    position: relative !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    width: 22px !important;
+    height: 18px !important;
+    margin-left: 6px !important;
+    color: #ff3d3d !important;
+    filter: drop-shadow(0 0 5px rgba(255,61,61,.48)) !important;
+    opacity: 1 !important;
+}
+
+#game .offlineIcon > span,
+body.discordActivity #game .offlineIcon > span {
+    filter: grayscale(1) sepia(1) saturate(7) hue-rotate(315deg) brightness(1.12) !important;
+}
+
+#game .offlineIcon::after,
+body.discordActivity #game .offlineIcon::after {
+    content: "" !important;
+    position: absolute !important;
+    left: 1px !important;
+    top: 8px !important;
+    width: 20px !important;
+    height: 2px !important;
+    border-radius: 2px !important;
+    background: #ff3434 !important;
+    transform: rotate(-43deg) !important;
+    box-shadow: 0 0 5px rgba(255,52,52,.72) !important;
+}
+
+#game .player.offline,
+body.discordActivity #game .player.offline {
+    opacity: .82 !important;
+    filter: none !important;
+    border-color: rgba(255,61,61,.55) !important;
+}
+
+#game .draggablePlayer,
+body.discordActivity #game .draggablePlayer {
+    cursor: grab !important;
+}
+
+#game .draggablePlayer:active,
+body.discordActivity #game .draggablePlayer:active {
+    cursor: grabbing !important;
+}
+
+@media (max-width: 980px) {
+    .spectatorMenuWrap {
+        position: fixed !important;
+        left: 10px !important;
+        top: 10px !important;
+    }
+
+    #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #bottomClueDock.bottomClueDock:not(.hidden) {
+        min-width: min(430px, calc(100vw - 24px)) !important;
+        grid-template-columns: auto minmax(180px, 1fr) 48px 38px !important;
+    }
+
+    #bottomClueDock #clueWord,
+    body.discordActivity #bottomClueDock #clueWord {
+        min-width: 180px !important;
+    }
+}
+
+@media (max-width: 620px) {
+    .spectatorToggleBtn {
+        min-width: 42px !important;
+        width: 42px !important;
+        padding: 0 !important;
+    }
+
+    .spectatorToggleBtn #spectatorToggleText,
+    .spectatorToggleBtn span:last-child {
+        display: none !important;
+    }
+
+    .spectatorDropdown {
+        width: min(220px, calc(100vw - 20px)) !important;
+    }
+
+    #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #bottomClueDock.bottomClueDock:not(.hidden) {
+        min-width: min(350px, calc(100vw - 18px)) !important;
+        max-width: min(350px, calc(100vw - 18px)) !important;
+        grid-template-columns: auto minmax(130px, 1fr) 44px 36px !important;
+        gap: 5px !important;
+        padding: 6px !important;
+    }
+
+    #bottomClueDock .dockText.cluePromptText {
+        min-width: 48px !important;
+    }
+
+    #bottomClueDock .dockText.cluePromptText b {
+        font-size: 11px !important;
+    }
+
+    #bottomClueDock #clueWord,
+    body.discordActivity #bottomClueDock #clueWord {
+        min-width: 130px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        font-size: 13px !important;
+    }
+
+    #bottomClueDock #clueNumber,
+    body.discordActivity #bottomClueDock #clueNumber,
+    #bottomClueDock #giveClueBtn.clueSubmitTick,
+    body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+    }
+}
+
+
+/* Final contrast and size alignment for the new game-page cards and clue displays. */
+#game #goldPanel .playerBody > b,
+#game #goldPanel .playerNameText,
+body.discordActivity #game #goldPanel .playerBody > b,
+body.discordActivity #game #goldPanel .playerNameText {
+    color: #211300 !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,.46) !important;
+}
+
+#game #blackPanel .playerBody > b,
+#game #blackPanel .playerNameText,
+body.discordActivity #game #blackPanel .playerBody > b,
+body.discordActivity #game #blackPanel .playerNameText {
+    color: #fff1bd !important;
+    text-shadow: 0 0 12px rgba(255,215,108,.24), 0 1px 0 #000 !important;
+}
+
+#currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #currentClueDock.currentClueDock:not(.hidden) {
+    min-width: min(460px, calc(100vw - 28px)) !important;
+    grid-template-columns: 62px minmax(240px, calc(13px * var(--clue-chars) + 150px)) 54px !important;
+}
+
+@media (max-width: 620px) {
+    #currentClueDock.currentClueDock:not(.hidden),
+    body.discordActivity #currentClueDock.currentClueDock:not(.hidden) {
+        min-width: min(350px, calc(100vw - 18px)) !important;
+        max-width: min(350px, calc(100vw - 18px)) !important;
+        grid-template-columns: 48px minmax(180px, 1fr) 44px !important;
+        gap: 5px !important;
+        padding: 6px !important;
+    }
+}
+
+/* Follow-up game-page polish: clean empty seats, team-colored placement targets, and larger clue/log controls. */
+
+/* Keep empty operative and spymaster role cards clean; player cards appear only after somebody joins. */
+#game .teamPanel section.emptyRoleSection .teamList:empty,
+body.discordActivity #game .teamPanel section.emptyRoleSection .teamList:empty {
+    min-height: 4px !important;
+    height: 4px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+#game .teamPanel section.emptyRoleSection,
+body.discordActivity #game .teamPanel section.emptyRoleSection {
+    min-height: 58px !important;
+}
+
+/* Black-team players use the same complete card treatment as Gold, with a true black finish. */
+#game #blackPanel .player,
+body.discordActivity #game #blackPanel .player {
+    background:
+        radial-gradient(circle at 18% 12%, rgba(255,255,255,.10), transparent 30%),
+        linear-gradient(145deg, #343438 0%, #101012 56%, #000 100%) !important;
+    border: 1px solid rgba(255,215,108,.46) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.11), 0 9px 18px rgba(0,0,0,.52), 0 0 13px rgba(255,215,108,.10) !important;
+}
+
+/* Move Options immediately left of the Black panel on desktop instead of inside its lower corner. */
+@media (min-width: 1181px) {
+    #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar {
+        left: auto !important;
+        right: calc(clamp(158px, 13vw, 190px) + 2px) !important;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1180px) {
+    #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar {
+        left: auto !important;
+        right: 138px !important;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 6px) !important;
+    }
+}
+
+/* Replace the old blue dashed drop box with an animated team-specific release target. */
+#game .teamList.dropReady,
+body.discordActivity #game .teamList.dropReady {
+    outline: 0 !important;
+    background: transparent !important;
+}
+
+#game .teamPanel section.dropTargetActive,
+body.discordActivity #game .teamPanel section.dropTargetActive {
+    isolation: isolate !important;
+    transform: translateZ(0) scale(1.025) !important;
+    overflow: hidden !important;
+}
+
+#game .teamPanel section.dropTargetActive::after,
+body.discordActivity #game .teamPanel section.dropTargetActive::after {
+    content: "RELEASE TO PLACE" !important;
+    position: absolute !important;
+    inset: 4px !important;
+    z-index: 40 !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 13px !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-size: 11px !important;
+    letter-spacing: .65px !important;
+    text-align: center !important;
+    pointer-events: none !important;
+    animation: releaseTargetPulse .78s ease-in-out infinite !important;
+}
+
+#game #goldPanel section.dropTargetGold,
+body.discordActivity #game #goldPanel section.dropTargetGold {
+    box-shadow: 0 0 0 3px #ffe275, 0 0 28px rgba(255,215,108,.82), inset 0 0 24px rgba(255,255,255,.32) !important;
+}
+
+#game #goldPanel section.dropTargetGold::after,
+body.discordActivity #game #goldPanel section.dropTargetGold::after {
+    color: #241400 !important;
+    background: linear-gradient(115deg, rgba(255,250,200,.91), rgba(255,201,43,.86), rgba(255,245,174,.91)) !important;
+    border: 2px solid rgba(91,55,0,.62) !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,.55) !important;
+}
+
+#game #blackPanel section.dropTargetBlack,
+body.discordActivity #game #blackPanel section.dropTargetBlack {
+    box-shadow: 0 0 0 3px #151515, 0 0 0 5px rgba(255,215,108,.72), 0 0 30px rgba(0,0,0,.92), inset 0 0 22px rgba(255,215,108,.12) !important;
+}
+
+#game #blackPanel section.dropTargetBlack::after,
+body.discordActivity #game #blackPanel section.dropTargetBlack::after {
+    color: #fff0b0 !important;
+    background: linear-gradient(115deg, rgba(52,52,56,.94), rgba(4,4,5,.94), rgba(43,43,46,.94)) !important;
+    border: 2px solid rgba(255,215,108,.66) !important;
+    text-shadow: 0 0 12px rgba(255,215,108,.46), 0 1px 0 #000 !important;
+}
+
+@keyframes releaseTargetPulse {
+    0%, 100% { opacity: .82; filter: brightness(1); transform: scale(.985); }
+    50% { opacity: 1; filter: brightness(1.18); transform: scale(1); }
+}
+
+#game .player.dragging,
+body.discordActivity #game .player.dragging {
+    opacity: .38 !important;
+    transform: scale(.94) !important;
+    filter: saturate(.8) !important;
+}
+
+#game .draggablePlayer,
+body.discordActivity #game .draggablePlayer {
+    touch-action: none !important;
+}
+
+.touchDragGhost {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    z-index: 250000 !important;
+    width: min(190px, 42vw) !important;
+    margin: 0 !important;
+    transform: translate(-50%, -58%) scale(1.06) !important;
+    opacity: .94 !important;
+    pointer-events: none !important;
+    box-shadow: 0 18px 42px rgba(0,0,0,.62), 0 0 24px rgba(255,215,108,.34) !important;
+}
+
+/* The clue-entry shell uses a title row and full-height word, number, and submit controls. */
+#bottomClueDock.bottomClueDock:not(.hidden),
+body.discordActivity #bottomClueDock.bottomClueDock:not(.hidden),
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
+    --clue-chars: 4;
+    width: fit-content !important;
+    min-width: min(555px, calc(100vw - 28px)) !important;
+    max-width: min(860px, calc(100vw - 28px)) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(330px, calc(15px * var(--clue-chars) + 180px)) 66px 58px !important;
+    grid-template-rows: 17px 52px !important;
+    grid-template-areas:
+        "label . ."
+        "word number submit" !important;
+    align-items: stretch !important;
+    gap: 5px 9px !important;
+    padding: 9px 11px 11px !important;
+    border-radius: 19px !important;
+}
+
+#bottomClueDock .dockText.cluePromptText,
+body.discordActivity #bottomClueDock .dockText.cluePromptText {
+    grid-area: label !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 17px !important;
+    margin: 0 !important;
+}
+
+#bottomClueDock .dockText.cluePromptText b,
+body.discordActivity #bottomClueDock .dockText.cluePromptText b {
+    display: block !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    letter-spacing: .7px !important;
+    text-align: center !important;
+}
+
+#bottomClueDock .clueWordLabel,
+body.discordActivity #bottomClueDock .clueWordLabel {
+    grid-area: word !important;
+    height: 52px !important;
+}
+
+#bottomClueDock .numberLabel,
+body.discordActivity #bottomClueDock .numberLabel {
+    grid-area: number !important;
+    width: 66px !important;
+    max-width: 66px !important;
+    height: 52px !important;
+}
+
+#bottomClueDock #giveClueBtn.clueSubmitTick,
+body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+    grid-area: submit !important;
+    width: 58px !important;
+    min-width: 58px !important;
+    max-width: 58px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    border-radius: 14px !important;
+    font-size: 27px !important;
+}
+
+#bottomClueDock #clueWord,
+body.discordActivity #bottomClueDock #clueWord,
+#bottomClueDock #clueNumber,
+body.discordActivity #bottomClueDock #clueNumber {
+    width: 100% !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    margin: 0 !important;
+    border-radius: 14px !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+
+#bottomClueDock #clueWord,
+body.discordActivity #bottomClueDock #clueWord {
+    min-width: 330px !important;
+    padding: 10px 16px !important;
+    text-align: center !important;
+}
+
+#bottomClueDock #clueNumber,
+body.discordActivity #bottomClueDock #clueNumber {
+    min-width: 66px !important;
+    padding: 0 5px !important;
+    font-size: 20px !important;
+    font-weight: 1000 !important;
+}
+
+#bottomClueDock.goldClueTurn #clueNumber,
+body.discordActivity #bottomClueDock.goldClueTurn #clueNumber {
+    color: #201200 !important;
+    background: linear-gradient(180deg, #fff4b4, #e0a71d 68%, #875700) !important;
+    border-color: rgba(255,243,178,.94) !important;
+    box-shadow: 0 0 15px rgba(255,215,108,.38), inset 0 1px 0 rgba(255,255,255,.58) !important;
+}
+
+#bottomClueDock.blackClueTurn #clueNumber,
+body.discordActivity #bottomClueDock.blackClueTurn #clueNumber {
+    color: #ffeaa8 !important;
+    background: linear-gradient(180deg, #37373b, #09090a 72%, #000) !important;
+    border-color: rgba(255,215,108,.50) !important;
+    box-shadow: 0 0 14px rgba(0,0,0,.72), inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+
+/* Operatives see the same larger clue shell, with CLUE above the word and a separate team-colored number. */
+#currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #currentClueDock.currentClueDock:not(.hidden),
+#game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden) {
+    --clue-chars: 4;
+    width: fit-content !important;
+    min-width: min(510px, calc(100vw - 28px)) !important;
+    max-width: min(850px, calc(100vw - 28px)) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(350px, calc(15px * var(--clue-chars) + 190px)) 68px !important;
+    grid-template-rows: 18px 54px !important;
+    grid-template-areas:
+        "label ."
+        "word number" !important;
+    align-items: stretch !important;
+    gap: 5px 10px !important;
+    padding: 9px 12px 12px !important;
+    border-radius: 20px !important;
+    overflow: visible !important;
+}
+
+#currentClueDock .currentClueLabel,
+body.discordActivity #currentClueDock .currentClueLabel {
+    grid-area: label !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 18px !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    letter-spacing: .75px !important;
+}
+
+#currentClueDock b,
+body.discordActivity #currentClueDock b {
+    grid-area: word !important;
+    width: 100% !important;
+    min-width: 350px !important;
+    max-width: none !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    margin: 0 !important;
+    padding: 10px 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 15px !important;
+    font-size: clamp(18px, 1.4vw, 24px) !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+#currentClueDock strong,
+body.discordActivity #currentClueDock strong {
+    grid-area: number !important;
+    width: 68px !important;
+    min-width: 68px !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 15px !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
+}
+
+#currentClueDock.blue strong,
+body.discordActivity #currentClueDock.blue strong {
+    color: #211300 !important;
+    background: linear-gradient(180deg, #fff2aa, #dba014 70%, #754900) !important;
+    border: 1px solid rgba(255,244,184,.92) !important;
+    box-shadow: 0 0 16px rgba(255,215,108,.42), inset 0 1px 0 rgba(255,255,255,.58) !important;
+}
+
+#currentClueDock.red strong,
+body.discordActivity #currentClueDock.red strong {
+    color: #ffeaa7 !important;
+    background: linear-gradient(180deg, #343438, #09090a 72%, #000) !important;
+    border: 1px solid rgba(255,215,108,.48) !important;
+    box-shadow: 0 0 15px rgba(0,0,0,.74), inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+
+/* Slightly enlarge every clue/pick history capsule while keeping each one on a single line. */
+#game .gameLogEntry.pickLog,
+#game .gameLogEntry.passLog,
+body.discordActivity #game .gameLogEntry.pickLog,
+body.discordActivity #game .gameLogEntry.passLog {
+    min-width: 76px !important;
+    height: 29px !important;
+    min-height: 29px !important;
+    max-height: 29px !important;
+}
+
+#game .gameLogEntry.pickLog .logPickWord,
+#game .gameLogEntry.passLog .logPickWord,
+#game .logPickWord,
+body.discordActivity #game .gameLogEntry.pickLog .logPickWord,
+body.discordActivity #game .gameLogEntry.passLog .logPickWord,
+body.discordActivity #game .logPickWord {
+    height: 29px !important;
+    min-height: 29px !important;
+    max-height: 29px !important;
+    gap: 5px !important;
+    padding: 3px 9px 3px 3px !important;
+    white-space: nowrap !important;
+}
+
+#game .logPickWord span,
+#game .gameLogEntry.pickLog span,
+#game .gameLogEntry.passLog span,
+body.discordActivity #game .logPickWord span,
+body.discordActivity #game .gameLogEntry.pickLog span,
+body.discordActivity #game .gameLogEntry.passLog span {
+    font-size: 10.5px !important;
+    white-space: nowrap !important;
+}
+
+#game .logLenMed .logPickWord span,
+body.discordActivity #game .logLenMed .logPickWord span {
+    font-size: 9.8px !important;
+}
+
+#game .logLenLong .logPickWord span,
+#game .logLenXL .logPickWord span,
+body.discordActivity #game .logLenLong .logPickWord span,
+body.discordActivity #game .logLenXL .logPickWord span {
+    font-size: 8.7px !important;
+    white-space: nowrap !important;
+}
+
+#game .characterLogFace,
+#game .logUserAvatar,
+#game .logSpyAvatar,
+#game .characterLogFace.customAvatar,
+#game .logUserAvatar.customAvatar,
+#game .logSpyAvatar.customAvatar,
+body.discordActivity #game .characterLogFace,
+body.discordActivity #game .logUserAvatar,
+body.discordActivity #game .logSpyAvatar,
+body.discordActivity #game .characterLogFace.customAvatar,
+body.discordActivity #game .logUserAvatar.customAvatar,
+body.discordActivity #game .logSpyAvatar.customAvatar {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    flex: 0 0 22px !important;
+    font-size: 14px !important;
+}
+
+#game .gameLogEntry.hintLog,
+body.discordActivity #game .gameLogEntry.hintLog {
+    min-width: 110px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    grid-template-columns: 24px auto 27px !important;
+    gap: 5px !important;
+    padding: 4px 8px !important;
+    white-space: nowrap !important;
+}
+
+#game .gameLogEntry.hintLog b,
+body.discordActivity #game .gameLogEntry.hintLog b {
+    font-size: 10.5px !important;
+    white-space: nowrap !important;
+}
+
+#game .gameLogEntry.hintLog.logLenLong b,
+#game .gameLogEntry.hintLog.logLenXL b,
+body.discordActivity #game .gameLogEntry.hintLog.logLenLong b,
+body.discordActivity #game .gameLogEntry.hintLog.logLenXL b {
+    font-size: 9px !important;
+    white-space: nowrap !important;
+}
+
+#game .gameLogEntry.hintLog span:not(.characterLogFace):not(.logSpyAvatar),
+body.discordActivity #game .gameLogEntry.hintLog span:not(.characterLogFace):not(.logSpyAvatar) {
+    width: 25px !important;
+    min-width: 25px !important;
+    height: 25px !important;
+    font-size: 11px !important;
+}
+
+@media (max-width: 620px) {
+    #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #bottomClueDock.bottomClueDock:not(.hidden),
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
+        min-width: min(390px, calc(100vw - 16px)) !important;
+        max-width: min(390px, calc(100vw - 16px)) !important;
+        grid-template-columns: minmax(215px, 1fr) 54px 48px !important;
+        grid-template-rows: 15px 46px !important;
+        gap: 4px 6px !important;
+        padding: 7px 8px 9px !important;
+    }
+
+    #bottomClueDock .clueWordLabel,
+    #bottomClueDock .numberLabel,
+    body.discordActivity #bottomClueDock .clueWordLabel,
+    body.discordActivity #bottomClueDock .numberLabel,
+    #bottomClueDock #clueWord,
+    #bottomClueDock #clueNumber,
+    body.discordActivity #bottomClueDock #clueWord,
+    body.discordActivity #bottomClueDock #clueNumber,
+    #bottomClueDock #giveClueBtn.clueSubmitTick,
+    body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+        height: 46px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
+    }
+
+    #bottomClueDock #clueWord,
+    body.discordActivity #bottomClueDock #clueWord {
+        min-width: 215px !important;
+        font-size: 15px !important;
+    }
+
+    #bottomClueDock .numberLabel,
+    body.discordActivity #bottomClueDock .numberLabel,
+    #bottomClueDock #clueNumber,
+    body.discordActivity #bottomClueDock #clueNumber {
+        width: 54px !important;
+        min-width: 54px !important;
+        max-width: 54px !important;
+    }
+
+    #bottomClueDock #giveClueBtn.clueSubmitTick,
+    body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+        width: 48px !important;
+        min-width: 48px !important;
+        max-width: 48px !important;
+    }
+
+    #currentClueDock.currentClueDock:not(.hidden),
+    body.discordActivity #currentClueDock.currentClueDock:not(.hidden),
+    #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
+    body.discordActivity #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden) {
+        min-width: min(390px, calc(100vw - 16px)) !important;
+        max-width: min(390px, calc(100vw - 16px)) !important;
+        grid-template-columns: minmax(260px, 1fr) 58px !important;
+        grid-template-rows: 16px 48px !important;
+        gap: 4px 7px !important;
+        padding: 7px 9px 10px !important;
+    }
+
+    #currentClueDock b,
+    body.discordActivity #currentClueDock b {
+        min-width: 260px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        padding: 8px 12px !important;
+        font-size: 17px !important;
+    }
+
+    #currentClueDock strong,
+    body.discordActivity #currentClueDock strong {
+        width: 58px !important;
+        min-width: 58px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        font-size: 19px !important;
+    }
+}
+
+/* Compact clue controls: remove the decorative outer shell and keep all three controls perfectly aligned. */
+#bottomClueDock.bottomClueDock:not(.hidden),
+body.discordActivity #bottomClueDock.bottomClueDock:not(.hidden),
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: 14px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 28px) !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    display: grid !important;
+    grid-template-columns: minmax(260px, calc(13px * var(--clue-chars) + 190px)) 64px 64px !important;
+    grid-template-rows: 56px !important;
+    grid-template-areas: "word number submit" !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    gap: 9px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    transform: translateX(-50%) !important;
+    overflow: visible !important;
+}
+
+#bottomClueDock .dockText.cluePromptText,
+body.discordActivity #bottomClueDock .dockText.cluePromptText {
+    display: none !important;
+}
+
+#bottomClueDock .clueWordLabel,
+#bottomClueDock .numberLabel,
+body.discordActivity #bottomClueDock .clueWordLabel,
+body.discordActivity #bottomClueDock .numberLabel {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#bottomClueDock .clueWordLabel,
+body.discordActivity #bottomClueDock .clueWordLabel {
+    grid-area: word !important;
+}
+
+#bottomClueDock .numberLabel,
+body.discordActivity #bottomClueDock .numberLabel {
+    grid-area: number !important;
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+}
+
+#bottomClueDock #clueWord,
+body.discordActivity #bottomClueDock #clueWord,
+#bottomClueDock #clueNumber,
+body.discordActivity #bottomClueDock #clueNumber,
+#bottomClueDock #giveClueBtn.clueSubmitTick,
+body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    margin: 0 !important;
+    border-radius: 15px !important;
+    box-sizing: border-box !important;
+    align-self: stretch !important;
+}
+
+#bottomClueDock #clueWord,
+body.discordActivity #bottomClueDock #clueWord {
+    width: 100% !important;
+    min-width: 260px !important;
+    padding: 10px 18px !important;
+    font-size: 19px !important;
+    line-height: 1 !important;
+    text-align: center !important;
+}
+
+#bottomClueDock #clueNumber,
+body.discordActivity #bottomClueDock #clueNumber {
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+    padding: 0 5px !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
+}
+
+#bottomClueDock #giveClueBtn.clueSubmitTick,
+body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+    grid-area: submit !important;
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+    padding: 0 !important;
+    font-size: 28px !important;
+    line-height: 1 !important;
+}
+
+/* Operative clue display: no CLUE label and no outer card, only a word-sized capsule plus a separate count. */
+#currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #currentClueDock.currentClueDock:not(.hidden),
+#game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden) {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: 58px !important;
+    width: max-content !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 28px) !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    display: inline-grid !important;
+    grid-template-columns: max-content 54px !important;
+    grid-template-rows: 50px !important;
+    grid-template-areas: "word number" !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    transform: translateX(-50%) !important;
+    overflow: visible !important;
+}
+
+#currentClueDock .currentClueLabel,
+body.discordActivity #currentClueDock .currentClueLabel {
+    display: none !important;
+}
+
+#currentClueDock b,
+body.discordActivity #currentClueDock b {
+    grid-area: word !important;
+    width: max-content !important;
+    min-width: calc((var(--clue-chars) * 1ch) + 42px) !important;
+    max-width: min(620px, calc(100vw - 96px)) !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    margin: 0 !important;
+    padding: 0 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 15px !important;
+    font-size: clamp(18px, 1.25vw, 23px) !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    box-sizing: border-box !important;
+}
+
+#currentClueDock strong,
+body.discordActivity #currentClueDock strong {
+    grid-area: number !important;
+    width: 54px !important;
+    min-width: 54px !important;
+    max-width: 54px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 15px !important;
+    font-size: 21px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 620px) {
+    #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #bottomClueDock.bottomClueDock:not(.hidden),
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
+        bottom: 10px !important;
+        height: 50px !important;
+        min-height: 50px !important;
+        grid-template-columns: minmax(205px, 1fr) 54px 54px !important;
+        grid-template-rows: 50px !important;
+        gap: 6px !important;
+        max-width: calc(100vw - 16px) !important;
+    }
+
+    #bottomClueDock .clueWordLabel,
+    #bottomClueDock .numberLabel,
+    body.discordActivity #bottomClueDock .clueWordLabel,
+    body.discordActivity #bottomClueDock .numberLabel,
+    #bottomClueDock #clueWord,
+    #bottomClueDock #clueNumber,
+    body.discordActivity #bottomClueDock #clueWord,
+    body.discordActivity #bottomClueDock #clueNumber,
+    #bottomClueDock #giveClueBtn.clueSubmitTick,
+    body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+        height: 50px !important;
+        min-height: 50px !important;
+        max-height: 50px !important;
+    }
+
+    #bottomClueDock #clueWord,
+    body.discordActivity #bottomClueDock #clueWord {
+        min-width: 205px !important;
+        padding: 8px 12px !important;
+        font-size: 17px !important;
+    }
+
+    #bottomClueDock .numberLabel,
+    body.discordActivity #bottomClueDock .numberLabel,
+    #bottomClueDock #clueNumber,
+    body.discordActivity #bottomClueDock #clueNumber,
+    #bottomClueDock #giveClueBtn.clueSubmitTick,
+    body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+        width: 54px !important;
+        min-width: 54px !important;
+        max-width: 54px !important;
+    }
+
+    #currentClueDock.currentClueDock:not(.hidden),
+    body.discordActivity #currentClueDock.currentClueDock:not(.hidden),
+    #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
+    body.discordActivity #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden) {
+        bottom: 64px !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        grid-template-columns: max-content 50px !important;
+        grid-template-rows: 46px !important;
+        gap: 6px !important;
+        max-width: calc(100vw - 16px) !important;
+    }
+
+    #currentClueDock b,
+    body.discordActivity #currentClueDock b {
+        min-width: calc((var(--clue-chars) * 1ch) + 32px) !important;
+        max-width: calc(100vw - 78px) !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        padding: 0 13px !important;
+        font-size: 17px !important;
+    }
+
+    #currentClueDock strong,
+    body.discordActivity #currentClueDock strong {
+        width: 50px !important;
+        min-width: 50px !important;
+        max-width: 50px !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        font-size: 19px !important;
+    }
+}
+
+/* Final game-page alignment patch: fixed spectator anchor, larger clue entry controls, and inline operative PASS. */
+.spectatorMenuWrap,
+body.discordActivity .spectatorMenuWrap,
+#game .spectatorMenuWrap,
+body.discordActivity #game .spectatorMenuWrap {
+    position: fixed !important;
+    left: max(8px, env(safe-area-inset-left, 0px)) !important;
+    top: max(8px, env(safe-area-inset-top, 0px)) !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    z-index: 12050 !important;
+}
+
+/* Leave a clearer gap between Options and the Black-team panel. */
+@media (min-width: 1181px) {
+    #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar {
+        right: calc(clamp(158px, 13vw, 190px) + 26px) !important;
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1180px) {
+    #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar {
+        right: 156px !important;
+    }
+}
+
+/* Spymaster clue entry: larger word/count controls and a perfectly aligned submit tick. */
+#bottomClueDock.bottomClueDock:not(.hidden),
+body.discordActivity #bottomClueDock.bottomClueDock:not(.hidden),
+#game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
+    height: 62px !important;
+    min-height: 62px !important;
+    grid-template-columns: minmax(360px, calc(14px * var(--clue-chars) + 220px)) 74px 72px !important;
+    grid-template-rows: 62px !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+#bottomClueDock .clueWordLabel,
+#bottomClueDock .numberLabel,
+body.discordActivity #bottomClueDock .clueWordLabel,
+body.discordActivity #bottomClueDock .numberLabel {
+    height: 62px !important;
+    min-height: 62px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#bottomClueDock .numberLabel,
+body.discordActivity #bottomClueDock .numberLabel,
+#bottomClueDock #clueNumber,
+body.discordActivity #bottomClueDock #clueNumber {
+    width: 74px !important;
+    min-width: 74px !important;
+    max-width: 74px !important;
+}
+
+#bottomClueDock #clueWord,
+body.discordActivity #bottomClueDock #clueWord,
+#bottomClueDock #clueNumber,
+body.discordActivity #bottomClueDock #clueNumber,
+#bottomClueDock #giveClueBtn.clueSubmitTick,
+body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+    height: 62px !important;
+    min-height: 62px !important;
+    max-height: 62px !important;
+    margin: 0 !important;
+    align-self: center !important;
+    vertical-align: middle !important;
+}
+
+#bottomClueDock #clueWord,
+body.discordActivity #bottomClueDock #clueWord {
+    min-width: 360px !important;
+    padding: 0 20px !important;
+    font-size: 21px !important;
+}
+
+#bottomClueDock #clueNumber,
+body.discordActivity #bottomClueDock #clueNumber {
+    padding: 0 6px !important;
+    font-size: 25px !important;
+}
+
+#bottomClueDock #giveClueBtn.clueSubmitTick,
+body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    font-size: 29px !important;
+    transform: none !important;
+}
+
+#bottomClueDock #giveClueBtn.clueSubmitTick:hover,
+#bottomClueDock #giveClueBtn.clueSubmitTick:active,
+body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick:hover,
+body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick:active {
+    transform: none !important;
+}
+
+/* Operative clue row: translucent clue capsule, separate count, and compact PASS button in one line. */
+#currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #currentClueDock.currentClueDock:not(.hidden),
+#game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
+body.discordActivity #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden) {
+    bottom: 14px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    grid-template-columns: max-content 54px !important;
+    grid-template-rows: 52px !important;
+    grid-template-areas: "word number" !important;
+    gap: 8px !important;
+}
+
+#currentClueDock.currentClueDock.hasCurrentCluePass:not(.hidden),
+body.discordActivity #currentClueDock.currentClueDock.hasCurrentCluePass:not(.hidden) {
+    grid-template-columns: max-content 54px 70px !important;
+    grid-template-areas: "word number pass" !important;
+}
+
+#currentClueDock b,
+body.discordActivity #currentClueDock b {
+    height: 52px !important;
+    min-height: 52px !important;
+    padding: 0 18px !important;
+    color: #fff5cf !important;
+    background: rgba(17, 14, 9, .68) !important;
+    border: 1px solid rgba(255, 215, 108, .34) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 8px 18px rgba(0,0,0,.30) !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+#currentClueDock strong,
+body.discordActivity #currentClueDock strong {
+    width: 54px !important;
+    min-width: 54px !important;
+    max-width: 54px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+}
+
+#currentClueDock .currentCluePass,
+body.discordActivity #currentClueDock .currentCluePass {
+    grid-area: pass !important;
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    letter-spacing: .45px !important;
+    line-height: 1 !important;
+    color: #fff2b5 !important;
+    background: linear-gradient(180deg, #3b3b3f, #09090a 74%) !important;
+    border: 1px solid rgba(255, 215, 108, .46) !important;
+    box-shadow: 0 0 14px rgba(255,215,108,.18), 0 7px 15px rgba(0,0,0,.36) !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+#currentClueDock.blue .currentCluePass,
+body.discordActivity #currentClueDock.blue .currentCluePass {
+    color: #211300 !important;
+    background: linear-gradient(180deg, #fff2a8, #d69b0c 72%) !important;
+    border-color: rgba(255,244,184,.88) !important;
+}
+
+#currentClueDock .currentCluePass:hover,
+#currentClueDock .currentCluePass:active,
+body.discordActivity #currentClueDock .currentCluePass:hover,
+body.discordActivity #currentClueDock .currentCluePass:active {
+    transform: none !important;
+}
+
+/* The retired detached PASS dock is intentionally suppressed. */
+#topOperativeActions.bottomPassBar,
+body.discordActivity #topOperativeActions.bottomPassBar {
+    display: none !important;
+}
+
+@media (max-width: 620px) {
+    #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #bottomClueDock.bottomClueDock:not(.hidden),
+    #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden),
+    body.discordActivity #game.gameV9:not(.hidden) #bottomClueDock.bottomClueDock:not(.hidden) {
+        height: 54px !important;
+        min-height: 54px !important;
+        grid-template-columns: minmax(220px, 1fr) 58px 56px !important;
+        grid-template-rows: 54px !important;
+        gap: 6px !important;
+    }
+
+    #bottomClueDock .clueWordLabel,
+    #bottomClueDock .numberLabel,
+    body.discordActivity #bottomClueDock .clueWordLabel,
+    body.discordActivity #bottomClueDock .numberLabel,
+    #bottomClueDock #clueWord,
+    #bottomClueDock #clueNumber,
+    body.discordActivity #bottomClueDock #clueWord,
+    body.discordActivity #bottomClueDock #clueNumber,
+    #bottomClueDock #giveClueBtn.clueSubmitTick,
+    body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+        height: 54px !important;
+        min-height: 54px !important;
+        max-height: 54px !important;
+    }
+
+    #bottomClueDock #clueWord,
+    body.discordActivity #bottomClueDock #clueWord {
+        min-width: 220px !important;
+        font-size: 18px !important;
+    }
+
+    #bottomClueDock .numberLabel,
+    body.discordActivity #bottomClueDock .numberLabel,
+    #bottomClueDock #clueNumber,
+    body.discordActivity #bottomClueDock #clueNumber {
+        width: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
+    }
+
+    #bottomClueDock #giveClueBtn.clueSubmitTick,
+    body.discordActivity #bottomClueDock #giveClueBtn.clueSubmitTick {
+        width: 56px !important;
+        min-width: 56px !important;
+        max-width: 56px !important;
+    }
+
+    #currentClueDock.currentClueDock:not(.hidden),
+    body.discordActivity #currentClueDock.currentClueDock:not(.hidden),
+    #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden),
+    body.discordActivity #game.gameV9:not(.hidden) #currentClueDock.currentClueDock:not(.hidden) {
+        bottom: 12px !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        grid-template-columns: max-content 48px !important;
+        grid-template-rows: 46px !important;
+    }
+
+    #currentClueDock.currentClueDock.hasCurrentCluePass:not(.hidden),
+    body.discordActivity #currentClueDock.currentClueDock.hasCurrentCluePass:not(.hidden) {
+        grid-template-columns: max-content 48px 60px !important;
+    }
+
+    #currentClueDock b,
+    body.discordActivity #currentClueDock b,
+    #currentClueDock strong,
+    body.discordActivity #currentClueDock strong {
+        height: 46px !important;
+        min-height: 46px !important;
+    }
+
+    #currentClueDock strong,
+    body.discordActivity #currentClueDock strong {
+        width: 48px !important;
+        min-width: 48px !important;
+        max-width: 48px !important;
+    }
+
+    #currentClueDock .currentCluePass,
+    body.discordActivity #currentClueDock .currentCluePass {
+        width: 60px !important;
+        min-width: 60px !important;
+        max-width: 60px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        font-size: 10px !important;
+    }
+}
+
+/* Final clue-control override: defeat older high-specificity positioning rules without changing other layouts. */
+html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden),
+html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) {
+    display: grid !important;
+    grid-template-columns: minmax(360px, calc(14px * var(--clue-chars) + 220px)) 74px 72px !important;
+    grid-template-rows: 62px !important;
+    grid-auto-flow: column !important;
+    align-items: stretch !important;
+    justify-items: stretch !important;
+    column-gap: 10px !important;
+    height: 62px !important;
+    min-height: 62px !important;
+    max-height: 62px !important;
+}
+
+html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) > .clueWordLabel,
+html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) > .numberLabel,
+html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) > .clueWordLabel,
+html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) > .numberLabel {
+    position: static !important;
+    inset: auto !important;
+    grid-row: 1 !important;
+    align-self: stretch !important;
+    justify-self: stretch !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    height: 62px !important;
+    min-height: 62px !important;
+    max-height: 62px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+}
+
+html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn.clueSubmitTick,
+html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn.clueSubmitTick {
+    position: static !important;
+    inset: auto !important;
+    grid-row: 1 !important;
+    align-self: stretch !important;
+    justify-self: stretch !important;
+    box-sizing: border-box !important;
+    height: 62px !important;
+    min-height: 62px !important;
+    max-height: 62px !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+
+html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn.clueSubmitTick,
+html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn.clueSubmitTick {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+}
+
+/* Operative clue row must remain one unbroken row: clue, number, then PASS. */
+html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
+html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) {
+    display: inline-flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: calc(100vw - 28px) !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    padding: 0 !important;
+    gap: 8px !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px) !important;
+    pointer-events: auto !important;
+}
+
+html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > b,
+html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > strong,
+html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > .currentCluePass,
+html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > b,
+html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > strong,
+html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > .currentCluePass {
+    position: static !important;
+    inset: auto !important;
+    flex: 0 0 auto !important;
+    align-self: center !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+
+html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > b,
+html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > b {
+    max-width: min(48vw, calc(14px * var(--clue-chars) + 68px)) !important;
+    width: max-content !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > strong,
+html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > strong {
+    width: 54px !important;
+    min-width: 54px !important;
+    max-width: 54px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+}
+
+html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock.hasCurrentCluePass:not(.hidden) > .currentCluePass,
+html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock.hasCurrentCluePass:not(.hidden) > .currentCluePass {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    line-height: 1 !important;
+    pointer-events: auto !important;
+}
+
+@media (max-width: 620px) {
+    html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden),
+    html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) {
+        grid-template-columns: minmax(220px, 1fr) 58px 56px !important;
+        grid-template-rows: 54px !important;
+        height: 54px !important;
+        min-height: 54px !important;
+        max-height: 54px !important;
+        column-gap: 6px !important;
+    }
+
+    html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) > .clueWordLabel,
+    html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) > .numberLabel,
+    html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+    html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+    html body #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn.clueSubmitTick,
+    html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) > .clueWordLabel,
+    html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) > .numberLabel,
+    html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #clueWord,
+    html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #clueNumber,
+    html body.discordActivity #game.gameV9:not(.hidden) > #bottomClueDock.bottomClueDock:not(.hidden) #giveClueBtn.clueSubmitTick {
+        height: 54px !important;
+        min-height: 54px !important;
+        max-height: 54px !important;
+    }
+
+    html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden),
+    html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) {
+        height: 46px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
+        gap: 6px !important;
+    }
+
+    html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > b,
+    html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > strong,
+    html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > b,
+    html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > strong {
+        height: 46px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
+    }
+
+    html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > strong,
+    html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > strong {
+        width: 48px !important;
+        min-width: 48px !important;
+        max-width: 48px !important;
+    }
+
+    html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock.hasCurrentCluePass:not(.hidden) > .currentCluePass,
+    html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock.hasCurrentCluePass:not(.hidden) > .currentCluePass {
+        width: 60px !important;
+        min-width: 60px !important;
+        max-width: 60px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        max-height: 38px !important;
+    }
+}
+
+/* Final game-log polish: detach the clue count and let operative avatars fill their frame. */
+html body #game .gameLogEntry.hintLog,
+html body.discordActivity #game .gameLogEntry.hintLog {
+    position: relative !important;
+    grid-template-columns: 24px auto !important;
+    margin-right: 36px !important;
+    overflow: visible !important;
+}
+
+html body #game .gameLogEntry.hintLog > span:last-child:not(.characterLogFace):not(.logSpyAvatar),
+html body.discordActivity #game .gameLogEntry.hintLog > span:last-child:not(.characterLogFace):not(.logSpyAvatar) {
+    position: absolute !important;
+    top: 50% !important;
+    right: -34px !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    z-index: 3 !important;
+}
+
+html body #game .gameLogEntry.pickLog .logUserAvatar,
+html body.discordActivity #game .gameLogEntry.pickLog .logUserAvatar {
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+}
+
+html body #game .gameLogEntry.pickLog .logUserAvatar img,
+html body.discordActivity #game .gameLogEntry.pickLog .logUserAvatar img {
+    width: 132% !important;
+    height: 132% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    transform: scale(1.08) !important;
+    transform-origin: center !important;
+}
+
+/* Game-log cleanup: structural wrappers stay invisible, while each clue/count remains one centered capsule. */
+html body #game .sideLogSection .log > .logRounds,
+html body #game .sideLogSection .log .logRounds > .logRound,
+html body #game .sideLogSection .log .logRound > .logPicks,
+html body.discordActivity #game .sideLogSection .log > .logRounds,
+html body.discordActivity #game .sideLogSection .log .logRounds > .logRound,
+html body.discordActivity #game .sideLogSection .log .logRound > .logPicks {
+    background: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+    padding: 0 !important;
+}
+
+html body #game .sideLogSection .log .logRound,
+html body.discordActivity #game .sideLogSection .log .logRound {
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+html body #game .sideLogSection .log .logPicks,
+html body.discordActivity #game .sideLogSection .log .logPicks {
+    justify-content: center !important;
+    justify-items: center !important;
+    align-items: center !important;
+}
+
+html body #game .gameLogEntry.hintLog,
+html body.discordActivity #game .gameLogEntry.hintLog {
+    position: static !important;
+    display: inline-grid !important;
+    grid-template-columns: 24px max-content 25px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: center !important;
+    width: max-content !important;
+    min-width: 110px !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 4px 7px !important;
+    gap: 5px !important;
+    overflow: hidden !important;
+}
+
+html body #game .gameLogEntry.hintLog > b,
+html body.discordActivity #game .gameLogEntry.hintLog > b {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    text-align: center !important;
+}
+
+html body #game .gameLogEntry.hintLog > span:last-child:not(.characterLogFace):not(.logSpyAvatar),
+html body.discordActivity #game .gameLogEntry.hintLog > span:last-child:not(.characterLogFace):not(.logSpyAvatar) {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    display: grid !important;
+    place-items: center !important;
+    width: 25px !important;
+    min-width: 25px !important;
+    max-width: 25px !important;
+    height: 25px !important;
+    min-height: 25px !important;
+    max-height: 25px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    z-index: auto !important;
+}
+
+/* Final game-log avatar parity: spymaster clues and operative passes use the same full-frame avatar sizing as guesses. */
+html body #game .gameLogEntry.hintLog .logSpyAvatar,
+html body #game .gameLogEntry.passLog .logUserAvatar,
+html body.discordActivity #game .gameLogEntry.hintLog .logSpyAvatar,
+html body.discordActivity #game .gameLogEntry.passLog .logUserAvatar {
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+}
+
+html body #game .gameLogEntry.hintLog .logSpyAvatar img,
+html body #game .gameLogEntry.passLog .logUserAvatar img,
+html body.discordActivity #game .gameLogEntry.hintLog .logSpyAvatar img,
+html body.discordActivity #game .gameLogEntry.passLog .logUserAvatar img {
+    width: 132% !important;
+    height: 132% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    transform: scale(1.08) !important;
+    transform-origin: center !important;
+}
+
+/* Final operative clue spacing and active-team top instruction polish. */
+html body #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > b,
+html body.discordActivity #game.gameV9:not(.hidden) > #currentClueDock.currentClueDock:not(.hidden) > b {
+    box-sizing: border-box !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+}
+
+#clueBadge.turnSubStatus .turnStatusAvatar,
+body.discordActivity #clueBadge.turnSubStatus .turnStatusAvatar {
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-radius: 999px !important;
+    line-height: 1 !important;
+}
+
+#clueBadge.turnSubStatus .turnStatusAvatar img,
+body.discordActivity #clueBadge.turnSubStatus .turnStatusAvatar img {
+    display: block !important;
+    width: 132% !important;
+    height: 132% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    transform: scale(1.08) !important;
+    transform-origin: center !important;
+}
+
+#clueBadge.turnSubStatus.blue,
+body.discordActivity #clueBadge.turnSubStatus.blue {
+    color: #171000 !important;
+    background: linear-gradient(180deg, #fff4ae 0%, #ffd34f 48%, #a96e00 100%) !important;
+    border-color: rgba(255, 240, 170, .92) !important;
+    box-shadow: 0 0 26px rgba(255, 215, 108, .52), inset 0 1px 0 rgba(255, 255, 255, .72) !important;
+}
+
+#clueBadge.turnSubStatus.red,
+body.discordActivity #clueBadge.turnSubStatus.red {
+    color: #fff0ae !important;
+    background: linear-gradient(180deg, #3b3b3f 0%, #111113 52%, #020203 100%) !important;
+    border-color: rgba(255, 215, 108, .54) !important;
+    box-shadow: 0 0 24px rgba(0, 0, 0, .82), 0 0 15px rgba(255, 215, 108, .18), inset 0 1px 0 rgba(255, 255, 255, .13) !important;
+}
+
+#clueBadge.turnSubStatus.red strong,
+body.discordActivity #clueBadge.turnSubStatus.red strong {
+    color: #fff0ae !important;
 }

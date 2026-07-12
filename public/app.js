@@ -7,6 +7,7 @@ let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let reactionTimer = null;
 let clueSplashTimer = null, lastClueSplashKey = '';
+let spectatorMenuOpen = false;
 
 function makePlayerKey() {
     return 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -366,7 +367,7 @@ function applyLanguage() {
     setText('.avatarUploadLabel small', 'optional');
     setButtonText('avatarUploadBtn', 'uploadImage');
     setButtonText('avatarClearBtn', 'remove');
-    setText('.teamChooseTitle', 'chooseTeam');
+    setText('.teamChooseTitle', document.body.classList.contains('discordActivity') ? 'chooseRole' : 'chooseTeam');
     const teamButtons = document.querySelectorAll('.teamPick');
     if (teamButtons[0]) {
         teamButtons[0].querySelector('span').textContent = tt('goldTeam');
@@ -386,11 +387,9 @@ function applyLanguage() {
         const boxes = discordCards[0].querySelectorAll('.discordRoleBox');
         if (boxes[0]) {
             boxes[0].querySelector('b').textContent = tt('operatives');
-            boxes[0].querySelector('small').textContent = tt('guessCardsShort');
         }
         if (boxes[1]) {
             boxes[1].querySelector('b').textContent = tt('spymasters');
-            boxes[1].querySelector('small').textContent = tt('giveCluesShort');
         }
     }
     if (discordCards[1]) {
@@ -405,11 +404,9 @@ function applyLanguage() {
         const boxes = discordCards[2].querySelectorAll('.discordRoleBox');
         if (boxes[0]) {
             boxes[0].querySelector('b').textContent = tt('operatives');
-            boxes[0].querySelector('small').textContent = tt('guessCardsShort');
         }
         if (boxes[1]) {
             boxes[1].querySelector('b').textContent = tt('spymasters');
-            boxes[1].querySelector('small').textContent = tt('giveCluesShort');
         }
     }
     document.querySelectorAll('.discordRoleJoin').forEach(btn => {
@@ -456,17 +453,23 @@ function applyLanguage() {
     if (goldSections[1]) goldSections[1].textContent = tt('spymasters');
     if (blackSections[0]) blackSections[0].textContent = tt('operatives');
     if (blackSections[1]) blackSections[1].textContent = tt('spymasters');
-    if (blackSections[2]) blackSections[2].textContent = tt('spectators');
-    if (blackSections[3]) blackSections[3].textContent = tt('gameLog');
+    if (blackSections[2]) blackSections[2].textContent = tt('gameLog');
+    const spectatorToggleText = $('spectatorToggleText');
+    if (spectatorToggleText) spectatorToggleText.textContent = spectatorMenuOpen
+        ? (uiLanguage === 'ar' ? 'إخفاء المشاهدين' : 'Hide Spectators')
+        : (uiLanguage === 'ar' ? 'إظهار المشاهدين' : 'Show Spectators');
     setText('.clueBoxSide h3', 'clueControl');
     setButtonText('inviteBtn', 'generateInvite');
     setPlaceholder('inviteLinkGame', 'invitePlaceholder');
     setButtonText('endTurnBtn', 'pass');
-    setText('#dockTitle', 'giveClue');
-    setLabelText('#bottomClueDock label:first-of-type', 'clueWord');
-    setLabelText('#bottomClueDock .numberLabel', 'number');
+    const dockTitle = $('dockTitle');
+    if (dockTitle) dockTitle.textContent = uiLanguage === 'ar' ? 'التلميح:' : 'CLUE:';
     setPlaceholder('clueWord', 'hintPlaceholder');
-    setButtonText('giveClueBtn', 'giveClue');
+    const clueSubmit = $('giveClueBtn');
+    if (clueSubmit) {
+        clueSubmit.textContent = '✓';
+        clueSubmit.setAttribute('aria-label', tt('giveClue'));
+    }
     const timerSpans = document.querySelectorAll('.timers span');
     if (timerSpans[0]?.firstChild) timerSpans[0].firstChild.textContent = `${tt('round')} `;
     if (timerSpans[1]?.firstChild) timerSpans[1].firstChild.textContent = `${tt('game')} `;
@@ -482,8 +485,8 @@ function applyLanguage() {
 }
 
 function lockDiscordNameField() {
-    // Discord Activity no longer locks or auto-fills the player name.
-    // Every player can type/edit their own in-game name.
+
+
     if (!nameInput) return;
     nameInput.readOnly = false;
     nameInput.classList.remove('discordNameLocked');
@@ -505,13 +508,13 @@ function resolvedDiscordName() {
 }
 
 function applyDiscordNameToInput() {
-    // Intentionally disabled. We keep Discord Activity room/invite support,
-    // but names are now manual again.
+
+
     lockDiscordNameField();
 }
 
 function waitForDiscordName() {
-    // No waiting for Discord identity anymore.
+
     return Promise.resolve('');
 }
 
@@ -711,7 +714,7 @@ function renderHomepageLobbyPreview(res, allowHidden = false) {
         return;
     }
     if (isDiscordActivity) {
-        // Discord lobby uses the role cards themselves; paintDiscordLobby renders the seats there.
+
         box.classList.add('hidden');
         box.innerHTML = '';
         return;
@@ -912,8 +915,8 @@ function startRevealLiftGhost(card) {
     const rect = src.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
 
-    // Build a fresh full-card overlay instead of cloning only the inner word area.
-    // The overlay is fixed exactly over the picked grey card, then only scales from its center.
+
+
     const ghost = document.createElement('div');
     const crown = document.createElement('img');
     const word = document.createElement('span');
@@ -1016,8 +1019,8 @@ function finishDelayedReveal(id, token) {
     showPickReaction(reaction);
     if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
         if (delayedWinRevealTimer) clearTimeout(delayedWinRevealTimer);
-        // Final win effects must wait until the picked card has finished its reveal and the reaction image has appeared.
-        // Death/assassin needs a longer pause so the death PNG is seen first, then the winner popup appears.
+
+
         const delay = reaction ? (reaction.kind === 'death' ? 3600 : 2300) : 1400;
         winRevealHoldUntil = Date.now() + delay;
         hideWinEffectsForCurrentView();
@@ -1082,11 +1085,11 @@ function spymasterClueSplashImageCandidates(team) {
     const file = team === 'red' ? 'blackspymaster.png' : 'goldspymaster.png';
     const basePath = window.location.pathname.replace(/[^/]*$/, '');
     const rawCandidates = [
-        `/${file}`,                         // Express serves files inside /public from the site root.
+        `/${file}`,
         `${basePath}${file}`,
         `./${file}`,
         file,
-        `${basePath}public/${file}`,        // Works if testing from the project root instead of Express.
+        `${basePath}public/${file}`,
         `./public/${file}`,
         `/public/${file}`
     ];
@@ -1339,6 +1342,9 @@ function spymasterForTeam(team) {
 
 function turnStatusHtml() {
     if (!state || state.status === 'finished') return '';
+
+    // Keep the instruction compact: the active people are represented by avatars,
+    // followed only by the action they need to perform.
     if (state.status === 'waiting-clue') {
         if (state.singlePlayer) {
             if (state.aiClueStatus?.state === 'failed' && state.aiClueStatus?.team === state.turn) {
@@ -1347,24 +1353,32 @@ function turnStatusHtml() {
             return state.turn === 'blue' ? tt('preparingYourClue') : tt('preparingBotClue');
         }
         const spy = spymasterForTeam(state.turn);
-        if (!spy) return tt('waitingSpy', {team: teamUpper(state.turn)});
+        if (!spy) {
+            return `<strong>${escapeHtml(teamUpper(state.turn))} ${uiLanguage === 'ar' ? 'أعط تلميحا' : 'GIVE A CLUE'}</strong>`;
+        }
         const src = safeAvatarSrc(playerAvatar(spy));
         const face = src
             ? `<span class="turnStatusAvatar"><img src="${src}" alt="${escapeHtml(spy.name || 'spymaster')}"></span>`
             : `<span class="turnStatusAvatar fallback">${charEmoji(spy.character)}</span>`;
-        return uiLanguage === 'ar'
-            ? `بانتظار ${face}<strong>${escapeHtml(spy.name || tt('spymaster'))}</strong> لإعطاء التلميح`
-            : `WAITING FOR ${face}<strong>${escapeHtml(spy.name || 'SPYMASTER')}</strong> TO GIVE A CLUE`;
+        return `${face}<strong>${uiLanguage === 'ar' ? 'أعط تلميحا' : 'GIVE A CLUE'}</strong>`;
     }
+
     if (state.status === 'guessing') {
         if (state.singlePlayer) {
             return state.turn === 'blue' ? tt('yourPickTurn') : tt('botPicking');
         }
-        return tt('waitingOps', {team: teamUpper(state.turn)});
+        const operatives = teamOperativesOnline(state.turn);
+        const faces = operatives.slice(0, 5).map(p => {
+            const src = safeAvatarSrc(playerAvatar(p));
+            return src
+                ? `<span class="turnStatusAvatar"><img src="${src}" alt="${escapeHtml(p.name || 'operative')}"></span>`
+                : `<span class="turnStatusAvatar fallback">${charEmoji(p.character)}</span>`;
+        }).join('');
+        const avatarGroup = faces ? `<span class="turnStatusAvatarGroup">${faces}</span>` : '';
+        return `${avatarGroup}<strong>${uiLanguage === 'ar' ? 'خمن البطاقات' : 'GUESS CARDS'}</strong>`;
     }
     return '';
 }
-
 
 function discordUser() {
     const direct = window.DD_CURRENT_USER || window.DD_DISCORD?.currentUser || null;
@@ -1466,7 +1480,7 @@ function stableDiscordFallbackKey(roomCode = '') {
 }
 
 function ensureDiscordIdentity() {
-    // Keep the Activity/session support, but do not fetch or force Discord names.
+
     lockDiscordNameField();
 }
 
@@ -1502,7 +1516,7 @@ function hasCustomAvatar() {
 }
 
 function outboundCharacter() {
-    // Uploaded images are their own avatar choice, so they must not reserve any character slot.
+
     return hasCustomAvatar() ? '' : selectedCharacter;
 }
 
@@ -1592,7 +1606,7 @@ function usedCharacters() {
     const myDiscordId = discordUser()?.id || '';
     const addPlayer = p => {
         if (!p?.character) return;
-        // A custom uploaded picture is not a game character, so it must not block/grey out a character.
+
         if (playerAvatar(p)) return;
         if (p.id && p.id === myId) return;
         if (myDiscordId && p.discordId && p.discordId === myDiscordId) return;
@@ -1735,8 +1749,8 @@ function setJoinButtonsReady() {
 }
 
 function updateJoinSummary() {
-    // The selected team/role is shown by placing the local user preview inside
-    // the matching lobby role box, instead of using the old separate summary bar.
+
+
     const box = $('joinSummary');
     if (box) {
         box.classList.add('hidden');
@@ -1781,8 +1795,12 @@ function syncDiscordLanding() {
     const roomField = document.querySelector('.websiteRoomField');
     if (roomField) roomField.classList.toggle('hidden', !!isDiscordActivity);
     const title = document.querySelector('.teamChooseTitle');
-    if (title) title.textContent = isDiscordActivity ? tt('chooseRole') : tt('chooseTeam');
     const chars = $('characterPick');
+    if (title) {
+        title.textContent = isDiscordActivity ? tt('chooseRole') : tt('chooseTeam');
+        if (isDiscordActivity && chars) chars.insertAdjacentElement('afterend', title);
+        else if (teamChoice) teamChoice.insertAdjacentElement('beforebegin', title);
+    }
     if (chars) chars.classList.remove('hidden');
     if (isDiscordActivity) {
         ensureDiscordIdentity();
@@ -1795,9 +1813,9 @@ function syncDiscordLanding() {
 }
 
 function getDiscordActivityRoomCode() {
-    // A Discord voice/text channel is shared by every participant, while an
-    // Activity instance id can be absent or briefly differ during startup.
-    // Always prefer the live channel scope so every participant reaches one room.
+
+
+
     const canonical = canonicalDiscordActivityRoomCode();
     if (canonical) return canonical;
 
@@ -1824,8 +1842,8 @@ let activityScopeWaitTimer = null;
 
 function restoreDiscordActivitySeat(reason = '', options = {}) {
     if (!isDiscordActivity || !socket?.connected) return false;
-    // Do not restore into a temporary instance-derived room while the SDK is
-    // still loading the shared Discord channel id. Retry as soon as it is ready.
+
+
     if (!discordChannelId() && !window.DD_DISCORD && !localDiscordChannelId) {
         if (!activityScopeWaitTimer) {
             activityScopeWaitTimer = setTimeout(() => {
@@ -1883,8 +1901,8 @@ function discordJoinPayload(team, role) {
     const finalName = currentDisplayName();
     const finalAvatar = customAvatar || '';
 
-    // Do not depend on Discord identity. A stable per-tab Activity key makes joins
-    // work on PC, mobile, tablet, and iPad even when Discord profile data is delayed.
+
+
     setPlayerKey(stableDiscordFallbackKey(roomCode));
     myId = playerKey;
     localStorage.cc_name = finalName;
@@ -1918,8 +1936,8 @@ async function joinDiscordActivity(team, role) {
         return;
     }
 
-    // Let the Discord SDK expose the shared channel id before deciding the room.
-    // This prevents two clients from hashing different temporary instance ids.
+
+
     await waitForDiscordSharedScope();
 
     selectedTeamChoice = team;
@@ -1954,11 +1972,11 @@ async function joinDiscordActivity(team, role) {
 }
 
 function sendDiscordIdentityToServer() {
-    // Disabled: player names are manual and editable again.
+
 }
 
 async function openDiscordInvite() {
-    // Give discord-sdk.js a moment to finish loading
+
     for (let i = 0; i < 10; i++) {
         if (window.DD_openInviteDialog) break;
         await new Promise(resolve => setTimeout(resolve, 150));
@@ -2122,7 +2140,7 @@ function refreshLandingAdminControls() {
     if (!bar) return;
     const inLobby = !!(state && state.status === 'lobby');
     const canStart = !!(p?.isAdmin && inLobby);
-    // Homepage/lobby should only show Start Game. Options belong on the game page only.
+
     bar.classList.toggle('hidden', !inLobby);
     if (start) start.classList.toggle('hidden', !canStart);
     if (opts) opts.classList.add('hidden');
@@ -2195,8 +2213,8 @@ function withFreshLobbyBeforeJoin(roomId, proceed) {
     socket.emit('getRoomInfo', roomInfoPayload(code), res => {
         if (res?.ok) {
             applyLobbyInfo(res);
-            // If another user took the selected character while this tab was open, do not send a stale join.
-            // renderCharacters() may auto-select the next free character; if none exists, stop here.
+
+
             if (!characterAvailableNow()) {
                 toast(tt('characterTakenFirst'));
                 renderCharacters();
@@ -2278,6 +2296,7 @@ function setupJoinFlow() {
 
 setupProfileControls();
 setupJoinFlow();
+setupSpectatorMenu();
 forceBottomOptionsBar();
 
 function joinPayload() {
@@ -2320,9 +2339,9 @@ function acceptJoinResponse(res) {
             role: $('role')?.value || selectedRoleChoice
         });
     }
-    // joinRoom can broadcast the room state before this callback reaches the tab.
-    // Re-render immediately after receiving the real seat key so a new tab shows
-    // its own chosen team/role instead of the old tab's saved seat.
+
+
+
     if (state) {
         if (isDiscordActivity && state.status === 'lobby') {
             game.classList.add('hidden');
@@ -2751,7 +2770,7 @@ function renderWinModal() {
     if (lastWinKey !== key) {
         lastWinKey = key;
         if (winDockTimer) clearTimeout(winDockTimer);
-        // Show the congratulations/winner effects briefly, then hide them automatically.
+
         winDockTimer = setTimeout(() => {
             winDockTimer = null;
             if (currentWinEffectKey() !== key) return;
@@ -2808,15 +2827,23 @@ function renderCurrentClueDock() {
     if (!el) return;
     if (state?.clue && state.status === 'guessing') {
         const team = state.clue.team || state.turn;
-        el.className = `currentClueDock glass ${team}`;
-        el.innerHTML = `<span class="currentClueLabel">${tt('currentClue')}</span><b>${String(state.clue.word || '').toUpperCase()}</b><strong>${Number(state.clue.number || 0)}</strong>`;
+        const word = String(state.clue.word || '').toUpperCase();
+        const chars = Math.max(4, Math.min(24, word.length || 4));
+        const player = me();
+        const canPass = !!(player?.role === 'operative' && player.team === state.turn);
+
+        // Keep the operative clue row local to the viewer: clue word, count, and an active-team PASS button.
+        el.className = `currentClueDock glass clueShell ${team} ${canPass ? 'hasCurrentCluePass' : ''}`;
+        el.style.setProperty('--clue-chars', chars);
+        el.innerHTML = `<b>${escapeHtml(word)}</b><strong>${Number(state.clue.number || 0)}</strong>${canPass ? `<button class="currentCluePass" type="button">${escapeHtml(tt('pass'))}</button>` : ''}`;
+        el.querySelector('.currentCluePass')?.addEventListener('click', () => socket.emit('endTurn'));
     } else {
         el.className = 'currentClueDock hidden';
         el.innerHTML = '';
     }
 }
 
-function renderSeatCharacters() { /* seat editing removed from in-game UI */
+function renderSeatCharacters() {
 }
 
 function renderMe() {
@@ -2908,6 +2935,31 @@ function openPlayerOptionsMenu(wrap, btn) {
 }
 
 
+
+function setSpectatorMenuOpen(open) {
+    spectatorMenuOpen = !!open;
+    const dropdown = $('spectatorDropdown');
+    const button = $('spectatorToggleBtn');
+    const text = $('spectatorToggleText');
+    dropdown?.classList.toggle('hidden', !spectatorMenuOpen);
+    button?.classList.toggle('open', spectatorMenuOpen);
+    button?.setAttribute('aria-expanded', spectatorMenuOpen ? 'true' : 'false');
+    if (text) text.textContent = spectatorMenuOpen
+        ? (uiLanguage === 'ar' ? 'إخفاء المشاهدين' : 'Hide Spectators')
+        : (uiLanguage === 'ar' ? 'إظهار المشاهدين' : 'Show Spectators');
+}
+
+function setupSpectatorMenu() {
+    const button = $('spectatorToggleBtn');
+    if (!button || button.dataset.ready === '1') return;
+    button.dataset.ready = '1';
+    button.addEventListener('click', ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setSpectatorMenuOpen(!spectatorMenuOpen);
+    });
+}
+
 function renderPlayers() {
     closePlayerOptionsMenus();
     const current = me();
@@ -2943,8 +2995,10 @@ function renderPlayers() {
     function playerHtml(p) {
         const offline = p.online === false;
         const adminBadge = p.isAdmin ? '<span class="adminBadge adminCrown" title="Admin">👑</span>' : '';
-        const canDrag = playerOptionsMode && p.id !== myId && (!p.isAdmin || adminMode);
-        return `<div class="player ${p.team} ${offline ? 'offline' : ''} ${canDrag ? 'draggablePlayer' : ''} ${p.isAdmin ? 'adminPlayer' : ''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}">${avatarHtml(p)}<div class="playerBody"><b class="${p.isAdmin ? 'adminNameLine' : ''}"><span class="playerNameText">${escapeHtml(p.name || 'Player')}</span><span class="inlineNameEditor hidden"><input type="text" maxlength="28" value="${escapeHtml(p.name || 'Player')}" aria-label="Player name"><button type="button" data-inline-name-save="${p.id}">Save</button><button type="button" data-inline-name-cancel="${p.id}">Cancel</button></span>${adminBadge}${offline ? '<span class="offlineIcon" title="Offline">📡</span>' : ''}</b>${adminTools(p)}</div></div>`;
+        // Spymasters and room admins can drag every seat, including their own seat and other admins.
+        const canDrag = playerOptionsMode;
+        const offlineMark = offline ? '<span class="offlineIcon" title="Disconnected"><span aria-hidden="true">📶</span></span>' : '';
+        return `<div class="player ${p.team} ${offline ? 'offline' : ''} ${canDrag ? 'draggablePlayer' : ''} ${p.isAdmin ? 'adminPlayer' : ''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}">${avatarHtml(p)}<div class="playerBody"><b class="${p.isAdmin ? 'adminNameLine' : ''}"><span class="playerNameText">${escapeHtml(p.name || 'Player')}</span><span class="inlineNameEditor hidden"><input type="text" maxlength="28" value="${escapeHtml(p.name || 'Player')}" aria-label="Player name"><button type="button" data-inline-name-save="${p.id}">Save</button><button type="button" data-inline-name-cancel="${p.id}">Cancel</button></span>${adminBadge}${offlineMark}</b>${adminTools(p)}</div></div>`;
     }
 
     function playerCardById(id) {
@@ -2995,15 +3049,27 @@ function renderPlayers() {
         return `<div class="emptyTeamSlot">${text}</div>`;
     }
 
-    $('goldOperatives').innerHTML = teams.blue.operative.map(playerHtml).join('') || empty(tt('noOperatives'));
-    $('goldSpymasters').innerHTML = teams.blue.spymaster.map(playerHtml).join('') || empty(tt('noSpymaster'));
-    $('blackOperatives').innerHTML = teams.red.operative.map(playerHtml).join('') || empty(tt('noOperatives'));
-    $('blackSpymasters').innerHTML = teams.red.spymaster.map(playerHtml).join('') || empty(tt('noSpymaster'));
+    // Empty operative/spymaster seats stay visually clean: only real players create seat cards.
+    const roleLists = [
+        ['goldOperatives', teams.blue.operative],
+        ['goldSpymasters', teams.blue.spymaster],
+        ['blackOperatives', teams.red.operative],
+        ['blackSpymasters', teams.red.spymaster]
+    ];
+    roleLists.forEach(([id, players]) => {
+        const list = $(id);
+        if (!list) return;
+        list.innerHTML = players.map(playerHtml).join('');
+        list.closest('section')?.classList.toggle('emptyRoleSection', players.length === 0);
+    });
+    // The spectator dropdown still explains its empty state because it is hidden until requested.
     $('spectators').innerHTML = teams.spectator.spectator.map(playerHtml).join('') || empty(tt('noSpectators'));
-    ['goldSpymasters', 'blackSpymasters', 'spectators'].forEach(id => {
+    ['goldSpymasters', 'blackSpymasters'].forEach(id => {
         const section = $(id)?.closest('section');
         if (section) section.classList.toggle('hidden', !!state?.singlePlayer);
     });
+    const spectatorMenu = $('spectatorMenuWrap');
+    if (spectatorMenu) spectatorMenu.classList.toggle('hidden', !!state?.singlePlayer);
     document.querySelectorAll('[data-player-options]').forEach(btn => {
         btn.onclick = (ev) => {
             ev.preventDefault();
@@ -3102,20 +3168,22 @@ function applyActiveTurnHighlight() {
     const activeTeam = state?.turn || '';
     document.body.dataset.turnTeam = activeTeam;
     const goldPanel = $('goldPanel'), blackPanel = $('blackPanel');
+
+    // Never dim the non-active team. The active team, role card, and players glow instead.
     [goldPanel, blackPanel].forEach(panel => panel?.classList.remove('activeTurnPanel', 'dimTurnPanel'));
+    document.querySelectorAll('.teamPanel section').forEach(section => section.classList.remove('activeRoleSection'));
     if (activeRole && activeTeam) {
         const activePanel = activeTeam === 'blue' ? goldPanel : blackPanel;
-        const dimPanel = activeTeam === 'blue' ? blackPanel : goldPanel;
         activePanel?.classList.add('activeTurnPanel');
-        dimPanel?.classList.add('dimTurnPanel');
     }
+
     document.querySelectorAll('.player').forEach(el => {
         const pid = el.dataset.playerId;
         const p = pid ? state?.players?.[pid] : null;
         const isActive = !!(p && activeRole && p.online !== false && p.team === activeTeam && p.role === activeRole);
-        const isOtherPlayingMember = !!(p && activeRole && p.team !== 'spectator' && !isActive);
         el.classList.toggle('activeTurnPlayer', isActive);
-        el.classList.toggle('dimTurnPlayer', isOtherPlayingMember);
+        el.classList.remove('dimTurnPlayer');
+        if (isActive) el.closest('section')?.classList.add('activeRoleSection');
     });
 }
 
@@ -3139,38 +3207,127 @@ function renderSeatControls() {
     }
 }
 
-function setupSectionJoinButtons() { /* in-game self switching removed; admin moves players only */
+function setupSectionJoinButtons() {
 }
 
 function setupAdminDragAndDrop(adminMode) {
+    const zones = [...document.querySelectorAll('[data-drop-team]')];
+
+    // Clear every placement preview so stale glows cannot remain after a cancelled drag.
+    function clearDropPreview() {
+        zones.forEach(zone => {
+            zone.classList.remove('dropReady', 'dropReadyGold', 'dropReadyBlack', 'dropReadySpectator');
+            zone.closest('section')?.classList.remove('dropTargetActive', 'dropTargetGold', 'dropTargetBlack', 'dropTargetSpectator');
+        });
+    }
+
+    // Use the destination team to render a gold, black, or neutral release target.
+    function showDropPreview(zone) {
+        clearDropPreview();
+        if (!zone) return;
+        const team = zone.dataset.dropTeam;
+        const suffix = team === 'blue' ? 'Gold' : team === 'red' ? 'Black' : 'Spectator';
+        zone.classList.add('dropReady', `dropReady${suffix}`);
+        zone.closest('section')?.classList.add('dropTargetActive', `dropTarget${suffix}`);
+    }
+
+    function movePlayer(playerId, zone) {
+        if (!playerId || !zone) return;
+        socket.emit('adminUpdatePlayer', {
+            playerId,
+            action: 'move',
+            team: zone.dataset.dropTeam,
+            role: zone.dataset.dropRole
+        });
+    }
+
     document.querySelectorAll('.draggablePlayer').forEach(el => {
         el.ondragstart = (ev) => {
             if (!adminMode) return ev.preventDefault();
             ev.dataTransfer.setData('text/plain', el.dataset.playerId);
             ev.dataTransfer.effectAllowed = 'move';
             el.classList.add('dragging');
+            document.body.classList.add('playerDragActive');
         };
-        el.ondragend = () => el.classList.remove('dragging');
+        el.ondragend = () => {
+            el.classList.remove('dragging');
+            document.body.classList.remove('playerDragActive');
+            clearDropPreview();
+        };
+
+        // Native HTML drag is unreliable on touch screens, so pointer dragging mirrors it locally.
+        el.onpointerdown = (ev) => {
+            if (!adminMode || ev.pointerType === 'mouse' || ev.target.closest('button, input')) return;
+            const playerId = el.dataset.playerId;
+            const startX = ev.clientX;
+            const startY = ev.clientY;
+            let dragging = false;
+            let activeZone = null;
+            let ghost = null;
+
+            const cleanup = () => {
+                el.removeEventListener('pointermove', onMove);
+                el.removeEventListener('pointerup', onEnd);
+                el.removeEventListener('pointercancel', onCancel);
+                el.classList.remove('dragging');
+                document.body.classList.remove('playerDragActive');
+                ghost?.remove();
+                clearDropPreview();
+                try { el.releasePointerCapture(ev.pointerId); } catch {}
+            };
+
+            const onMove = (moveEv) => {
+                const distance = Math.hypot(moveEv.clientX - startX, moveEv.clientY - startY);
+                if (!dragging && distance < 8) return;
+                if (!dragging) {
+                    dragging = true;
+                    el.classList.add('dragging');
+                    document.body.classList.add('playerDragActive');
+                    ghost = el.cloneNode(true);
+                    ghost.classList.add('touchDragGhost');
+                    ghost.removeAttribute('draggable');
+                    document.body.appendChild(ghost);
+                }
+                moveEv.preventDefault();
+                ghost.style.left = `${moveEv.clientX}px`;
+                ghost.style.top = `${moveEv.clientY}px`;
+                activeZone = document.elementFromPoint(moveEv.clientX, moveEv.clientY)?.closest('[data-drop-team]') || null;
+                showDropPreview(activeZone);
+            };
+
+            const onEnd = (upEv) => {
+                if (dragging) {
+                    upEv.preventDefault();
+                    movePlayer(playerId, activeZone);
+                }
+                cleanup();
+            };
+            const onCancel = () => cleanup();
+
+            try { el.setPointerCapture(ev.pointerId); } catch {}
+            el.addEventListener('pointermove', onMove);
+            el.addEventListener('pointerup', onEnd);
+            el.addEventListener('pointercancel', onCancel);
+        };
     });
-    document.querySelectorAll('[data-drop-team]').forEach(zone => {
+
+    zones.forEach(zone => {
         zone.ondragover = (ev) => {
-            if (adminMode) {
-                ev.preventDefault();
-                zone.classList.add('dropReady');
-            }
+            if (!adminMode) return;
+            ev.preventDefault();
+            ev.dataTransfer.dropEffect = 'move';
+            showDropPreview(zone);
         };
-        zone.ondragleave = () => zone.classList.remove('dropReady');
+        zone.ondragleave = (ev) => {
+            if (zone.contains(ev.relatedTarget)) return;
+            clearDropPreview();
+        };
         zone.ondrop = (ev) => {
             if (!adminMode) return;
             ev.preventDefault();
-            zone.classList.remove('dropReady');
             const playerId = ev.dataTransfer.getData('text/plain');
-            if (playerId) socket.emit('adminUpdatePlayer', {
-                playerId,
-                action: 'move',
-                team: zone.dataset.dropTeam,
-                role: zone.dataset.dropRole
-            });
+            movePlayer(playerId, zone);
+            clearDropPreview();
         };
     });
 }
@@ -3191,14 +3348,25 @@ function syncClueCount() {
     const hintMode = !!(state?.hintRequested && p && state.hintRequested.team === p.team && p.team === state?.turn);
     const isSpy = p?.role === 'spymaster';
     const isCurrentSpy = isSpy && p.team === state?.turn && (state?.status === 'waiting-clue' || (hintMode && state?.status === 'guessing'));
-    // Do not disable the Give Clue button just because no target is selected yet.
-    // A disabled button creates a "does nothing" click; the click handler below now shows the proper toast.
+
+
     if (btn) {
-        // Keep the button clickable so the user gets a toast instead of a dead button.
-        // The click handler and server still enforce spymaster/turn rules.
         btn.disabled = state?.status === 'lobby' || state?.status === 'finished';
+        btn.textContent = '✓';
         btn.classList.toggle('needsClueTarget', !!(isCurrentSpy && !hintMode && n < 1));
+        btn.classList.toggle('goldTick', state?.turn === 'blue');
+        btn.classList.toggle('blackTick', state?.turn === 'red');
     }
+    updateClueShellWidth();
+}
+
+
+function updateClueShellWidth(word = null) {
+    const input = $('clueWord');
+    const value = word === null ? String(input?.value || '') : String(word || '');
+    const chars = Math.max(4, Math.min(24, value.trim().length || 4));
+    $('bottomClueDock')?.style.setProperty('--clue-chars', chars);
+    $('currentClueDock')?.style.setProperty('--clue-chars', chars);
 }
 
 function teamOperativesOnline(team) {
@@ -3294,9 +3462,9 @@ function renderBoard() {
     board.classList.toggle('hasPendingReveal', pendingRevealIds.size > 0);
     board.parentElement?.classList.toggle('hasPendingRevealWrap', pendingRevealIds.size > 0);
     const marked = myMarkedIds();
-    // Spawn animation should happen only for a truly fresh board, not for votes/reveals/turn changes.
-    // Do not include visible colors, revealed state, votes, or round number here because those
-    // change during normal play and would reanimate every card.
+
+
+
     const boardKey = `${state.id}-${state.board.map(c => `${c.id}:${c.word}`).join('|')}`;
     const shouldSpawn = boardKey !== lastBoardKey;
     lastBoardKey = boardKey;
@@ -3305,15 +3473,15 @@ function renderBoard() {
         const showOrigin = state.status === 'finished' && !pendingReveal;
         const visuallyRevealed = !!c.revealed && !pendingReveal;
         const colorClass = pendingReveal ? '' : (((visuallyRevealed || spy || showOrigin) && c.color) ? c.color : '');
-        // Spymaster clue-target selections should show the crown only, without the old cyan border/tick.
+
         const spyClueTarget = !c.revealed && spy && (c.clueTarget || targetIds.has(c.id));
         const voteCount = state.voteInfo?.counts?.[c.id] || 0;
         const agreed = state.voteInfo?.agreedCardId === c.id;
         const myVote = marked.includes(c.id);
         const voted = voteCount > 0;
         const revealer = c.revealedById ? state?.players?.[c.revealedById] : null;
-        // During play, revealed team/grey cards become crown-only. After the win, show every real word/color.
-        // Clicking a crown-only revealed card flips it locally for this browser only, without emitting to the server.
+
+
         const teamReveal = !!(!showOrigin && visuallyRevealed && (c.color === 'blue' || c.color === 'red'));
         const correctReveal = teamReveal;
         const neutralReveal = !!(!showOrigin && visuallyRevealed && c.color === 'neutral');
@@ -3324,8 +3492,8 @@ function renderBoard() {
         const voteFaces = voted && !c.revealed ? voteFacesHtml(c.id) : '';
         const confirmMini = canConfirmThis ? `<span class="cardConfirm" data-confirm-id="${c.id}" title="Confirm ${c.word}">✓</span>` : '';
         const revealBadge = visuallyRevealed ? revealHeroSvg(c.color) : '';
-        // Use a real centered crown layer instead of card backgrounds/pseudo-elements.
-        // This avoids mobile Safari/Discord cropping the crown into the top-left corner.
+
+
         const crownSrc = neutralReveal ? '/crown-bw.png' : '/crown.png';
         const hasCrownLayer = spyClueTarget || ((teamReveal || neutralReveal) && !localFlippedReveal);
         const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
@@ -3416,7 +3584,8 @@ function renderPanels() {
     $('spymasterPanel').classList.add('hidden');
     const opActive = !!(p?.role === 'operative' && p.team === state.turn && (state.status === 'guessing' || (!state.singlePlayer && state.status === 'waiting-clue')));
     const topActions = $('topOperativeActions');
-    if (topActions) topActions.classList.toggle('hidden', !opActive);
+    // PASS now lives beside the operative clue count, so the old detached PASS dock stays hidden.
+    if (topActions) topActions.classList.add('hidden');
     $('operativePanel').classList.toggle('hidden', !opActive);
     const hintBtn = $('requestHintBtn');
     if (hintBtn) hintBtn.classList.add('hidden');
@@ -3430,13 +3599,13 @@ function renderPanels() {
         $('clueNumber').readOnly = false;
         $('clueNumber').disabled = !isCurrentSpy;
         syncClueCount();
-        if (isCurrentSpy) {
-            $('dockTitle').textContent = tt('giveClue');
-            $('dockHelp').textContent = '';
-        } else if (isAnySpy) {
-            $('dockTitle').textContent = tt('waiting');
-            $('dockHelp').textContent = '';
-        }
+        const dockTitle = $('dockTitle');
+        const dockHelp = $('dockHelp');
+        if (dockTitle) dockTitle.textContent = uiLanguage === 'ar' ? 'التلميح:' : 'CLUE:';
+        if (dockHelp) dockHelp.textContent = '';
+        dock.classList.toggle('goldClueTurn', state?.turn === 'blue');
+        dock.classList.toggle('blackClueTurn', state?.turn === 'red');
+        updateClueShellWidth();
     }
 
     const newRound = $('newRoundBtn');
@@ -3535,11 +3704,12 @@ function renderLog() {
             current.picks.push(parts);
         }
     }
+    // Keep a new game's glowing log panel clean until the first clue, pick, or pass is recorded.
     const html = rounds.length ? `<div class="logRounds">${rounds.map(r => `
     <div class="logRound">
       ${r.hint ? hintHtml(r.hint) : ''}
       <div class="logPicks">${r.picks.map(parts => parts[0] === 'PICK' ? pickHtml(parts) : passHtml(parts)).join('')}</div>
-    </div>`).join('')}</div>` : `<div class="gameLogEmpty">${tt('noGuesses')}</div>`;
+    </div>`).join('')}</div>` : '';
     const mainLog = $('log');
     if (mainLog) {
         mainLog.innerHTML = html;
@@ -3586,8 +3756,8 @@ function runOrRequestAdminAction(action, label, confirmText) {
         return;
     }
 
-    // Discord Activities / iframes can silently block native confirm() dialogs,
-    // so the Options buttons must not depend on confirm() to run.
+
+
     if (current.isAdmin || current.role === 'spymaster') {
         targetIds.clear();
         socket.emit(action);
@@ -3595,7 +3765,7 @@ function runOrRequestAdminAction(action, label, confirmText) {
         return;
     }
 
-    // Non-admin players can still use the menu by sending a request to the room admin.
+
     socket.emit('adminActionRequest', {action});
 }
 
@@ -3653,6 +3823,9 @@ if (newGameBtn) newGameBtn.onclick = () => {
         socket.emit('newGame');
     }
 };
+const clueWordInput = $('clueWord');
+if (clueWordInput) clueWordInput.addEventListener('input', () => updateClueShellWidth());
+
 const giveClueButton = $('giveClueBtn');
 if (giveClueButton) giveClueButton.onclick = () => {
     const targets = [...targetIds];

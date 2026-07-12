@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>CODENAMES DSTY</title>
-    <link rel="stylesheet" href="/style.css?v=159"/>
+    <link rel="stylesheet" href="/style.css?v=162"/>
 </head>
 <body>
 <div id="app">
@@ -54,7 +54,6 @@
                 </div>
             </label>
         </div>
-        <div class="teamChooseTitle">Choose your team</div>
         <div id="teamChoice" class="teamChoice">
             <button type="button" class="teamPick goldPick" data-team="blue"><span>Gold Team</span><small>Join the
                 golden side</small></button>
@@ -78,6 +77,7 @@
         </div>
         <div id="lobbyPreview" class="lobbyPreview hidden"></div>
         <div id="characterPick" class="characters"></div>
+        <div class="teamChooseTitle">Choose your role</div>
         <div id="discordLobby" class="discordLobby hidden" aria-label="Discord Activity lobby">
             <div class="discordLobbyTop">
 
@@ -86,13 +86,13 @@
                 <section class="discordTeamCard discordGoldCard">
                     <h2>Gold Team</h2>
                     <div class="discordRoleBox">
-                        <div><b>Operatives</b><small>Guess cards</small></div>
+                        <div><b>Operatives</b></div>
                         <button type="button" class="discordRoleJoin primary" data-team="blue" data-role="operative">
                             Join
                         </button>
                     </div>
                     <div class="discordRoleBox">
-                        <div><b>Spymasters</b><small>Give clues</small></div>
+                        <div><b>Spymasters</b></div>
                         <button type="button" class="discordRoleJoin primary" data-team="blue" data-role="spymaster">
                             Join
                         </button>
@@ -100,23 +100,20 @@
                 </section>
                 <section class="discordSpectatorCard">
                     <h2>Spectators 👁</h2>
-                    <p>Watch the match without guessing.</p>
                     <button type="button" class="discordRoleJoin" data-team="spectator" data-role="spectator">Join as
                         Spectator
                     </button>
-                    <p class="discordHelpText">Choose any side and role, then your Discord Activity room opens
-                        automatically.</p>
                 </section>
                 <section class="discordTeamCard discordBlackCard">
                     <h2>Black Team</h2>
                     <div class="discordRoleBox">
-                        <div><b>Operatives</b><small>Guess cards</small></div>
+                        <div><b>Operatives</b></div>
                         <button type="button" class="discordRoleJoin primary" data-team="red" data-role="operative">
                             Join
                         </button>
                     </div>
                     <div class="discordRoleBox">
-                        <div><b>Spymasters</b><small>Give clues</small></div>
+                        <div><b>Spymasters</b></div>
                         <button type="button" class="discordRoleJoin primary" data-team="red" data-role="spymaster">
                             Join
                         </button>
@@ -185,7 +182,6 @@
                 </div>
             </div>
         </div>
-        <p class="hintText">Spymasters see hidden colors; operatives only see revealed cards.</p>
     </section>
 
     <main id="game" class="hidden gameV9">
@@ -206,6 +202,16 @@
             </div>
         </div>
         <header class="topbar glass">
+            <!-- Compact spectator menu lives in the top-left corner of the game header. -->
+            <div id="spectatorMenuWrap" class="spectatorMenuWrap">
+                <button id="spectatorToggleBtn" class="spectatorToggleBtn" type="button" aria-expanded="false" aria-controls="spectatorDropdown">
+                    <span class="spectatorEye" aria-hidden="true">👁</span>
+                    <span id="spectatorToggleText">Show Spectators</span>
+                </button>
+                <div id="spectatorDropdown" class="spectatorDropdown hidden">
+                    <div id="spectators" class="teamList compact spectatorDropdownList" data-drop-team="spectator" data-drop-role="spectator"></div>
+                </div>
+            </div>
             <div class="brandSide">
                 <div class="dstyLogo gameDstyLogo"><span>CODENAMES</span><em>DSTY</em></div>
                 <span id="roomLabel"></span>
@@ -257,10 +263,6 @@
             <section><h3>Spymasters</h3>
                 <div id="blackSpymasters" class="teamList" data-drop-team="red" data-drop-role="spymaster"></div>
             </section>
-            <section><h3>Spectators</h3>
-                <div id="spectators" class="teamList compact" data-drop-team="spectator"
-                     data-drop-role="spectator"></div>
-            </section>
             <section class="sideLogSection"><h3>Game Log</h3>
                 <div id="log" class="log"></div>
             </section>
@@ -301,14 +303,20 @@
         </div>
 
         <section id="bottomClueDock" class="bottomClueDock glass hidden">
-            <div class="dockText">
-                <b id="dockTitle">Give your clue</b>
-                <span id="dockHelp">Click your team cards; the number updates automatically.</span>
+            <!-- The same responsive clue-shell dimensions are shared with the operative clue display. -->
+            <div class="dockText cluePromptText">
+                <b id="dockTitle">CLUE:</b>
+                <span id="dockHelp"></span>
             </div>
-            <label>Clue word<input id="clueWord" placeholder="Hint"/></label>
-            <label class="numberLabel">Number<input id="clueNumber" type="number" min="0" value="0"
-                                                    readonly/></label>
-            <button id="giveClueBtn" class="primary" type="button">Give Clue</button>
+            <label class="clueWordLabel">
+                <span class="visuallyHidden">Clue</span>
+                <input id="clueWord" placeholder="Hint" aria-label="Clue word"/>
+            </label>
+            <label class="numberLabel">
+                <span class="visuallyHidden">Number</span>
+                <input id="clueNumber" type="number" min="0" value="0" readonly aria-label="Clue number"/>
+            </label>
+            <button id="giveClueBtn" class="primary clueSubmitTick" type="button" aria-label="Give clue">✓</button>
         </section>
     </main>
 </div>
@@ -337,6 +345,6 @@
 </script>
 <script type="module" src="/discord-sdk.js?v=62"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js?v=160"></script>
+<script src="/app.js?v=162"></script>
 </body>
 </html>

@@ -67,11 +67,13 @@ app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.h
 
 const PORT = process.env.PORT || 3000;
 const rooms = new Map();
-// Discord clients in the same channel must resolve to one server room even if
-// one client briefly sends a different Activity instance-derived room id.
+
+
 const discordActivityRooms = new Map();
-const WEB_OFFLINE_SEAT_TTL_MS = 10000;
-const DISCORD_ACTIVITY_OFFLINE_SEAT_TTL_MS = 1000 * 60 * 30;
+// Disconnected players stay visible for five seconds, then their seat is removed.
+const OFFLINE_SEAT_TTL_MS = 5000;
+// A lightweight seat snapshot lets the same player return to the same team/role later.
+const RECENT_SEAT_TTL_MS = 1000 * 60 * 30;
 
 function envBool(name, fallback = false) {
     const value = String(process.env[name] ?? '').trim().toLowerCase();
@@ -231,9 +233,9 @@ try {
 ARABIC_WORDS = [...new Set(ARABIC_WORDS)].filter(w => isArabicWord(w));
 if (ARABIC_WORDS.length < 25) ARABIC_WORDS = ['ملك', 'ملكة', 'تاج', 'قصر', 'بحر', 'موج', 'نهر', 'جزيرة', 'طبيب', 'مستشفى', 'مدرسة', 'معلم', 'طالب', 'كتاب', 'هاتف', 'حاسوب', 'ذهب', 'فضة', 'شجرة', 'وردة', 'مطر', 'قمر', 'طائرة', 'سيارة', 'كرة'];
 
-// Codenames-style balance: the team that starts has 9 cards, the other team has 8, plus 7 blank cards and 1 grey danger card.
-// Board words are pulled from small semantic clusters first, then filled from data/words.json.
-// This keeps the board harder because several cards can feel related without changing any gameplay logic.
+
+
+
 const SEMANTIC_CLUSTERS = [
     ['KING', 'QUEEN', 'CROWN', 'THRONE', 'PALACE', 'ROYAL', 'MONARCH', 'CASTLE'],
     ['OCEAN', 'SEA', 'WAVE', 'BEACH', 'ISLAND', 'REEF', 'ANCHOR', 'SHIP', 'SAIL'],
@@ -434,10 +436,10 @@ function makeBoard(startingTeam = 'red', wordMode = 'themed', language = 'en') {
         assassin: 1
     };
     const colors = [];
-    for (let i = 0; i < teamCounts.blue; i++) colors.push('blue');      // Gold team cards
-    for (let i = 0; i < teamCounts.red; i++) colors.push('red');        // Black team cards
-    for (let i = 0; i < teamCounts.neutral; i++) colors.push('neutral'); // Blank cards: skip turn only
-    colors.push('assassin');                                         // Grey danger card: instant loss
+    for (let i = 0; i < teamCounts.blue; i++) colors.push('blue');
+    for (let i = 0; i < teamCounts.red; i++) colors.push('red');
+    for (let i = 0; i < teamCounts.neutral; i++) colors.push('neutral');
+    colors.push('assassin');
     const shuffledColors = shuffle(colors);
     const words = wordMode === 'random'
         ? randomWordsFromBank(playable, 25)
@@ -475,6 +477,7 @@ function newRoom(id, language = 'en') {
         votes: {},
         adminToken: makeAdminToken(),
         adminRequests: [],
+        recentSeats: {},
         singlePlayer: false,
         singlePlayerDifficulty: 'medium',
         singlePlayerUsedClues: {blue: [], red: []},
@@ -486,6 +489,41 @@ function newRoom(id, language = 'en') {
     };
 }
 
+
+
+function recentSeatKeys(player = {}) {
+    const keys = [];
+    if (player.id) keys.push(`player:${player.id}`);
+    if (player.discordId) keys.push(`discord:${String(player.discordId).toLowerCase()}`);
+    return keys;
+}
+
+function rememberRecentSeat(room, player) {
+    room.recentSeats = room.recentSeats || {};
+    const snapshot = {
+        id: player.id,
+        name: player.name,
+        avatar: player.avatar,
+        discordId: player.discordId,
+        team: player.team,
+        role: player.role,
+        character: player.character,
+        isAdmin: !!player.isAdmin,
+        removedAt: Date.now()
+    };
+    recentSeatKeys(player).forEach(key => room.recentSeats[key] = snapshot);
+}
+
+function findRecentSeat(room, {playerKey = '', discordId = ''} = {}) {
+    room.recentSeats = room.recentSeats || {};
+    const now = Date.now();
+    for (const [key, seat] of Object.entries(room.recentSeats)) {
+        if (!seat || now - Number(seat.removedAt || 0) > RECENT_SEAT_TTL_MS) delete room.recentSeats[key];
+    }
+    return room.recentSeats[`player:${playerKey}`]
+        || (discordId ? room.recentSeats[`discord:${String(discordId).toLowerCase()}`] : null)
+        || null;
+}
 
 function roomLobbyInfo(room) {
     const players = Object.values(room.players || {});
@@ -611,8 +649,8 @@ function publicClue(room, player) {
 
 function publicLog(room, player) {
     const lines = room.log.slice(-30);
-    // In single-player, keep the current clue private via publicClue(), but show
-    // both sides' clue history in the game log so the bot turn is understandable.
+
+
     return lines;
 }
 
@@ -621,7 +659,7 @@ function emitRoom(room) {
     Object.values(room.players).forEach(p => {
         if (p.online !== false && p.socketId) io.to(p.socketId).emit('state', publicRoom(room, p.id));
     });
-    // Also update players who are still on the homepage/lobby preview before joining.
+
     io.to(`preview:${room.id}`).emit('lobbyInfo', roomLobbyInfo(room));
 }
 
@@ -651,7 +689,7 @@ function resetRoomTable(room, message = 'Table reset with a fresh board.') {
     room.singlePlayerAiClueStatus = null;
     room.roundStartedAt = Date.now();
     room.gameStartedAt = Date.now();
-    // Reset table means a clean board + clean game log.
+
     room.log = [];
 }
 
@@ -2017,8 +2055,8 @@ io.on('connection', socket => {
         if (!id) id = code();
         if (id.length > 5) id = id.slice(0, 5);
 
-        // The first participant binds the shared Discord scope to a room. Every
-        // later participant in that channel is forced into the same room.
+
+
         const mappedRoomId = scopeKey ? discordActivityRooms.get(scopeKey) : '';
         if (mappedRoomId && rooms.has(mappedRoomId)) id = mappedRoomId;
         else if (mappedRoomId) discordActivityRooms.delete(scopeKey);
@@ -2164,9 +2202,22 @@ io.on('connection', socket => {
         avatar = safeText(avatar, 120000);
         discordId = safeText(discordId, 80);
 
-        // Browser tabs share localStorage, but each tab is a separate player when there is no Discord ID.
-        // Split an already-online same-key seat BEFORE checking character availability, otherwise the
-        // old seat can accidentally bypass the taken-character check and hide other players.
+        // If the visible seat was already removed, reuse its saved team/role for this identity.
+        const recentSeat = !existing ? findRecentSeat(room, {playerKey: key, discordId}) : null;
+        if (recentSeat) {
+            team = recentSeat.team;
+            role = recentSeat.role;
+            if (!avatar && recentSeat.avatar) avatar = recentSeat.avatar;
+            if (!discordId && recentSeat.discordId) discordId = recentSeat.discordId;
+            if (recentSeat.character) character = recentSeat.character;
+            if (recentSeat.isAdmin) adminToken = room.adminToken;
+            // Consume old snapshots so later moves or kicks cannot revive stale seat data.
+            recentSeatKeys(recentSeat).forEach(seatKey => delete room.recentSeats[seatKey]);
+        }
+
+
+
+
         if (existing && existing.online !== false && existing.socketId !== socket.id && !discordId && !String(key).startsWith('d_')) {
             key = freshPlayerKey(room);
             existing = null;
@@ -2204,8 +2255,8 @@ io.on('connection', socket => {
             }
         }
 
-        // If a disconnected user rejoins with a fresh browser/session key, remove
-        // their old offline seat so the room does not show a duplicate no-wifi card.
+
+
         for (const [pid, oldPlayer] of Object.entries(room.players || {})) {
             if (pid === key || oldPlayer.online !== false) continue;
             const sameDiscordUser = !!(discordId && oldPlayer.discordId && oldPlayer.discordId === discordId);
@@ -2217,13 +2268,13 @@ io.on('connection', socket => {
         }
         existing = room.players[key];
 
-        // Same browser in a new tab shares localStorage, so it sends the same playerKey.
-        // If that player is still online, treat this as a NEW seat using the selected team/role.
-        // If that player is offline, restore their old seat so refresh/reconnect/host return works.
+
+
+
         if (discordId) {
             for (const [pid, oldPlayer] of Object.entries(room.players)) {
                 if (pid !== key && oldPlayer.discordId && oldPlayer.discordId === discordId) {
-                    // Same Discord user can only occupy one seat. Moving roles replaces the old seat.
+
                     if (oldPlayer.isAdmin && !forceAdmin) adminToken = room.adminToken;
                     delete room.players[pid];
                     delete room.votes?.[pid];
@@ -2232,8 +2283,8 @@ io.on('connection', socket => {
             existing = room.players[key];
         }
 
-        // If the same open Discord frame clicks Join again with a different fallback key, move the same seat.
-        // This prevents one user from appearing in several team/role blocks.
+
+
         if (previousPlayer && !existing) {
             if (previousPlayer.isAdmin && !forceAdmin) adminToken = room.adminToken;
             delete room.players[previousKey];
@@ -2243,7 +2294,7 @@ io.on('connection', socket => {
             existing = previousPlayer;
         }
 
-        // Extra safety: same socket can never keep old seats in the same room.
+
         for (const [pid, oldPlayer] of Object.entries(room.players)) {
             if (pid !== key && oldPlayer.socketId === socket.id) {
                 if (oldPlayer.isAdmin && !forceAdmin) adminToken = room.adminToken;
@@ -2253,9 +2304,9 @@ io.on('connection', socket => {
         }
         existing = room.players[key];
 
-        // Reconnects are restored by the browser/session playerKey only.
-        // Do not match by displayed name, because two different people may use the same name
-        // on the same team with different roles.
+
+
+
 
         socket.data.roomId = room.id;
         socket.data.playerKey = key;
@@ -2277,12 +2328,12 @@ io.on('connection', socket => {
                 existing.isAdmin = true;
                 existing.adminToken = room.adminToken;
             }
-            // Keep same-name seats allowed. Only this exact playerKey seat is restored.
+
             emitRoom(room);
             return {ok: true};
         }
 
-        // Only the original room creator/admin-token holder becomes admin. Becoming spymaster never gives admin power.
+
         const isAdmin = !!forceAdmin || !!(adminToken && adminToken === room.adminToken);
         room.players[key] = {
             id: key,
@@ -2299,7 +2350,7 @@ io.on('connection', socket => {
             isAdmin,
             adminToken: isAdmin ? room.adminToken : undefined
         };
-        // Same displayed names are allowed for different people/roles.
+
         emitRoom(room);
         return {ok: true};
     }
@@ -2456,8 +2507,10 @@ io.on('connection', socket => {
         if ((action === 'kick' || action === 'assignAdmin') && !actor.isAdmin) {
             return cb({ok: false, error: 'Only the room admin can use that option.'});
         }
-        if (target.isAdmin && target.id !== actor?.id && action !== 'changeName') {
-            return cb({ok: false, error: 'The room admin cannot be moved or kicked by anyone else.'});
+        // Admins and spymasters may move any seat, including another admin or themselves.
+        // Kicking the room admin remains protected below.
+        if (target.isAdmin && target.id !== actor?.id && action === 'kick') {
+            return cb({ok: false, error: 'The room admin cannot be kicked by anyone else.'});
         }
         if (action === 'kick') {
             if (target.isAdmin) return cb({ok: false, error: 'The room admin cannot be kicked.'});
@@ -2636,16 +2689,17 @@ io.on('connection', socket => {
             p.lastSeenAt = Date.now();
             room.log.push(`${p.name} disconnected. The room stays alive and they can rejoin with code ${room.id}.`);
             emitRoom(room);
-            const offlineSeatTtl = String(offlinePlayerId || '').startsWith('d_local_') || p.discordId
-                ? DISCORD_ACTIVITY_OFFLINE_SEAT_TTL_MS
-                : WEB_OFFLINE_SEAT_TTL_MS;
             setTimeout(() => {
-                const latest = room.players?.[offlinePlayerId];
+                // Resolve the current room object because a new-game action may replace it during the grace period.
+                const liveRoom = rooms.get(room.id) || room;
+                const latest = liveRoom.players?.[offlinePlayerId];
                 if (!latest || latest.online !== false) return;
-                delete room.votes?.[offlinePlayerId];
-                delete room.players[offlinePlayerId];
-                emitRoom(room);
-            }, offlineSeatTtl);
+                // Remove the stale visible player after five seconds, but retain a private resume snapshot.
+                rememberRecentSeat(liveRoom, latest);
+                delete liveRoom.votes?.[offlinePlayerId];
+                delete liveRoom.players[offlinePlayerId];
+                emitRoom(liveRoom);
+            }, OFFLINE_SEAT_TTL_MS);
         }
     });
 });
