@@ -1,0 +1,602 @@
+#toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    background: #11100d;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: .2s;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .4);
+    z-index: 20;
+}
+
+#toast.show {
+    opacity: 1;
+}
+
+.winFlash {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255, 215, 108, .36), transparent 55%);
+    animation: fade .8s forwards;
+    z-index: 10;
+}
+
+.loseFlash {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(155, 155, 155, .38), transparent 55%);
+    animation: fade .8s forwards;
+    z-index: 10;
+}
+
+@keyframes fade {
+    to {
+        opacity: 0;
+    }
+}
+
+.gameIntroOverlay,
+.pickReactionOverlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 5000000 !important;
+    display: grid !important;
+    place-items: center !important;
+    background: radial-gradient(circle at center, rgba(255, 215, 108, .18), rgba(0, 0, 0, .86) 58%, rgba(0, 0, 0, .96)) !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+}
+
+.gameIntroOverlay.hidden,
+.pickReactionOverlay.hidden {
+    display: none !important;
+}
+
+.gameIntroCard {
+    display: grid !important;
+    place-items: center !important;
+    gap: 18px !important;
+    animation: introStageGlow 2.45s ease both !important;
+}
+
+.gameIntroRing {
+    width: min(68vw, 560px) !important;
+    max-width: calc(100vw - 38px) !important;
+    max-height: min(70vh, 560px) !important;
+    aspect-ratio: 1 !important;
+    border-radius: 50% !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: clamp(18px, 3.2vw, 34px) !important;
+    background: conic-gradient(from 0deg, #ffd95d, #fff7ba 18%, #16d9cf 36%, #10100b 50%, #ffe27a 72%, #fff7ba 86%, #ffd95d) !important;
+    box-shadow: 0 0 60px rgba(255, 215, 108, .6), 0 0 126px rgba(22, 217, 207, .26), 0 28px 78px rgba(0, 0, 0, .74) !important;
+    animation: introRingSpin 2.15s cubic-bezier(.18, .82, .16, 1) both !important;
+}
+
+.gameIntroRing img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+    background: #050402 !important;
+    box-shadow: inset 0 0 24px rgba(0, 0, 0, .5), 0 14px 38px rgba(0, 0, 0, .62) !important;
+}
+
+.gameIntroText {
+    min-width: 180px !important;
+    padding: 12px 26px !important;
+    border-radius: 999px !important;
+    background: linear-gradient(180deg, #fff6b4, #d69b09) !important;
+    color: #130b00 !important;
+    font-weight: 1000 !important;
+    font-size: clamp(18px, 3vw, 34px) !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 0 34px rgba(255, 215, 108, .42) !important;
+}
+
+.gameIntroOverlay.introOut {
+    animation: introFadeOut .42s ease both !important;
+}
+
+.pickReactionOverlay {
+    background: radial-gradient(circle at center, rgba(255, 255, 255, .08), rgba(0, 0, 0, .18) 42%, rgba(0, 0, 0, .45)) !important;
+}
+
+.pickReactionCard {
+    display: grid !important;
+    grid-template-columns: minmax(110px, 190px) 58px minmax(128px, 172px) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    animation: reactionPop .55s cubic-bezier(.18, .92, .22, 1.22) both, reactionFloat 1.35s ease-in-out .55s infinite alternate !important;
+}
+
+.pickReactionCard img {
+    width: min(32vw, 190px) !important;
+    aspect-ratio: 1 !important;
+    object-fit: contain !important;
+    filter: drop-shadow(0 18px 24px rgba(0, 0, 0, .62)) !important;
+}
+
+.reactionChain {
+    position: relative !important;
+    height: 92px !important;
+}
+
+.reactionChain span {
+    position: absolute !important;
+    border-radius: 50% !important;
+    background: linear-gradient(180deg, #fff7bf, #d39a0b) !important;
+    border: 2px solid rgba(255, 255, 255, .55) !important;
+    box-shadow: 0 0 16px rgba(255, 215, 108, .55) !important;
+}
+
+.reactionChain span:first-child {
+    width: 30px !important;
+    height: 30px !important;
+    left: 6px !important;
+    top: 24px !important;
+}
+
+.reactionChain span:last-child {
+    width: 18px !important;
+    height: 18px !important;
+    right: 5px !important;
+    top: 44px !important;
+}
+
+.pickReactionCard.wrong .reactionSpeech {
+    background: radial-gradient(circle at 30% 20%, #fff1f1, #ff6d6d 58%, #8f0808) !important;
+    color: #fff !important;
+}
+
+.pickReactionCard.grey .reactionSpeech {
+    background: radial-gradient(circle at 30% 20%, #ffffff, #cfd3d8 58%, #6b7078) !important;
+    color: #101216 !important;
+}
+
+.pickReactionCard.death .reactionSpeech {
+    background: radial-gradient(circle at 30% 20%, #ffd5d5, #ff2424 48%, #250000) !important;
+    color: #fff !important;
+}
+
+.pickReactionOverlay.reactionOut {
+    animation: reactionFadeOut .32s ease both !important;
+}
+
+@keyframes introRingSpin {
+    0% {
+        transform: rotateY(0deg) rotate(0deg) scale(.28);
+        opacity: 0;
+        filter: blur(10px) brightness(1.9);
+    }
+
+    28% {
+        transform: rotateY(540deg) rotate(300deg) scale(1.12);
+        opacity: 1;
+        filter: blur(1px) brightness(1.35);
+    }
+
+    48% {
+        transform: rotateY(720deg) rotate(690deg) scale(1.05);
+        opacity: 1;
+        filter: blur(0) brightness(1.18);
+    }
+
+    62% {
+        transform: rotateY(720deg) rotate(720deg) scale(1);
+        opacity: 1;
+        filter: blur(0) brightness(1.06);
+    }
+
+    76%, 100% {
+        transform: rotateY(720deg) rotate(720deg) scale(1);
+        opacity: 1;
+        filter: blur(0) brightness(1);
+    }
+}
+
+@keyframes introStageGlow {
+    0% {
+        transform: translateY(10px) scale(.98);
+        opacity: 0;
+    }
+
+    8%, 92% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes introFadeOut {
+    to {
+        opacity: 0;
+        transform: scale(1.04);
+    }
+}
+
+@keyframes reactionPop {
+    0% {
+        transform: translateY(28px) scale(.45) rotate(-7deg);
+        opacity: 0;
+        filter: blur(7px);
+    }
+
+    70% {
+        transform: translateY(-6px) scale(1.08) rotate(2deg);
+        opacity: 1;
+        filter: blur(0);
+    }
+
+    100% {
+        transform: translateY(0) scale(1) rotate(0);
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+@keyframes reactionFloat {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes reactionFadeOut {
+    to {
+        opacity: 0;
+        transform: scale(.94);
+    }
+}
+
+@media (max-width: 760px) {
+    .gameIntroRing {
+        width: min(84vw, 420px) !important;
+        max-height: min(66vh, 420px) !important;
+        border-radius: 50% !important;
+    }
+
+    .gameIntroRing img {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 50% !important;
+    }
+
+    .pickReactionCard {
+        grid-template-columns: 1fr !important;
+        justify-items: center !important;
+        gap: 4px !important;
+    }
+
+    .reactionChain {
+        width: 74px !important;
+        height: 34px !important;
+        transform: rotate(90deg) !important;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.winModal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at center, rgba(255, 215, 108, .16), rgba(0, 0, 0, .78));
+    backdrop-filter: blur(7px);
+    animation: modalFade .25s ease both;
+}
+
+.winModal.hidden {
+    display: none !important;
+}
+
+.winModalCard {
+    padding: 34px 30px 28px;
+    border-radius: 30px;
+    text-align: center;
+    color: #fff2bd;
+    border: 1px solid rgba(255, 215, 108, .55);
+    background: radial-gradient(circle at 50% 0%, rgba(255, 230, 126, .25), transparent 44%),
+    linear-gradient(145deg, rgba(38, 26, 6, .98), rgba(0, 0, 0, .96));
+    box-shadow: 0 0 60px rgba(255, 200, 50, .25), 0 24px 90px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .18);
+    position: relative;
+    animation: winPop .45s cubic-bezier(.2, 1.25, .2, 1) both;
+}
+
+.winModalCard:before {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background: conic-gradient(from 0deg, transparent, rgba(255, 215, 108, .22), transparent 18%, rgba(255, 255, 255, .18), transparent 35%);
+    animation: heroRotate 7s linear infinite;
+    opacity: .55;
+}
+
+.winModalCard > * {
+    position: relative;
+    z-index: 1;
+}
+
+.winBurst {
+    font-size: 70px;
+    line-height: 1;
+    animation: winBurstPulse 1s ease-in-out infinite;
+}
+
+.winModalCard h2 {
+    margin: 10px 0 8px;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif;
+    letter-spacing: -1px;
+    background: linear-gradient(90deg, #fff7c6, #e1a917, #fff4af);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 28px rgba(255, 215, 108, .24);
+}
+
+.winModalCard p {
+    margin: 0 0 20px;
+    color: #f4df9b;
+    font-weight: 800;
+}
+
+.winModalCard button {
+    min-width: 190px;
+    height: 46px;
+    border-radius: 999px;
+}
+
+@keyframes modalFade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes winPop {
+    from {
+        opacity: 0;
+        transform: scale(.82) translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes winBurstPulse {
+    0%, 100% {
+        transform: scale(1) rotate(-3deg);
+    }
+
+    50% {
+        transform: scale(1.16) rotate(4deg);
+    }
+}
+
+@keyframes winnerPanelGlow {
+    0%, 100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.28);
+    }
+}
+
+@media (max-width: 980px) {
+    .winModalCard {
+        padding: 28px 20px 24px;
+    }
+}
+
+.winModal.docked {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    pointer-events: none !important;
+    place-items: start !important;
+    animation: none !important;
+}
+
+.winModal.docked .winModalCard {
+    position: fixed;
+    top: 205px;
+    border-radius: 22px;
+    animation: winDockSlide .55s cubic-bezier(.2, .95, .18, 1) both, dockedWinFloat 2.2s ease-in-out infinite .6s;
+}
+
+.winModal.docked .winBurst {
+    font-size: 38px;
+}
+
+.winModal.docked .winModalCard h2 {
+    margin: 6px 0;
+}
+
+.winModal.docked .winModalCard p {
+    font-size: 12px;
+    margin: 0;
+}
+
+.winModalCard button {
+    display: none !important;
+}
+
+@media (max-width: 980px) {
+    .winModal.docked .winModalCard {
+        top: auto;
+        bottom: 12px;
+        left: 12px !important;
+        right: 12px !important;
+        width: auto;
+    }
+}
+
+.roleOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, .58);
+    backdrop-filter: blur(7px);
+    padding: 18px;
+}
+
+.roleOverlay.hidden {
+    display: none !important;
+}
+
+.adminRequestModal {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, .45);
+    backdrop-filter: blur(8px);
+}
+
+.adminRequestModal.hidden {
+    display: none !important;
+}
+
+.adminRequestCard {
+    width: min(440px, calc(100vw - 28px));
+    border-radius: 24px;
+    padding: 24px;
+    text-align: center;
+    animation: adminPop .22s ease both;
+}
+
+.adminRequestIcon {
+    font-size: 42px;
+    filter: drop-shadow(0 0 14px rgba(255, 215, 108, .55));
+    margin-bottom: 8px;
+}
+
+.adminRequestCard h2 {
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    color: #ffe285;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif;
+}
+
+.adminRequestCard p {
+    margin: 0 0 18px;
+    color: #fff2c3;
+    line-height: 1.45;
+}
+
+.winModal.docked .winModalCard {
+    overflow: visible !important;
+    padding: 16px 18px !important;
+}
+
+.winModal.docked.winBlue .winModalCard {
+    left: 14px !important;
+    right: auto !important;
+}
+
+.winModal.docked.winRed .winModalCard {
+    right: 14px !important;
+    left: auto !important;
+}
+
+.winModal.docked .winModalCard h2 {
+    font-size: clamp(20px, 2.2vw, 30px) !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    line-height: 1.05 !important;
+}
+
+.winModalCard {
+    width: min(680px, calc(100vw - 42px)) !important;
+    overflow: visible !important;
+}
+
+.winModalCard h2 {
+    font-size: clamp(28px, 4.4vw, 58px) !important;
+    white-space: normal !important;
+    line-height: 1.05 !important;
+}
+
+.winModal.docked .winModalCard {
+    width: min(360px, calc(100vw - 30px)) !important;
+    max-width: 360px !important;
+}
+
+.neutralFlash {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(220, 224, 230, .18), transparent 58%);
+    animation: flash .38s ease-out forwards;
+    z-index: 9999;
+}
+
+.singleDifficultyOverlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9000 !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 18px !important;
+    background: rgba(0, 0, 0, .68) !important;
+    backdrop-filter: blur(5px) !important;
+}
+
+.singleDifficultyOverlay.hidden {
+    display: none !important;
+}
+
+#toast.hostOnlyModeToast,
+body.discordActivity #toast.hostOnlyModeToast {
+    color: #fff3c4 !important;
+    font-weight: 1000 !important;
+    border: 2px solid rgba(255, 215, 108, .82) !important;
+    background: linear-gradient(135deg, rgba(255, 215, 108, .20), rgba(0, 0, 0, .92) 34%, rgba(255, 215, 108, .15)),
+        linear-gradient(180deg, #14110b, #050505) !important;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .88),
+        0 18px 42px rgba(0, 0, 0, .72),
+        0 0 34px rgba(255, 215, 108, .35) !important;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .68), 0 0 12px rgba(255, 215, 108, .38) !important;
+    max-width: min(92vw, 560px) !important;
+    text-align: center !important;
+}
+
+.winModal.hidden,
+body.discordActivity .winModal.hidden {
+    display: none !important;
+}

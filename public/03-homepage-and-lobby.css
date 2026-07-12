@@ -1,0 +1,2467 @@
+.landing {
+    width: min(920px, calc(100vw - 28px));
+    margin: 6vh auto;
+    text-align: center;
+}
+
+.landing h1, .logoTitle {
+    font-size: clamp(38px, 6.4vw, 82px);
+    margin: 0;
+    letter-spacing: -3px;
+    line-height: .95;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #fff9dd, #ffd76c, #fff, #b47a00, #fff0b8);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 28px rgba(255, 215, 108, .16);
+    animation: logoFlow 5s linear infinite;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 18px;
+}
+
+.characters {
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+.char {
+    width: 70px;
+    height: 70px;
+    border-radius: 22px;
+    border: 2px solid transparent;
+    background: rgba(255, 255, 255, .08);
+    display: grid;
+    place-items: center;
+    font-size: 31px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.char:before {
+    content: "";
+    position: absolute;
+    inset: -25%;
+    background: radial-gradient(circle, var(--a), transparent 55%);
+    opacity: .3;
+    animation: spin 8s linear infinite;
+}
+
+.char span {
+    position: relative;
+}
+
+.char.selected {
+    border-color: var(--gold);
+    box-shadow: 0 0 24px rgba(255, 215, 108, .55);
+}
+
+.hintText {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+@media (max-width: 620px) {
+    .landing h1 {
+        font-size: 42px;
+    }
+
+    .actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 720px) {
+    .landing {
+        margin: 2vh auto;
+    }
+}
+
+.reactionSpeech {
+    width: min(30vw, 172px) !important;
+    min-width: 128px !important;
+    aspect-ratio: 1 !important;
+    border-radius: 50% !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 18px !important;
+    text-align: center !important;
+    line-height: 1.06 !important;
+    font-weight: 1000 !important;
+    font-size: clamp(15px, 2.5vw, 26px) !important;
+    color: #130b00 !important;
+    background: radial-gradient(circle at 30% 20%, #fffbe2, #ffd95d 58%, #c88700) !important;
+    border: 3px solid rgba(255, 255, 255, .68) !important;
+    box-shadow: 0 18px 38px rgba(0, 0, 0, .5), 0 0 28px rgba(255, 215, 108, .42) !important;
+}
+
+@media (max-width: 760px) {
+    .reactionSpeech {
+        width: min(48vw, 160px) !important;
+    }
+}
+
+.modesFloating {
+    position: fixed;
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    z-index: 8500;
+    display: grid;
+    justify-items: end;
+    gap: 10px;
+}
+
+body[data-lang="ar"] .modesFloating {
+    right: auto;
+    left: max(18px, env(safe-area-inset-left));
+}
+
+.modesBtn {
+    min-width: 142px;
+    min-height: 58px;
+    border-radius: 18px;
+    padding: 15px 22px;
+    font-size: 18px;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: #130b00;
+    background: radial-gradient(circle at 18% 18%, rgba(255, 255, 255, .75), transparent 24%),
+    linear-gradient(180deg, #fff4b8, #ffd34d 45%, #9c6500);
+    border: 1px solid rgba(255, 242, 178, .92);
+    box-shadow: 0 0 26px rgba(255, 215, 108, .45), 0 16px 30px rgba(0, 0, 0, .48);
+}
+
+.modesMenu {
+    width: min(230px, calc(100vw - 34px));
+    padding: 10px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 215, 108, .36);
+    background: rgba(15, 12, 7, .94);
+    box-shadow: 0 18px 46px rgba(0, 0, 0, .56), inset 0 1px 0 rgba(255, 240, 170, .08);
+    backdrop-filter: blur(14px);
+    display: grid;
+    gap: 8px;
+}
+
+.modesMenu.hidden {
+    display: none;
+}
+
+.modeChoice {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 13px;
+    text-align: center;
+    color: #fff6d8;
+    background: linear-gradient(180deg, rgba(72, 56, 27, .98), rgba(19, 15, 9, .98));
+    border: 1px solid rgba(255, 215, 108, .24);
+}
+
+.modeChoice.primaryMode {
+    color: #150c00;
+    background: linear-gradient(180deg, #fff1a4, #cf8c05 70%, #604000);
+    border-color: rgba(255, 236, 165, .82);
+}
+
+@media (max-width: 640px) {
+    .modesFloating {
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    body[data-lang="ar"] .modesFloating {
+        right: auto;
+        left: max(12px, env(safe-area-inset-left));
+    }
+
+    .modesBtn {
+        min-width: 118px;
+        min-height: 48px;
+        font-size: 14px;
+        border-radius: 15px;
+    }
+}
+
+@media (max-width: 430px) {
+    .characters .char {
+        width: 58px;
+        height: 58px;
+    }
+}
+
+.lobbyPreview {
+    margin: 12px auto 8px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 215, 108, .28);
+    border-radius: 16px;
+    background: rgba(0, 0, 0, .28);
+    text-align: left;
+    color: #ffeec2;
+}
+
+.lobbyPreview b {
+    display: block;
+    margin-bottom: 8px;
+    color: #fff3be;
+}
+
+.lobbyPreview .muted {
+    display: block;
+    color: #cdbb85;
+}
+
+.previewGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.previewGrid span, .previewSpies span {
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(255, 215, 108, .08);
+    display: block;
+}
+
+.previewSpies {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+@media (max-width: 980px) {
+    .previewGrid, .previewSpies {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 680px) {
+    .previewGrid, .previewSpies {
+        grid-template-columns: 1fr;
+    }
+}
+
+.joinBasics {
+    margin-top: 8px;
+}
+
+.teamChooseTitle {
+    margin: 14px 0 10px;
+    color: #fff3be;
+    font-weight: 1000;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: 13px;
+    text-align: left;
+}
+
+.teamChoice {
+    display: grid;
+    grid-template-columns: 1fr 1fr .72fr;
+    gap: 12px;
+    margin: 0 0 12px;
+}
+
+.teamPick {
+    min-height: 98px;
+    border: 1px solid rgba(255, 215, 108, .26);
+    border-radius: 20px;
+    padding: 16px 14px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.teamPick:before {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    opacity: .33;
+    z-index: -1;
+    filter: blur(2px);
+    transform: rotate(12deg);
+}
+
+.teamPick span {
+    display: block;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif;
+    font-size: clamp(20px, 2.2vw, 31px);
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.teamPick small {
+    display: block;
+    margin-top: 8px;
+    color: #e9d99b;
+    font-weight: 800;
+}
+
+.teamPick.selected {
+    outline: 3px solid #ffd76c;
+    box-shadow: 0 0 35px rgba(255, 215, 108, .34), inset 0 0 0 1px rgba(255, 255, 255, .25);
+    transform: translateY(-2px);
+}
+
+.joinSummary {
+    margin: 10px 0 4px;
+    padding: 10px 13px;
+    border-radius: 14px;
+    background: rgba(255, 215, 108, .1);
+    border: 1px solid rgba(255, 215, 108, .24);
+    color: #ffedb0;
+    text-align: left;
+    font-weight: 800;
+}
+
+.rolePopup {
+    width: min(560px, calc(100vw - 26px));
+    border-radius: 26px;
+    padding: 26px;
+    position: relative;
+    box-shadow: 0 30px 100px rgba(0, 0, 0, .7), 0 0 60px rgba(255, 215, 108, .18);
+    animation: rolePop .22s ease both;
+}
+
+.rolePopup h2 {
+    margin: 0 36px 8px 0;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif;
+    font-size: clamp(28px, 4vw, 42px);
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #fff7cf, #ffd76c, #a86e00);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.rolePopup p {
+    margin: 0 0 18px;
+    color: #d8c58a;
+    font-weight: 800;
+}
+
+.rolePick {
+    padding: 18px;
+    text-align: left;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 215, 108, .22);
+    background: linear-gradient(145deg, rgba(255, 215, 108, .13), rgba(0, 0, 0, .55));
+}
+
+.rolePick b {
+    display: block;
+    font-size: 22px;
+    color: #fff4bf;
+    text-transform: uppercase;
+}
+
+.rolePick span {
+    display: block;
+    margin-top: 7px;
+    color: #d6c385;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.rolePick.selected {
+    outline: 2px solid #ffd76c;
+    box-shadow: 0 0 24px rgba(255, 215, 108, .25);
+}
+
+.rolePick.hidden {
+    display: none !important;
+}
+
+@keyframes homeSweep {
+    from {
+        transform: translateX(-35%) rotate(12deg);
+    }
+
+    to {
+        transform: translateX(35%) rotate(12deg);
+    }
+}
+
+@media (max-width: 720px) {
+    .teamChoice {
+        grid-template-columns: 1fr;
+    }
+
+    .teamPick {
+        min-height: 82px;
+    }
+}
+
+.adminActions button {
+    min-height: 22px;
+    border: 1px solid rgba(255, 215, 108, .22);
+    box-shadow: none;
+}
+
+.adminActions button:first-child {
+    background: linear-gradient(180deg, rgba(255, 89, 89, .3), rgba(60, 0, 0, .5));
+    color: #ffd3d3;
+    border-color: rgba(255, 90, 90, .35);
+}
+
+.adminActions button:hover {
+    filter: brightness(1.16);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 980px) {
+    .adminActions button {
+        flex: 1 1 54px;
+    }
+}
+
+.adminActions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.adminActions button {
+    padding: 5px 8px;
+    font-size: 11px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #5a1f1f, #231010);
+    color: #ffd9d9;
+}
+
+.adminRequestActions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.adminRequestActions button {
+    min-width: 130px;
+}
+
+@media (max-width: 520px) {
+    .adminRequestActions {
+        flex-direction: column;
+    }
+
+    .adminRequestActions button {
+        width: 100%;
+    }
+}
+
+.joinBasics {
+    display: grid;
+    gap: 12px;
+    align-items: end;
+    margin: 18px auto 14px;
+}
+
+.joinBasics label {
+    display: block;
+}
+
+.discordLobby {
+    margin: 18px auto 8px;
+    max-width: 1120px;
+    animation: fadeIn .25s ease both;
+}
+
+.discordLobbyTop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.discordRoleGrid {
+    display: grid;
+    align-items: stretch;
+}
+
+.discordRoleBox {
+    justify-content: space-between;
+    border-radius: 18px;
+    margin-top: 12px;
+    background: rgba(0, 0, 0, .28);
+    border: 1px solid rgba(255, 215, 108, .18);
+}
+
+.discordRoleBox b {
+    display: block;
+    text-transform: uppercase;
+    color: #fff8df;
+}
+
+.discordRoleBox small {
+    display: block;
+    color: #d9c68e;
+    margin-top: 4px;
+}
+
+.discordRoleJoin {
+    border-radius: 999px;
+    background: linear-gradient(180deg, #16d600, #0a8900);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .42);
+    box-shadow: 0 0 18px rgba(12, 200, 0, .25), 0 8px 18px rgba(0, 0, 0, .32);
+}
+
+body.discordActivity .websiteRoomField,
+body.discordActivity #teamChoice,
+body.discordActivity .actions,
+body.discordActivity #roleOverlay,
+body.discordActivity #lobbyPreview {
+    display: none !important;
+}
+
+body.discordActivity .discordLobby {
+    display: block !important;
+}
+
+body.discordActivity .teamChooseTitle {
+    text-transform: uppercase;
+    color: #fff3be;
+    font-weight: 1000;
+    margin-top: 6px;
+}
+
+body.discordActivity .hintText {
+    margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+    .discordRoleGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1050px) {
+    .discordRoleGrid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+body.discordActivity .joinBasics {
+    display: none !important;
+}
+
+.landingAdminBar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 16px auto 4px;
+    position: relative;
+}
+
+.landingStartGameBtn {
+    font-size: 18px;
+    padding: 14px 34px;
+    border-radius: 999px;
+    box-shadow: 0 0 28px rgba(255, 215, 108, .45);
+}
+
+#landingOptionsWrap {
+    display: none !important;
+}
+
+.landingAdminBar .optionsWrap {
+    display: none !important;
+}
+
+.discordRoleJoin:disabled {
+    opacity: .45;
+    filter: grayscale(.5);
+    cursor: not-allowed;
+}
+
+body.discordActivity #characterPick {
+    display: block !important;
+}
+
+.characters {
+    display: block !important;
+    text-align: center;
+}
+
+.characterTitle {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #ffe9a6;
+    font-weight: 1000;
+    margin: 4px 0 8px;
+    text-align: center;
+}
+
+.characterGrid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.characterGrid .char {
+    padding: 5px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 1px solid rgba(255, 215, 108, .25);
+    background: radial-gradient(circle at 50% 15%, color-mix(in srgb, var(--a) 35%, transparent), rgba(0, 0, 0, .38));
+    color: #fff8df;
+}
+
+.characterGrid .char span {
+    line-height: 1;
+}
+
+.characterGrid .char small {
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #ecd899;
+    font-weight: 1000;
+}
+
+.characterGrid .char.selected {
+    border-color: #ffe285 !important;
+    box-shadow: 0 0 0 2px rgba(255, 215, 108, .4), 0 0 24px rgba(255, 215, 108, .45) !important;
+    transform: translateY(-2px);
+}
+
+.characterGrid .char.taken {
+    cursor: not-allowed;
+}
+
+.characterGrid .char.taken small {
+    color: #ffaaaa;
+}
+
+.characterAvatar {
+    background: radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--a) 55%, #fff 12%), rgba(255, 255, 255, .08)) !important;
+    border: 1px solid rgba(255, 215, 108, .28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 6px 14px rgba(0, 0, 0, .25);
+}
+
+.landingAdminBar {
+    z-index: 500 !important;
+}
+
+body.discordActivity .landingStartGameBtn {
+    box-shadow: 0 0 38px rgba(255, 215, 108, .62), 0 16px 32px rgba(0, 0, 0, .5) !important;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity .landingAdminBar {
+        bottom: clamp(86px, 14vh, 142px) !important;
+    }
+}
+
+body.discordActivity .landing {
+    overflow: hidden;
+}
+
+body.discordActivity #characterPick {
+    max-width: 1040px !important;
+}
+
+.discordRoleGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, .62fr) minmax(0, 1fr) !important;
+    gap: 12px !important;
+    width: 100%;
+    min-width: 0;
+}
+
+.discordRoleBox {
+    min-width: 0 !important;
+    padding: 12px !important;
+}
+
+.discordRoleBox > div {
+    min-width: 0;
+}
+
+.discordRoleBox b {
+    font-size: clamp(15px, 1.1vw, 18px) !important;
+}
+
+.discordRoleJoin {
+    min-width: 90px !important;
+    padding: 10px 12px !important;
+}
+
+.discordLobbyTop:empty {
+    display: none !important;
+}
+
+.characterGrid {
+    gap: 11px !important;
+}
+
+.characterGrid .char {
+    width: 76px !important;
+    height: 78px !important;
+    border-radius: 20px !important;
+}
+
+.characterGrid .char span {
+    font-size: 34px !important;
+}
+
+.characterGrid .char small {
+    font-size: 9px !important;
+    max-width: 68px !important;
+}
+
+.characterGrid .char.taken {
+    opacity: .28 !important;
+    filter: grayscale(1) brightness(.72) !important;
+}
+
+.characterGrid .char.taken span {
+    filter: grayscale(1);
+}
+
+.characterAvatar {
+    font-size: 24px !important;
+}
+
+body.discordActivity .landingAdminBar {
+    position: fixed !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: min(480px, calc(100vw - 36px)) !important;
+    display: flex !important;
+    justify-content: center !important;
+    pointer-events: none !important;
+}
+
+body.discordActivity .landingAdminBar.hidden {
+    display: none !important;
+}
+
+body.discordActivity .landingStartGameBtn {
+    pointer-events: auto !important;
+    width: min(360px, 100%) !important;
+    border-radius: 999px !important;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity .landing {
+        height: calc(100vh - 10px) !important;
+        max-height: calc(100vh - 10px) !important;
+        margin: 5px auto !important;
+        padding: 10px !important;
+    }
+
+    .characterGrid .char {
+        width: 58px !important;
+        height: 58px !important;
+        border-radius: 16px !important;
+    }
+
+    .characterGrid .char span {
+        font-size: 25px !important;
+    }
+
+    .characterGrid .char small {
+        font-size: 7px !important;
+    }
+
+    .discordRoleGrid {
+        grid-template-columns: 1fr 0.72fr 1fr !important;
+        gap: 6px !important;
+    }
+
+    .discordRoleBox {
+        padding: 8px !important;
+        margin-top: 7px !important;
+        border-radius: 13px !important;
+    }
+
+    .discordRoleBox small, .discordSpectatorCard p {
+        font-size: 10px !important;
+    }
+
+    .discordRoleJoin {
+        min-width: 64px !important;
+        padding: 8px !important;
+        font-size: 12px !important;
+    }
+
+    body.discordActivity .landingStartGameBtn {
+        height: 46px !important;
+        font-size: 18px !important;
+    }
+}
+
+.joinBasics {
+    grid-template-columns: minmax(260px, 1fr) 180px !important;
+    max-width: 760px !important;
+}
+
+.homeProfileTools {
+    max-width: 760px;
+    margin: 0 auto 14px;
+    text-align: left;
+}
+
+.avatarUploadActions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatarUploadActions button {
+    padding: 10px 13px;
+    border-radius: 999px;
+    font-size: 13px;
+}
+
+.characterAvatar {
+    overflow: hidden;
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.characterAvatar.customAvatar {
+    background: #111 !important;
+    padding: 0 !important;
+}
+
+.characterAvatar.customAvatar .crownMark {
+    position: absolute;
+    right: -3px;
+    top: -6px;
+    z-index: 3;
+}
+
+@media (max-width: 620px) {
+    .joinBasics {
+        grid-template-columns: 1fr !important;
+    }
+
+    .avatarUploadActions button {
+        flex: 1;
+        min-width: 120px;
+    }
+}
+
+body.discordActivity .joinBasics,
+.joinBasics.nameVisibleFix {
+    display: grid !important;
+}
+
+body.discordActivity .joinBasics {
+    grid-template-columns: minmax(280px, 680px) !important;
+    align-items: end !important;
+    gap: 10px !important;
+}
+
+body.discordActivity .joinBasics label {
+    color: #ffe8a4 !important;
+    font-size: 13px !important;
+    letter-spacing: .3px !important;
+    text-transform: uppercase !important;
+}
+
+body.discordActivity .teamChooseTitle {
+    text-align: left !important;
+    max-width: 1120px !important;
+}
+
+.discordRoleBox {
+    display: grid !important;
+    grid-template-columns: minmax(120px, 1fr) auto !important;
+    grid-auto-rows: auto !important;
+    align-items: center !important;
+    gap: 8px 12px !important;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity .joinBasics {
+        width: min(520px, calc(100vw - 26px)) !important;
+        margin: 4px auto 8px !important;
+    }
+
+    body.discordActivity .homeProfileTools {
+        width: min(520px, calc(100vw - 26px)) !important;
+        margin-bottom: 8px !important;
+    }
+}
+
+.char.usingUploadedImage,
+body.hasCustomAvatar .char.selected {
+    box-shadow: none !important;
+}
+
+body.hasCustomAvatar #characterPick .characterTitle::after {
+    content: " · uploaded image active";
+    color: #ffe9a7;
+    opacity: .75;
+    font-size: .86em;
+}
+
+body.discordActivity .landing {
+    width: min(1040px, calc(100vw - 18px)) !important;
+    max-height: calc(100dvh - 14px) !important;
+    margin: 7px auto !important;
+    padding: 14px 18px 104px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    border-radius: 22px !important;
+}
+
+body.discordActivity .joinBasics {
+    width: min(560px, calc(100vw - 42px)) !important;
+    max-width: 560px !important;
+    margin: 4px auto 8px !important;
+}
+
+body.discordActivity .homeProfileTools {
+    width: min(560px, calc(100vw - 42px)) !important;
+    max-width: 560px !important;
+    margin: 0 auto 8px !important;
+}
+
+body.discordActivity #characterPick {
+    margin: 4px auto 10px !important;
+}
+
+body.discordActivity .characterTitle {
+    margin: 0 0 6px !important;
+    font-size: 11px !important;
+}
+
+body.discordActivity .characterGrid {
+    gap: 7px !important;
+}
+
+body.discordActivity .characterGrid .char {
+    width: 52px !important;
+    height: 56px !important;
+    border-radius: 15px !important;
+    padding: 4px 3px !important;
+}
+
+body.discordActivity .characterGrid .char span {
+    font-size: 24px !important;
+}
+
+body.discordActivity .characterGrid .char small {
+    font-size: 7px !important;
+    max-width: 46px !important;
+}
+
+body.discordActivity .teamChooseTitle {
+    margin: 6px auto 6px !important;
+    font-size: 15px !important;
+}
+
+body.discordActivity .discordRoleGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(175px, .58fr) minmax(0, 1fr) !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+}
+
+body.discordActivity .discordRoleBox {
+    margin-top: 7px !important;
+    padding: 8px 9px !important;
+    border-radius: 14px !important;
+    gap: 6px 8px !important;
+}
+
+body.discordActivity .discordRoleBox b {
+    font-size: 14px !important;
+}
+
+body.discordActivity .discordRoleBox small,
+body.discordActivity .discordSpectatorCard p,
+body.discordActivity .discordHelpText {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+}
+
+body.discordActivity .discordRoleJoin {
+    min-width: 72px !important;
+    min-height: 34px !important;
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+}
+
+body.discordActivity .hintText {
+    margin: 6px auto 0 !important;
+    font-size: 11px !important;
+}
+
+body.discordActivity .landingAdminBar {
+    bottom: 22px !important;
+    z-index: 850 !important;
+}
+
+body.discordActivity .landingStartGameBtn {
+    height: 46px !important;
+    max-width: 320px !important;
+    font-size: 19px !important;
+}
+
+body.discordActivity .player .avatar,
+body.discordActivity .avatar.characterAvatar {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    border-radius: 8px !important;
+    font-size: 15px !important;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity .landing {
+        padding-bottom: 120px !important;
+    }
+
+    body.discordActivity .discordRoleGrid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+#game .teamPanel .avatar.characterAvatar {
+    width: 68px !important;
+    height: 68px !important;
+    min-width: 68px !important;
+    border-radius: 20px !important;
+    font-size: 36px !important;
+    box-shadow: 0 0 0 2px rgba(255, 237, 164, .28), 0 12px 20px rgba(0, 0, 0, .42) !important;
+}
+
+#game .teamPanel .avatar.characterAvatar img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: inherit !important;
+}
+
+@media (max-width: 1280px) and (min-width: 981px) {
+    #game .teamPanel .avatar.characterAvatar {
+        width: 54px !important;
+        height: 54px !important;
+        min-width: 54px !important;
+        border-radius: 16px !important;
+        font-size: 30px !important;
+    }
+}
+
+body.discordActivity #game .teamPanel .avatar.characterAvatar {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 12px !important;
+    font-size: 23px !important;
+}
+
+@media (max-width: 980px) {
+    #game .teamPanel .avatar.characterAvatar {
+        width: 54px !important;
+        height: 54px !important;
+        min-width: 54px !important;
+    }
+}
+
+@media (max-width: 980px) {
+    body.discordActivity #game .teamPanel .avatar.characterAvatar,
+    #game .teamPanel .avatar.characterAvatar {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        border-radius: 10px !important;
+        font-size: 20px !important;
+    }
+}
+
+@media (max-width: 980px) {
+    body.discordActivity #landing.landing,
+    #landing.landing {
+        width: min(100vw - 10px, 430px) !important;
+        min-height: auto !important;
+        max-height: calc(100dvh - 10px) !important;
+        margin: 5px auto !important;
+        padding: 9px 10px 8px !important;
+        overflow: hidden !important;
+        border-radius: 18px !important;
+    }
+
+    body.discordActivity .dstyTitleWrap,
+    #landing .dstyTitleWrap {
+        margin: 0 0 6px !important;
+        padding: 0 !important;
+    }
+
+    body.discordActivity .homeDstyLogo,
+    #landing .homeDstyLogo {
+        font-size: clamp(28px, 10.4vw, 44px) !important;
+        line-height: .82 !important;
+        gap: .12em !important;
+        flex-wrap: wrap !important;
+        filter: drop-shadow(0 0 10px rgba(77, 242, 255, .2)) !important;
+    }
+
+    body.discordActivity .dstyLogo::before,
+    #landing .dstyLogo::before {
+        bottom: -.13em !important;
+    }
+
+    body.discordActivity .dstyLogo::after,
+    #landing .dstyLogo::after {
+        display: none !important;
+    }
+
+    body.discordActivity .joinBasics,
+    #landing .joinBasics {
+        display: block !important;
+        max-width: 100% !important;
+        margin: 5px auto 5px !important;
+        gap: 0 !important;
+    }
+
+    body.discordActivity .joinBasics label,
+    #landing .joinBasics label,
+    body.discordActivity .avatarUploadLabel,
+    #landing .avatarUploadLabel {
+        font-size: 10px !important;
+        letter-spacing: .04em !important;
+        line-height: 1.05 !important;
+    }
+
+    body.discordActivity #name,
+    #landing #name {
+        height: 32px !important;
+        min-height: 32px !important;
+        margin-top: 4px !important;
+        padding: 6px 10px !important;
+        border-radius: 12px !important;
+        font-size: 15px !important;
+        line-height: 1 !important;
+    }
+
+    body.discordActivity .homeProfileTools,
+    #landing .homeProfileTools {
+        margin: 5px auto 5px !important;
+        max-width: 100% !important;
+    }
+
+    body.discordActivity .avatarUploadRow,
+    #landing .avatarUploadRow {
+        min-height: 54px !important;
+        padding: 6px 8px !important;
+        border-radius: 15px !important;
+        display: grid !important;
+        grid-template-columns: 46px 1fr !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    body.discordActivity .homeAvatarPreview,
+    #landing .homeAvatarPreview {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        border-radius: 14px !important;
+        font-size: 22px !important;
+        margin: 0 !important;
+    }
+
+    body.discordActivity .homeAvatarPreview img,
+    #landing .homeAvatarPreview img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: inherit !important;
+    }
+
+    body.discordActivity .avatarUploadActions,
+    #landing .avatarUploadActions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: stretch !important;
+        gap: 6px !important;
+        min-width: 0 !important;
+    }
+
+    body.discordActivity .avatarUploadActions button,
+    #landing .avatarUploadActions button,
+    body.discordActivity #avatarUploadBtn,
+    #landing #avatarUploadBtn,
+    body.discordActivity #avatarClearBtn,
+    #landing #avatarClearBtn {
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 5px 8px !important;
+        border-radius: 999px !important;
+        font-size: 11px !important;
+        line-height: 1 !important;
+        flex: 1 1 auto !important;
+        white-space: nowrap !important;
+    }
+
+    body.discordActivity .teamChooseTitle,
+    #landing .teamChooseTitle {
+        margin: 5px 0 3px !important;
+        font-size: 12px !important;
+        text-align: left !important;
+        letter-spacing: .08em !important;
+    }
+
+    body.discordActivity .characters,
+    #landing .characters {
+        margin-top: 4px !important;
+        gap: 4px !important;
+    }
+
+    body.discordActivity .characterTitle,
+    #landing .characterTitle {
+        font-size: 11px !important;
+        margin-bottom: 3px !important;
+        line-height: 1 !important;
+    }
+
+    body.discordActivity .characterGrid,
+    #landing .characterGrid {
+        display: grid !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 5px !important;
+        width: 100% !important;
+        max-width: 340px !important;
+        margin: 0 auto !important;
+    }
+
+    body.discordActivity .characterGrid .char,
+    #landing .characterGrid .char,
+    body.discordActivity .char,
+    #landing .char {
+        width: 100% !important;
+        height: 45px !important;
+        min-width: 0 !important;
+        min-height: 45px !important;
+        border-radius: 13px !important;
+        padding: 2px !important;
+        display: grid !important;
+        grid-template-rows: 1fr auto !important;
+        place-items: center !important;
+    }
+
+    body.discordActivity .characterGrid .char span,
+    #landing .characterGrid .char span,
+    body.discordActivity .char span,
+    #landing .char span {
+        font-size: 18px !important;
+        line-height: 1 !important;
+    }
+
+    body.discordActivity .characterGrid .char small,
+    #landing .characterGrid .char small,
+    body.discordActivity .char small,
+    #landing .char small {
+        font-size: 6.5px !important;
+        line-height: 1 !important;
+        letter-spacing: .02em !important;
+    }
+
+    body.discordActivity #discordLobby,
+    #landing #discordLobby {
+        margin: 7px auto 0 !important;
+        max-width: 100% !important;
+    }
+
+    body.discordActivity .discordRoleGrid,
+    #landing .discordRoleGrid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, .82fr) minmax(0, 1fr) !important;
+        grid-template-areas: "gold spec black" !important;
+        gap: 5px !important;
+        align-items: stretch !important;
+        width: 100% !important;
+    }
+
+    body.discordActivity .discordGoldCard,
+    #landing .discordGoldCard {
+        grid-area: gold !important;
+    }
+
+    body.discordActivity .discordSpectatorCard,
+    #landing .discordSpectatorCard {
+        grid-area: spec !important;
+    }
+
+    body.discordActivity .discordBlackCard,
+    #landing .discordBlackCard {
+        grid-area: black !important;
+    }
+
+    body.discordActivity .discordTeamCard,
+    body.discordActivity .discordSpectatorCard,
+    #landing .discordTeamCard,
+    #landing .discordSpectatorCard {
+        min-height: 116px !important;
+        padding: 7px 5px !important;
+        border-radius: 15px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        gap: 4px !important;
+    }
+
+    body.discordActivity .discordTeamCard h2,
+    body.discordActivity .discordSpectatorCard h2,
+    #landing .discordTeamCard h2,
+    #landing .discordSpectatorCard h2 {
+        margin: 0 0 2px !important;
+        font-size: clamp(12px, 3.3vw, 16px) !important;
+        line-height: 1 !important;
+        letter-spacing: .02em !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+    }
+
+    body.discordActivity .discordRoleBox,
+    #landing .discordRoleBox {
+        min-height: 37px !important;
+        padding: 4px 5px !important;
+        border-radius: 11px !important;
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        align-items: center !important;
+        gap: 4px !important;
+        text-align: left !important;
+    }
+
+    body.discordActivity .discordRoleBox b,
+    #landing .discordRoleBox b {
+        font-size: 9.5px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    body.discordActivity .discordRoleBox small,
+    #landing .discordRoleBox small {
+        display: none !important;
+    }
+
+    body.discordActivity .discordRoleJoin,
+    #landing .discordRoleJoin {
+        min-width: 43px !important;
+        height: 26px !important;
+        min-height: 26px !important;
+        padding: 3px 7px !important;
+        border-radius: 999px !important;
+        font-size: 10px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    body.discordActivity .discordSpectatorCard p,
+    #landing .discordSpectatorCard p,
+    body.discordActivity .discordHelpText,
+    #landing .discordHelpText {
+        display: none !important;
+    }
+
+    body.discordActivity .discordSpectatorCard .discordRoleJoin,
+    #landing .discordSpectatorCard .discordRoleJoin {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 34px !important;
+        margin-top: auto !important;
+        font-size: 9.5px !important;
+        padding: 3px 4px !important;
+        white-space: normal !important;
+    }
+
+    body.discordActivity .discordSeatList,
+    #landing .discordSeatList,
+    body.discordActivity .discordSeatMini,
+    #landing .discordSeatMini {
+        display: none !important;
+    }
+
+    body.discordActivity .hintText,
+    #landing .hintText {
+        margin: 5px 0 0 !important;
+        font-size: 9px !important;
+        line-height: 1.15 !important;
+    }
+
+    body.discordActivity #landingAdminBar,
+    #landing #landingAdminBar,
+    body.discordActivity .actions,
+    #landing .actions,
+    body.discordActivity #lobbyPreview,
+    #landing #lobbyPreview {
+        margin-top: 5px !important;
+    }
+
+    body.discordActivity #adminControlBar.bottomOptionsBar,
+    #landing #adminControlBar.bottomOptionsBar,
+    body.discordActivity #adminControlBar,
+    #landing #adminControlBar {
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 1px) !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.discordActivity .homeDstyLogo,
+    #landing .homeDstyLogo {
+        font-size: clamp(25px, 9.5vw, 38px) !important;
+    }
+
+    body.discordActivity .characterGrid,
+    #landing .characterGrid {
+        max-width: 310px !important;
+        gap: 4px !important;
+    }
+
+    body.discordActivity .characterGrid .char,
+    #landing .characterGrid .char,
+    body.discordActivity .char,
+    #landing .char {
+        height: 40px !important;
+        min-height: 40px !important;
+    }
+
+    body.discordActivity .discordRoleGrid,
+    #landing .discordRoleGrid {
+        gap: 4px !important;
+    }
+
+    body.discordActivity .discordRoleBox,
+    #landing .discordRoleBox {
+        padding: 3px 4px !important;
+    }
+
+    body.discordActivity .discordRoleJoin,
+    #landing .discordRoleJoin {
+        min-width: 39px !important;
+        font-size: 9px !important;
+    }
+}
+
+.rolePick.fullRole,
+.rolePick:disabled,
+.discordRoleJoin:disabled {
+    cursor: not-allowed !important;
+    opacity: .62 !important;
+    filter: grayscale(.35) brightness(.82) !important;
+    transform: none !important;
+}
+
+.rolePick.fullRole,
+.rolePick.fullRole:hover {
+    border-color: rgba(255, 120, 90, .62) !important;
+    background: linear-gradient(145deg, rgba(70, 32, 26, .92), rgba(20, 12, 10, .98)) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 170, 120, .22), 0 0 18px rgba(255, 90, 60, .16) !important;
+}
+
+.rolePick.fullRole b {
+    color: #ffd1bf !important;
+}
+
+.discordRoleJoin:disabled {
+    color: #ffe1cf !important;
+    background: linear-gradient(180deg, #6a4f3c, #34261d) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 190, 140, .24) !important;
+}
+
+.singleDifficultyCard {
+    width: min(540px, 94vw) !important;
+    border-radius: 18px !important;
+    padding: 22px !important;
+    position: relative !important;
+    text-align: center !important;
+    border: 1px solid rgba(255, 215, 108, .55) !important;
+    box-shadow: 0 0 40px rgba(255, 215, 108, .22), 0 24px 60px rgba(0, 0, 0, .65) !important;
+}
+
+.singleDifficultyCard h2 {
+    margin: 0 0 6px !important;
+    color: #ffe58a !important;
+    font-size: clamp(22px, 3vw, 34px) !important;
+    text-transform: uppercase !important;
+}
+
+.singleDifficultyCard p {
+    margin: 0 0 16px !important;
+    color: rgba(255, 246, 206, .82) !important;
+    font-weight: 800 !important;
+}
+
+.singleDifficultyChoices {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+}
+
+.singleDifficultyChoices button {
+    min-height: 112px !important;
+    border-radius: 14px !important;
+    padding: 12px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    color: #160d00 !important;
+    background: linear-gradient(180deg, #fff2a5, #d39510 68%, #5c3900) !important;
+    border: 1px solid rgba(255, 236, 165, .85) !important;
+}
+
+.singleDifficultyChoices button b {
+    font-size: 14px !important;
+    text-transform: uppercase !important;
+}
+
+.singleDifficultyChoices button span {
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+}
+
+@media (max-width: 640px) {
+    .singleDifficultyCard {
+        padding: 15px !important;
+    }
+
+    .singleDifficultyChoices {
+        grid-template-columns: 1fr !important;
+    }
+
+    .singleDifficultyChoices button {
+        min-height: 64px !important;
+    }
+}
+
+body.discordActivity .modesFloating {
+    position: static !important;
+    right: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    z-index: 20 !important;
+    justify-items: start !important;
+    width: min(240px, 100%) !important;
+    margin: 14px 0 0 !important;
+}
+
+body.discordActivity[data-lang="ar"] .modesFloating {
+    justify-items: start !important;
+}
+
+body.discordActivity .modesBtn {
+    min-width: 138px !important;
+    min-height: 52px !important;
+}
+
+body.discordActivity .modesMenu {
+    position: static !important;
+    width: min(230px, 100%) !important;
+}
+
+#landing .letterFillTitle,
+body.discordActivity #landing .letterFillTitle {
+    color: transparent !important;
+}
+
+#landing .letterFillTitle::before,
+#landing .letterFillTitle::after,
+body.discordActivity #landing .letterFillTitle::before,
+body.discordActivity #landing .letterFillTitle::after {
+    content: none !important;
+    display: none !important;
+}
+
+#landing .letterFillTitle .fillWord,
+body.discordActivity #landing .letterFillTitle .fillWord {
+    color: transparent !important;
+}
+
+#landing .letterFillTitle .fillLetter::before,
+body.discordActivity #landing .letterFillTitle .fillLetter::before {
+    content: attr(data-letter) !important;
+    position: absolute !important;
+    inset: 0 !important;
+    color: #ffd84f !important;
+    -webkit-text-fill-color: #ffd84f !important;
+    -webkit-text-stroke: 0 transparent !important;
+    background: linear-gradient(180deg, #fff8c8 0%, #ffd84f 36%, #d79605 68%, #704300 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    text-shadow: 0 0 .14em rgba(255, 232, 136, .56), 0 .05em .1em rgba(0, 0, 0, .72) !important;
+    clip-path: inset(100% 0 0 0) !important;
+    animation: titleLetterFill 5.2s ease-in-out infinite !important;
+    animation-delay: calc(var(--i) * .09s) !important;
+    pointer-events: none !important;
+}
+
+#landing .letterFillTitle,
+body.discordActivity #landing .letterFillTitle {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: baseline !important;
+    justify-content: center !important;
+    gap: .28em !important;
+    overflow: visible !important;
+    padding: .08em .12em .1em !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    text-shadow: none !important;
+    filter: drop-shadow(0 .1em .08em rgba(0, 0, 0, .74)) !important;
+    animation: none !important;
+}
+
+#landing .letterFillTitle::before,
+#landing .letterFillTitle::after,
+#landing .letterFillTitle .fillLetter::before,
+#landing .letterFillTitle .fillLetter::after,
+body.discordActivity #landing .letterFillTitle::before,
+body.discordActivity #landing .letterFillTitle::after,
+body.discordActivity #landing .letterFillTitle .fillLetter::before,
+body.discordActivity #landing .letterFillTitle .fillLetter::after {
+    content: none !important;
+    display: none !important;
+}
+
+#landing .letterFillTitle .fillWord,
+body.discordActivity #landing .letterFillTitle .fillWord {
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: .015em !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+}
+
+#landing .letterFillTitle em.fillWord,
+body.discordActivity #landing .letterFillTitle em.fillWord {
+    font-style: normal !important;
+    transform: skewX(-8deg) !important;
+}
+
+#landing .letterFillTitle .fillLetter,
+body.discordActivity #landing .letterFillTitle .fillLetter {
+    --dsty-letter-fill: rgba(0, 0, 0, .36);
+    position: relative !important;
+    display: inline-block !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: var(--dsty-letter-fill) !important;
+    -webkit-text-fill-color: var(--dsty-letter-fill) !important;
+    -webkit-text-stroke: .026em rgba(255, 215, 108, .95) !important;
+    text-shadow: 0 .045em 0 rgba(0, 0, 0, .9),
+        0 0 .12em rgba(255, 215, 108, .28) !important;
+    animation: dstyRealLetterFill 5.4s steps(1, end) infinite !important;
+    animation-delay: calc(var(--i) * .11s) !important;
+}
+
+@media (max-width: 760px) {
+    #landing .letterFillTitle,
+    body.discordActivity #landing .letterFillTitle {
+        gap: .18em !important;
+        padding: .05em .04em .08em !important;
+    }
+
+    #landing .letterFillTitle .fillLetter,
+    body.discordActivity #landing .letterFillTitle .fillLetter {
+        -webkit-text-stroke: .021em rgba(255, 215, 108, .95) !important;
+    }
+}
+
+#landing .discordRoleJoin[data-team="blue"]:not(:disabled),
+body.discordActivity #landing .discordRoleJoin[data-team="blue"]:not(:disabled) {
+    color: #1b1000 !important;
+    background: radial-gradient(circle at 28% 18%, rgba(255, 255, 255, .68), transparent 24%),
+        linear-gradient(180deg, #fff2a5 0%, #ffd84a 42%, #c78905 72%, #6d4300 100%) !important;
+    border: 1px solid rgba(255, 237, 156, .95) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55),
+        0 0 16px rgba(255, 215, 108, .55),
+        0 8px 16px rgba(0, 0, 0, .42) !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .46) !important;
+}
+
+#landing .discordRoleJoin[data-team="red"]:not(:disabled),
+body.discordActivity #landing .discordRoleJoin[data-team="red"]:not(:disabled) {
+    color: #fff3bf !important;
+    background: radial-gradient(circle at 28% 18%, rgba(255, 215, 108, .22), transparent 26%),
+        linear-gradient(180deg, #383838 0%, #111112 54%, #020202 100%) !important;
+    border: 1px solid rgba(255, 215, 108, .7) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12),
+        0 0 16px rgba(255, 215, 108, .26),
+        0 8px 16px rgba(0, 0, 0, .55) !important;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .85) !important;
+}
+
+#landing .discordRoleJoin[data-team="blue"]:not(:disabled):hover,
+body.discordActivity #landing .discordRoleJoin[data-team="blue"]:not(:disabled):hover,
+#landing .discordRoleJoin[data-team="red"]:not(:disabled):hover,
+body.discordActivity #landing .discordRoleJoin[data-team="red"]:not(:disabled):hover,
+#landing .discordRoleJoin[data-team="spectator"]:not(:disabled):hover,
+body.discordActivity #landing .discordRoleJoin[data-team="spectator"]:not(:disabled):hover {
+    transform: translateY(-1px) scale(1.03) !important;
+    filter: brightness(1.08) saturate(1.08) !important;
+}
+
+#landing .discordRoleJoin:disabled,
+body.discordActivity #landing .discordRoleJoin:disabled {
+    color: rgba(255, 248, 218, .55) !important;
+    background: linear-gradient(180deg, rgba(90, 84, 62, .55), rgba(24, 22, 18, .78)) !important;
+    border-color: rgba(255, 215, 108, .22) !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: grayscale(.35) brightness(.75) !important;
+}
+
+@media (max-width: 980px) {
+    #landing:not(.hidden) {
+        max-height: calc(100dvh - 14px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin-top: max(10px, env(safe-area-inset-top, 0px)) !important;
+        margin-bottom: max(10px, env(safe-area-inset-bottom, 0px)) !important;
+    }
+}
+
+@media (max-width: 980px) {
+    #landing:not(.hidden),
+    body.discordActivity #landing:not(.hidden) {
+        margin-top: max(72px, calc(env(safe-area-inset-top, 0px) + 58px)) !important;
+    }
+
+    #landing:not(.hidden) .joinBasics,
+    body.discordActivity #landing:not(.hidden) .joinBasics {
+        margin-top: 24px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #landing:not(.hidden),
+    body.discordActivity #landing:not(.hidden) {
+        margin-top: max(92px, calc(env(safe-area-inset-top, 0px) + 76px)) !important;
+    }
+
+    #landing:not(.hidden) .dstyTitleWrap,
+    body.discordActivity #landing:not(.hidden) .dstyTitleWrap {
+        margin-top: max(34px, calc(env(safe-area-inset-top, 0px) + 26px)) !important;
+        padding-top: 22px !important;
+        transform: translateY(24px) !important;
+    }
+}
+
+@media (max-width: 980px) {
+    #landing:not(.hidden),
+    body.discordActivity #landing:not(.hidden) {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: auto !important;
+        transform: translate(-50%, -50%) !important;
+        width: min(940px, calc(100vw - 22px)) !important;
+        max-height: calc(100dvh - max(58px, calc(env(safe-area-inset-top, 0px) + 36px)) - max(24px, env(safe-area-inset-bottom, 0px))) !important;
+        margin: 0 !important;
+        padding-top: 24px !important;
+        padding-bottom: 24px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        box-sizing: border-box !important;
+        z-index: 10 !important;
+    }
+
+    #landing:not(.hidden) .dstyTitleWrap,
+    body.discordActivity #landing:not(.hidden) .dstyTitleWrap {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        transform: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #landing:not(.hidden),
+    body.discordActivity #landing:not(.hidden) {
+        top: 53% !important;
+        width: calc(100vw - 18px) !important;
+        max-height: calc(100dvh - max(72px, calc(env(safe-area-inset-top, 0px) + 48px)) - max(22px, env(safe-area-inset-bottom, 0px))) !important;
+        padding-top: 28px !important;
+        padding-bottom: 28px !important;
+    }
+}
+
+@media (max-width: 980px) {
+    html body #app > #landing.landing:not(.hidden),
+    html body.discordActivity #app > #landing.landing:not(.hidden) {
+        position: fixed !important;
+        left: 50% !important;
+        right: auto !important;
+        top: max(78px, calc(env(safe-area-inset-top, 0px) + 64px)) !important;
+        bottom: auto !important;
+        transform: translateX(-50%) !important;
+        width: min(940px, calc(100vw - 22px)) !important;
+        height: auto !important;
+        max-height: calc(100dvh - max(104px, calc(env(safe-area-inset-top, 0px) + 88px)) - max(18px, env(safe-area-inset-bottom, 0px))) !important;
+        margin: 0 !important;
+        padding-bottom: 28px !important;
+        -webkit-overflow-scrolling: touch !important;
+        box-sizing: border-box !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .dstyTitleWrap,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .dstyTitleWrap {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        transform: none !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .joinBasics,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .joinBasics {
+        margin-top: 20px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    html body #app > #landing.landing:not(.hidden),
+    html body.discordActivity #app > #landing.landing:not(.hidden) {
+        top: max(96px, calc(env(safe-area-inset-top, 0px) + 78px)) !important;
+        width: calc(100vw - 18px) !important;
+        max-height: calc(100dvh - max(126px, calc(env(safe-area-inset-top, 0px) + 108px)) - max(16px, env(safe-area-inset-bottom, 0px))) !important;
+    }
+}
+
+@media (max-width: 980px) {
+    html body #app > #landing.landing:not(.hidden),
+    html body.discordActivity #app > #landing.landing:not(.hidden) {
+        overflow-y: auto !important;
+        overflow-x: visible !important;
+        padding-top: max(34px, calc(env(safe-area-inset-top, 0px) + 22px)) !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap,
+    html body #app > #landing.landing:not(.hidden) .dstyTitleWrap,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .dstyTitleWrap {
+        min-height: clamp(72px, 18vw, 112px) !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        align-items: center !important;
+        padding-top: clamp(18px, 5vw, 34px) !important;
+        padding-bottom: 12px !important;
+        margin-top: 0 !important;
+        margin-bottom: 12px !important;
+        transform: none !important;
+        box-sizing: border-box !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .homeDstyLogo,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .homeDstyLogo,
+    html body #app > #landing.landing:not(.hidden) .letterFillTitle,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .letterFillTitle {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        line-height: 1.16 !important;
+        overflow: visible !important;
+        padding-top: .22em !important;
+        padding-bottom: .16em !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        transform: none !important;
+        box-sizing: content-box !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .letterFillTitle .fillWord,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .letterFillTitle .fillWord,
+    html body #app > #landing.landing:not(.hidden) .letterFillTitle .fillLetter,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .letterFillTitle .fillLetter {
+        line-height: 1.16 !important;
+        overflow: visible !important;
+    }
+}
+
+@media (max-width: 480px) {
+    html body #app > #landing.landing:not(.hidden),
+    html body.discordActivity #app > #landing.landing:not(.hidden) {
+        padding-top: max(48px, calc(env(safe-area-inset-top, 0px) + 34px)) !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap,
+    html body #app > #landing.landing:not(.hidden) .dstyTitleWrap,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .dstyTitleWrap {
+        min-height: clamp(82px, 22vw, 126px) !important;
+        padding-top: clamp(24px, 7vw, 44px) !important;
+        padding-bottom: 14px !important;
+    }
+
+    html body #app > #landing.landing:not(.hidden) .homeDstyLogo,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .homeDstyLogo,
+    html body #app > #landing.landing:not(.hidden) .letterFillTitle,
+    html body.discordActivity #app > #landing.landing:not(.hidden) .letterFillTitle {
+        line-height: 1.2 !important;
+        padding-top: .28em !important;
+        padding-bottom: .18em !important;
+    }
+}
+
+@media (max-width: 980px) {
+    @supports selector(#app:has(> #landing:not(.hidden))) {
+        html:has(#app > #landing:not(.hidden)),
+        body:has(#app > #landing:not(.hidden)) {
+            height: 100dvh !important;
+            min-height: 100dvh !important;
+            max-height: 100dvh !important;
+            overflow: hidden !important;
+        }
+
+        html body #app:has(> #landing:not(.hidden)) {
+            height: 100dvh !important;
+            min-height: 100dvh !important;
+            max-height: 100dvh !important;
+            padding-top: max(88px, calc(env(safe-area-inset-top, 0px) + 72px)) !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            box-sizing: border-box !important;
+        }
+
+        html body #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden),
+        html body.discordActivity #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden) {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            transform: none !important;
+            margin: 0 auto !important;
+            width: min(100vw - 18px, 430px) !important;
+            max-height: none !important;
+            overflow: visible !important;
+            padding-top: 24px !important;
+            box-sizing: border-box !important;
+        }
+
+        html body #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap,
+        html body.discordActivity #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden) .homeTitleSplit.dstyTitleWrap {
+            overflow: visible !important;
+            min-height: 86px !important;
+            padding-top: 22px !important;
+            padding-bottom: 14px !important;
+            margin-top: 0 !important;
+            margin-bottom: 14px !important;
+            transform: none !important;
+        }
+
+        html body #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden) .homeDstyLogo,
+        html body.discordActivity #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden) .homeDstyLogo,
+        html body #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden) .letterFillTitle,
+        html body.discordActivity #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden) .letterFillTitle {
+            line-height: 1.18 !important;
+            overflow: visible !important;
+            padding-top: .24em !important;
+            padding-bottom: .18em !important;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    @supports selector(#app:has(> #landing:not(.hidden))) {
+        html body #app:has(> #landing:not(.hidden)) {
+            padding-top: max(118px, calc(env(safe-area-inset-top, 0px) + 94px)) !important;
+        }
+
+        html body #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden),
+        html body.discordActivity #app:has(> #landing:not(.hidden)) > #landing.landing:not(.hidden) {
+            padding-top: 30px !important;
+        }
+    }
+}
+
+.previewRoster {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.previewTeam {
+    min-width: 0;
+    border: 1px solid rgba(255, 215, 108, .16);
+    border-radius: 13px;
+    padding: 8px;
+    background: rgba(0, 0, 0, .22);
+}
+
+.previewTeam h4 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    color: #ffe39a;
+}
+
+.previewTeam > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.previewSeat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .10);
+    color: #fff8e5;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.previewSeat em {
+    font-style: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity .discordSeatList,
+    #landing .discordSeatList {
+        display: flex !important;
+        min-height: 20px !important;
+        margin-top: 5px !important;
+        gap: 4px !important;
+        flex-wrap: wrap !important;
+    }
+
+    body.discordActivity .discordSeatMini,
+    #landing .discordSeatMini {
+        display: inline-flex !important;
+        max-width: 100% !important;
+        min-height: 21px !important;
+        padding: 2px 5px !important;
+        gap: 4px !important;
+        font-size: 8.5px !important;
+        line-height: 1 !important;
+    }
+
+    body.discordActivity .discordSeatMini .avatar,
+    #landing .discordSeatMini .avatar {
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        font-size: 10px !important;
+    }
+
+    body.discordActivity .discordSeatMini .seatName,
+    #landing .discordSeatMini .seatName {
+        max-width: 58px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .previewRoster {
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+    }
+
+    .previewTeam {
+        padding: 6px !important;
+    }
+
+    .previewSeat {
+        font-size: 10px !important;
+        padding: 4px 6px !important;
+    }
+}
+
+.backgroundBtn {
+    min-width: 142px;
+}
+
+.backgroundMenu {
+    width: min(250px, calc(100vw - 34px));
+}
+
+.bgChoice {
+    position: relative;
+    overflow: hidden;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 800;
+    letter-spacing: .4px;
+    min-height: 50px;
+}
+
+.bgChoice::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: .55;
+    pointer-events: none;
+}
+
+.bgChoice[data-bg-theme="royal-noir"]::before {
+    background: linear-gradient(135deg, #e9d37a, #704400 55%, #050505);
+}
+
+.bgChoice[data-bg-theme="violet-crown"]::before {
+    background: linear-gradient(135deg, #c37bff, #3b185e 52%, #050505);
+}
+
+.bgChoice[data-bg-theme="ember-royal"]::before {
+    background: linear-gradient(135deg, #ff8b49, #7a1e00 52%, #050505);
+}
+
+.bgChoice[data-bg-theme="emerald-night"]::before {
+    background: linear-gradient(135deg, #4fdd92, #0b3821 52%, #050505);
+}
+
+.bgChoice[data-bg-theme="azure-luxe"]::before {
+    background: linear-gradient(135deg, #59bfff, #123a74 52%, #050505);
+}
+
+.bgChoice[data-bg-theme="obsidian-rose"]::before {
+    background: linear-gradient(135deg, #ff75ab, #65142f 52%, #050505);
+}
+
+.bgChoice > *,
+.bgChoice {
+    position: relative;
+    z-index: 1;
+}
+
+.bgChoice.selected {
+    border-color: rgba(255,255,255,.72) !important;
+    box-shadow: 0 0 0 2px rgba(255, 215, 108, .68), 0 0 20px rgba(255, 215, 108, .34) !important;
+}
+
+@media (max-width: 640px) {
+    .backgroundBtn,
+    .modesBtn {
+        min-width: 118px;
+        min-height: 48px;
+        font-size: 14px;
+    }
+
+    .backgroundMenu,
+    .modesMenu {
+        width: min(210px, calc(100vw - 28px));
+    }
+}
+
+#landing #lobbyPreview:not(.hidden),
+body.discordActivity #landing #lobbyPreview:not(.hidden),
+#landing .lobbyPreview:not(.hidden),
+body.discordActivity #landing .lobbyPreview:not(.hidden) {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#landing .previewRoster,
+body.discordActivity #landing .previewRoster,
+#landing .previewTeam,
+body.discordActivity #landing .previewTeam,
+#landing .previewTeam > div,
+body.discordActivity #landing .previewTeam > div {
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#landing .previewRoster,
+body.discordActivity #landing .previewRoster {
+    display: grid !important;
+}
+
+#landing .previewTeam > div,
+body.discordActivity #landing .previewTeam > div {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+}
+
+#landing .previewSeat,
+body.discordActivity #landing .previewSeat,
+#landing .previewEmpty,
+body.discordActivity #landing .previewEmpty {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#landing .discordSeatList,
+body.discordActivity #landing .discordSeatList,
+body.discordActivity .discordRoleBox .discordSeatList,
+body.discordActivity .discordSpectatorCard .discordSeatList,
+#landing .discordRoleBox .discordSeatList,
+#landing .discordSpectatorCard .discordSeatList {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-top: 6px !important;
+    height: auto !important;
+    min-height: 22px !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#landing .discordSeatMini,
+body.discordActivity #landing .discordSeatMini,
+#landing .discordSeatMini.discordSeatLarge,
+body.discordActivity #landing .discordSeatMini.discordSeatLarge,
+#landing .discordSeatEmpty,
+body.discordActivity #landing .discordSeatEmpty {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 22px !important;
+    overflow: visible !important;
+}
+
+@media (max-width: 980px) {
+    #landing .discordSeatList,
+    body.discordActivity #landing .discordSeatList,
+    #landing .discordSeatMini,
+    body.discordActivity #landing .discordSeatMini,
+    #landing .discordSeatEmpty,
+    body.discordActivity #landing .discordSeatEmpty {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    #landing .discordSeatList,
+    body.discordActivity #landing .discordSeatList {
+        display: flex !important;
+    }
+}
+
+body.discordActivity #landing .teamChooseTitle {
+    position: relative !important;
+    width: min(100%, 1120px) !important;
+    height: 66px !important;
+    margin: 12px auto 10px !important;
+    padding: 0 150px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 2px solid #ffd84f !important;
+    border-radius: 999px !important;
+    background: linear-gradient(180deg, rgba(65, 62, 57, .98), rgba(35, 33, 29, .98)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 12px 24px rgba(0, 0, 0, .34) !important;
+    color: #fff8d6 !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-size: clamp(22px, 2.2vw, 34px) !important;
+    line-height: 1 !important;
+    letter-spacing: .055em !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+    overflow: visible !important;
+}
+
+body.discordActivity #landing .teamChooseTitle::before,
+body.discordActivity #landing .teamChooseTitle::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    pointer-events: none !important;
+}
+
+body.discordActivity #landing .teamChooseTitle::before {
+    left: 18.9% !important;
+    border-top: 19px solid transparent !important;
+    border-bottom: 19px solid transparent !important;
+    border-right: 24px solid #ffd84f !important;
+    filter: drop-shadow(0 0 7px rgba(255, 216, 79, .28)) !important;
+}
+
+body.discordActivity #landing .teamChooseTitle::after {
+    left: 81.1% !important;
+    border-top: 19px solid transparent !important;
+    border-bottom: 19px solid transparent !important;
+    border-left: 24px solid #080808 !important;
+    filter: drop-shadow(1px 0 0 #ffd84f) drop-shadow(-1px 0 0 #ffd84f) drop-shadow(0 1px 0 #ffd84f) drop-shadow(0 -1px 0 #ffd84f) !important;
+}
+
+body.discordActivity #landing #discordLobby {
+    width: min(100%, 1120px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+#landing .discordRoleBox small,
+body.discordActivity #landing .discordRoleBox small,
+#landing .discordSpectatorCard > p,
+body.discordActivity #landing .discordSpectatorCard > p,
+#landing > .hintText,
+body.discordActivity #landing > .hintText {
+    display: none !important;
+}
+
+#landing .discordRoleJoin[data-team="spectator"]:not(:disabled),
+body.discordActivity #landing .discordRoleJoin[data-team="spectator"]:not(:disabled) {
+    color: #f5f5f5 !important;
+    background: linear-gradient(180deg, #86898e 0%, #5b5e63 52%, #34363a 100%) !important;
+    border: 1px solid rgba(235, 238, 242, .72) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), 0 8px 16px rgba(0, 0, 0, .38) !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .72) !important;
+}
+
+#landing .modesFloating,
+body.discordActivity #landing .modesFloating {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    margin: 14px auto 0 !important;
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    grid-template-rows: auto auto !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    align-items: start !important;
+    gap: 8px 10px !important;
+    z-index: 20 !important;
+}
+
+#landing #modesBtn,
+body.discordActivity #landing #modesBtn {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+}
+
+#landing #backgroundBtn,
+body.discordActivity #landing #backgroundBtn {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+}
+
+#landing #modesMenu,
+body.discordActivity #landing #modesMenu {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+}
+
+#landing #backgroundMenu,
+body.discordActivity #landing #backgroundMenu {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+}
+
+#landing .modesBtn,
+body.discordActivity #landing .modesBtn {
+    min-width: 166px !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 9px 16px !important;
+    border-radius: 15px !important;
+    font-size: 15px !important;
+    letter-spacing: .06em !important;
+}
+
+#landing .modesMenu,
+body.discordActivity #landing .modesMenu {
+    position: static !important;
+    width: 190px !important;
+    max-width: calc(50vw - 20px) !important;
+}
+
+@media (max-width: 760px) {
+    body.discordActivity #landing .teamChooseTitle {
+        height: 48px !important;
+        margin: 8px auto 7px !important;
+        padding: 0 72px !important;
+        font-size: clamp(14px, 4vw, 20px) !important;
+        letter-spacing: .035em !important;
+    }
+
+    body.discordActivity #landing .teamChooseTitle::before {
+        left: 17.5% !important;
+        border-top-width: 13px !important;
+        border-bottom-width: 13px !important;
+        border-right-width: 17px !important;
+    }
+
+    body.discordActivity #landing .teamChooseTitle::after {
+        left: 82.5% !important;
+        border-top-width: 13px !important;
+        border-bottom-width: 13px !important;
+        border-left-width: 17px !important;
+    }
+
+    #landing .modesFloating,
+    body.discordActivity #landing .modesFloating {
+        gap: 7px !important;
+        margin-top: 10px !important;
+    }
+
+    #landing .modesBtn,
+    body.discordActivity #landing .modesBtn {
+        min-width: 132px !important;
+        min-height: 40px !important;
+        height: 40px !important;
+        padding: 7px 11px !important;
+        font-size: 12px !important;
+    }
+
+    #landing .modesMenu,
+    body.discordActivity #landing .modesMenu {
+        width: 150px !important;
+    }
+}

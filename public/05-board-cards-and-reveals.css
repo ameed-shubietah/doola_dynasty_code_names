@@ -1,0 +1,3605 @@
+.boardWrap {
+    grid-column: 2;
+    min-width: 0;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(110px, 1fr));
+    gap: 11px;
+}
+
+.card {
+    background: linear-gradient(145deg, #ead5b7, #b68a5c 56%, #745238);
+    position: relative;
+    display: flex;
+    cursor: pointer;
+    overflow: hidden;
+    transition: .18s transform, .18s filter, .18s box-shadow;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.07);
+}
+
+.card:before {
+    content: "";
+    position: absolute;
+}
+
+.card:after {
+    content: "";
+    position: absolute;
+    inset: -80% -40%;
+    background: linear-gradient(115deg, transparent 43%, rgba(255, 255, 255, .18), transparent 57%);
+    transform: translateX(-70%) rotate(12deg);
+    transition: .55s;
+}
+
+.card:hover:after {
+    transform: translateX(70%) rotate(12deg);
+}
+
+.word {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    background: rgba(72, 48, 31, .58);
+    text-align: center;
+}
+
+.card.revealed {
+    cursor: default;
+}
+
+.card.blue {
+    box-shadow: 0 0 26px rgba(255, 215, 108, .25), 0 16px 24px rgba(0, 0, 0, .42);
+}
+
+.card.blue .word {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .4);
+}
+
+.card.pop {
+    animation: pop .42s;
+}
+
+.card.shake {
+    animation: shake .42s;
+}
+
+@media (max-width: 1050px) {
+    .left, .right, .boardWrap {
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 620px) {
+    .board {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.card {
+    height: 124px;
+    padding: 12px;
+    border-width: 2px;
+}
+
+.card:before {
+    inset: 9px;
+    border-radius: 15px;
+    border-color: rgba(255, 228, 148, .28);
+}
+
+.word {
+    min-height: 50px;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    border-radius: 12px;
+    font-weight: 900;
+    letter-spacing: .6px;
+    line-height: 1.02;
+    text-transform: uppercase;
+    text-wrap: balance;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .26);
+    font-size: clamp(15px, calc(29px - (var(--letters, 8) * .52px)), 27px);
+}
+
+.word.shortWord {
+    font-size: clamp(22px, 1.65vw, 29px);
+    letter-spacing: .9px;
+}
+
+.word.mediumWord {
+    font-size: clamp(18px, 1.35vw, 25px);
+    letter-spacing: .6px;
+}
+
+.word.longWord {
+    line-height: 1.05;
+}
+
+.card.spyPickable {
+    box-shadow: 0 0 0 1px rgba(255, 215, 108, .25), 0 16px 24px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+
+.card.spyPickable:hover {
+    box-shadow: 0 0 24px rgba(255, 215, 108, .28), 0 16px 24px rgba(0, 0, 0, .42);
+}
+
+.card.target {
+    outline: 0;
+}
+
+.card.target::after {
+    place-items: center;
+}
+
+.card.red.target {
+    border-color: #39e7ff !important;
+    box-shadow: 0 0 0 4px #39e7ff, 0 0 34px rgba(57, 231, 255, .72), 0 16px 24px rgba(0, 0, 0, .46) !important;
+}
+
+.card.assassin.target {
+    border-color: #ffe285 !important;
+    box-shadow: 0 0 0 4px #ffe285, 0 0 34px rgba(255, 226, 133, .72), 0 16px 24px rgba(0, 0, 0, .46) !important;
+}
+
+.card {
+    font-family: "Segoe UI", Inter, Arial, sans-serif;
+}
+
+.word {
+    font-family: "Segoe UI Black", "Arial Black", "Trebuchet MS", system-ui, sans-serif;
+    hyphens: none;
+    word-break: keep-all;
+    overflow-wrap: normal;
+}
+
+.word.longWord {
+    letter-spacing: .05px;
+}
+
+.card.neutral .word {
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+}
+
+.card.blue {
+    border-color: rgba(255, 246, 177, .62);
+}
+
+.card.blue.target {
+    border-color: #122a30 !important;
+    box-shadow: 0 0 0 4px #122a30, 0 0 34px rgba(41, 207, 255, .42), 0 18px 28px rgba(0, 0, 0, .48) !important;
+}
+
+.card.target .word {
+    box-shadow: none !important;
+}
+
+.card.target::after {
+    content: "✓";
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    inset: auto;
+    width: auto;
+    height: auto;
+    display: block;
+    border-radius: 0;
+    background: transparent !important;
+    color: #28cfff;
+    font-size: 32px;
+    line-height: 1;
+    font-weight: 1000;
+    transform: none;
+    animation: none;
+    z-index: 5;
+    text-shadow: 0 0 3px #001018, 0 0 10px rgba(40, 207, 255, .95), 0 2px 0 rgba(0, 0, 0, .35);
+    box-shadow: none !important;
+}
+
+.card {
+    min-width: 0;
+}
+
+.word {
+    max-width: 100%;
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+}
+
+.word.shortWord {
+    display: flex;
+}
+
+.word.mediumWord {
+    display: flex;
+}
+
+.word.longWord {
+    font-size: clamp(13px, .95vw, 18px);
+}
+
+@media (max-width: 1250px) {
+    .card {
+        height: 112px;
+    }
+
+    .word {
+        font-size: clamp(14px, 1.2vw, 23px);
+    }
+}
+
+@media (max-width: 1050px) {
+    .boardWrap {
+        order: 3;
+    }
+
+    .board {
+        grid-template-columns: repeat(5, minmax(80px, 1fr));
+        gap: 8px;
+    }
+
+    .card {
+        height: 96px;
+        padding: 8px;
+    }
+
+    .word {
+        min-height: 42px;
+        font-size: clamp(12px, 2.1vw, 20px);
+    }
+}
+
+@media (max-width: 720px) {
+    .board {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .card {
+        height: 86px;
+        border-radius: 15px;
+    }
+
+    .card:before {
+        inset: 7px;
+    }
+
+    .word {
+        font-size: clamp(11px, 3.2vw, 18px);
+        min-height: 38px;
+        padding: 6px;
+    }
+}
+
+#game .board.operativeBoard .card:not(.revealed):not(.originShown)::before,
+body.discordActivity #game .board.operativeBoard .card:not(.revealed):not(.originShown)::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: 58% auto !important;
+    opacity: .18 !important;
+    transform: none !important;
+    filter: drop-shadow(0 10px 12px rgba(0, 0, 0, .36)) !important;
+    pointer-events: none !important;
+}
+
+#game .card .cardCrownLayer,
+#game.gameV9 .board .card.hasCrownLayer .cardCrownLayer,
+body.discordActivity #game .card .cardCrownLayer,
+body.discordActivity #game.gameV9 .board .card.hasCrownLayer .cardCrownLayer {
+    position: absolute !important;
+    inset: auto !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: min(62%, 120px) !important;
+    height: auto !important;
+    max-height: 78% !important;
+    transform: translate(-50%, -50%) !important;
+    transform-origin: center center !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    margin: 0 !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+}
+
+@media (max-width: 430px) {
+    .card {
+        height: 82px;
+    }
+}
+
+.card.voted:not(.revealed) {
+    border-color: #29cfff !important;
+    box-shadow: 0 0 0 3px rgba(41, 207, 255, .72), 0 0 24px rgba(41, 207, 255, .35), 0 18px 28px rgba(0, 0, 0, .48) !important;
+}
+
+.card.agreed:not(.revealed) {
+    border-color: #73f0ff !important;
+    box-shadow: 0 0 0 4px rgba(115, 240, 255, .95), 0 0 34px rgba(115, 240, 255, .62), 0 18px 28px rgba(0, 0, 0, .48) !important;
+}
+
+.card.myVote:not(.agreed)::before {
+    border-color: rgba(41, 207, 255, .95) !important;
+    box-shadow: inset 0 0 0 2px rgba(41, 207, 255, .45);
+}
+
+@keyframes scoreBump {
+    0% {
+        transform: scale(1);
+    }
+
+    35% {
+        transform: scale(1.13);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes scoreGainPulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.08);
+        filter: brightness(1.25);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes scoreShine {
+    to {
+        transform: translateX(120%);
+    }
+}
+
+.gameV9 .boardWrap {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.revealAvatar {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 8;
+    width: 58px;
+    height: 58px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    font-size: 31px;
+    background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .22), rgba(0, 0, 0, .2)), var(--accent, #ffd76c);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, .15), 0 8px 18px rgba(0, 0, 0, .44);
+    pointer-events: none;
+}
+
+.card.revealed.blue .revealAvatar, .card.revealed.red .revealAvatar {
+    border: 2px solid rgba(255, 255, 255, .45);
+}
+
+@media (max-width: 1280px) {
+    .board {
+        gap: 8px;
+    }
+
+    .card {
+        height: 105px;
+    }
+}
+
+@media (max-width: 980px) {
+    .gameV9 .boardWrap {
+        grid-column: 1;
+        grid-row: 3;
+    }
+}
+
+@media (max-width: 680px) {
+    .board {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .card {
+        height: 84px;
+    }
+
+    .revealAvatar {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 430px) {
+    .board {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 981px) {
+    .gameV9 .boardWrap {
+        grid-column: 2;
+        grid-row: 2;
+        min-height: 0;
+        overflow: hidden;
+    }
+}
+
+@keyframes miniCardFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+@media (max-width: 1280px) and (min-width: 981px) {
+    .card {
+        border-radius: 14px;
+    }
+}
+
+@media (min-width: 981px) {
+    .gameV9 .boardWrap {
+        height: 100%;
+        padding-bottom: 96px;
+    }
+
+    .board {
+        height: 100%;
+        grid-template-rows: repeat(5, minmax(50px, 1fr));
+        gap: 7px;
+    }
+
+    .card {
+        min-height: 0;
+        height: auto;
+        padding: 8px;
+        border-radius: 13px;
+    }
+
+    .card:before {
+        inset: 7px;
+        border-radius: 9px;
+    }
+
+    .word {
+        padding: 7px 5px;
+        font-size: clamp(16px, 1.25vw, 25px);
+        letter-spacing: .6px;
+    }
+
+    .word.longWord {
+        font-size: clamp(11px, .86vw, 17px);
+        letter-spacing: 0;
+    }
+}
+
+@media (max-width: 1280px) and (min-width: 981px) {
+    .gameV9 .boardWrap {
+        padding-bottom: 90px;
+    }
+
+    .word {
+        font-size: clamp(14px, 1.1vw, 22px);
+    }
+}
+
+@media (max-height: 760px) and (min-width: 981px) {
+    .gameV9 .boardWrap {
+        padding-bottom: 82px;
+    }
+
+    .board {
+        gap: 6px;
+    }
+
+    .word {
+        font-size: clamp(13px, 1vw, 21px);
+        padding: 6px 4px;
+    }
+
+    .word.longWord {
+        font-size: clamp(10px, .78vw, 15px);
+    }
+}
+
+.card.revealed {
+    isolation: isolate;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    filter: saturate(1.08);
+}
+
+.card.revealed .word {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    z-index: 6;
+    min-height: auto;
+    padding: 7px 8px;
+    border-radius: 10px;
+    font-size: clamp(12px, 1vw, 18px);
+    background: rgba(0, 0, 0, .42);
+    color: #fff9df;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .4);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
+}
+
+.card.revealed.blue {
+    background: radial-gradient(circle at 35% 18%, #fff0a6, #ffd64f 48%, #b67b00 100%) !important;
+    color: #191000;
+    border-color: #ffe99b;
+    box-shadow: 0 0 30px rgba(255, 215, 108, .34), 0 16px 24px rgba(0, 0, 0, .44);
+}
+
+.card.revealed.red {
+    background: radial-gradient(circle at 35% 18%, #4f4f53, #151516 60%, #000 100%) !important;
+    border-color: #f0cc68;
+    color: #fff4c7;
+    box-shadow: 0 0 24px rgba(0, 0, 0, .7), 0 16px 24px rgba(0, 0, 0, .5);
+}
+
+.card.revealed.neutral {
+    background: radial-gradient(circle at 35% 18%, #d7c4aa, #95704d 62%, #63442b 100%) !important;
+    border-color: #d3b084;
+    color: #fff7e8;
+}
+
+.card.revealed.assassin {
+    background: radial-gradient(circle at 35% 18%, #e5e7ea, #9aa0a7 62%, #555b63 100%) !important;
+    border-color: #f4f7ff;
+    color: #fff;
+}
+
+.revealHero {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    place-items: center;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: .95;
+}
+
+.revealHero:before {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, .18), transparent 30%);
+    animation: heroRotate 5s linear infinite;
+    opacity: .65;
+}
+
+.revealHero svg {
+    width: 118%;
+    height: 118%;
+    transform-origin: 50% 55%;
+    animation: heroFloat 2.8s ease-in-out infinite;
+    filter: drop-shadow(0 15px 20px rgba(0, 0, 0, .38));
+}
+
+@keyframes heroFloat {
+    0%, 100% {
+        transform: translateY(1px) scale(1);
+    }
+
+    50% {
+        transform: translateY(-7px) scale(1.035);
+    }
+}
+
+@keyframes heroRotate {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 1280px) {
+    .card.revealed .word {
+        bottom: 7px;
+    }
+}
+
+@media (max-width: 820px) {
+    .revealHero svg {
+        width: 130%;
+        height: 130%;
+    }
+
+    .card.revealed .word {
+        font-size: 11px;
+    }
+}
+
+.flyingCard {
+    position: fixed;
+    z-index: 9998;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    pointer-events: none;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif;
+    font-size: clamp(12px, 1.1vw, 20px);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    box-shadow: 0 18px 35px rgba(0, 0, 0, .42), 0 0 30px rgba(255, 215, 108, .3);
+    border: 2px solid rgba(255, 255, 255, .55);
+    overflow: hidden;
+}
+
+.flyingCard:before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .16);
+}
+
+.flyingCard.flyGold {
+    background: linear-gradient(145deg, #fff2a7, #d79c13 70%, #704a00);
+    color: #1a1000;
+}
+
+.flyingCard.flyBlack {
+    background: linear-gradient(145deg, #3b3b40, #050505 75%);
+    color: #fff0af;
+    border-color: rgba(255, 215, 108, .7);
+}
+
+.flyingCard {
+    color: inherit;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .25);
+}
+
+.cardConfirm {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif;
+    font-weight: 1000;
+    text-shadow: none;
+    cursor: pointer;
+    animation: cardConfirmFloat 1.05s ease-in-out infinite;
+}
+
+@keyframes cardConfirmFloat {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-2px) scale(1.05);
+    }
+}
+
+.card.myVote:not(.revealed)::after {
+    opacity: .12 !important;
+}
+
+.card.originShown:not(.revealed) {
+    filter: saturate(.96) brightness(.94);
+    cursor: default;
+}
+
+.card.originShown:not(.revealed)::before {
+    border-color: rgba(255, 255, 255, .18);
+}
+
+.card.originShown.blue:not(.revealed) {
+    box-shadow: 0 0 22px rgba(255, 215, 108, .2), 0 12px 22px rgba(0, 0, 0, .42);
+}
+
+.card.originShown.red:not(.revealed) {
+    box-shadow: 0 0 18px rgba(0, 0, 0, .55), 0 12px 22px rgba(0, 0, 0, .42);
+}
+
+.card.originShown.assassin:not(.revealed) {
+    box-shadow: 0 0 24px rgba(220, 230, 245, .25), 0 12px 22px rgba(0, 0, 0, .42);
+}
+
+body.discordActivity .card:before {
+    inset: 6px;
+    border-radius: 8px;
+}
+
+body.discordActivity .word {
+    letter-spacing: .4px;
+}
+
+body.discordActivity .word.longWord {
+    font-size: clamp(10px, .82vw, 15px);
+}
+
+@media (max-width: 760px) {
+    body.discordActivity .gameV9 .boardWrap {
+        padding-bottom: 0;
+    }
+}
+
+@keyframes cardSpawn {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(.72) rotateX(65deg);
+        filter: blur(4px);
+    }
+
+    65% {
+        opacity: 1;
+        transform: translateY(-5px) scale(1.04);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+.card:before {
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 78% auto !important;
+    opacity: .18 !important;
+    border: 0 !important;
+    filter: drop-shadow(0 10px 12px rgba(0, 0, 0, .45));
+    z-index: 1;
+}
+
+.card.blue:before {
+    opacity: .23 !important;
+}
+
+.card.red:before {
+    opacity: .18 !important;
+    filter: grayscale(1) brightness(1.4) contrast(1.2) drop-shadow(0 10px 12px rgba(0, 0, 0, .65));
+}
+
+.revealHero {
+    display: none !important;
+}
+
+.card.neutral {
+    border-color: rgba(220, 225, 230, .62) !important;
+}
+
+.card {
+    align-items: center !important;
+    justify-content: center !important;
+    border: 3px solid rgba(0, 0, 0, .95) !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+    background-position: center 56% !important;
+    background-size: 82% auto !important;
+    background-image: url("/crown.png") !important;
+}
+
+.card:before {
+    display: none !important;
+}
+
+.card:after {
+    display: none !important;
+}
+
+.card.blue {
+    background-color: #f9d36a !important;
+    background-image: url("/crown.png"), linear-gradient(90deg, #f8d25f, #ffefb0) !important;
+    color: #111 !important;
+}
+
+.card .word {
+    width: 92%;
+    min-height: 42px;
+    border: 3px solid rgba(0, 0, 0, .55) !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    letter-spacing: 1px !important;
+    text-shadow: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .32) !important;
+}
+
+.card.blue .word {
+    background: rgba(248, 209, 81, .62) !important;
+    color: #050505 !important;
+}
+
+.card.red {
+    background-color: #0b0b0d !important;
+    background-image: url("/crown.png"), linear-gradient(90deg, #050506, #2e2e31 58%, #050506) !important;
+    color: #fff !important;
+}
+
+.card.red .word {
+    background: rgba(5, 5, 5, .72) !important;
+    color: #fff !important;
+    border-color: rgba(255, 215, 108, .42) !important;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .8) !important;
+}
+
+.card.assassin {
+    background-color: #9f0907 !important;
+    background-image: url("/crown.png"), linear-gradient(90deg, #650402, #bd0d0a 60%, #760403) !important;
+}
+
+.card.assassin .word {
+    border-color: rgba(0, 0, 0, .62) !important;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .55) !important;
+}
+
+.card.neutral {
+    background-color: #c8c8cc !important;
+    background-image: url("/crown.png"), linear-gradient(90deg, #9a9aa0, #eeeeef 60%, #a9a9af) !important;
+    color: #111 !important;
+}
+
+.card.neutral .word {
+    color: #050505 !important;
+}
+
+.gameV9 .boardWrap,
+.boardWrap,
+.board {
+    position: relative;
+    z-index: 1;
+}
+
+.card.neutral .word {
+    background: rgba(238, 238, 241, .72) !important;
+}
+
+.gameV9 .boardWrap,
+.gameV9 .board,
+.gameV9 .teamPanel {
+    z-index: 1 !important;
+}
+
+.card {
+    background-repeat: no-repeat, no-repeat !important;
+    background-clip: border-box !important;
+}
+
+.card.blue {
+    background-size: 62% auto, 100% 100% !important;
+    background-position: center 58%, center !important;
+}
+
+.card.red {
+    background-size: 58% auto, 100% 100% !important;
+    background-position: center 58%, center !important;
+}
+
+.card.neutral {
+    background-size: 58% auto, 100% 100% !important;
+    background-position: center 58%, center !important;
+}
+
+.card.assassin {
+    background-size: 58% auto, 100% 100% !important;
+    background-position: center 58%, center !important;
+}
+
+.card.red .word, .card.neutral .word, .card.assassin .word {
+    z-index: 5 !important;
+}
+
+@media (max-width: 1250px) {
+    .card.blue {
+        background-size: 56% auto, 100% 100% !important;
+    }
+
+    .card.red, .card.neutral, .card.assassin {
+        background-size: 52% auto, 100% 100% !important;
+    }
+}
+
+.card,
+.card.blue,
+.card.red,
+.card.neutral,
+.card.assassin {
+    background-image: none !important;
+    background-repeat: no-repeat !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+}
+
+.card.blue {
+    background: linear-gradient(90deg, #f4c84a 0%, #ffe9a6 56%, #f4c84a 100%) !important;
+}
+
+.card.red {
+    background: linear-gradient(90deg, #050506 0%, #171719 55%, #050506 100%) !important;
+}
+
+.card.neutral {
+    background: linear-gradient(90deg, #9c9ca2 0%, #eeeeef 56%, #a8a8ae 100%) !important;
+}
+
+.card::before,
+.card.blue::before,
+.card.red::before,
+.card.neutral::before,
+.card.assassin::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 74% !important;
+    height: 86% !important;
+    transform: translate(-50%, -46%) !important;
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: contain !important;
+    opacity: .88 !important;
+    z-index: 1 !important;
+    border: 0 !important;
+    filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .36)) !important;
+    pointer-events: none !important;
+}
+
+.card.red::before {
+    width: 68% !important;
+    height: 80% !important;
+    opacity: .9 !important;
+    filter: drop-shadow(0 9px 10px rgba(0, 0, 0, .6)) !important;
+}
+
+.card.neutral::before {
+    width: 68% !important;
+    height: 80% !important;
+    opacity: .72 !important;
+    filter: saturate(.95) drop-shadow(0 8px 10px rgba(0, 0, 0, .38)) !important;
+}
+
+.card.assassin::before {
+    width: 68% !important;
+    height: 80% !important;
+    opacity: .9 !important;
+    filter: drop-shadow(0 9px 10px rgba(0, 0, 0, .55)) !important;
+}
+
+.card .word {
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+.card::after,
+.card.blue::after,
+.card.red::after,
+.card.neutral::after,
+.card.assassin::after {
+    display: none !important;
+    content: none !important;
+}
+
+.card.target,
+.card.blue.target,
+.card.red.target,
+.card.neutral.target,
+.card.assassin.target {
+    border-color: #26d9ff !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 5px rgba(38, 217, 255, .95), 0 0 32px rgba(38, 217, 255, .72), 0 16px 24px rgba(0, 0, 0, .48) !important;
+    filter: brightness(1.07) !important;
+}
+
+.card.target .word,
+.card.blue.target .word,
+.card.red.target .word,
+.card.neutral.target .word,
+.card.assassin.target .word {
+    box-shadow: 0 0 0 3px rgba(38, 217, 255, .82), 0 4px 12px rgba(0, 0, 0, .32) !important;
+}
+
+.card.target::after,
+.card.blue.target::after,
+.card.red.target::after,
+.card.neutral.target::after,
+.card.assassin.target::after {
+    content: "✓" !important;
+    display: grid !important;
+    position: absolute !important;
+    top: 8px !important;
+    right: 10px !important;
+    width: 30px !important;
+    height: 30px !important;
+    place-items: center !important;
+    border-radius: 999px !important;
+    background: #26d9ff !important;
+    color: #031015 !important;
+    font-size: 20px !important;
+    font-weight: 1000 !important;
+    z-index: 10 !important;
+    box-shadow: 0 0 18px rgba(38, 217, 255, .8) !important;
+    pointer-events: none !important;
+}
+
+@media (max-width: 1250px) {
+    .card::before, .card.blue::before {
+        width: 70% !important;
+        height: 80% !important;
+    }
+
+    .card.red::before, .card.neutral::before, .card.assassin::before {
+        width: 64% !important;
+        height: 76% !important;
+    }
+}
+
+.card.voted:not(.revealed),
+.card.agreed:not(.revealed),
+.card.myVote:not(.revealed) {
+    outline: 0 !important;
+    border-color: #2ee7ff !important;
+    box-shadow: 0 0 0 4px rgba(46, 231, 255, .95), 0 0 28px rgba(46, 231, 255, .72), 0 14px 28px rgba(0, 0, 0, .5) !important;
+}
+
+@media (max-width: 1180px) {
+    body.discordActivity .card {
+        height: clamp(72px, 12vh, 110px) !important;
+    }
+}
+
+@media (max-width: 900px) {
+    body.discordActivity .teamPanelGold, body.discordActivity .teamPanelBlack, body.discordActivity .gameV9 .boardWrap {
+        grid-column: 1 !important;
+    }
+
+    body.discordActivity .board {
+        grid-template-columns: repeat(5, minmax(62px, 1fr)) !important;
+    }
+}
+
+.cardConfirm {
+    width: 40px !important;
+    height: 40px !important;
+    border: 3px solid rgba(255, 255, 255, .92) !important;
+    background: linear-gradient(180deg, #eaffff, #28ddff 55%, #0795b6) !important;
+    color: #021015 !important;
+    font-size: 26px !important;
+    line-height: 1 !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, .42), 0 0 24px rgba(40, 221, 255, .95), 0 10px 22px rgba(0, 0, 0, .55) !important;
+}
+
+.cardConfirm::before {
+    content: "";
+    position: absolute;
+    inset: -9px;
+    border-radius: 999px;
+    background: rgba(40, 221, 255, .10);
+    z-index: -1;
+}
+
+.cardConfirm:hover {
+    filter: brightness(1.25) !important;
+    transform: scale(1.12) !important;
+}
+
+.card.myVote:not(.revealed) {
+    outline: 4px solid #32dfff !important;
+    outline-offset: -4px !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, .7), 0 0 28px rgba(50, 223, 255, .65), 0 16px 24px rgba(0, 0, 0, .42) !important;
+}
+
+.card.voted:not(.revealed) {
+    filter: brightness(.96) saturate(1.05);
+}
+
+@media (max-width: 720px) {
+    .cardConfirm {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 22px !important;
+        top: 5px !important;
+        right: 5px !important;
+    }
+}
+
+.card.red {
+    border-color: #ffd76c !important;
+    box-shadow: 0 16px 24px rgba(0, 0, 0, .42), 0 0 0 1px rgba(255, 215, 108, .55), inset 0 1px 0 rgba(255, 255, 255, .12) !important;
+}
+
+.card.red.revealed,
+.card.red.originShown {
+    border-color: #ffd76c !important;
+}
+
+.pickedLabel.pickedRevealed {
+    opacity: .96;
+    bottom: 6px;
+}
+
+.pickedLabel.pickedRevealed {
+    color: #1d1200 !important;
+    background: linear-gradient(180deg, #fff2b1, #e3ad25) !important;
+    border: 1px solid rgba(255, 244, 185, .95) !important;
+    box-shadow: 0 0 15px rgba(255, 215, 108, .55), 0 2px 0 rgba(0, 0, 0, .28) !important;
+}
+
+.card.revealed.target {
+    box-shadow: 0 16px 24px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .18) !important;
+    border-color: rgba(255, 216, 119, .26) !important;
+}
+
+.card.revealed.target::after {
+    display: none !important;
+}
+
+.board.operativeBoard .card:not(.revealed):not(.originShown) {
+    background: linear-gradient(135deg, #f3f3f5, #aeb2b8 45%, #6d7178 100%) !important;
+    border-color: rgba(235, 238, 242, .72) !important;
+    color: #111 !important;
+}
+
+.board.operativeBoard .card:not(.revealed):not(.originShown) .word {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .72), rgba(210, 214, 220, .48)) !important;
+    color: #111 !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .45) !important;
+}
+
+.board.operativeBoard .card:not(.revealed):before {
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 72% auto !important;
+    opacity: .20 !important;
+    filter: drop-shadow(0 10px 12px rgba(0, 0, 0, .42));
+}
+
+.board.spyBoard .card.pickedByOperative:before,
+.board.spyBoard .card.voted:before,
+.board.spyBoard .card.revealed:before {
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 66% auto !important;
+    opacity: .18 !important;
+    border: 0 !important;
+    filter: drop-shadow(0 10px 12px rgba(0, 0, 0, .48));
+}
+
+.board.spyBoard .card.blue {
+    background: linear-gradient(135deg, #fff3a6, #ffd04b 55%, #b87900) !important;
+    color: #161000 !important;
+    border-color: rgba(255, 236, 160, .9) !important;
+}
+
+.board.spyBoard .card.blue .word {
+    background: rgba(255, 255, 255, .45) !important;
+    color: #111 !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .4) !important;
+}
+
+.board.spyBoard .card.red {
+    background: linear-gradient(135deg, #323337, #070708 72%, #000) !important;
+    color: #fff4c8 !important;
+    border-color: rgba(255, 215, 108, .72) !important;
+}
+
+.board.spyBoard .card.red .word {
+    background: rgba(255, 215, 108, .12) !important;
+    color: #fff !important;
+}
+
+.board.spyBoard .card.neutral {
+    background: linear-gradient(135deg, #f3f3f5, #aeb2b8 48%, #666b72) !important;
+    border-color: rgba(235, 238, 242, .82) !important;
+    color: #111 !important;
+}
+
+.board.spyBoard .card.neutral .word {
+    background: rgba(255, 255, 255, .52) !important;
+    color: #111 !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .4) !important;
+}
+
+.board.spyBoard .card.assassin {
+    background: linear-gradient(135deg, #ff342d, #a60808 58%, #510000) !important;
+    border-color: rgba(255, 170, 150, .8) !important;
+    color: #fff !important;
+}
+
+.board.spyBoard .card.assassin .word {
+    background: rgba(80, 0, 0, .45) !important;
+    color: #fff !important;
+}
+
+.card.assassin {
+    background: linear-gradient(135deg, #ff342d, #a60808 58%, #510000) !important;
+    border-color: rgba(255, 170, 150, .8) !important;
+    color: #fff !important;
+}
+
+.card.assassin .word {
+    background: rgba(80, 0, 0, .45) !important;
+    color: #fff !important;
+}
+
+.board.spyBoard .card:before {
+    background-image: none !important;
+    opacity: 0 !important;
+}
+
+.board.spyBoard .card.voted:before {
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 73% auto !important;
+    opacity: .35 !important;
+    filter: drop-shadow(0 12px 16px rgba(0, 0, 0, .5)) !important;
+}
+
+.board.spyBoard .card.pickedByOperative:before,
+.board.spyBoard .card.revealed:before {
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 78% auto !important;
+    opacity: .55 !important;
+    filter: drop-shadow(0 14px 18px rgba(0, 0, 0, .58)) !important;
+}
+
+.pickedLabel.pickedRevealed {
+    display: none !important;
+}
+
+.card.revealed .pickedLabel {
+    display: none !important;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity .board {
+        gap: 4px !important;
+        grid-template-rows: repeat(5, minmax(0, 1fr)) !important;
+    }
+
+    body.discordActivity .card {
+        border-radius: 9px !important;
+        padding: 3px !important;
+    }
+
+    body.discordActivity .word {
+        min-height: 26px !important;
+        font-size: clamp(9px, 1.8vw, 14px) !important;
+        padding: 3px !important;
+    }
+}
+
+body.discordActivity .gameV9 .boardWrap {
+    height: 100% !important;
+    min-height: 0 !important;
+    padding-bottom: 70px !important;
+    overflow: hidden !important;
+}
+
+body.discordActivity .board {
+    height: 100% !important;
+    grid-template-columns: repeat(5, minmax(96px, 1fr)) !important;
+    grid-template-rows: repeat(5, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+}
+
+body.discordActivity .card {
+    height: auto !important;
+    min-height: 0 !important;
+    border-radius: 12px !important;
+    padding: 5px !important;
+}
+
+body.discordActivity .word {
+    min-height: 31px !important;
+    padding: 4px 5px !important;
+    font-size: clamp(11px, 1.08vw, 17px) !important;
+}
+
+@media (max-width: 1180px) {
+    body.discordActivity .board {
+        grid-template-columns: repeat(5, minmax(76px, 1fr)) !important;
+        gap: 4px !important;
+    }
+
+    body.discordActivity .word {
+        min-height: 27px !important;
+        font-size: clamp(9px, 1.25vw, 14px) !important;
+    }
+}
+
+@media (max-width: 980px) {
+    body.discordActivity .teamPanelGold,
+    body.discordActivity .teamPanelBlack,
+    body.discordActivity .gameV9 .boardWrap {
+        grid-column: 1 !important;
+    }
+
+    body.discordActivity .board {
+        grid-template-columns: repeat(5, minmax(58px, 1fr)) !important;
+        min-height: 520px !important;
+    }
+}
+
+.board.spyBoard .card.target::before,
+.board.spyBoard .card.spyPickable.target::before,
+.card.target::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 76% !important;
+    height: 86% !important;
+    transform: translate(-50%, -47%) !important;
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: contain !important;
+    opacity: .88 !important;
+    z-index: 2 !important;
+    border: 0 !important;
+    pointer-events: none !important;
+    filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .55)) !important;
+}
+
+.board.spyBoard .card.target .word,
+.card.target .word {
+    z-index: 5 !important;
+}
+
+.card.target {
+    border-color: #2ee7ff !important;
+    box-shadow: 0 0 0 4px rgba(46, 231, 255, .9), 0 0 32px rgba(46, 231, 255, .55), 0 14px 28px rgba(0, 0, 0, .48) !important;
+}
+
+.card.revealed .word {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.card.revealed::before,
+.board.operativeBoard .card.revealed::before,
+.board.spyBoard .card.revealed::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 78% !important;
+    height: 88% !important;
+    transform: translate(-50%, -48%) !important;
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: contain !important;
+    opacity: .92 !important;
+    z-index: 2 !important;
+    border: 0 !important;
+    filter: drop-shadow(0 12px 16px rgba(0, 0, 0, .55)) !important;
+}
+
+.card.revealed::after {
+    display: none !important;
+    content: none !important;
+}
+
+@media (max-width: 980px) {
+    .board.spyBoard .card.target::before, .card.target::before {
+        width: 72% !important;
+        height: 82% !important;
+    }
+}
+
+.card.spyClueTarget,
+.board.spyBoard .card.spyClueTarget,
+.board.spyBoard .card.spyPickable.spyClueTarget {
+    outline: 0 !important;
+    box-shadow: none !important;
+    filter: brightness(1.03) !important;
+}
+
+.card.spyClueTarget::after,
+.board.spyBoard .card.spyClueTarget::after {
+    display: none !important;
+    content: none !important;
+}
+
+.card.spyClueTarget::before,
+.board.spyBoard .card.spyClueTarget::before,
+.board.spyBoard .card.spyPickable.spyClueTarget::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 76% !important;
+    height: 86% !important;
+    transform: translate(-50%, -47%) !important;
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: contain !important;
+    opacity: .86 !important;
+    z-index: 2 !important;
+    border: 0 !important;
+    pointer-events: none !important;
+    filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .55)) !important;
+}
+
+.card.spyClueTarget .word,
+.board.spyBoard .card.spyClueTarget .word {
+    z-index: 5 !important;
+}
+
+.card.voted:not(.revealed),
+.card.agreed:not(.revealed),
+.card.myVote:not(.revealed),
+.board.spyBoard .card.voted:not(.revealed),
+.board.spyBoard .card.agreed:not(.revealed),
+.board.spyBoard .card.myVote:not(.revealed) {
+    outline: 0 !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+.board.spyBoard .card.blue.voted:not(.revealed),
+.board.spyBoard .card.blue.agreed:not(.revealed),
+.board.spyBoard .card.blue.myVote:not(.revealed) {
+    border-color: rgba(255, 236, 160, .9) !important;
+}
+
+.board.spyBoard .card.red.voted:not(.revealed),
+.board.spyBoard .card.red.agreed:not(.revealed),
+.board.spyBoard .card.red.myVote:not(.revealed) {
+    border-color: rgba(255, 215, 108, .72) !important;
+}
+
+.board.spyBoard .card.neutral.voted:not(.revealed),
+.board.spyBoard .card.neutral.agreed:not(.revealed),
+.board.spyBoard .card.neutral.myVote:not(.revealed) {
+    border-color: rgba(235, 238, 242, .82) !important;
+}
+
+.board.spyBoard .card.assassin.voted:not(.revealed),
+.board.spyBoard .card.assassin.agreed:not(.revealed),
+.board.spyBoard .card.assassin.myVote:not(.revealed) {
+    border-color: rgba(255, 170, 150, .8) !important;
+}
+
+.board.operativeBoard .card.voted:not(.revealed),
+.board.operativeBoard .card.agreed:not(.revealed),
+.board.operativeBoard .card.myVote:not(.revealed) {
+    border-color: rgba(235, 238, 242, .72) !important;
+}
+
+.cardConfirm {
+    left: 8px !important;
+    right: auto !important;
+    top: 8px !important;
+    z-index: 55 !important;
+}
+
+.card.revealed:not(.correctReveal) .word,
+.board.spyBoard .card.revealed:not(.correctReveal) .word,
+.board.operativeBoard .card.revealed:not(.correctReveal) .word {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.card.revealed.correctReveal .word,
+.board.spyBoard .card.revealed.correctReveal .word,
+.board.operativeBoard .card.revealed.correctReveal .word {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.card.revealed.correctReveal::before,
+.board.spyBoard .card.revealed.correctReveal::before,
+.board.operativeBoard .card.revealed.correctReveal::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 80% !important;
+    height: 90% !important;
+    transform: translate(-50%, -48%) !important;
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: contain !important;
+    opacity: .9 !important;
+    z-index: 3 !important;
+    border: 0 !important;
+    pointer-events: none !important;
+    filter: drop-shadow(0 12px 16px rgba(0, 0, 0, .58)) !important;
+}
+
+.card.revealed:not(.correctReveal)::before,
+.board.spyBoard .card.revealed:not(.correctReveal)::before,
+.board.operativeBoard .card.revealed:not(.correctReveal)::before {
+    opacity: .12 !important;
+}
+
+@media (max-width: 980px) {
+    .cardConfirm {
+        left: 5px !important;
+        top: 5px !important;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 18px !important;
+    }
+}
+
+@media (max-width: 980px) {
+    body.discordActivity #game .board,
+    #game .board {
+        min-height: 0 !important;
+        display: grid !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        grid-template-rows: repeat(5, minmax(0, 1fr)) !important;
+        gap: 4px !important;
+        overflow: hidden !important;
+    }
+
+    body.discordActivity #game .card,
+    #game .card {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 3px !important;
+        border-radius: 9px !important;
+        border-width: 1.5px !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+
+    body.discordActivity #game .card:before,
+    #game .card:before {
+        inset: 4px !important;
+        border-radius: 6px !important;
+    }
+
+    body.discordActivity #game .word,
+    #game .word {
+        min-height: 18px !important;
+        max-height: 22px !important;
+        padding: 2px 3px !important;
+        border-radius: 7px !important;
+        font-size: clamp(6.8px, 2.05vw, 10.5px) !important;
+        line-height: 1 !important;
+        letter-spacing: .25px !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        -webkit-line-clamp: unset !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    body.discordActivity #game .word.longWord,
+    #game .word.longWord {
+        font-size: clamp(5.8px, 1.8vw, 8.8px) !important;
+        letter-spacing: 0 !important;
+    }
+
+    body.discordActivity .cardConfirm,
+    .cardConfirm {
+        width: 22px !important;
+        height: 22px !important;
+        left: 3px !important;
+        top: 3px !important;
+        font-size: 14px !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: portrait) {
+    body.discordActivity #game .board,
+    #game .board {
+        height: 100% !important;
+        grid-template-rows: repeat(5, minmax(0, 1fr)) !important;
+        gap: 3px !important;
+    }
+
+    body.discordActivity #game .card,
+    #game .card {
+        min-height: 0 !important;
+        height: auto !important;
+        border-radius: 8px !important;
+        padding: 2px !important;
+    }
+
+    body.discordActivity #game .word,
+    #game .word {
+        min-height: 17px !important;
+        max-height: 20px !important;
+        padding: 2px 3px !important;
+        font-size: clamp(6px, 1.8vw, 9.4px) !important;
+        letter-spacing: .18px !important;
+    }
+
+    body.discordActivity #game .word.longWord,
+    #game .word.longWord {
+        font-size: clamp(5.4px, 1.55vw, 7.8px) !important;
+        letter-spacing: -.05px !important;
+    }
+}
+
+@media (max-width: 980px) {
+    body.discordActivity #game .card.blue,
+    #game .card.blue {
+        background-image: linear-gradient(145deg, #fff3a6, #ffd04b 55%, #b87900) !important;
+        background-position: center center !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+    }
+
+    body.discordActivity #game .card.red,
+    #game .card.red {
+        background-image: linear-gradient(145deg, #333338, #070708 72%, #010101) !important;
+        background-position: center center !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+    }
+
+    body.discordActivity #game .card.neutral,
+    #game .card.neutral {
+        background-image: linear-gradient(145deg, #f1f2f4, #b7bac0 48%, #747980) !important;
+        background-position: center center !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+    }
+
+    body.discordActivity #game .card.assassin,
+    #game .card.assassin {
+        background-image: linear-gradient(145deg, #ff2d26, #b00806 58%, #530100) !important;
+        background-position: center center !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+    }
+
+    body.discordActivity #game .card:not(.spyClueTarget):not(.target):not(.correctReveal):not(.revealed)::before,
+    #game .card:not(.spyClueTarget):not(.target):not(.correctReveal):not(.revealed)::before {
+        background-image: none !important;
+        opacity: 0 !important;
+    }
+
+    body.discordActivity #game .card.spyClueTarget::before,
+    body.discordActivity #game .card.target::before,
+    body.discordActivity #game .card.revealed.correctReveal::before,
+    body.discordActivity #game .board.spyBoard .card.spyClueTarget::before,
+    body.discordActivity #game .board.spyBoard .card.target::before,
+    body.discordActivity #game .board.spyBoard .card.revealed.correctReveal::before,
+    body.discordActivity #game .board.operativeBoard .card.revealed.correctReveal::before,
+    #game .card.spyClueTarget::before,
+    #game .card.target::before,
+    #game .card.revealed.correctReveal::before,
+    #game .board.spyBoard .card.spyClueTarget::before,
+    #game .board.spyBoard .card.target::before,
+    #game .board.spyBoard .card.revealed.correctReveal::before,
+    #game .board.operativeBoard .card.revealed.correctReveal::before {
+        content: "" !important;
+        display: block !important;
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        right: auto !important;
+        bottom: auto !important;
+        inset: auto !important;
+        width: min(76%, 86px) !important;
+        height: min(82%, 96px) !important;
+        transform: translate(-50%, -50%) !important;
+        transform-origin: center center !important;
+        background-image: url("/crown.png") !important;
+        background-repeat: no-repeat !important;
+        background-position: center center !important;
+        background-size: contain !important;
+        opacity: .9 !important;
+        z-index: 2 !important;
+        border: 0 !important;
+        outline: 0 !important;
+        pointer-events: none !important;
+        filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .56)) !important;
+    }
+
+    body.discordActivity #game .card.revealed.correctReveal .word,
+    #game .card.revealed.correctReveal .word {
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+
+    body.discordActivity #game .card.revealed:not(.correctReveal) .word,
+    #game .card.revealed:not(.correctReveal) .word {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    body.discordActivity #game .card.spyClueTarget::before,
+    body.discordActivity #game .card.target::before,
+    body.discordActivity #game .card.revealed.correctReveal::before,
+    #game .card.spyClueTarget::before,
+    #game .card.target::before,
+    #game .card.revealed.correctReveal::before {
+        width: min(72%, 104px) !important;
+        height: min(78%, 96px) !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
+
+#game .card.hasCrownLayer,
+body.discordActivity #game .card.hasCrownLayer {
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: cover !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+}
+
+#game .card.hasCrownLayer.blue,
+body.discordActivity #game .card.hasCrownLayer.blue {
+    background-image: linear-gradient(145deg, #fff3a6, #ffd04b 55%, #b87900) !important;
+}
+
+#game .card.hasCrownLayer.neutral,
+body.discordActivity #game .card.hasCrownLayer.neutral {
+    background-image: linear-gradient(145deg, #f1f2f4, #b7bac0 48%, #747980) !important;
+}
+
+#game .card.hasCrownLayer.assassin,
+body.discordActivity #game .card.hasCrownLayer.assassin {
+    background-image: linear-gradient(145deg, #ff2d26, #b00806 58%, #530100) !important;
+}
+
+#game .card.hasCrownLayer::before,
+#game .board.spyBoard .card.hasCrownLayer::before,
+#game .board.operativeBoard .card.hasCrownLayer::before,
+body.discordActivity #game .card.hasCrownLayer::before,
+body.discordActivity #game .board.spyBoard .card.hasCrownLayer::before,
+body.discordActivity #game .board.operativeBoard .card.hasCrownLayer::before {
+    content: "" !important;
+    display: none !important;
+    background-image: none !important;
+    opacity: 0 !important;
+}
+
+#game .card .cardCrownLayer,
+body.discordActivity #game .card .cardCrownLayer {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: min(78%, 104px) !important;
+    height: min(86%, 116px) !important;
+    transform: translate(-50%, -50%) !important;
+    transform-origin: center center !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+    opacity: .92 !important;
+    filter: drop-shadow(0 9px 12px rgba(0, 0, 0, .58)) !important;
+}
+
+#game .card.hasCrownLayer .word,
+body.discordActivity #game .card.hasCrownLayer .word {
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+#game .card.hasCrownLayer.correctReveal .word,
+body.discordActivity #game .card.hasCrownLayer.correctReveal .word {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+@media (max-width: 980px) {
+    #game .card .cardCrownLayer,
+    body.discordActivity #game .card .cardCrownLayer {
+        width: min(80%, 76px) !important;
+        height: min(84%, 88px) !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    #game .card .cardCrownLayer,
+    body.discordActivity #game .card .cardCrownLayer {
+        width: min(76%, 96px) !important;
+        height: min(82%, 86px) !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
+
+#game .card.hasCrownLayer::before,
+#game .card.hasCrownLayer::after,
+#game .board.spyBoard .card.hasCrownLayer::before,
+#game .board.spyBoard .card.hasCrownLayer::after,
+#game .board.operativeBoard .card.hasCrownLayer::before,
+#game .board.operativeBoard .card.hasCrownLayer::after,
+body.discordActivity #game .card.hasCrownLayer::before,
+body.discordActivity #game .card.hasCrownLayer::after,
+body.discordActivity #game .board.spyBoard .card.hasCrownLayer::before,
+body.discordActivity #game .board.spyBoard .card.hasCrownLayer::after,
+body.discordActivity #game .board.operativeBoard .card.hasCrownLayer::before,
+body.discordActivity #game .board.operativeBoard .card.hasCrownLayer::after {
+    opacity: 0 !important;
+}
+
+#game .card.neutralReveal .cardCrownBwLayer,
+body.discordActivity #game .card.neutralReveal .cardCrownBwLayer {
+    width: min(70%, 96px) !important;
+    height: min(78%, 108px) !important;
+    opacity: .78 !important;
+    z-index: 2 !important;
+    filter: drop-shadow(0 7px 10px rgba(0, 0, 0, .45)) grayscale(1) contrast(1.08) !important;
+}
+
+#game .card.neutralReveal .word,
+body.discordActivity #game .card.neutralReveal .word {
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative !important;
+    z-index: 6 !important;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity #game .card.hasCrownLayer::before,
+    body.discordActivity #game .card.hasCrownLayer::after,
+    #game .card.hasCrownLayer::before,
+    #game .card.hasCrownLayer::after {
+        content: none !important;
+        display: none !important;
+    }
+
+    body.discordActivity #game .card.neutralReveal .cardCrownBwLayer,
+    #game .card.neutralReveal .cardCrownBwLayer {
+        width: min(72%, 68px) !important;
+        height: min(78%, 78px) !important;
+        transform: translate(-50%, -50%) !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    body.discordActivity #game .card.neutralReveal .cardCrownBwLayer,
+    #game .card.neutralReveal .cardCrownBwLayer {
+        width: min(68%, 88px) !important;
+        height: min(74%, 78px) !important;
+    }
+}
+
+#game .card.neutralReveal .word,
+#game .board.spyBoard .card.neutralReveal .word,
+#game .board.operativeBoard .card.neutralReveal .word,
+body.discordActivity #game .card.neutralReveal .word,
+body.discordActivity #game .board.spyBoard .card.neutralReveal .word,
+body.discordActivity #game .board.operativeBoard .card.neutralReveal .word {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+@media (max-width: 980px) {
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer::before,
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer::after,
+    body.discordActivity #game.gameV9 .board.spyBoard .card.hasCrownLayer::before,
+    body.discordActivity #game.gameV9 .board.spyBoard .card.hasCrownLayer::after,
+    body.discordActivity #game.gameV9 .board.operativeBoard .card.hasCrownLayer::before,
+    body.discordActivity #game.gameV9 .board.operativeBoard .card.hasCrownLayer::after,
+    #game.gameV9 .board .card.hasCrownLayer::before,
+    #game.gameV9 .board .card.hasCrownLayer::after,
+    #game.gameV9 .board.spyBoard .card.hasCrownLayer::before,
+    #game.gameV9 .board.spyBoard .card.hasCrownLayer::after,
+    #game.gameV9 .board.operativeBoard .card.hasCrownLayer::before,
+    #game.gameV9 .board.operativeBoard .card.hasCrownLayer::after {
+        content: none !important;
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        inset: auto !important;
+        background: none !important;
+        background-image: none !important;
+        opacity: 0 !important;
+        box-shadow: none !important;
+        filter: none !important;
+    }
+
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer .cardCrownLayer {
+        display: block !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+        z-index: 4 !important;
+    }
+
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer.correctReveal .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer.correctReveal .cardCrownLayer {
+        width: min(74%, 72px) !important;
+        height: min(80%, 82px) !important;
+    }
+
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer.neutralReveal .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer.neutralReveal .cardCrownLayer {
+        width: min(70%, 66px) !important;
+        height: min(76%, 76px) !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer.correctReveal .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer.correctReveal .cardCrownLayer {
+        width: min(72%, 88px) !important;
+        height: min(78%, 82px) !important;
+    }
+
+    body.discordActivity #game.gameV9 .board .card.hasCrownLayer.neutralReveal .cardCrownLayer,
+    #game.gameV9 .board .card.hasCrownLayer.neutralReveal .cardCrownLayer {
+        width: min(68%, 82px) !important;
+        height: min(74%, 76px) !important;
+    }
+}
+
+@keyframes cardGroundRise {
+    0% {
+        transform: translateY(13px) scale(.94);
+        filter: brightness(.86);
+    }
+
+    45% {
+        transform: translateY(-13px) scale(1.08);
+        filter: brightness(1.22);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+        filter: brightness(1.05);
+    }
+}
+
+@media (max-width: 980px) {
+    body.discordActivity #game .board,
+    #game .board {
+        height: calc(100% - 50px) !important;
+        max-height: calc(100% - 50px) !important;
+    }
+}
+
+@media (max-width: 980px) and (orientation: landscape) {
+    body.discordActivity #game .board,
+    #game .board {
+        height: calc(100% - 22px) !important;
+        max-height: calc(100% - 22px) !important;
+    }
+}
+
+#game .card.hasCrownLayer::before,
+#game .card.hasCrownLayer::after,
+#game .board.spyBoard .card.hasCrownLayer::before,
+#game .board.spyBoard .card.hasCrownLayer::after,
+#game .board.operativeBoard .card.hasCrownLayer::before,
+#game .board.operativeBoard .card.hasCrownLayer::after,
+body.discordActivity #game .card.hasCrownLayer::before,
+body.discordActivity #game .card.hasCrownLayer::after,
+body.discordActivity #game .board.spyBoard .card.hasCrownLayer::before,
+body.discordActivity #game .board.spyBoard .card.hasCrownLayer::after,
+body.discordActivity #game .board.operativeBoard .card.hasCrownLayer::before,
+body.discordActivity #game .board.operativeBoard .card.hasCrownLayer::after {
+    content: none !important;
+    display: none !important;
+    background-image: none !important;
+}
+
+#game .card.crownOnlyReveal .word,
+#game .board.spyBoard .card.crownOnlyReveal .word,
+#game .board.operativeBoard .card.crownOnlyReveal .word,
+body.discordActivity #game .card.crownOnlyReveal .word,
+body.discordActivity #game .board.spyBoard .card.crownOnlyReveal .word,
+body.discordActivity #game .board.operativeBoard .card.crownOnlyReveal .word {
+    display: none !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown {
+    cursor: default !important;
+    filter: saturate(1.04) brightness(1) !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word,
+#game .board.finishedBoard .card.finalOriginShown.crownOnlyReveal .word,
+#game .board.finishedBoard .card.finalOriginShown.revealed .word,
+#game .board.finishedBoard .card.finalOriginShown.correctReveal .word,
+#game .board.finishedBoard .card.finalOriginShown.hasCrownLayer .word,
+#game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+#game .board.finishedBoard.operativeBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.crownOnlyReveal .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.revealed .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.correctReveal .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.hasCrownLayer .word,
+body.discordActivity #game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard.operativeBoard .card.finalOriginShown .word {
+    display: inline-flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+#game .card.red,
+#game .board.spyBoard .card.red,
+body.discordActivity #game .card.red,
+body.discordActivity #game .board.spyBoard .card.red {
+    background: linear-gradient(145deg, #333338, #070708 72%, #010101) !important;
+    background-image: linear-gradient(145deg, #333338, #070708 72%, #010101) !important;
+    color: #fff !important;
+    border-color: rgba(255, 215, 108, .72) !important;
+}
+
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word {
+    border-color: rgba(255, 221, 143, .58) !important;
+}
+
+#game .card.hasCrownLayer.red,
+body.discordActivity #game .card.hasCrownLayer.red {
+    background-image: linear-gradient(145deg, #333338, #070708 72%, #010101) !important;
+}
+
+#game .card.assassin,
+#game .board.spyBoard .card.assassin,
+body.discordActivity #game .card.assassin,
+body.discordActivity #game .board.spyBoard .card.assassin,
+#game .card.hasCrownLayer.assassin,
+body.discordActivity #game .card.hasCrownLayer.assassin {
+    background: linear-gradient(145deg, #ff372f 0%, #b70806 58%, #520100 100%) !important;
+    background-image: linear-gradient(145deg, #ff372f 0%, #b70806 58%, #520100 100%) !important;
+    color: #fff !important;
+    border-color: rgba(255, 196, 132, .9) !important;
+}
+
+@media (max-width: 980px) {
+    #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown),
+    body.discordActivity #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown),
+    #game .board.operativeBoard .card:not(.revealed):not(.originShown),
+    body.discordActivity #game .board.operativeBoard .card:not(.revealed):not(.originShown) {
+        background-color: #b8bcc2 !important;
+        background-image: linear-gradient(135deg, #f3f3f5 0%, #c9cdd3 38%, #8f949c 100%) !important;
+        background-repeat: no-repeat !important;
+        background-position: center center !important;
+        background-size: cover !important;
+        color: #111 !important;
+        overflow: hidden !important;
+        isolation: isolate !important;
+    }
+
+    #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown) .cardHiddenCrownLayer,
+    body.discordActivity #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown) .cardHiddenCrownLayer,
+    #game .board.operativeBoard .card:not(.revealed):not(.originShown) .cardHiddenCrownLayer,
+    body.discordActivity #game .board.operativeBoard .card:not(.revealed):not(.originShown) .cardHiddenCrownLayer {
+        display: none !important;
+    }
+
+    #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown)::after,
+    body.discordActivity #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown)::after,
+    #game .board.operativeBoard .card:not(.revealed):not(.originShown)::after,
+    body.discordActivity #game .board.operativeBoard .card:not(.revealed):not(.originShown)::after {
+        content: none !important;
+        display: none !important;
+        background: none !important;
+        background-image: none !important;
+        opacity: 0 !important;
+    }
+
+    #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown)::before,
+    body.discordActivity #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown)::before,
+    #game .board.operativeBoard .card:not(.revealed):not(.originShown)::before,
+    body.discordActivity #game .board.operativeBoard .card:not(.revealed):not(.originShown)::before {
+        content: "" !important;
+        display: block !important;
+        position: absolute !important;
+        inset: 0 !important;
+        left: 0 !important;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        transform: none !important;
+        background-image: url("/crown.png") !important;
+        background-repeat: no-repeat !important;
+        background-position: center center !important;
+        background-size: 82% auto !important;
+        opacity: .18 !important;
+        filter: grayscale(1) saturate(.18) contrast(.9) drop-shadow(0 7px 8px rgba(0, 0, 0, .34)) !important;
+        z-index: 1 !important;
+        border: 0 !important;
+        outline: 0 !important;
+        pointer-events: none !important;
+    }
+
+    #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown) .word,
+    body.discordActivity #game.gameV9 .board.operativeBoard .card:not(.revealed):not(.originShown) .word,
+    #game .board.operativeBoard .card:not(.revealed):not(.originShown) .word,
+    body.discordActivity #game .board.operativeBoard .card:not(.revealed):not(.originShown) .word {
+        position: relative !important;
+        z-index: 5 !important;
+    }
+}
+
+@keyframes dstyPendingCardAscend {
+    0% {
+        transform: translateY(0) scale(1) rotate(0deg);
+        filter: brightness(.92) saturate(.9);
+    }
+
+    18% {
+        transform: translateY(5px) scale(.98) rotate(-.35deg);
+        filter: brightness(1.05) saturate(1);
+    }
+
+    68% {
+        transform: translateY(-34px) scale(1.075) rotate(.6deg);
+        filter: brightness(1.22) saturate(1.12);
+    }
+
+    100% {
+        transform: translateY(-44px) scale(1.09) rotate(0deg);
+        filter: brightness(1.28) saturate(1.16);
+    }
+}
+
+@keyframes dstyPendingCardAscendMobile {
+    0% {
+        transform: translateY(0) scale(1) rotate(0deg);
+        filter: brightness(.92) saturate(.9);
+    }
+
+    18% {
+        transform: translateY(4px) scale(.98) rotate(-.25deg);
+        filter: brightness(1.05) saturate(1);
+    }
+
+    68% {
+        transform: translateY(-22px) scale(1.065) rotate(.45deg);
+        filter: brightness(1.2) saturate(1.1);
+    }
+
+    100% {
+        transform: translateY(-28px) scale(1.075) rotate(0deg);
+        filter: brightness(1.26) saturate(1.14);
+    }
+}
+
+.revealLiftLayer {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 4200000 !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+    perspective: 900px !important;
+}
+
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost {
+    margin: 0 !important;
+    filter: brightness(1.08) saturate(1.08) !important;
+    backface-visibility: hidden !important;
+}
+
+@keyframes dstyCardLiftTowardScreen {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+        filter: brightness(.92) saturate(.9) blur(0);
+    }
+
+    14% {
+        transform: translate3d(0, 8px, 0) scale(.98) rotate(-.6deg);
+        opacity: 1;
+        filter: brightness(1.04) saturate(1);
+    }
+
+    52% {
+        transform: translate3d(calc(var(--reveal-lift-dx, 0px) * .52), calc(var(--reveal-lift-dy, -120px) * .58), 0) scale(calc(var(--reveal-lift-scale, 1.6) * .82)) rotate(1.1deg);
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.16);
+    }
+
+    82% {
+        transform: translate3d(calc(var(--reveal-lift-dx, 0px) * .9), calc(var(--reveal-lift-dy, -120px) * .94), 0) scale(calc(var(--reveal-lift-scale, 1.6) * 1.04)) rotate(-.35deg);
+        opacity: 1;
+        filter: brightness(1.32) saturate(1.22);
+    }
+
+    100% {
+        transform: translate3d(var(--reveal-lift-dx, 0px), var(--reveal-lift-dy, -120px), 0) scale(var(--reveal-lift-scale, 1.6)) rotate(0deg);
+        opacity: 1;
+        filter: brightness(1.42) saturate(1.26);
+    }
+}
+
+@keyframes dstyCardLiftGhostDone {
+    to {
+        opacity: 0;
+        transform: translate3d(var(--reveal-lift-dx, 0px), var(--reveal-lift-dy, -120px), 0) scale(calc(var(--reveal-lift-scale, 1.6) * 1.06));
+        filter: brightness(1.7) blur(2px);
+    }
+}
+
+@keyframes dstyPendingRevealSlot {
+    0%, 100% {
+        opacity: .34;
+    }
+
+    50% {
+        opacity: .2;
+    }
+}
+
+@media (max-width: 980px) {
+    .revealLiftLayer {
+        perspective: 760px !important;
+    }
+}
+
+@keyframes dstyCardLiftTowardScreenMobile {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+        filter: brightness(.92) saturate(.9) blur(0);
+    }
+
+    14% {
+        transform: translate3d(0, 5px, 0) scale(.97) rotate(-.45deg);
+        opacity: 1;
+        filter: brightness(1.04) saturate(1);
+    }
+
+    52% {
+        transform: translate3d(calc(var(--reveal-lift-dx, 0px) * .52), calc(var(--reveal-lift-dy, -100px) * .58), 0) scale(calc(var(--reveal-lift-scale, 1.95) * .78)) rotate(.8deg);
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.15);
+    }
+
+    82% {
+        transform: translate3d(calc(var(--reveal-lift-dx, 0px) * .9), calc(var(--reveal-lift-dy, -100px) * .94), 0) scale(calc(var(--reveal-lift-scale, 1.95) * 1.02)) rotate(-.25deg);
+        opacity: 1;
+        filter: brightness(1.32) saturate(1.2);
+    }
+
+    100% {
+        transform: translate3d(var(--reveal-lift-dx, 0px), var(--reveal-lift-dy, -100px), 0) scale(var(--reveal-lift-scale, 1.95)) rotate(0deg);
+        opacity: 1;
+        filter: brightness(1.42) saturate(1.24);
+    }
+}
+
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost {
+    min-width: 0 !important;
+    min-height: 0 !important;
+}
+
+@keyframes dstyCardLiftVerticalFullCard {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+        filter: brightness(.94) saturate(.92) blur(0);
+    }
+
+    14% {
+        transform: translate3d(0, 7px, 0) scale(.98);
+        opacity: 1;
+        filter: brightness(1.06) saturate(1);
+    }
+
+    58% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -150px) * .65), 0) scale(calc(var(--reveal-lift-scale, 1.5) * .84));
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.14);
+    }
+
+    84% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -150px) * .94), 0) scale(calc(var(--reveal-lift-scale, 1.5) * 1.03));
+        opacity: 1;
+        filter: brightness(1.34) saturate(1.2);
+    }
+
+    100% {
+        transform: translate3d(0, var(--reveal-lift-dy, -150px), 0) scale(var(--reveal-lift-scale, 1.5));
+        opacity: 1;
+        filter: brightness(1.44) saturate(1.25);
+    }
+}
+
+@keyframes dstyCardLiftVerticalDone {
+    to {
+        opacity: 0;
+        transform: translate3d(0, var(--reveal-lift-dy, -150px), 0) scale(calc(var(--reveal-lift-scale, 1.5) * 1.04));
+        filter: brightness(1.7) blur(2px);
+    }
+}
+
+@keyframes dstyPendingRevealSlotHold {
+    0%, 100% {
+        opacity: .34;
+    }
+
+    50% {
+        opacity: .2;
+    }
+}
+
+@media (max-width: 980px) {
+    .cardRevealLiftGhost,
+    body.discordActivity .cardRevealLiftGhost {
+        animation-name: dstyCardLiftVerticalFullCardMobile !important;
+        box-shadow: 0 24px 42px rgba(0, 0, 0, .72), 0 0 0 2px rgba(255, 234, 146, .62), 0 0 34px rgba(255, 215, 108, .36) !important;
+    }
+}
+
+@keyframes dstyCardLiftVerticalFullCardMobile {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+        filter: brightness(.94) saturate(.92) blur(0);
+    }
+
+    14% {
+        transform: translate3d(0, 5px, 0) scale(.98);
+        opacity: 1;
+        filter: brightness(1.06) saturate(1);
+    }
+
+    58% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -130px) * .65), 0) scale(calc(var(--reveal-lift-scale, 1.72) * .84));
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.14);
+    }
+
+    84% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -130px) * .94), 0) scale(calc(var(--reveal-lift-scale, 1.72) * 1.03));
+        opacity: 1;
+        filter: brightness(1.34) saturate(1.2);
+    }
+
+    100% {
+        transform: translate3d(0, var(--reveal-lift-dy, -130px), 0) scale(var(--reveal-lift-scale, 1.72));
+        opacity: 1;
+        filter: brightness(1.44) saturate(1.25);
+    }
+}
+
+@keyframes dstyPendingRevealFloatInPlace {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        filter: grayscale(.18) brightness(.96) saturate(.94);
+    }
+
+    18% {
+        transform: translate3d(0, 3px, 0) scale(.992) rotate(-.25deg);
+        filter: grayscale(.08) brightness(1.04) saturate(1.02);
+    }
+
+    42% {
+        transform: translate3d(0, -8px, 0) scale(1.018) rotate(.28deg);
+        filter: grayscale(.04) brightness(1.12) saturate(1.06);
+    }
+
+    68% {
+        transform: translate3d(0, -4px, 0) scale(1.012) rotate(-.18deg);
+        filter: grayscale(.02) brightness(1.16) saturate(1.08);
+    }
+
+    86% {
+        transform: translate3d(0, -7px, 0) scale(1.02) rotate(.12deg);
+        filter: grayscale(0) brightness(1.2) saturate(1.1);
+    }
+
+    100% {
+        transform: translate3d(0, -2px, 0) scale(1.006) rotate(0deg);
+        filter: grayscale(0) brightness(1.24) saturate(1.12);
+    }
+}
+
+@keyframes dstyPendingRevealWordPulse {
+    0%, 100% {
+        filter: brightness(1);
+    }
+
+    45% {
+        filter: brightness(1.18);
+    }
+
+    75% {
+        filter: brightness(1.1);
+    }
+}
+
+@media (max-width: 980px) {
+    #game .card.pendingReveal,
+    body.discordActivity #game .card.pendingReveal {
+        animation-name: dstyPendingRevealFloatInPlaceMobile !important;
+    }
+}
+
+@keyframes dstyPendingRevealFloatInPlaceMobile {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        filter: grayscale(.18) brightness(.96) saturate(.94);
+    }
+
+    18% {
+        transform: translate3d(0, 2px, 0) scale(.992) rotate(-.18deg);
+        filter: grayscale(.08) brightness(1.04) saturate(1.02);
+    }
+
+    42% {
+        transform: translate3d(0, -5px, 0) scale(1.014) rotate(.18deg);
+        filter: grayscale(.04) brightness(1.12) saturate(1.06);
+    }
+
+    68% {
+        transform: translate3d(0, -3px, 0) scale(1.009) rotate(-.12deg);
+        filter: grayscale(.02) brightness(1.16) saturate(1.08);
+    }
+
+    86% {
+        transform: translate3d(0, -5px, 0) scale(1.014) rotate(.08deg);
+        filter: grayscale(0) brightness(1.2) saturate(1.1);
+    }
+
+    100% {
+        transform: translate3d(0, -1px, 0) scale(1.004) rotate(0deg);
+        filter: grayscale(0) brightness(1.24) saturate(1.12);
+    }
+}
+
+.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealLiftGhostDone {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+    animation: dstySoftCardFloatDone .18s ease both !important;
+}
+
+.cardRevealLiftGhost .cardCrownLayer,
+body.discordActivity .cardRevealLiftGhost .cardCrownLayer,
+.cardRevealLiftGhost .revealHero,
+body.discordActivity .cardRevealLiftGhost .revealHero {
+    display: none !important;
+}
+
+@keyframes dstySoftCardFloatBeforeReveal {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+        filter: brightness(.96) saturate(.94) blur(0);
+    }
+
+    18% {
+        transform: translate3d(0, 4px, 0) scale(.992) rotate(-.25deg);
+        opacity: 1;
+        filter: brightness(1.05) saturate(1.02) blur(0);
+    }
+
+    48% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -24px) * .82), 0) scale(calc(var(--reveal-lift-scale, 1.055) * .992)) rotate(.25deg);
+        opacity: 1;
+        filter: brightness(1.16) saturate(1.08) blur(0);
+    }
+
+    72% {
+        transform: translate3d(0, var(--reveal-lift-dy, -24px), 0) scale(var(--reveal-lift-scale, 1.055)) rotate(-.12deg);
+        opacity: 1;
+        filter: brightness(1.22) saturate(1.1) blur(0);
+    }
+
+    100% {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -24px) * .88), 0) scale(calc(var(--reveal-lift-scale, 1.055) * .995)) rotate(0deg);
+        opacity: 1;
+        filter: brightness(1.18) saturate(1.08) blur(0);
+    }
+}
+
+@keyframes dstySoftCardFloatDone {
+    to {
+        transform: translate3d(0, calc(var(--reveal-lift-dy, -24px) * .88), 0) scale(calc(var(--reveal-lift-scale, 1.055) * .995));
+        opacity: 0;
+        filter: brightness(1.45) blur(2px);
+    }
+}
+
+@keyframes dstyPendingRevealSlotSoftHold {
+    0%, 100% {
+        opacity: .28;
+    }
+
+    45%, 70% {
+        opacity: .16;
+    }
+}
+
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost,
+.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealLiftGhostDone {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    animation: none !important;
+    pointer-events: none !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    transform-origin: center center !important;
+    will-change: transform, filter, box-shadow !important;
+}
+
+#game .card.pendingReveal .word,
+body.discordActivity #game .card.pendingReveal .word {
+    z-index: 9 !important;
+}
+
+@keyframes dstyPendingRevealTowardEye {
+    0% {
+        transform: scale(1);
+        filter: grayscale(.15) brightness(.96) saturate(.94);
+    }
+
+    16% {
+        transform: scale(.988);
+        filter: grayscale(.10) brightness(1.02) saturate(1);
+    }
+
+    44% {
+        transform: scale(1.075);
+        filter: grayscale(.04) brightness(1.13) saturate(1.06);
+    }
+
+    72% {
+        transform: scale(1.115);
+        filter: grayscale(.02) brightness(1.20) saturate(1.10);
+    }
+
+    100% {
+        transform: scale(1.07);
+        filter: grayscale(0) brightness(1.17) saturate(1.08);
+    }
+}
+
+@media (max-width: 760px) {
+    #game .card.pendingReveal,
+    body.discordActivity #game .card.pendingReveal {
+        animation-name: dstyPendingRevealTowardEyeMobile !important;
+    }
+}
+
+@keyframes dstyPendingRevealTowardEyeMobile {
+    0% {
+        transform: scale(1);
+        filter: grayscale(.15) brightness(.96) saturate(.94);
+    }
+
+    16% {
+        transform: scale(.99);
+        filter: grayscale(.10) brightness(1.02) saturate(1);
+    }
+
+    44% {
+        transform: scale(1.065);
+        filter: grayscale(.04) brightness(1.13) saturate(1.06);
+    }
+
+    72% {
+        transform: scale(1.10);
+        filter: grayscale(.02) brightness(1.20) saturate(1.10);
+    }
+
+    100% {
+        transform: scale(1.06);
+        filter: grayscale(0) brightness(1.17) saturate(1.08);
+    }
+}
+
+.cardRevealLiftGhost,
+body.discordActivity .cardRevealLiftGhost {
+    display: flex !important;
+    position: fixed !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+    z-index: 5005000 !important;
+    transform-origin: 50% 50% !important;
+    will-change: transform, opacity, filter, box-shadow !important;
+    animation: dstyCardTowardViewer 1.5s cubic-bezier(.16, .84, .18, 1) both !important;
+    background-color: #b8bcc2 !important;
+    background-image: linear-gradient(135deg, #f5f6f8 0%, #c9cdd3 42%, #777d86 100%) !important;
+    border: 2px solid rgba(242, 244, 248, .86) !important;
+    color: #111 !important;
+    box-shadow: 0 22px 34px rgba(0, 0, 0, .58),
+        0 0 0 2px rgba(255, 235, 150, .42),
+        0 0 34px rgba(255, 215, 108, .24) !important;
+}
+
+.cardRevealLiftGhost::before,
+body.discordActivity .cardRevealLiftGhost::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-image: url("/crown.png") !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: 82% auto !important;
+    opacity: .18 !important;
+    filter: grayscale(1) saturate(.18) contrast(.9) drop-shadow(0 7px 8px rgba(0, 0, 0, .34)) !important;
+    border: 0 !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+}
+
+.cardRevealLiftGhost::after,
+body.discordActivity .cardRevealLiftGhost::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: -45% !important;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.22), transparent 58%) !important;
+    opacity: .42 !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+}
+
+.cardRevealLiftGhost .word,
+body.discordActivity .cardRevealLiftGhost .word {
+    position: relative !important;
+    z-index: 8 !important;
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(180deg, rgba(255,255,255,.76), rgba(214,218,224,.52)) !important;
+    color: #111 !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .48) !important;
+}
+
+.cardRevealLiftGhost .cardCrownLayer,
+body.discordActivity .cardRevealLiftGhost .cardCrownLayer,
+.cardRevealLiftGhost .revealHero,
+body.discordActivity .cardRevealLiftGhost .revealHero,
+.cardRevealLiftGhost .voteFaces,
+body.discordActivity .cardRevealLiftGhost .voteFaces,
+.cardRevealLiftGhost .voteBadge,
+body.discordActivity .cardRevealLiftGhost .voteBadge,
+.cardRevealLiftGhost .cardConfirm,
+body.discordActivity .cardRevealLiftGhost .cardConfirm {
+    display: none !important;
+}
+
+.cardRevealLiftGhost.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealLiftGhost.cardRevealLiftGhostDone {
+    animation: dstyCardTowardViewerDone .18s ease both !important;
+}
+
+#game .boardWrap.hasPendingRevealWrap,
+body.discordActivity #game .boardWrap.hasPendingRevealWrap,
+#game .board.hasPendingReveal,
+body.discordActivity #game .board.hasPendingReveal {
+    overflow: visible !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    position: relative !important;
+    z-index: 5 !important;
+    pointer-events: none !important;
+    opacity: .18 !important;
+    transform: none !important;
+    animation: none !important;
+    filter: grayscale(.35) brightness(.72) !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 231, 150, .12), 0 8px 16px rgba(0, 0, 0, .25) !important;
+}
+
+#game .card.pendingReveal .word,
+body.discordActivity #game .card.pendingReveal .word {
+    opacity: .30 !important;
+    transform: none !important;
+    animation: none !important;
+}
+
+#game .card.pendingReveal .cardCrownLayer,
+body.discordActivity #game .card.pendingReveal .cardCrownLayer {
+    display: none !important;
+}
+
+@keyframes dstyCardTowardViewer {
+    0% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+        filter: grayscale(.12) brightness(.96) saturate(.94) blur(0);
+    }
+
+    12% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(.985);
+        opacity: 1;
+        filter: grayscale(.08) brightness(1.02) saturate(1) blur(0);
+    }
+
+    48% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1.22);
+        opacity: 1;
+        filter: grayscale(.03) brightness(1.13) saturate(1.06) blur(0);
+    }
+
+    78% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1.42);
+        opacity: .98;
+        filter: grayscale(0) brightness(1.2) saturate(1.08) blur(.1px);
+    }
+
+    100% {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1.52);
+        opacity: 0;
+        filter: grayscale(0) brightness(1.34) saturate(1.1) blur(1.2px);
+    }
+}
+
+@keyframes dstyCardTowardViewerDone {
+    to {
+        transform: perspective(900px) translate3d(0, 0, 0) scale(1.54);
+        opacity: 0;
+        filter: brightness(1.4) blur(1.5px);
+    }
+}
+
+@media (max-width: 760px) {
+    .cardRevealLiftGhost,
+    body.discordActivity .cardRevealLiftGhost {
+        animation-name: dstyCardTowardViewerMobile !important;
+        box-shadow: 0 18px 28px rgba(0, 0, 0, .58),
+            0 0 0 2px rgba(255, 235, 150, .38),
+            0 0 24px rgba(255, 215, 108, .20) !important;
+    }
+}
+
+@keyframes dstyCardTowardViewerMobile {
+    0% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+        filter: grayscale(.12) brightness(.96) saturate(.94) blur(0);
+    }
+
+    12% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(.99);
+        opacity: 1;
+        filter: grayscale(.08) brightness(1.02) saturate(1) blur(0);
+    }
+
+    48% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(1.16);
+        opacity: 1;
+        filter: grayscale(.03) brightness(1.13) saturate(1.06) blur(0);
+    }
+
+    78% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(1.30);
+        opacity: .98;
+        filter: grayscale(0) brightness(1.2) saturate(1.08) blur(.1px);
+    }
+
+    100% {
+        transform: perspective(780px) translate3d(0, 0, 0) scale(1.38);
+        opacity: 0;
+        filter: grayscale(0) brightness(1.34) saturate(1.1) blur(1.2px);
+    }
+}
+
+.cardRevealFullGhost,
+body.discordActivity .cardRevealFullGhost {
+    position: fixed !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+    pointer-events: none !important;
+    z-index: 5005000 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform-origin: 50% 50% !important;
+    will-change: transform, opacity !important;
+    background-color: #b8bcc2 !important;
+    background-image: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .42), transparent 54%),
+        linear-gradient(135deg, #f4f5f7 0%, #c8ccd2 45%, #747a83 100%) !important;
+    border: 2px solid rgba(244, 245, 247, .88) !important;
+    color: #111 !important;
+    box-shadow: 0 22px 34px rgba(0, 0, 0, .58),
+        inset 0 1px 0 rgba(255, 255, 255, .50),
+        0 0 0 2px rgba(255, 235, 150, .40),
+        0 0 34px rgba(255, 215, 108, .22) !important;
+    animation: dstyRevealFullCardScale var(--reveal-ms, 1650ms) linear both,
+        dstyRevealFullCardFade var(--reveal-ms, 1650ms) linear both !important;
+}
+
+.cardRevealFullGhost::before,
+body.discordActivity .cardRevealFullGhost::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 9px !important;
+    border: 2px solid rgba(35, 38, 44, .22) !important;
+    border-radius: inherit !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+    background: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+.cardRevealFullGhost::after,
+body.discordActivity .cardRevealFullGhost::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: -40% !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+    background: linear-gradient(115deg, transparent 42%, rgba(255, 255, 255, .30), transparent 58%) !important;
+    opacity: .34 !important;
+    transform: none !important;
+}
+
+.cardRevealFullGhost .word,
+body.discordActivity .cardRevealFullGhost .word {
+    position: relative !important;
+    z-index: 8 !important;
+    width: 100% !important;
+    min-height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(218,222,228,.56)) !important;
+    color: #111 !important;
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .48) !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.32) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhostDone {
+    animation: dstyRevealFullCardDone .18s linear both !important;
+}
+
+@keyframes dstyRevealFullCardScale {
+    from {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    to {
+        transform: translate3d(0, 0, 0) scale(1.52);
+    }
+}
+
+@keyframes dstyRevealFullCardFade {
+    0%, 86% {
+        opacity: 1;
+        filter: grayscale(.10) brightness(1) saturate(.96) blur(0);
+    }
+
+    100% {
+        opacity: 0;
+        filter: grayscale(0) brightness(1.22) saturate(1.04) blur(.8px);
+    }
+}
+
+@keyframes dstyRevealFullCardDone {
+    to {
+        transform: translate3d(0, 0, 0) scale(1.54);
+        opacity: 0;
+        filter: brightness(1.24) blur(1px);
+    }
+}
+
+@media (max-width: 760px) {
+    .cardRevealFullGhost,
+    body.discordActivity .cardRevealFullGhost {
+        animation: dstyRevealFullCardScaleMobile var(--reveal-ms, 1650ms) linear both,
+            dstyRevealFullCardFade var(--reveal-ms, 1650ms) linear both !important;
+    }
+}
+
+@keyframes dstyRevealFullCardScaleMobile {
+    from {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    to {
+        transform: translate3d(0, 0, 0) scale(1.40);
+    }
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost::after,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost::after {
+    inset: -30% !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost .word,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .word {
+    align-self: stretch !important;
+    margin-top: auto !important;
+    margin-bottom: 2px !important;
+}
+
+#game .card.pendingReveal,
+body.discordActivity #game .card.pendingReveal {
+    background-color: #aeb4bc !important;
+    background-image: linear-gradient(145deg, #d1d6dd 0%, #b6bcc4 44%, #878f99 100%) !important;
+    border-color: rgba(198, 204, 212, .9) !important;
+}
+
+#game .card.pendingReveal::before,
+body.discordActivity #game .card.pendingReveal::before {
+    border-color: rgba(109, 117, 127, .46) !important;
+}
+
+@media (max-width: 760px) {
+    .cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown,
+    body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown {
+        max-width: 62px !important;
+        top: 13px !important;
+    }
+}
+
+body[data-turn-team="blue"] .card.myVote:not(.revealed),
+body.discordActivity[data-turn-team="blue"] .card.myVote:not(.revealed) {
+    outline: 3px solid #f4c546 !important;
+    outline-offset: -3px;
+    box-shadow: 0 0 24px rgba(255, 215, 108, .42), 0 16px 24px rgba(0, 0, 0, .42) !important;
+}
+
+body[data-turn-team="red"] .card.myVote:not(.revealed),
+body.discordActivity[data-turn-team="red"] .card.myVote:not(.revealed) {
+    outline: 3px solid #050505 !important;
+    outline-offset: -3px;
+    box-shadow: 0 0 0 2px rgba(255, 215, 108, .16), 0 16px 24px rgba(0, 0, 0, .55) !important;
+}
+
+body[data-turn-team="blue"] .card.myVote:not(.revealed)::before,
+body.discordActivity[data-turn-team="blue"] .card.myVote:not(.revealed)::before {
+    border-color: rgba(255, 230, 151, .72) !important;
+}
+
+body[data-turn-team="red"] .card.myVote:not(.revealed)::before,
+body.discordActivity[data-turn-team="red"] .card.myVote:not(.revealed)::before {
+    border-color: rgba(13, 13, 13, .95) !important;
+}
+
+body[data-turn-team="blue"] .cardConfirm,
+body.discordActivity[data-turn-team="blue"] .cardConfirm {
+    background: linear-gradient(180deg, #fff1ad, #d39a12 72%, #6f4700) !important;
+    color: #180f00 !important;
+    box-shadow: 0 0 18px rgba(255, 215, 108, .52), 0 8px 18px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255,255,255,.58) !important;
+}
+
+body[data-turn-team="red"] .cardConfirm,
+body.discordActivity[data-turn-team="red"] .cardConfirm {
+    background: linear-gradient(180deg, #303030, #0a0a0b 75%, #000000) !important;
+    color: #ffe7a1 !important;
+    border: 1px solid rgba(255, 215, 108, .28) !important;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.88), 0 0 18px rgba(255, 215, 108, .16), 0 8px 18px rgba(0,0,0,.46) !important;
+}
+
+body[data-turn-team="blue"] .cardConfirm:hover,
+body[data-turn-team="red"] .cardConfirm:hover,
+body.discordActivity[data-turn-team="blue"] .cardConfirm:hover,
+body.discordActivity[data-turn-team="red"] .cardConfirm:hover {
+    filter: brightness(1.1) !important;
+}
+
+body[data-turn-team="blue"] .card.voted:not(.revealed),
+body[data-turn-team="blue"] .card.pickedByOperative:not(.revealed),
+body.discordActivity[data-turn-team="blue"] .card.voted:not(.revealed),
+body.discordActivity[data-turn-team="blue"] .card.pickedByOperative:not(.revealed) {
+    box-shadow: 0 0 0 2px rgba(244, 197, 70, .42), 0 14px 24px rgba(0,0,0,.38) !important;
+}
+
+body[data-turn-team="red"] .card.voted:not(.revealed),
+body[data-turn-team="red"] .card.pickedByOperative:not(.revealed),
+body.discordActivity[data-turn-team="red"] .card.voted:not(.revealed),
+body.discordActivity[data-turn-team="red"] .card.pickedByOperative:not(.revealed) {
+    box-shadow: 0 0 0 2px rgba(8, 8, 10, .95), 0 0 0 4px rgba(255, 215, 108, .14), 0 14px 24px rgba(0,0,0,.46) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost::before,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost::before {
+    content: "" !important;
+    display: block !important;
+    inset: 9px !important;
+    border: 2px solid rgba(116, 125, 136, .62) !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    opacity: 1 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost::after,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost::after {
+    display: none !important;
+    content: none !important;
+    opacity: 0 !important;
+    background: none !important;
+}
+
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    min-height: 50px !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    line-height: 1.02 !important;
+    transform: none !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost {
+    overflow: visible !important;
+    background-color: #aeb4bc !important;
+    background-image: radial-gradient(circle at 50% 44%, rgba(255,255,255,.30), transparent 58%),
+        linear-gradient(145deg, #d8dce2 0%, #b8bec7 48%, #858d97 100%) !important;
+    border: 0 !important;
+    outline: 3px solid rgba(128, 136, 146, .95) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 24px 38px rgba(0, 0, 0, .58),
+        0 0 0 6px rgba(198, 204, 212, .34),
+        0 0 24px rgba(112, 120, 130, .26) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost::before,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost::before,
+.cardRevealFullGhost.cardRevealLiftGhost::after,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost::after {
+    display: none !important;
+    content: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: none !important;
+    opacity: 0 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown {
+    display: block !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 68% !important;
+    max-width: none !important;
+    height: auto !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 4 !important;
+    opacity: .34 !important;
+    filter: grayscale(1) brightness(.92) contrast(1.08) drop-shadow(0 5px 7px rgba(0,0,0,.30)) !important;
+    pointer-events: none !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost .word,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .word {
+    position: relative !important;
+    z-index: 8 !important;
+    width: min(84%, calc(100% - 32px)) !important;
+    max-width: min(84%, calc(100% - 32px)) !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 38px !important;
+    margin: 0 auto !important;
+    padding: 6px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    border-radius: 10px !important;
+    border: 2px solid rgba(110, 118, 128, .78) !important;
+    background: linear-gradient(180deg, rgba(238,241,245,.90), rgba(201,207,216,.78)) !important;
+    color: #20262c !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,.55) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.42) !important;
+}
+
+#game .board .card:not(.revealed):not(.crownOnlyReveal) .word,
+body.discordActivity #game .board .card:not(.revealed):not(.crownOnlyReveal) .word,
+#game .board.spyBoard .card:not(.revealed):not(.crownOnlyReveal) .word,
+body.discordActivity #game .board.spyBoard .card:not(.revealed):not(.crownOnlyReveal) .word,
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+#game .card.assassin .word,
+#game .board.spyBoard .card.assassin .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.assassin .word,
+body.discordActivity #game .board.spyBoard .card.assassin .word {
+    width: min(84%, calc(100% - 34px)) !important;
+    max-width: min(84%, calc(100% - 34px)) !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 38px !important;
+    margin: 0 auto !important;
+    padding: 6px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    border-radius: 10px !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+}
+
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word {
+    background: rgba(255, 215, 108, .12) !important;
+    border: 2px solid rgba(255, 221, 143, .58) !important;
+    color: #fff !important;
+    text-shadow: 0 2px 0 rgba(0,0,0,.62) !important;
+}
+
+#game .card.assassin .word,
+#game .board.spyBoard .card.assassin .word,
+body.discordActivity #game .card.assassin .word,
+body.discordActivity #game .board.spyBoard .card.assassin .word {
+    background: rgba(92, 0, 0, .62) !important;
+    border: 2px solid rgba(45, 0, 0, .92) !important;
+    color: #fff7d6 !important;
+    text-shadow: 0 2px 0 rgba(0,0,0,.70) !important;
+}
+
+@media (max-width: 760px) {
+    .cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown,
+    body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .cardRevealGhostCrown {
+        width: 66% !important;
+    }
+
+    .cardRevealFullGhost.cardRevealLiftGhost .word,
+    body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost .word,
+    #game .board .card:not(.revealed):not(.crownOnlyReveal) .word,
+    body.discordActivity #game .board .card:not(.revealed):not(.crownOnlyReveal) .word {
+        width: min(86%, calc(100% - 24px)) !important;
+        max-width: min(86%, calc(100% - 24px)) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 5px 8px !important;
+    }
+}
+
+#game .board.finishedBoard .card.finalOriginShown,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown {
+    align-content: center !important;
+    justify-content: center !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word.longWord,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.longWord {
+    font-size: clamp(11px, 1.02vw, 17px) !important;
+    letter-spacing: .35px !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.mediumWord {
+    font-size: clamp(12px, 1.12vw, 19px) !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown.red .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.red .word,
+#game .card.red .word,
+#game .board.spyBoard .card.red .word,
+body.discordActivity #game .card.red .word,
+body.discordActivity #game .board.spyBoard .card.red .word {
+    width: min(84%, calc(100% - 34px)) !important;
+    max-width: min(84%, calc(100% - 34px)) !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 760px) {
+    #game .board.finishedBoard .card.finalOriginShown .word,
+    body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word,
+    #game .card.red .word,
+    body.discordActivity #game .card.red .word {
+        width: min(86%, calc(100% - 24px)) !important;
+        max-width: min(86%, calc(100% - 24px)) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
+        padding: 5px 8px !important;
+        font-size: clamp(10px, 2.8vw, 15px) !important;
+        letter-spacing: .35px !important;
+    }
+}
+
+#game .board.finishedBoard .card.finalOriginShown,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown {
+    position: relative !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word,
+#game .board.finishedBoard .card.finalOriginShown.red .word,
+#game .board.finishedBoard .card.finalOriginShown.blue .word,
+#game .board.finishedBoard .card.finalOriginShown.neutral .word,
+#game .board.finishedBoard .card.finalOriginShown.assassin .word,
+#game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+#game .board.finishedBoard.operativeBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.red .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.blue .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.neutral .word,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown.assassin .word,
+body.discordActivity #game .board.finishedBoard.spyBoard .card.finalOriginShown .word,
+body.discordActivity #game .board.finishedBoard.operativeBoard .card.finalOriginShown .word {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: auto !important;
+    transform: translate(-50%, -50%) !important;
+    translate: none !important;
+    width: min(74%, 260px) !important;
+    max-width: min(74%, 260px) !important;
+    min-width: 0 !important;
+    height: clamp(30px, 2.1vw, 38px) !important;
+    min-height: clamp(30px, 2.1vw, 38px) !important;
+    max-height: clamp(30px, 2.1vw, 38px) !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    font-size: clamp(14px, 1.12vw, 20px) !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-weight: 1000 !important;
+    letter-spacing: .72px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    text-indent: 0 !important;
+    isolation: isolate !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+#game .board.finishedBoard .card.finalOriginShown .word.longWord,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.longWord {
+    font-size: clamp(13px, 1.02vw, 18px) !important;
+    letter-spacing: .45px !important;
+}
+
+#game .board.finishedBoard .card.finalOriginShown .cardCrownLayer,
+body.discordActivity #game .board.finishedBoard .card.finalOriginShown .cardCrownLayer {
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+@media (max-width: 760px) {
+    #game .board.finishedBoard .card.finalOriginShown .word,
+    body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word {
+        width: min(78%, 190px) !important;
+        max-width: min(78%, 190px) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
+        padding: 0 8px !important;
+        font-size: clamp(10px, 2.6vw, 15px) !important;
+        letter-spacing: .35px !important;
+    }
+
+    #game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+    #game .board.finishedBoard .card.finalOriginShown .word.longWord,
+    body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.mediumWord,
+    body.discordActivity #game .board.finishedBoard .card.finalOriginShown .word.longWord {
+        font-size: clamp(9px, 2.3vw, 13px) !important;
+        letter-spacing: .22px !important;
+    }
+}
+
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown {
+    place-items: center !important;
+}
+
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord {
+    font-size: clamp(12px, .94vw, 17px) !important;
+    letter-spacing: .32px !important;
+}
+
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox {
+    position: absolute !important;
+    inset: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    translate: none !important;
+    width: min(74%, 250px) !important;
+    max-width: min(74%, 250px) !important;
+    min-width: 0 !important;
+    height: clamp(31px, 2.15vw, 39px) !important;
+    min-height: clamp(31px, 2.15vw, 39px) !important;
+    max-height: clamp(31px, 2.15vw, 39px) !important;
+    margin: auto !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-weight: 1000 !important;
+    font-size: clamp(13px, 1.02vw, 19px) !important;
+    letter-spacing: .55px !important;
+    box-sizing: border-box !important;
+    border-radius: 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-indent: 0 !important;
+    z-index: 12 !important;
+}
+
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.mediumWord,
+html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox.longWord {
+    font-size: clamp(12px, .94vw, 17px) !important;
+    letter-spacing: .32px !important;
+}
+
+@media (max-width: 760px) {
+    html body #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+    html body.discordActivity #game.gameV9 #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+    html body #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox,
+    html body.discordActivity #game #board.board.finishedBoard > button.card.finalOriginShown > span.word.finalWordBox {
+        width: min(76%, 190px) !important;
+        max-width: min(76%, 190px) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
+        padding: 0 8px !important;
+        font-size: clamp(10px, 2.5vw, 14px) !important;
+        letter-spacing: .25px !important;
+    }
+}
+
+#game .board .card.localWordFlipped,
+body.discordActivity #game .board .card.localWordFlipped {
+    cursor: pointer !important;
+    perspective: 900px !important;
+}
+
+#game .board .card.localWordFlipped .cardCrownLayer,
+body.discordActivity #game .board .card.localWordFlipped .cardCrownLayer {
+    display: none !important;
+}
+
+#game .board .card.localWordFlipped.correctReveal::before,
+body.discordActivity #game .board .card.localWordFlipped.correctReveal::before,
+#game .board.spyBoard .card.localWordFlipped.correctReveal::before,
+body.discordActivity #game .board.spyBoard .card.localWordFlipped.correctReveal::before,
+#game .board.operativeBoard .card.localWordFlipped.correctReveal::before,
+body.discordActivity #game .board.operativeBoard .card.localWordFlipped.correctReveal::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 9px !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
+    background: none !important;
+    background-image: none !important;
+    border: 2px solid rgba(255, 228, 148, .28) !important;
+    border-radius: 15px !important;
+    opacity: 1 !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
+    filter: none !important;
+}
+
+#game .board .card.localWordFlipped .word,
+body.discordActivity #game .board .card.localWordFlipped .word,
+#game .board .card.localWordFlipped.correctReveal .word,
+body.discordActivity #game .board .card.localWordFlipped.correctReveal .word,
+#game .board.spyBoard .card.localWordFlipped.correctReveal .word,
+body.discordActivity #game .board.spyBoard .card.localWordFlipped.correctReveal .word,
+#game .board.operativeBoard .card.localWordFlipped.correctReveal .word,
+body.discordActivity #game .board.operativeBoard .card.localWordFlipped.correctReveal .word {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: auto !important;
+    transform: translate(-50%, -50%) !important;
+    rotate: y 0deg !important;
+    backface-visibility: hidden !important;
+    width: min(78%, 260px) !important;
+    max-width: min(78%, 260px) !important;
+    min-height: 38px !important;
+    height: auto !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+    z-index: 6 !important;
+    animation: localPickedWordFlip .22s ease-out both !important;
+}
+
+@keyframes localPickedWordFlip {
+    0% {
+        rotate: y 92deg;
+        scale: .96;
+        opacity: 0;
+    }
+
+    100% {
+        rotate: y 0deg;
+        scale: 1;
+        opacity: 1;
+    }
+}
+
+html body #game #board.board > button.card.localWordFlipped > span.word,
+html body.discordActivity #game #board.board > button.card.localWordFlipped > span.word,
+html body #game #board.board > button.card.localWordFlipped.correctReveal > span.word,
+html body.discordActivity #game #board.board > button.card.localWordFlipped.correctReveal > span.word,
+html body #game #board.board.spyBoard > button.card.localWordFlipped.correctReveal > span.word,
+html body.discordActivity #game #board.board.spyBoard > button.card.localWordFlipped.correctReveal > span.word,
+html body #game #board.board.operativeBoard > button.card.localWordFlipped.correctReveal > span.word,
+html body.discordActivity #game #board.board.operativeBoard > button.card.localWordFlipped.correctReveal > span.word {
+    inset: auto !important;
+    left: 50% !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    width: min(78%, 260px) !important;
+    min-height: 44px !important;
+    display: grid !important;
+    place-items: center !important;
+    text-align: center !important;
+    line-height: 1.02 !important;
+}
+
+@keyframes activeRoleCardGlow {
+    0%, 100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.18);
+    }
+}
+
+@keyframes releaseTargetPulse {
+    0%, 100% {
+        opacity: .82;
+        filter: brightness(1);
+        transform: scale(.985);
+    }
+
+    50% {
+        opacity: 1;
+        filter: brightness(1.18);
+        transform: scale(1);
+    }
+}
