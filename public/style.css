@@ -1099,17 +1099,84 @@ html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sid
     max-height: none !important;
 }
 
-html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player),
-html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player),
+html body #app #game .miniScoreCard::before,
+html body.discordActivity #app #game .miniScoreCard::before,
+html body #app #game .goldMini::before,
+html body #app #game .blackMini::before,
+html body.discordActivity #app #game .goldMini::before,
+html body.discordActivity #app #game .blackMini::before {
+    content: none !important;
+    display: none !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+html body #app #game .miniScoreCard,
+html body.discordActivity #app #game .miniScoreCard {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, .46) !important;
+}
+
+@media (min-width: 981px) {
+    html body #app #game.gameV9 > #adminControlBar.bottomOptionsBar,
+    html body.discordActivity #app #game.gameV9 > #adminControlBar.bottomOptionsBar {
+        position: relative !important;
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        align-self: end !important;
+        justify-self: end !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        bottom: auto !important;
+        transform: none !important;
+        width: calc((100% - 28px) / 5) !important;
+        max-width: none !important;
+        margin: 0 0 8px 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        pointer-events: none !important;
+        z-index: 100004 !important;
+    }
+
+    html body #app #game.gameV9 > #adminControlBar.bottomOptionsBar .gameOptionsWrap,
+    html body.discordActivity #app #game.gameV9 > #adminControlBar.bottomOptionsBar .gameOptionsWrap {
+        position: relative !important;
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+        pointer-events: auto !important;
+    }
+
+    html body #app #game.gameV9 > #adminControlBar.bottomOptionsBar .optionsMenu,
+    html body.discordActivity #app #game.gameV9 > #adminControlBar.bottomOptionsBar .optionsMenu {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+    }
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > h3,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > h3,
+html body #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection):has(> .teamList > .player) > h3,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection):has(> .teamList > .player) > h3 {
+    height: auto !important;
+    min-height: 34px !important;
+    max-height: none !important;
+    padding: 8px 10px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection),
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection),
 html body #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection),
 html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) {
-    position: relative !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 4px !important;
-    width: 100% !important;
     flex: 0 0 auto !important;
     flex-grow: 0 !important;
     flex-shrink: 0 !important;
@@ -1118,104 +1185,12 @@ html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.activeRo
     min-height: 0 !important;
     max-height: none !important;
     block-size: auto !important;
-    margin: 8px 0 !important;
-    padding: 0 6px 8px !important;
-    overflow: visible !important;
-    box-sizing: border-box !important;
 }
 
-html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > h3,
-html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > h3,
-html body #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) > h3,
-html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) > h3 {
-    position: relative !important;
-    width: 100% !important;
-    flex: 0 0 34px !important;
-    height: 34px !important;
-    min-height: 34px !important;
-    max-height: 34px !important;
-    margin: 0 !important;
-    padding: 8px 10px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
-}
-
-html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > .teamList,
-html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > .teamList,
-html body #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) > .teamList,
-html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) > .teamList {
-    position: static !important;
-    left: auto !important;
-    right: auto !important;
-    top: auto !important;
-    transform: none !important;
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    align-items: flex-start !important;
-    align-content: flex-start !important;
-    width: 238px !important;
-    max-width: 100% !important;
-    flex: 0 0 auto !important;
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList {
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
     block-size: auto !important;
-    margin: 0 auto !important;
-    padding: 2px 0 0 !important;
-    overflow: visible !important;
-    box-sizing: border-box !important;
-}
-
-html body #app #game.gameV9 > aside.teamPanel > section.dropTargetActive:not(.sideLogSection),
-html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.dropTargetActive:not(.sideLogSection) {
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    block-size: auto !important;
-    overflow: visible !important;
-}
-
-html body #app #game.gameV9 > aside.teamPanel > section.dropTargetActive:not(.sideLogSection)::after,
-html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.dropTargetActive:not(.sideLogSection)::after {
-    display: none !important;
-}
-
-html body #app #game.gameV9 > aside.teamPanel > section.dropTargetActive:not(.sideLogSection) > h3,
-html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.dropTargetActive:not(.sideLogSection) > h3 {
-    flex: 0 0 34px !important;
-    height: 34px !important;
-    min-height: 34px !important;
-    max-height: 34px !important;
-    padding: 8px 10px !important;
-}
-
-@media (max-width: 1280px) {
-    html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > .teamList,
-    html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > .teamList,
-    html body #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) > .teamList,
-    html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) > .teamList {
-        width: 226px !important;
-    }
-}
-
-@media (max-width: 980px) {
-    html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player),
-    html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player),
-    html body #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection),
-    html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) {
-        gap: 3px !important;
-        padding-bottom: 6px !important;
-    }
-
-    html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > .teamList,
-    html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection):has(> .teamList > .player) > .teamList,
-    html body #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) > .teamList,
-    html body.discordActivity #app #game.gameV9 > aside.teamPanel > section.activeRoleSection:not(.sideLogSection) > .teamList {
-        width: 204px !important;
-    }
 }
