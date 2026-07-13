@@ -2999,3 +2999,48 @@ html body.discordActivity #app #game #spectatorToggleBtn.spectatorToggleBtn {
     transform: none !important;
     translate: none !important;
 }
+
+/* ========================================================================== */
+/* Wider desktop team rails                                                   */
+/* ========================================================================== */
+@media (min-width: 1181px) {
+    html body #app > #game.gameV9:not(.hidden),
+    html body.discordActivity #app > #game.gameV9:not(.hidden) {
+        --team-rail-width: clamp(230px, 15vw, 280px);
+        grid-template-columns: var(--team-rail-width) minmax(0, 1fr) var(--team-rail-width) !important;
+        column-gap: clamp(18px, 1.25vw, 24px) !important;
+    }
+
+    html body #app > #game.gameV9:not(.hidden) > .boardWrap,
+    html body.discordActivity #app > #game.gameV9:not(.hidden) > .boardWrap {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* --- follow-up fix: remove side-section boxes so the page background shows through --- */
+#game .teamPanel section,
+body.discordActivity #game .teamPanel section {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
+
+#game .teamPanel .teamList,
+body.discordActivity #game .teamPanel .teamList {
+    background: transparent !important;
+}
+
+#game .teamPanel section > h3,
+body.discordActivity #game .teamPanel section > h3 {
+    margin: 0 0 10px !important;
+}
+
+@media (max-width: 980px) {
+    #game .teamPanel section,
+    body.discordActivity #game .teamPanel section {
+        margin: 8px 0 !important;
+    }
+}
