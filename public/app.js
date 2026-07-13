@@ -7,7 +7,6 @@ let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let boardDealTimers = [];
 let boardDealState = {key: '', phase: 'idle', visibleRows: 5};
-let reactionTimer = null;
 let clueSplashTimer = null, lastClueSplashKey = '';
 let spectatorMenuOpen = false;
 
@@ -44,11 +43,13 @@ let clueNumberEdited = false;
 let lastClueTargetCount = 0;
 const MAX_CLUE_TARGETS = 25;
 const pendingRevealIds = new Set();
-const REVEAL_ASCEND_MS = 1650;
+const REVEAL_ASCEND_MS = 2200;
+const REVEAL_PEAK_MS = 850;
 const delayedRevealTimers = new Map();
 const delayedRevealTokens = new Map();
 const delayedRevealReactions = new Map();
 const revealLiftGhosts = new Map();
+const revealPeakTimers = new Map();
 
 function adminStorageKey(roomId) {
     return `cc_adminToken_${String(roomId || '').toUpperCase()}`;
@@ -1063,25 +1064,10 @@ function revealReactionForCard(card, beforeState, nowState) {
     if (!card?.revealed) return null;
     const revealer = card.revealedById ? nowState?.players?.[card.revealedById] : null;
     const pickerTeam = revealer?.team || beforeState?.turn || '';
-    if (card.color === 'assassin') {
-        return {kind: 'death', img: '/death.png', text: 'BOOM! Death card!'};
-    }
-    if (card.color === 'neutral') {
-        return {kind: 'grey', img: '/grey.png', text: 'Grey zone! Turn over!'};
-    }
-    if (pickerTeam && card.color === pickerTeam) {
-        return {kind: 'correct', img: '/correct.png', text: 'YAAAY! Nice pick!'};
-    }
-    return {kind: 'wrong', img: '/wrong.png', text: 'Oops! Wrong team!'};
-}
-
-function firstRevealReaction(beforeState, nowState) {
-    if (!beforeState?.board || !nowState?.board) return null;
-    for (const card of nowState.board) {
-        const old = beforeState.board.find(x => x.id === card.id);
-        if (old && !old.revealed && card.revealed) return revealReactionForCard(card, beforeState, nowState);
-    }
-    return null;
+    if (card.color === 'assassin') return {kind: 'death', pickerTeam};
+    if (card.color === 'neutral') return {kind: 'grey', pickerTeam};
+    if (pickerTeam && card.color === pickerTeam) return {kind: 'correct', pickerTeam};
+    return {kind: 'wrong', pickerTeam};
 }
 
 
@@ -1091,19 +1077,24 @@ function revealLiftSelector(id) {
 }
 
 function removeRevealLiftGhost(id) {
+    const peakTimer = revealPeakTimers.get(id);
+    if (peakTimer) clearTimeout(peakTimer);
+    revealPeakTimers.delete(id);
     const ghost = revealLiftGhosts.get(id);
     if (!ghost) return;
     revealLiftGhosts.delete(id);
     ghost.classList.add('cardRevealLiftGhostDone');
-    setTimeout(() => ghost.remove(), 180);
+    setTimeout(() => ghost.remove(), 140);
 }
 
 function clearRevealLiftGhosts() {
+    revealPeakTimers.forEach(timer => clearTimeout(timer));
+    revealPeakTimers.clear();
     revealLiftGhosts.forEach(ghost => ghost.remove());
     revealLiftGhosts.clear();
 }
 
-function startRevealLiftGhost(card) {
+function startRevealLiftGhost(card, reaction) {
     if (!card || !board || !document.body) return;
     removeRevealLiftGhost(card.id);
     const src = board.querySelector(revealLiftSelector(card.id));
@@ -1111,14 +1102,13 @@ function startRevealLiftGhost(card) {
     const rect = src.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
 
-
-
     const ghost = document.createElement('div');
     const crown = document.createElement('img');
     const word = document.createElement('span');
     const wordText = String(card.word || '').trim();
     const revealGhostColor = String(card.color || '').replace(/[^a-z0-9_-]/gi, '');
-    ghost.className = `cardRevealLiftGhost cardRevealFullGhost operativeRevealGhost ${revealGhostColor ? `revealGhost-${revealGhostColor}` : ''}`;
+    const correctClass = reaction?.kind === 'correct' ? ' revealGhostCorrect' : '';
+    ghost.className = `cardRevealLiftGhost cardRevealFullGhost operativeRevealGhost ${revealGhostColor ? `revealGhost-${revealGhostColor}` : ''}${correctClass}`;
     crown.className = 'cardCrownLayer cardRevealGhostCrown';
     crown.src = '/crown-bw.png';
     crown.alt = '';
@@ -1128,6 +1118,7 @@ function startRevealLiftGhost(card) {
     word.textContent = wordText;
     ghost.appendChild(crown);
     ghost.appendChild(word);
+    if (reaction?.kind === 'correct') ghost.insertAdjacentHTML('beforeend', cardFireworkHtml());
 
     const srcStyle = window.getComputedStyle(src);
     ghost.style.left = `${rect.left}px`;
@@ -1143,6 +1134,17 @@ function startRevealLiftGhost(card) {
 
     revealLiftGhosts.set(card.id, ghost);
     document.body.appendChild(ghost);
+
+    const peakTimer = setTimeout(() => {
+        revealPeakTimers.delete(card.id);
+        const liveGhost = revealLiftGhosts.get(card.id);
+        if (!liveGhost || !document.body.contains(liveGhost)) return;
+        liveGhost.classList.add('revealPeakActive');
+        if (card.color === 'neutral') crown.src = '/crown-bw.png';
+        else if (card.color === 'assassin') crown.remove();
+        else crown.src = '/crown.png';
+    }, REVEAL_PEAK_MS);
+    revealPeakTimers.set(card.id, peakTimer);
 }
 
 function revealTokenForState(nowState, card) {
@@ -1160,6 +1162,8 @@ function clearDelayedReveals() {
     delayedRevealTokens.clear();
     delayedRevealReactions.clear();
     pendingRevealIds.clear();
+    revealPeakTimers.forEach(timer => clearTimeout(timer));
+    revealPeakTimers.clear();
     clearRevealLiftGhosts();
 }
 
@@ -1200,19 +1204,18 @@ function finishDelayedReveal(id, token) {
     delayedRevealTokens.delete(id);
     delayedRevealReactions.delete(id);
     pendingRevealIds.delete(id);
-    removeRevealLiftGhost(id);
 
     const card = state?.board?.find(c => c.id === id);
     const stillSameRound = token === revealTokenForState(state, card);
     if (!card || !card.revealed || !stillSameRound) return;
 
     renderBoard();
+    removeRevealLiftGhost(id);
     renderLog();
     playRevealSoundForCard(card);
     if (card.color === 'blue' || card.color === 'red') {
         requestAnimationFrame(() => flyCardToTeamScore(card));
     }
-    showPickReaction(reaction);
 
     if (pendingRevealIds.size === 0) {
         render();
@@ -1220,9 +1223,7 @@ function finishDelayedReveal(id, token) {
 
     if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
         if (delayedWinRevealTimer) clearTimeout(delayedWinRevealTimer);
-
-
-        const delay = reaction ? (reaction.kind === 'death' ? 3600 : 2300) : 1400;
+        const delay = reaction ? (reaction.kind === 'death' ? 2800 : 2100) : 1400;
         winRevealHoldUntil = Date.now() + delay;
         hideWinEffectsForCurrentView();
         delayedWinRevealTimer = setTimeout(() => {
@@ -1246,39 +1247,15 @@ function scheduleDelayedReveals(beforeState, nowState) {
         const existing = delayedRevealTimers.get(id);
         if (existing) clearTimeout(existing);
 
+        const reaction = revealReactionForCard(card, beforeState, nowState);
         pendingRevealIds.add(id);
         delayedRevealTokens.set(id, token);
-        delayedRevealReactions.set(id, revealReactionForCard(card, beforeState, nowState));
-        startRevealLiftGhost(card);
+        delayedRevealReactions.set(id, reaction);
+        startRevealLiftGhost(card, reaction);
         delayedRevealTimers.set(id, setTimeout(() => finishDelayedReveal(id, token), REVEAL_ASCEND_MS));
     }
 
     return reveals;
-}
-
-function showPickReaction(reaction) {
-    if (!reaction) return;
-    const overlay = $('pickReactionOverlay');
-    const card = $('pickReactionCard');
-    const img = $('pickReactionImg');
-    const text = $('pickReactionText');
-    if (!overlay || !card || !img || !text) return;
-    if (reactionTimer) clearTimeout(reactionTimer);
-    img.src = reaction.img;
-    text.textContent = reaction.text;
-    card.className = `pickReactionCard ${reaction.kind || 'correct'}`;
-    overlay.classList.remove('hidden', 'reactionOut');
-    overlay.setAttribute('aria-hidden', 'false');
-    void overlay.offsetWidth;
-    overlay.classList.add('reactionLive');
-    reactionTimer = setTimeout(() => {
-        overlay.classList.add('reactionOut');
-        reactionTimer = setTimeout(() => {
-            overlay.classList.add('hidden');
-            overlay.classList.remove('reactionLive', 'reactionOut');
-            overlay.setAttribute('aria-hidden', 'true');
-        }, 320);
-    }, 1750);
 }
 
 
@@ -3872,6 +3849,17 @@ function revealHeroSvg(color) {
     return '';
 }
 
+function cardFireworkHtml() {
+    const particles = [
+        [-92, -58, 0, 7], [-66, -82, 20, 5], [-28, -94, 70, 6], [18, -92, 10, 5],
+        [58, -78, 55, 7], [92, -48, 20, 5], [104, -8, 80, 6], [92, 34, 15, 5],
+        [64, 72, 65, 7], [24, 92, 25, 5], [-22, 96, 75, 6], [-62, 74, 15, 5],
+        [-96, 42, 60, 7], [-106, 2, 30, 5], [-76, -24, 90, 6], [0, -72, 120, 5],
+        [74, 8, 130, 6], [0, 76, 110, 5], [-70, 12, 140, 6], [48, 54, 150, 5]
+    ];
+    return `<span class="cardFireworkLayer" aria-hidden="true">${particles.map(([x, y, delay, size]) => `<i style="--particle-x:${x}px;--particle-y:${y}px;--particle-x-end:${Math.round(x * 1.18)}px;--particle-y-end:${Math.round(y * 1.18)}px;--particle-delay:${delay}ms;--particle-size:${size}px"></i>`).join('')}</span>`;
+}
+
 function renderBoard() {
     if (state?.status === 'lobby') {
         clearBoardDealAnimation();
@@ -3910,9 +3898,9 @@ function renderBoard() {
 
 
         const teamReveal = !!(!showOrigin && visuallyRevealed && (c.color === 'blue' || c.color === 'red'));
-        const correctReveal = teamReveal;
+        const correctReveal = !!(teamReveal && revealer?.team === c.color);
         const neutralReveal = !!(!showOrigin && visuallyRevealed && c.color === 'neutral');
-        const localFlippedReveal = (teamReveal || neutralReveal) && localFlippedPickedCards.has(localPickedFlipKey(c));
+        const localFlippedReveal = false;
         const playableSpyTarget = spy && p?.team === state.turn && state.status === 'waiting-clue' && c.color === p.team && !c.revealed;
         const canConfirmThis = p?.role === 'operative' && p.team === state.turn && state.status === 'guessing' && myVote && !c.revealed;
         const voteBadge = '';
@@ -3922,11 +3910,11 @@ function renderBoard() {
 
 
         const crownSrc = neutralReveal ? '/crown-bw.png' : '/crown.png';
-        const hasCrownLayer = spyClueTarget || ((teamReveal || neutralReveal) && !localFlippedReveal);
+        const hasCrownLayer = spyClueTarget || teamReveal || neutralReveal;
         const crownLayer = hasCrownLayer ? `<img class="cardCrownLayer ${neutralReveal ? 'cardCrownBwLayer' : ''}" src="${crownSrc}" alt="" aria-hidden="true">` : '';
-        const crownOnlyReveal = (teamReveal || neutralReveal) && !localFlippedReveal;
+        const crownOnlyReveal = teamReveal || neutralReveal;
         const finalWordStyle = `--letters:${String(c.word).length}`;
-        const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)} ${showOrigin ? 'finalWordBox' : ''}" style="${finalWordStyle}">${c.word}</span>`;
+        const wordLayer = `<span class="word ${cardLengthClass(c.word)} ${showOrigin ? 'finalWordBox' : ''}" style="${finalWordStyle}">${c.word}</span>`;
         return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${visuallyRevealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${localFlippedReveal ? 'localWordFlipped' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${visuallyRevealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     applyBoardDealVisualState();
@@ -3935,13 +3923,6 @@ function renderBoard() {
             if (ev.target.closest('.cardConfirm')) return;
             const id = Number(el.dataset.id);
             const card = state.board.find(c => c.id === id);
-            if (isLocalPickedFlipEligible(card)) {
-                const key = localPickedFlipKey(card);
-                if (localFlippedPickedCards.has(key)) localFlippedPickedCards.delete(key);
-                else localFlippedPickedCards.add(key);
-                renderBoard();
-                return;
-            }
             const p = me();
             if (!p || !card || card.revealed || state.status === 'finished') return;
             if (p.role === 'spymaster') {

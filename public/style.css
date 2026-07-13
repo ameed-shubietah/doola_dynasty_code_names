@@ -1270,3 +1270,339 @@ html body.discordActivity #app #game.gameV9 #blackOperatives > .player:not(.edit
         line-height: 18px !important;
     }
 }
+
+html body #app #game.gameV9 #board.board > button.card.revealed.crownOnlyReveal > span.word,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.revealed.crownOnlyReveal > span.word {
+    position: absolute !important;
+    inset: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    translate: none !important;
+    transform: scale(.96) !important;
+    transform-origin: center center !important;
+    width: min(78%, 260px) !important;
+    max-width: min(78%, 260px) !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    margin: auto !important;
+    padding: 7px 10px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    border-radius: 10px !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    z-index: 30 !important;
+    transition: opacity .16s ease, visibility .16s ease, transform .16s ease !important;
+}
+
+html body #app #game.gameV9 #board.board > button.card.revealed.crownOnlyReveal:hover > span.word,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.revealed.crownOnlyReveal:hover > span.word {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: scale(1) !important;
+}
+
+html body #app #game.gameV9 #board.board > button.card.revealed.crownOnlyReveal:hover > .cardCrownLayer,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.revealed.crownOnlyReveal:hover > .cardCrownLayer {
+    opacity: .16 !important;
+    filter: drop-shadow(0 5px 8px rgba(0, 0, 0, .28)) !important;
+    transition: opacity .16s ease, filter .16s ease !important;
+}
+
+html body #app #game.gameV9 #board.board > button.card.revealed.crownOnlyReveal {
+    cursor: default !important;
+}
+
+html body #app #game.gameV9 #board.board > button.card.correctRevealFirework,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.correctRevealFirework {
+    position: relative !important;
+    isolation: isolate !important;
+    overflow: visible !important;
+    z-index: 44 !important;
+}
+
+html body #app #game.gameV9 #board.board > button.card.correctRevealFirework.blue,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.correctRevealFirework.blue {
+    --firework-color: #ffd447;
+    --firework-color-soft: #fff2a8;
+    --firework-glow: rgba(255, 212, 71, .95);
+}
+
+html body #app #game.gameV9 #board.board > button.card.correctRevealFirework.red,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.correctRevealFirework.red {
+    --firework-color: #111114;
+    --firework-color-soft: #55555d;
+    --firework-glow: rgba(255, 215, 108, .82);
+}
+
+html body #app #game.gameV9 #board.board > button.card.correctRevealFirework > .cardFireworkLayer,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.correctRevealFirework > .cardFireworkLayer {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+    z-index: 35 !important;
+}
+
+html body #app #game.gameV9 #board.board > button.card.correctRevealFirework > .cardFireworkLayer::before,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.correctRevealFirework > .cardFireworkLayer::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 34% !important;
+    aspect-ratio: 1 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, var(--firework-color-soft) 0 14%, var(--firework-color) 15% 32%, transparent 68%) !important;
+    transform: translate(-50%, -50%) scale(.2) !important;
+    opacity: 0 !important;
+    filter: drop-shadow(0 0 10px var(--firework-glow)) !important;
+    animation: cardFireworkCore 700ms ease-out 180ms both !important;
+}
+
+html body #app #game.gameV9 #board.board > button.card.correctRevealFirework > .cardFireworkLayer > i,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.correctRevealFirework > .cardFireworkLayer > i {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: var(--particle-size, 6px) !important;
+    height: var(--particle-size, 6px) !important;
+    border-radius: 50% !important;
+    background: var(--firework-color) !important;
+    border: 1px solid var(--firework-color-soft) !important;
+    box-shadow: 0 0 6px var(--firework-glow), 0 0 12px var(--firework-glow) !important;
+    opacity: 0 !important;
+    transform: translate(-50%, -50%) scale(.2) !important;
+    animation: cardFireworkParticle 820ms cubic-bezier(.12, .68, .18, 1) calc(180ms + var(--particle-delay, 0ms)) both !important;
+}
+
+html body #app #game.gameV9 #board.board > button.card.correctRevealFirework> .cardCrownLayer,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.correctRevealFirework> .cardCrownLayer {
+    opacity: 1 !important;
+}
+
+html body #app #game.gameV9 #board.board > button.card.correctRevealFirework > span.word,
+html body.discordActivity #app #game.gameV9 #board.board > button.card.correctRevealFirework > span.word {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+@keyframes cardFireworkCore {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.18); }
+    15% { opacity: 1; }
+    56% { opacity: .95; transform: translate(-50%, -50%) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.75); }
+}
+
+@keyframes cardFireworkParticle {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.15); }
+    10% { opacity: 1; }
+    70% { opacity: 1; transform: translate(calc(-50% + var(--particle-x)), calc(-50% + var(--particle-y))) scale(1); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--particle-x-end)), calc(-50% + var(--particle-y-end))) scale(.12); }
+}
+
+html body #app #game.gameV9 .boardWrap:has(#board > .correctRevealFirework),
+html body #app #game.gameV9 #board.board:has(> .correctRevealFirework),
+html body.discordActivity #app #game.gameV9 .boardWrap:has(#board > .correctRevealFirework),
+html body.discordActivity #app #game.gameV9 #board.board:has(> .correctRevealFirework) {
+    overflow: visible !important;
+}
+
+@media (max-width: 980px) {
+    html body #app #game.gameV9 #board.board > button.card.revealed.crownOnlyReveal > span.word,
+    html body.discordActivity #app #game.gameV9 #board.board > button.card.revealed.crownOnlyReveal > span.word {
+        width: min(82%, 190px) !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        max-height: 30px !important;
+        padding: 5px 7px !important;
+    }
+
+    html body #app #game.gameV9 #board.board > button.card.correctRevealFirework > .cardFireworkLayer > i,
+    html body.discordActivity #app #game.gameV9 #board.board > button.card.correctRevealFirework > .cardFireworkLayer > i {
+        width: max(4px, calc(var(--particle-size, 6px) * .78)) !important;
+        height: max(4px, calc(var(--particle-size, 6px) * .78)) !important;
+    }
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost {
+    animation: revealGhostApproachHoldReturn var(--reveal-ms, 2200ms) cubic-bezier(.22, .7, .18, 1) both !important;
+    transform-origin: 50% 50% !important;
+    transition: background .12s ease, outline-color .12s ease, box-shadow .12s ease !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.cardRevealLiftGhostDone,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.cardRevealLiftGhostDone {
+    animation: none !important;
+    transform: translate3d(0, 0, 0) scale(1) !important;
+    opacity: 0 !important;
+    transition: opacity .12s ease !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhost-blue,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhost-blue {
+    background-color: #d9a817 !important;
+    background-image: radial-gradient(circle at 35% 18%, #fff0a6, #ffd64f 48%, #b67b00 100%) !important;
+    outline-color: rgba(255, 221, 111, .98) !important;
+    box-shadow: 0 28px 46px rgba(0, 0, 0, .62), 0 0 0 6px rgba(255, 211, 70, .32), 0 0 34px rgba(255, 211, 70, .58) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhost-red,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhost-red {
+    background-color: #0b0b0d !important;
+    background-image: radial-gradient(circle at 35% 18%, #4f4f53, #151516 60%, #000 100%) !important;
+    outline-color: rgba(255, 215, 108, .72) !important;
+    box-shadow: 0 28px 46px rgba(0, 0, 0, .7), 0 0 0 6px rgba(22, 22, 25, .68), 0 0 30px rgba(255, 215, 108, .28) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhost-assassin,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhost-assassin {
+    background-color: #960b08 !important;
+    background-image: radial-gradient(circle at 35% 18%, #ff4740, #bd100c 52%, #520300 100%) !important;
+    outline-color: rgba(255, 104, 91, .95) !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive .cardRevealGhostCrown,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive .cardRevealGhostCrown {
+    width: 72% !important;
+    opacity: .96 !important;
+    filter: drop-shadow(0 7px 10px rgba(0, 0, 0, .42)) drop-shadow(0 0 9px rgba(255, 215, 108, .34)) !important;
+    transition: opacity .1s ease, filter .1s ease, width .1s ease !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive .word,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive .word {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost > .cardFireworkLayer,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost > .cardFireworkLayer {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+    z-index: 40 !important;
+    opacity: 0 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealGhostCorrect.revealGhost-blue {
+    --firework-color: #ffd447;
+    --firework-color-soft: #fff2a8;
+    --firework-glow: rgba(255, 212, 71, .96);
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealGhostCorrect.revealGhost-red {
+    --firework-color: #111114;
+    --firework-color-soft: #6a6a73;
+    --firework-glow: rgba(255, 215, 108, .84);
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer {
+    opacity: 1 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer::before,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 34% !important;
+    aspect-ratio: 1 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, var(--firework-color-soft) 0 14%, var(--firework-color) 15% 32%, transparent 68%) !important;
+    transform: translate(-50%, -50%) scale(.2) !important;
+    opacity: 0 !important;
+    filter: drop-shadow(0 0 10px var(--firework-glow)) !important;
+    animation: revealPeakFireworkCore 760ms ease-out both !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer > i,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer > i {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: var(--particle-size, 6px) !important;
+    height: var(--particle-size, 6px) !important;
+    border-radius: 50% !important;
+    background: var(--firework-color) !important;
+    border: 1px solid var(--firework-color-soft) !important;
+    box-shadow: 0 0 6px var(--firework-glow), 0 0 12px var(--firework-glow) !important;
+    opacity: 0 !important;
+    transform: translate(-50%, -50%) scale(.2) !important;
+    animation: revealPeakFireworkParticle 900ms cubic-bezier(.12, .68, .18, 1) var(--particle-delay, 0ms) both !important;
+}
+
+@keyframes revealGhostApproachHoldReturn {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+    }
+    38% {
+        transform: translate3d(0, 0, 0) scale(1.52);
+        opacity: 1;
+    }
+    64% {
+        transform: translate3d(0, 0, 0) scale(1.52);
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes revealPeakFireworkCore {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.16);
+    }
+    14% {
+        opacity: 1;
+    }
+    58% {
+        opacity: .96;
+        transform: translate(-50%, -50%) scale(1.16);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.7);
+    }
+}
+
+@keyframes revealPeakFireworkParticle {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.14);
+    }
+    10% {
+        opacity: 1;
+    }
+    72% {
+        opacity: 1;
+        transform: translate(calc(-50% + var(--particle-x)), calc(-50% + var(--particle-y))) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--particle-x-end)), calc(-50% + var(--particle-y-end))) scale(.1);
+    }
+}
+
+html body #app #game.gameV9 .boardWrap:has(.cardRevealLiftGhost.revealPeakActive),
+html body #app #game.gameV9 #board.board:has(.cardRevealLiftGhost.revealPeakActive),
+body.discordActivity .cardRevealLiftGhost.revealPeakActive {
+    overflow: visible !important;
+}
