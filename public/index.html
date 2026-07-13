@@ -4,7 +4,8 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>CODENAMES DSTY</title>
-    <link rel="stylesheet" href="/style.css?v=164"/>
+    <link rel="stylesheet" href="/style.css?v=162"/>
+    <link rel="stylesheet" href="/10-game-start-and-deal.css?v=2"/>
 </head>
 <body>
 <div id="app">
@@ -125,7 +126,7 @@
             </div>
         </div>
         <div id="landingAdminBar" class="landingAdminBar hidden">
-            <button id="landingStartGameBtn" class="primary landingStartGameBtn hidden" type="button">Start Game
+            <button id="landingStartGameBtn" class="primary landingStartGameBtn hidden" type="button">Start
             </button>
             <div id="landingOptionsWrap" class="optionsWrap hidden">
                 <button class="optionsBtn" type="button">Options ▾</button>
@@ -232,7 +233,7 @@
                     <span id="winnerBadge"></span>
                 </div>
                 <div class="topGameTools hidden" aria-hidden="true"></div>
-                <button id="newRoundBtn" class="primary hidden">Create New Game</button>
+                <button id="newRoundBtn" class="primary hidden">Start New</button>
             </div>
             <div class="timers"><span>Round <b id="roundTime">00:00</b></span><span>Game <b
                     id="gameTime">00:00</b></span></div>
@@ -348,6 +349,6 @@
 </script>
 <script type="module" src="/discord-sdk.js?v=62"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js?v=163"></script>
+<script src="/app.js?v=167"></script>
 </body>
 </html>

@@ -99,7 +99,7 @@ const OLLAMA_AUTH_HEADER = String(process.env.OLLAMA_AUTH_HEADER || '').trim();
 const AI_ENGINE_OFFLINE_MESSAGE = "the host's pc where he hosts the ai engine that runs this mode is turned off at the moment";
 const MAX_CLUE_TARGETS = 25;
 const MAX_AI_CLUE_TARGETS = envInt('AI_MAX_CLUE_TARGETS', 5, 1, 5);
-const MAX_CLUE_WORD_LENGTH = 20;
+const MAX_CLUE_WORD_LENGTH = 14;
 const GENERIC_BAD_CLUES = new Set(['WORD', 'WORDS', 'CLUE', 'TARGET', 'TARGETS', 'CARD', 'CARDS', 'THING', 'THINGS', 'OBJECT', 'OBJECTS', 'ITEM', 'ITEMS', 'COMMON', 'RELATED', 'ASSOCIATED', 'GENERAL']);
 const GENERIC_BAD_ARABIC_CLUES = new Set(['كلمة', 'كلمات', 'تلميح', 'بطاقة', 'بطاقات', 'شيء', 'اشياء', 'عام', 'عامة', 'مشترك', 'مرتبط']);
 const AI_EXTRA_CLUE_WORDS = [
@@ -2405,16 +2405,22 @@ io.on('connection', socket => {
         const room = getPlayerRoom(socket.id);
         if (!room) return;
         if (room.botTimer) clearTimeout(room.botTimer);
+
+        // Build the next board now, but return everyone to the shared lobby first.
+        // The players object is preserved, so every team/role/character spot remains intact.
         const players = room.players;
         const adminToken = room.adminToken;
         const fresh = newRoom(room.id, room.language || 'en');
-        fresh.status = 'waiting-clue';
+        fresh.status = 'lobby';
+        fresh.gameStartedAt = 0;
+        fresh.roundStartedAt = Date.now();
         fresh.log = [];
         fresh.players = players;
         fresh.adminToken = adminToken;
         fresh.singlePlayer = !!room.singlePlayer;
         fresh.language = room.language || 'en';
         fresh.singlePlayerDifficulty = room.singlePlayerDifficulty || 'medium';
+
         if (fresh.singlePlayer) {
             fresh.turn = 'blue';
             fresh.board = makeBoard('blue', 'full', fresh.language);
@@ -2422,9 +2428,9 @@ io.on('connection', socket => {
             fresh.singlePlayerUsedClueGroups = {blue: [], red: []};
             fresh.singlePlayerAiClueStatus = null;
         }
+
         rooms.set(room.id, fresh);
         emitRoom(fresh);
-        scheduleSinglePlayerBot(fresh);
     });
 
     socket.on('resetTable', () => {
@@ -2568,18 +2574,7 @@ io.on('connection', socket => {
         const room = getPlayerRoom(socket.id);
         if (!room) return;
         const p = getPlayerBySocket(room, socket.id);
-        if (!p || p.role !== 'spymaster') return;
-        if (p.team !== room.turn) {
-            const currentTeam = room.turn === 'blue' ? 'Gold' : 'Black';
-            const currentTeamArabic = room.turn === 'blue' ? 'الذهبي' : 'الأسود';
-            return socket.emit(
-                'toast',
-                languageOfRoom(room) === 'ar'
-                    ? `الدور الآن لصاحب تلميح الفريق ${currentTeamArabic}.`
-                    : `It is the ${currentTeam} spymaster's turn.`
-            );
-        }
-        if (!playerCanAct(room, p)) return;
+        if (!playerCanAct(room, p) || p.role !== 'spymaster') return;
         const isExtraHint = false;
         if (room.status !== 'waiting-clue') return;
         const roomLanguage = languageOfRoom(room);

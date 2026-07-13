@@ -1,0 +1,220 @@
+/* Additive trial styles for Start / Start New and the post-logo board deal. */
+
+#landingStartGameBtn,
+body.discordActivity #landingStartGameBtn {
+    position: relative !important;
+    isolation: isolate !important;
+    min-width: 154px !important;
+    min-height: 52px !important;
+    padding: 12px 30px !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.4px !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-size: clamp(16px, 2vw, 22px) !important;
+    color: #170d00 !important;
+    background:
+        radial-gradient(circle at 24% 18%, rgba(255,255,255,.9), transparent 24%),
+        linear-gradient(180deg, #fff4b4 0%, #ffd44c 44%, #a66e00 100%) !important;
+    border: 1px solid rgba(255,244,183,.96) !important;
+    box-shadow:
+        0 0 20px rgba(255,215,108,.5),
+        0 0 48px rgba(255,190,37,.24),
+        0 14px 30px rgba(0,0,0,.48),
+        inset 0 1px 0 rgba(255,255,255,.72) !important;
+    animation: startButtonGlow 1.45s ease-in-out infinite !important;
+}
+
+#landingStartGameBtn::before,
+body.discordActivity #landingStartGameBtn::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: -70% -36% !important;
+    z-index: -1 !important;
+    background: linear-gradient(112deg, transparent 36%, rgba(255,255,255,.82) 49%, transparent 62%) !important;
+    transform: translateX(-72%) rotate(9deg) !important;
+    animation: startButtonSweep 2.15s ease-in-out infinite !important;
+}
+
+#landingStartGameBtn:hover,
+body.discordActivity #landingStartGameBtn:hover {
+    transform: translateY(-2px) scale(1.035) !important;
+    filter: brightness(1.08) !important;
+}
+
+#newRoundBtn {
+    position: relative !important;
+    overflow: hidden !important;
+    min-width: 138px !important;
+    border-radius: 999px !important;
+    text-transform: uppercase !important;
+    letter-spacing: .9px !important;
+    color: #160d00 !important;
+    background: linear-gradient(180deg, #fff5b6, #ffd243 52%, #9e6800) !important;
+    border: 1px solid rgba(255,242,176,.94) !important;
+    box-shadow: 0 0 24px rgba(255,215,108,.46), 0 10px 24px rgba(0,0,0,.44) !important;
+    animation: startNewGlow 1.35s ease-in-out infinite !important;
+}
+
+@keyframes startButtonGlow {
+    0%, 100% {
+        box-shadow: 0 0 18px rgba(255,215,108,.44), 0 0 42px rgba(255,190,37,.18), 0 14px 30px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.72);
+    }
+    50% {
+        box-shadow: 0 0 32px rgba(255,226,126,.84), 0 0 72px rgba(255,179,16,.38), 0 16px 34px rgba(0,0,0,.54), inset 0 1px 0 rgba(255,255,255,.9);
+    }
+}
+
+@keyframes startButtonSweep {
+    0%, 42% {
+        transform: translateX(-72%) rotate(9deg);
+        opacity: 0;
+    }
+    58% {
+        opacity: .86;
+    }
+    86%, 100% {
+        transform: translateX(72%) rotate(9deg);
+        opacity: 0;
+    }
+}
+
+@keyframes startNewGlow {
+    0%, 100% { filter: brightness(1); transform: scale(1); }
+    50% { filter: brightness(1.15); transform: scale(1.035); }
+}
+
+/* Keep the board footprint stable while the five rows are dealt. */
+#board.boardDealPending .card,
+#board.boardDealRunning .card:not(.dealRowVisible) {
+    opacity: 0 !important;
+    transform: translateY(-24px) scale(.94) !important;
+    filter: blur(3px) brightness(1.25) !important;
+    pointer-events: none !important;
+    animation: none !important;
+}
+
+#board.boardDealRunning .card.dealRowVisible {
+    opacity: 1;
+    pointer-events: auto;
+    animation: boardRowDealIn .29s cubic-bezier(.18,.86,.18,1.08) both !important;
+    animation-delay: calc(var(--deal-col, 0) * 16ms) !important;
+}
+
+@keyframes boardRowDealIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-28px) rotateX(18deg) scale(.93);
+        filter: blur(4px) brightness(1.42);
+    }
+    72% {
+        opacity: 1;
+        transform: translateY(3px) rotateX(0deg) scale(1.015);
+        filter: blur(0) brightness(1.12);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) rotateX(0deg) scale(1);
+        filter: blur(0) brightness(1);
+    }
+}
+
+/* Blank deal cards fly from each arriving row into the exact remaining-card blocks. */
+.blankDealCard {
+    position: fixed !important;
+    z-index: 22000 !important;
+    width: 48px !important;
+    height: 68px !important;
+    border-radius: 10px !important;
+    pointer-events: none !important;
+    opacity: 0;
+    background:
+        radial-gradient(circle at 24% 16%, rgba(255,255,255,.86), transparent 24%),
+        linear-gradient(145deg, #fff1bd 0%, #d8b96d 50%, #70552a 100%) !important;
+    border: 3px solid rgba(255,239,179,.96) !important;
+    box-shadow:
+        0 12px 28px rgba(0,0,0,.66),
+        0 0 20px rgba(255,215,108,.35),
+        inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+
+.blankDealCard::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 6px !important;
+    border-radius: 6px !important;
+    border: 2px solid rgba(72,51,19,.52) !important;
+    box-shadow: inset 0 0 0 2px rgba(255,246,203,.26) !important;
+}
+
+.blankDealCard::after {
+    content: "" !important;
+    position: absolute !important;
+    left: 10px !important;
+    right: 10px !important;
+    top: 50% !important;
+    height: 14px !important;
+    transform: translateY(-50%) !important;
+    border-radius: 5px !important;
+    background: rgba(45,31,13,.36) !important;
+    border: 1px solid rgba(255,245,196,.45) !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.35) !important;
+}
+
+.blankDealBlack {
+    background:
+        radial-gradient(circle at 24% 16%, rgba(255,255,255,.22), transparent 24%),
+        linear-gradient(145deg, #4f5054 0%, #171719 54%, #020202 100%) !important;
+    border-color: rgba(255,215,108,.9) !important;
+}
+
+.blankDealBlack::before {
+    border-color: rgba(255,215,108,.48) !important;
+    box-shadow: inset 0 0 0 2px rgba(255,215,108,.08) !important;
+}
+
+.blankDealBlack::after {
+    background: rgba(255,215,108,.12) !important;
+    border-color: rgba(255,215,108,.42) !important;
+}
+
+.miniScoreCard.dealReceivePulse {
+    animation: remainingBlockReceive .46s cubic-bezier(.2,.82,.2,1) both !important;
+}
+
+@keyframes remainingBlockReceive {
+    0% { transform: scale(1); filter: brightness(1); }
+    48% { transform: scale(1.085); filter: brightness(1.42) drop-shadow(0 0 18px rgba(255,215,108,.74)); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+@media (max-width: 980px) {
+    #landingStartGameBtn,
+    body.discordActivity #landingStartGameBtn {
+        min-width: 124px !important;
+        min-height: 42px !important;
+        padding: 9px 22px !important;
+        font-size: 14px !important;
+    }
+
+    .blankDealCard {
+        width: 34px !important;
+        height: 48px !important;
+        border-radius: 7px !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #landingStartGameBtn,
+    #newRoundBtn,
+    #board.boardDealRunning .card.dealRowVisible,
+    .miniScoreCard.dealReceivePulse {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+
+    .blankDealCard {
+        display: none !important;
+    }
+}

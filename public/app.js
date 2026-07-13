@@ -5,6 +5,8 @@ const localFlippedPickedCards = new Set();
 let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null, winRevealHoldUntil = 0, hiddenWinEffectKey = '';
 let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
+let boardDealTimers = [];
+let boardDealState = {key: '', phase: 'idle', visibleRows: 5};
 let reactionTimer = null;
 let clueSplashTimer = null, lastClueSplashKey = '';
 let spectatorMenuOpen = false;
@@ -126,7 +128,7 @@ const UI_TEXT = {
         watchOnly: 'Watch only',
         createRoom: 'Create Room',
         joinRoom: 'Join Room',
-        startGame: 'Start Game',
+        startGame: 'Start',
         options: 'Options ▾',
         resetTable: 'Reset Table',
         shuffleTeams: 'Shuffle Teams',
@@ -165,7 +167,7 @@ const UI_TEXT = {
         hintPlaceholder: 'Hint',
         number: 'Number',
         currentClue: 'CLUE',
-        createNewGame: 'Create New Game',
+        createNewGame: 'Start New',
         back: 'Back',
         confirm: '✓ Confirm',
         round: 'Round',
@@ -234,7 +236,7 @@ const UI_TEXT = {
         watchOnly: 'مشاهدة فقط',
         createRoom: 'إنشاء غرفة',
         joinRoom: 'دخول الغرفة',
-        startGame: 'ابدأ اللعبة',
+        startGame: 'ابدأ',
         options: 'الخيارات ▾',
         resetTable: 'إعادة الطاولة',
         shuffleTeams: 'خلط الفرق',
@@ -273,7 +275,7 @@ const UI_TEXT = {
         hintPlaceholder: 'تلميح',
         number: 'العدد',
         currentClue: 'التلميح',
-        createNewGame: 'لعبة جديدة',
+        createNewGame: 'ابدأ من جديد',
         back: 'رجوع',
         confirm: '✓ تأكيد',
         round: 'الجولة',
@@ -840,25 +842,221 @@ function flash(cls) {
     setTimeout(() => d.remove(), 850);
 }
 
+function gameIntroIdentity(s = state) {
+    if (!s?.id || s.status === 'lobby') return '';
+    const startedAt = Number(s.gameStartedAt || 0);
+    if (!startedAt) return '';
+    return `${String(s.id).toUpperCase()}:${startedAt}`;
+}
+
+function gameIntroStorageKey(s = state) {
+    const identity = gameIntroIdentity(s);
+    return identity ? `cc_gameIntroSeen_${identity}` : '';
+}
+
+function hasSeenGameIntro(s = state) {
+    const key = gameIntroStorageKey(s);
+    if (!key) return false;
+    try {
+        return localStorage.getItem(key) === '1';
+    } catch {
+        return false;
+    }
+}
+
+function markGameIntroSeen(s = state) {
+    const key = gameIntroStorageKey(s);
+    if (!key) return;
+    try {
+        localStorage.setItem(key, '1');
+    } catch {
+    }
+}
+
+function clearBoardDealTimers() {
+    boardDealTimers.forEach(timer => clearTimeout(timer));
+    boardDealTimers = [];
+}
+
+function currentBoardDealKey(s = state) {
+    return gameIntroIdentity(s);
+}
+
+function applyBoardDealVisualState() {
+    if (!board) return;
+    const key = currentBoardDealKey();
+    const active = !!(
+        key &&
+        boardDealState.key === key &&
+        (boardDealState.phase === 'pending' || boardDealState.phase === 'running')
+    );
+
+    board.classList.toggle('boardDealPending', active && boardDealState.phase === 'pending');
+    board.classList.toggle('boardDealRunning', active && boardDealState.phase === 'running');
+
+    board.querySelectorAll('.card').forEach((card, index) => {
+        const row = Math.floor(index / 5);
+        card.style.setProperty('--deal-col', String(index % 5));
+        card.classList.toggle('dealRowVisible', !active || row < boardDealState.visibleRows);
+        if (active) card.classList.remove('spawnCard');
+    });
+}
+
+function clearBoardDealAnimation() {
+    clearBoardDealTimers();
+    boardDealState = {key: '', phase: 'idle', visibleRows: 5};
+    if (board) {
+        board.classList.remove('boardDealPending', 'boardDealRunning');
+        board.querySelectorAll('.card').forEach(card => {
+            card.classList.remove('dealRowVisible');
+            card.style.removeProperty('--deal-col');
+        });
+    }
+    document.querySelectorAll('.blankDealCard').forEach(card => card.remove());
+    document.querySelectorAll('.dealReceivePulse').forEach(el => el.classList.remove('dealReceivePulse'));
+}
+
+function prepareBoardDealAnimation(key = currentBoardDealKey()) {
+    if (!key) return;
+    clearBoardDealTimers();
+    boardDealState = {key, phase: 'pending', visibleRows: 0};
+    applyBoardDealVisualState();
+}
+
+function remainingCardBlock(team) {
+    const score = team === 'blue' ? $('goldSideScore') : $('blackSideScore');
+    return score?.closest('.miniScoreCard') || score || null;
+}
+
+function animateBlankDealCard(sourceRect, destination, team, rowIndex) {
+    if (!sourceRect || !destination) return;
+    const destinationRect = destination.getBoundingClientRect();
+    if (!destinationRect.width || !destinationRect.height) return;
+
+    const ghost = document.createElement('div');
+    ghost.className = `blankDealCard ${team === 'blue' ? 'blankDealGold' : 'blankDealBlack'}`;
+    ghost.setAttribute('aria-hidden', 'true');
+
+    const startX = sourceRect.left + sourceRect.width / 2;
+    const startY = sourceRect.top + sourceRect.height / 2;
+    const endX = destinationRect.left + destinationRect.width / 2;
+    const endY = destinationRect.top + destinationRect.height / 2;
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const arc = team === 'blue' ? -38 : 38;
+
+    ghost.style.left = `${startX}px`;
+    ghost.style.top = `${startY}px`;
+    ghost.style.setProperty('--deal-row-index', String(rowIndex));
+    document.body.appendChild(ghost);
+
+    const animation = ghost.animate([
+        {transform: 'translate(-50%, -50%) scale(.58) rotate(0deg)', opacity: 0},
+        {transform: 'translate(-50%, -50%) scale(.92) rotate(0deg)', opacity: .98, offset: .14},
+        {transform: `translate(calc(-50% + ${dx * .38}px), calc(-50% + ${dy * .28 + arc}px)) scale(1.08) rotate(${team === 'blue' ? -7 : 7}deg)`, opacity: 1, offset: .52},
+        {transform: `translate(calc(-50% + ${dx * .76}px), calc(-50% + ${dy * .72 + arc * .34}px)) scale(.78) rotate(${team === 'blue' ? -13 : 13}deg)`, opacity: .94, offset: .82},
+        {transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.38) rotate(${team === 'blue' ? -18 : 18}deg)`, opacity: 0}
+    ], {
+        duration: 920,
+        easing: 'cubic-bezier(.2,.72,.18,1)'
+    });
+
+    destination.classList.remove('dealReceivePulse');
+    void destination.offsetWidth;
+    destination.classList.add('dealReceivePulse');
+
+    animation.onfinish = () => {
+        ghost.remove();
+        setTimeout(() => destination.classList.remove('dealReceivePulse'), 140);
+    };
+}
+
+function animateBlankCardDistribution(rowIndex) {
+    if (!board) return;
+    const rowCards = [...board.querySelectorAll('.card')].slice(rowIndex * 5, rowIndex * 5 + 5);
+    if (!rowCards.length) return;
+
+    const leftSource = rowCards[0]?.getBoundingClientRect();
+    const rightSource = rowCards[rowCards.length - 1]?.getBoundingClientRect();
+    animateBlankDealCard(leftSource, remainingCardBlock('blue'), 'blue', rowIndex);
+    animateBlankDealCard(rightSource, remainingCardBlock('red'), 'red', rowIndex);
+}
+
+function startBoardDealAnimation(key = currentBoardDealKey()) {
+    if (!key || boardDealState.key !== key) return;
+
+    clearBoardDealTimers();
+    boardDealState.phase = 'running';
+    boardDealState.visibleRows = 0;
+    applyBoardDealVisualState();
+
+    const rowDelayMs = 265;
+    const totalRows = 5;
+
+    for (let row = 0; row < totalRows; row++) {
+        boardDealTimers.push(setTimeout(() => {
+            if (boardDealState.key !== key || boardDealState.phase !== 'running') return;
+            boardDealState.visibleRows = row + 1;
+            applyBoardDealVisualState();
+            requestAnimationFrame(() => animateBlankCardDistribution(row));
+        }, 55 + row * rowDelayMs));
+    }
+
+    boardDealTimers.push(setTimeout(() => {
+        if (boardDealState.key !== key) return;
+        boardDealState = {key: '', phase: 'idle', visibleRows: 5};
+        applyBoardDealVisualState();
+    }, 55 + totalRows * rowDelayMs + 720));
+}
+
+function hideGameIntroImmediately() {
+    if (gameIntroTimer) {
+        clearTimeout(gameIntroTimer);
+        gameIntroTimer = null;
+    }
+    const overlay = $('gameIntroOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('introLive', 'introOut');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
+}
+
 function showGameIntro(reason = 'join') {
     const overlay = $('gameIntroOverlay');
-    if (!overlay || !state?.id) return;
-    const key = `${state.id}:${state.round}:${state.status}:${reason}`;
-    if (lastIntroKey === key) return;
-    lastIntroKey = key;
+    const identity = gameIntroIdentity();
+    if (!overlay || !identity) return false;
+
+    // A reconnect, restored Discord activity, browser revisit, or visibility change
+    // must not replay the intro for the same running game.
+    if (hasSeenGameIntro()) {
+        lastIntroKey = identity;
+        return false;
+    }
+    if (lastIntroKey === identity) return false;
+
+    lastIntroKey = identity;
+    markGameIntroSeen();
+    prepareBoardDealAnimation(identity);
+
     if (gameIntroTimer) clearTimeout(gameIntroTimer);
     overlay.classList.remove('hidden', 'introOut');
     overlay.setAttribute('aria-hidden', 'false');
     void overlay.offsetWidth;
     overlay.classList.add('introLive');
+
     gameIntroTimer = setTimeout(() => {
         overlay.classList.add('introOut');
         gameIntroTimer = setTimeout(() => {
             overlay.classList.add('hidden');
             overlay.classList.remove('introLive', 'introOut');
             overlay.setAttribute('aria-hidden', 'true');
+            gameIntroTimer = null;
+            startBoardDealAnimation(identity);
         }, 420);
     }, 2450);
+
+    return true;
 }
 
 function revealReactionForCard(card, beforeState, nowState) {
@@ -1015,6 +1213,11 @@ function finishDelayedReveal(id, token) {
         requestAnimationFrame(() => flyCardToTeamScore(card));
     }
     showPickReaction(reaction);
+
+    if (pendingRevealIds.size === 0) {
+        render();
+    }
+
     if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
         if (delayedWinRevealTimer) clearTimeout(delayedWinRevealTimer);
 
@@ -2737,13 +2940,33 @@ socket.on('state', s => {
     }
     myId = playerKey;
     if (isDiscordActivity) sendDiscordIdentityToServer();
-    if (isDiscordActivity && s.status === 'lobby') {
+    if (s.status === 'lobby') {
+        hideGameIntroImmediately();
+        clearBoardDealAnimation();
+        lastIntroKey = '';
+        lastBoardKey = '';
+        hideWinEffectsForCurrentView();
+        targetIds.clear();
+        clearLocalPickedFlips();
+
+        const currentPlayer = s?.players?.[myId] || null;
+        if (currentPlayer) {
+            selectedTeamChoice = currentPlayer.team || '';
+            selectedRoleChoice = currentPlayer.role || '';
+            const teamSel = $('team'), roleSel = $('role');
+            if (teamSel && selectedTeamChoice) teamSel.value = selectedTeamChoice;
+            if (roleSel && selectedRoleChoice) roleSel.value = selectedRoleChoice;
+        }
+
         game.classList.add('hidden');
         landing.classList.remove('hidden');
         if (roomInput && s.id) roomInput.value = s.id;
+        syncDiscordLanding();
         applyLobbyInfo(lobbyInfoFromState(s));
-        refreshDiscordLobbyPreview(true);
+        if (isDiscordActivity) refreshDiscordLobbyPreview(true);
+        else renderHomepageLobbyPreview(lobbyInfoFromState(s), true);
         refreshLandingAdminControls();
+        setJoinButtonsReady();
         return;
     }
     if (gameJustStarted) {
@@ -2948,8 +3171,9 @@ function render() {
     updateInviteFields(state.id);
     $('turnBadge').className = 'hidden';
     $('turnBadge').textContent = '';
-    $('clueBadge').className = `badge turnSubStatus ${state.turn}`;
-    $('clueBadge').innerHTML = turnStatusHtml();
+    const revealTransitionActive = pendingRevealIds.size > 0;
+    $('clueBadge').className = revealTransitionActive ? 'hidden' : `badge turnSubStatus ${state.turn}`;
+    $('clueBadge').innerHTML = revealTransitionActive ? '' : turnStatusHtml();
     const activeWinKey = currentWinEffectKey();
     const winEffectsBlocked = pendingRevealIds.size > 0 || !!(winRevealHoldUntil && Date.now() < winRevealHoldUntil);
     const showWinEffects = !!(state.winner && hiddenWinEffectKey !== activeWinKey && !winEffectsBlocked);
@@ -3650,6 +3874,7 @@ function revealHeroSvg(color) {
 
 function renderBoard() {
     if (state?.status === 'lobby') {
+        clearBoardDealAnimation();
         board.classList.remove('spyBoard', 'operativeBoard', 'hasPendingReveal');
         board.parentElement?.classList.remove('hasPendingRevealWrap');
         board.innerHTML = `<div class="waitingBoard">${uiLanguage === 'ar' ? 'بانتظار المدير لبدء اللعبة...' : 'Waiting for admin to start the game...'}</div>`;
@@ -3704,6 +3929,7 @@ function renderBoard() {
         const wordLayer = crownOnlyReveal ? '' : `<span class="word ${cardLengthClass(c.word)} ${showOrigin ? 'finalWordBox' : ''}" style="${finalWordStyle}">${c.word}</span>`;
         return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${visuallyRevealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${localFlippedReveal ? 'localWordFlipped' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${visuallyRevealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
+    applyBoardDealVisualState();
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {
             if (ev.target.closest('.cardConfirm')) return;
@@ -3777,26 +4003,27 @@ function renderPanels() {
         const cs = $('clueStatus');
         if (cs) cs.innerHTML = '';
     }
+    const revealTransitionActive = pendingRevealIds.size > 0;
     const turnSpy = spymasterName(state.turn);
-    const hintModeForSpy = !!(state?.hintRequested && p?.role === 'spymaster' && state.hintRequested.team === p.team && p.team === state.turn);
-    const isCurrentSpy = p?.role === 'spymaster' && p.team === state.turn && (state.status === 'waiting-clue' || hintModeForSpy);
-    const isAnySpy = p?.role === 'spymaster';
-    const isOp = p?.role === 'operative' && p.team === state.turn;
+    const hintModeForSpy = !!(!revealTransitionActive && state?.hintRequested && p?.role === 'spymaster' && state.hintRequested.team === p.team && p.team === state.turn);
+    const isCurrentSpy = !revealTransitionActive && p?.role === 'spymaster' && p.team === state.turn && (state.status === 'waiting-clue' || hintModeForSpy);
+    const isAnySpy = !revealTransitionActive && p?.role === 'spymaster';
+    const isOp = !revealTransitionActive && p?.role === 'operative' && p.team === state.turn;
     const canClaim = p && p.team === state.turn && p.role !== 'spymaster' && !hasOnlineSpymaster(state.turn) && state.status === 'waiting-clue';
     $('spymasterPanel').classList.add('hidden');
-    const opActive = !!(p?.role === 'operative' && p.team === state.turn && (state.status === 'guessing' || (!state.singlePlayer && state.status === 'waiting-clue')));
+    const opActive = !!(!revealTransitionActive && p?.role === 'operative' && p.team === state.turn && (state.status === 'guessing' || (!state.singlePlayer && state.status === 'waiting-clue')));
     const topActions = $('topOperativeActions');
     // PASS now lives beside the operative clue count, so the old detached PASS dock stays hidden.
     if (topActions) topActions.classList.add('hidden');
     $('operativePanel').classList.toggle('hidden', !opActive);
     const hintBtn = $('requestHintBtn');
     if (hintBtn) hintBtn.classList.add('hidden');
-    $('endTurnBtn').disabled = !(p?.role === 'operative' && p.team === state.turn && state.status === 'guessing');
+    $('endTurnBtn').disabled = revealTransitionActive || !(p?.role === 'operative' && p.team === state.turn && state.status === 'guessing');
 
     const dock = $('bottomClueDock');
     if (dock) {
         const clueAlreadyShown = !!(state?.clue && state.status === 'guessing');
-        dock.classList.toggle('hidden', !isAnySpy || clueAlreadyShown);
+        dock.classList.toggle('hidden', revealTransitionActive || !isAnySpy || clueAlreadyShown);
         $('clueWord').disabled = !isCurrentSpy;
         $('clueNumber').readOnly = false;
         $('clueNumber').disabled = !isCurrentSpy;
@@ -4076,6 +4303,7 @@ const newRoundBtn = $('newRoundBtn');
 if (newRoundBtn) newRoundBtn.onclick = () => {
     targetIds.clear();
     clearLocalPickedFlips();
+    clearBoardDealAnimation();
     socket.emit('newGame');
 };
 const requestHintBtn = $('requestHintBtn');
