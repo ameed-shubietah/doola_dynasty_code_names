@@ -1911,7 +1911,7 @@ function avatarHtml(p, extra = '') {
         : '';
     const character = p?.character || selectedCharacter || 'raiden';
     const src = safeAvatarSrc(playerAvatar(p));
-    const face = src ? `<img src="${src}" alt="${escapeHtml(p?.name || 'avatar')}" loading="lazy">` : charEmoji(character);
+    const face = src ? `<img src="${src}" alt="${escapeHtml(p?.name || 'avatar')}" loading="lazy">` : `<span class="characterAvatarGlyph" aria-hidden="true">${charEmoji(character)}</span>`;
     return `<div class="avatar characterAvatar ${extra} ${src ? 'customAvatar' : ''}" style="--a:${charAccent(character)}">${face}${crown}</div>`;
 }
 
@@ -4161,7 +4161,7 @@ function renderLog() {
         const visual = src
             ? `<span class="logAvatarVisual customAvatar"><img src="${src}" alt="${title}"></span>`
             : `<span class="logAvatarVisual">${charEmoji(ch)}</span>`;
-        const crown = isSpymaster ? '<span class="logAvatarCrown" aria-hidden="true">👑</span>' : '';
+        const crown = isSpymaster ? '<img class="logAvatarCrown" src="/crown.png" alt="" aria-hidden="true">' : '';
         return `<span class="${cls} characterLogFace logAvatarHover team-${team} ${src ? 'customAvatar' : ''}" style="--a:${charAccent(ch)}" data-log-name="${title}" data-log-team="${team}" data-log-spymaster="${isSpymaster ? '1' : '0'}" aria-label="${title}">${visual}${crown}</span>`;
     }
 
@@ -4297,8 +4297,12 @@ function showLogAvatarPopover(source) {
     const name = source.dataset.logName || 'Player';
     const isSpymaster = source.dataset.logSpymaster === '1';
     const popover = document.createElement('div');
-    popover.className = `logAvatarPopover team-${team}`;
-    popover.innerHTML = `<div class="logAvatarPopoverImage">${visual.innerHTML}${isSpymaster ? '<span class="logAvatarPopoverCrown" aria-hidden="true">👑</span>' : ''}<span class="logAvatarPopoverName">${escapeHtml(name)}</span></div>`;
+    popover.className = `logAvatarPopover team-${team} ${source.classList.contains('customAvatar') ? 'customAvatar' : 'characterAvatar'}`;
+    popover.dataset.logSpymaster = isSpymaster ? '1' : '0';
+    const popoverCrown = isSpymaster
+        ? '<img class="gameSpymasterCrown logAvatarPopoverCrown" src="/crown.png?v=202" alt="" aria-hidden="true" draggable="false">'
+        : '';
+    popover.innerHTML = `<div class="logAvatarPopoverImage">${visual.innerHTML}${popoverCrown}<span class="logAvatarPopoverName">${escapeHtml(name)}</span></div>`;
     document.body.appendChild(popover);
     logAvatarPopover = popover;
     logAvatarPopoverSource = source;
