@@ -4692,3 +4692,45 @@ setInterval(() => {
     $('roundTime').textContent = fmt(Date.now() - state.roundStartedAt);
     $('gameTime').textContent = fmt(Date.now() - state.gameStartedAt);
 }, 500);
+
+
+const mobileGameLogQuery = window.matchMedia('(max-width: 760px)');
+let gameLogHomeMarker = null;
+
+function syncExistingGameLogPlacement() {
+    const gameRoot = $('game');
+    const blackPanel = $('blackPanel');
+    const logElement = $('log');
+    const logSection = logElement?.closest('.sideLogSection');
+    if (!gameRoot || !blackPanel || !logSection) return;
+
+    if (!gameLogHomeMarker) {
+        gameLogHomeMarker = document.createComment('game-log-home');
+        logSection.parentNode?.insertBefore(gameLogHomeMarker, logSection);
+    }
+
+    if (mobileGameLogQuery.matches) {
+        if (logSection.parentNode !== gameRoot) gameRoot.appendChild(logSection);
+        logSection.classList.add('mobileLogRelocated');
+        logSection.setAttribute('aria-label', 'Game Log');
+    } else {
+        if (logSection.parentNode !== blackPanel) {
+            if (gameLogHomeMarker?.parentNode) gameLogHomeMarker.parentNode.insertBefore(logSection, gameLogHomeMarker.nextSibling);
+            else blackPanel.appendChild(logSection);
+        }
+        logSection.classList.remove('mobileLogRelocated');
+        logSection.removeAttribute('aria-label');
+    }
+
+    requestAnimationFrame(() => {
+        logElement.scrollTop = logElement.scrollHeight;
+    });
+}
+
+syncExistingGameLogPlacement();
+if (typeof mobileGameLogQuery.addEventListener === 'function') {
+    mobileGameLogQuery.addEventListener('change', syncExistingGameLogPlacement);
+} else if (typeof mobileGameLogQuery.addListener === 'function') {
+    mobileGameLogQuery.addListener(syncExistingGameLogPlacement);
+}
+window.addEventListener('orientationchange', syncExistingGameLogPlacement);

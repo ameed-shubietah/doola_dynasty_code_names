@@ -4552,3 +4552,182 @@ html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAvata
         margin: 0 !important;
     }
 }
+
+@media (max-width: 760px) {
+    html body .spymasterClueStage,
+    html body.discordActivity .spymasterClueStage {
+        width: max-content !important;
+        height: auto !important;
+        max-width: 94vw !important;
+        max-height: 84vh !important;
+        display: block !important;
+    }
+
+    html body .spymasterClueImg,
+    html body.discordActivity .spymasterClueImg {
+        width: auto !important;
+        height: auto !important;
+        max-width: 92vw !important;
+        max-height: 82vh !important;
+        object-fit: contain !important;
+        margin: 0 auto !important;
+    }
+
+    html body .spymasterClueImg.spymasterImageMissing,
+    html body.discordActivity .spymasterClueImg.spymasterImageMissing {
+        width: min(92vw, 440px) !important;
+        height: min(92vw, 440px) !important;
+        max-width: 92vw !important;
+        max-height: 82vh !important;
+    }
+
+    html body .spymasterClueBox,
+    html body.discordActivity .spymasterClueBox {
+        bottom: 5.8% !important;
+    }
+}
+
+
+@media (max-width: 760px) {
+    html body #app #game.gameV9:not(.hidden),
+    html body.discordActivity #app #game.gameV9:not(.hidden),
+    html body #landing.hidden + #game.gameV9:not(.hidden),
+    html body.discordActivity #landing.hidden + #game.gameV9:not(.hidden) {
+        grid-template-rows: auto auto auto auto auto auto !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated {
+        grid-column: 1 !important;
+        grid-row: 6 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-self: stretch !important;
+        justify-self: stretch !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: clamp(150px, 27vh, 210px) !important;
+        min-height: 150px !important;
+        max-height: 210px !important;
+        margin: 0 !important;
+        padding: 5px !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        border: 1px solid rgba(229, 185, 62, .45) !important;
+        border-radius: 11px !important;
+        background: linear-gradient(180deg, rgba(27, 18, 10, .96), rgba(3, 3, 3, .98)) !important;
+        box-shadow: inset 0 0 0 1px rgba(255, 229, 153, .05), 0 8px 20px rgba(0, 0, 0, .34) !important;
+        order: initial !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > h3,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > h3 {
+        flex: 0 0 27px !important;
+        display: grid !important;
+        place-items: center !important;
+        width: 100% !important;
+        height: 27px !important;
+        min-height: 27px !important;
+        max-height: 27px !important;
+        margin: 0 0 4px !important;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        background: rgba(77, 24, 12, .56) !important;
+        color: #fff0b3 !important;
+        font-size: 11px !important;
+        line-height: 1 !important;
+        letter-spacing: .9px !important;
+        text-align: center !important;
+        text-transform: uppercase !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > #log.log,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > #log.log {
+        flex: 1 1 auto !important;
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 5px 4px !important;
+        box-sizing: border-box !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: thin !important;
+        scrollbar-color: rgba(236, 191, 64, .78) rgba(255, 255, 255, .06) !important;
+        touch-action: pan-y !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > #log.log::-webkit-scrollbar,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > #log.log::-webkit-scrollbar {
+        width: 5px !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > #log.log::-webkit-scrollbar-track,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > #log.log::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, .05) !important;
+        border-radius: 999px !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > #log.log::-webkit-scrollbar-thumb,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated > #log.log::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #ffe18a, #ad7100) !important;
+        border-radius: 999px !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log > .logRounds,
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logRounds > .logRound,
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logRound > .logPicks,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log > .logRounds,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logRounds > .logRound,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logRound > .logPicks {
+        background: transparent !important;
+        background-image: none !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        outline: 0 !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logRounds,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logRounds {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logRound,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logRound {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 4px !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logPicks,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .logPicks {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 4px !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .gameLogEntry,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .sideLogSection.mobileLogRelocated #log .gameLogEntry {
+        max-width: calc(100vw - 30px) !important;
+    }
+}
