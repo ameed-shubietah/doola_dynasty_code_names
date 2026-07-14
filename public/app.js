@@ -3452,9 +3452,47 @@ function ensureMobileTeamToggle(panelId) {
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
+function syncMobileBackButton() {
+    const game = $('game');
+    const back = $('backToLobbyBtn');
+    const topbar = game?.querySelector('.topbar');
+    const timers = topbar?.querySelector('.timers');
+    if (!game || !back || !topbar || !timers) return;
+    const mobile = window.matchMedia('(max-width: 760px)').matches;
+    if (mobile) {
+        if (back.parentElement !== topbar || back.nextElementSibling !== timers) topbar.insertBefore(back, timers);
+        back.classList.add('mobileTopBack');
+        return;
+    }
+    back.classList.remove('mobileTopBack');
+    if (back.parentElement !== game) game.insertBefore(back, game.firstElementChild);
+}
+
 function ensureMobileTeamToggles() {
+    const mobile = window.matchMedia('(max-width: 760px)').matches;
+    if (mobile) {
+        ['goldPanel', 'blackPanel'].forEach(panelId => {
+            const panel = $(panelId);
+            if (!panel) return;
+            panel.querySelectorAll('.mobileTeamToggle').forEach(btn => btn.remove());
+            panel.classList.add('mobileTeamOpen');
+            panel.dataset.mobileTeamOpen = 'true';
+            mobileTeamOpenState[panelId] = true;
+        });
+        syncMobileBackButton();
+        return;
+    }
     ensureMobileTeamToggle('goldPanel');
     ensureMobileTeamToggle('blackPanel');
+    syncMobileBackButton();
+}
+
+if (!window.__mobileGameLayoutSyncReady) {
+    window.__mobileGameLayoutSyncReady = true;
+    window.addEventListener('resize', () => {
+        ensureMobileTeamToggles();
+        syncMobileBackButton();
+    });
 }
 
 function ownerWrapForFloatingMenu(menu) {
