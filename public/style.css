@@ -2612,3 +2612,18 @@ html body.discordActivity #app #game.gameV9 #board.board > button.card.assassinR
         padding: 0 8px !important;
     }
 }
+
+
+html body #newRoundBtn,
+html body.discordActivity #newRoundBtn {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 28px !important;
+    padding: 3px 10px !important;
+    border-radius: 8px !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    letter-spacing: .2px !important;
+    white-space: nowrap !important;
+}
