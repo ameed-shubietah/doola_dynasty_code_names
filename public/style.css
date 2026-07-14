@@ -1607,7 +1607,6 @@ body.discordActivity .cardRevealLiftGhost.revealPeakActive {
     overflow: visible !important;
 }
 
-
 .cardRevealFullGhost.cardRevealLiftGhost,
 body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost {
     animation: revealGhostSlowApproachHoldReturn var(--reveal-ms, 2800ms) cubic-bezier(.22, .64, .18, 1) both !important;
@@ -1744,7 +1743,6 @@ body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.r
         transform: translate(0, -50%) rotate(var(--ray-angle)) translateX(var(--ray-distance)) scaleX(1);
     }
 }
-
 
 .cardRevealFullGhost.cardRevealLiftGhost > .revealFireworkBurst,
 body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost > .revealFireworkBurst {
@@ -1889,7 +1887,6 @@ body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.r
         transform: translate(0, -50%) rotate(var(--burst-angle)) translateX(var(--burst-distance)) scaleX(1);
     }
 }
-
 
 html body #app #game.gameV9 .logAvatarHover,
 html body.discordActivity #app #game.gameV9 .logAvatarHover,
@@ -2210,4 +2207,118 @@ html body.discordActivity #spymasterClueWord {
         white-space: normal !important;
         text-wrap: balance !important;
     }
+}
+
+html body .spymasterClueBox,
+html body.discordActivity .spymasterClueBox {
+    left: 50% !important;
+    top: auto !important;
+    bottom: clamp(42px, 5.5vh, 62px) !important;
+    transform: translateX(-50%) !important;
+    width: max-content !important;
+    min-width: 0 !important;
+    max-width: min(78vw, 650px) !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    overflow: visible !important;
+    z-index: 8 !important;
+}
+
+html body .spymasterClueBox::before,
+html body .spymasterClueBox::after,
+html body.discordActivity .spymasterClueBox::before,
+html body.discordActivity .spymasterClueBox::after {
+    content: none !important;
+    display: none !important;
+}
+
+html body .spymasterClueSplash.blue .spymasterClueBox,
+html body .spymasterClueSplash.red .spymasterClueBox,
+html body.discordActivity .spymasterClueSplash.blue .spymasterClueBox,
+html body.discordActivity .spymasterClueSplash.red .spymasterClueBox {
+    background: transparent !important;
+    color: #f7df8b !important;
+    border: 0 !important;
+    text-shadow: none !important;
+}
+
+html body .spymasterClueLabel,
+html body.discordActivity .spymasterClueLabel {
+    margin: 0 0 2px !important;
+    color: #d8bc67 !important;
+    font-size: clamp(8px, .75vw, 11px) !important;
+    letter-spacing: 2.8px !important;
+    opacity: .86 !important;
+    text-shadow: 0 2px 2px rgba(0, 0, 0, .95), 0 0 8px rgba(0, 0, 0, .72) !important;
+}
+
+html body #spymasterClueWord,
+html body.discordActivity #spymasterClueWord {
+    width: max-content !important;
+    max-width: min(72vw, 610px) !important;
+    margin: 0 auto !important;
+    color: #ffe58c !important;
+    font-size: clamp(30px, 4.1vw, 56px) !important;
+    line-height: .92 !important;
+    letter-spacing: 1.4px !important;
+    white-space: nowrap !important;
+    text-shadow: 0 3px 1px rgba(0, 0, 0, .96), 0 0 8px rgba(0, 0, 0, .82), 0 1px 0 rgba(255, 243, 181, .24) !important;
+    filter: drop-shadow(0 2px 1px rgba(0, 0, 0, .72)) !important;
+}
+
+html body .spymasterClueNumber,
+html body.discordActivity .spymasterClueNumber {
+    gap: 6px !important;
+    margin-top: 5px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #f5dfa0 !important;
+    box-shadow: none !important;
+    text-shadow: 0 2px 2px rgba(0, 0, 0, .96), 0 0 7px rgba(0, 0, 0, .7) !important;
+}
+
+html body .spymasterClueNumber span,
+html body.discordActivity .spymasterClueNumber span {
+    font-size: clamp(17px, 1.7vw, 24px) !important;
+}
+
+html body .spymasterClueNumber em,
+html body.discordActivity .spymasterClueNumber em {
+    font-size: clamp(8px, .72vw, 11px) !important;
+    letter-spacing: 1.4px !important;
+}
+
+@media (max-width: 760px) {
+    html body .spymasterClueBox,
+    html body.discordActivity .spymasterClueBox {
+        bottom: clamp(30px, 4.5vh, 44px) !important;
+        max-width: 82vw !important;
+    }
+
+    html body #spymasterClueWord,
+    html body.discordActivity #spymasterClueWord {
+        max-width: 78vw !important;
+        font-size: clamp(25px, 8vw, 42px) !important;
+        white-space: normal !important;
+        text-wrap: balance !important;
+    }
+}
+
+html body .spymasterClueLabel,
+html body.discordActivity .spymasterClueLabel {
+    display: none !important;
+}
+
+html body .spymasterClueSplash.red #spymasterClueWord,
+html body.discordActivity .spymasterClueSplash.red #spymasterClueWord {
+    color: #050505 !important;
+    text-shadow: 0 1px 0 rgba(255, 232, 150, .48), 0 2px 2px rgba(0, 0, 0, .32) !important;
+    filter: none !important;
 }
