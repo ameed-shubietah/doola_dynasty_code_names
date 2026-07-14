@@ -2627,3 +2627,125 @@ html body.discordActivity #newRoundBtn {
     letter-spacing: .2px !important;
     white-space: nowrap !important;
 }
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName) .playerNameText,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName) .playerNameText {
+    display: block !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    justify-content: flex-start !important;
+    text-align: start !important;
+    unicode-bidi: plaintext !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player.turnPlayerActive > .avatar.characterAvatar,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player.turnPlayerActive > .avatar.characterAvatar {
+    animation: sidePanelTurnAvatarPulse 1.25s ease-in-out infinite !important;
+    transform-origin: center center !important;
+    will-change: scale, filter !important;
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player.turnPlayerActive:not(.editingName) .playerNameText,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player.turnPlayerActive:not(.editingName) .playerNameText {
+    animation: sidePanelTurnNamePulse 1.25s ease-in-out infinite !important;
+    transform-origin: center center !important;
+    will-change: scale, filter, opacity !important;
+}
+
+@keyframes sidePanelTurnAvatarPulse {
+    0%, 100% {
+        scale: 1;
+        filter: brightness(1) drop-shadow(0 0 0 rgba(255, 215, 95, 0));
+    }
+    50% {
+        scale: 1.085;
+        filter: brightness(1.16) drop-shadow(0 0 10px rgba(255, 215, 95, .72));
+    }
+}
+
+@keyframes sidePanelTurnNamePulse {
+    0%, 100% {
+        scale: 1;
+        opacity: 1;
+        filter: brightness(1);
+    }
+    50% {
+        scale: 1.045;
+        opacity: .82;
+        filter: brightness(1.22);
+    }
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName) > .playerBody,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName) > .playerBody {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName) > .playerBody > b,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName) > .playerBody > b {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName) .playerNameText,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName) .playerNameText {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    translate: none !important;
+    flex: 0 1 auto !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    justify-content: flex-start !important;
+    text-align: start !important;
+    unicode-bidi: plaintext !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player.blue.turnPlayerActive,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player.blue.turnPlayerActive {
+    --side-turn-pulse: rgba(255, 213, 78, .78);
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player.red.turnPlayerActive,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player.red.turnPlayerActive {
+    --side-turn-pulse: rgba(236, 238, 245, .68);
+}
+
+@keyframes sidePanelTurnAvatarPulse {
+    0%, 100% {
+        scale: 1;
+        filter: brightness(1) drop-shadow(0 0 0 var(--side-turn-pulse, rgba(255, 215, 95, 0)));
+    }
+    50% {
+        scale: 1.085;
+        filter: brightness(1.16) drop-shadow(0 0 10px var(--side-turn-pulse, rgba(255, 215, 95, .72)));
+    }
+}

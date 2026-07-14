@@ -3442,10 +3442,13 @@ function renderPlayers() {
     function playerHtml(p) {
         const offline = p.online === false;
         const adminBadge = p.isAdmin ? '<span class="adminBadge adminCrown" title="Admin">👑</span>' : '';
-        // Spymasters and room admins can drag every seat, including their own seat and other admins.
         const canDrag = playerOptionsMode;
         const offlineMark = offline ? '<span class="offlineIcon" title="Disconnected"><span aria-hidden="true">📶</span></span>' : '';
-        return `<div class="player ${p.team} ${offline ? 'offline' : ''} ${canDrag ? 'draggablePlayer' : ''} ${p.isAdmin ? 'adminPlayer' : ''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}">${avatarHtml(p)}<div class="playerBody"><b class="${p.isAdmin ? 'adminNameLine' : ''}"><span class="playerNameText">${escapeHtml(p.name || 'Player')}</span><span class="inlineNameEditor hidden"><input type="text" maxlength="28" value="${escapeHtml(p.name || 'Player')}" aria-label="Player name"><button type="button" data-inline-name-save="${p.id}">Save</button><button type="button" data-inline-name-cancel="${p.id}">Cancel</button></span>${adminBadge}${offlineMark}</b>${adminTools(p)}</div></div>`;
+        const activeTurnPlayer = !offline && p.team === state.turn && (
+            (state.status === 'waiting-clue' && p.role === 'spymaster') ||
+            (state.status === 'guessing' && p.role === 'operative')
+        );
+        return `<div class="player ${p.team} ${offline ? 'offline' : ''} ${canDrag ? 'draggablePlayer' : ''} ${p.isAdmin ? 'adminPlayer' : ''} ${activeTurnPlayer ? 'turnPlayerActive' : ''}" data-player-id="${p.id}" draggable="${canDrag ? 'true' : 'false'}">${avatarHtml(p)}<div class="playerBody"><b class="${p.isAdmin ? 'adminNameLine' : ''}"><span class="playerNameText" title="${escapeHtml(p.name || 'Player')}">${escapeHtml(p.name || 'Player')}</span><span class="inlineNameEditor hidden"><input type="text" maxlength="28" value="${escapeHtml(p.name || 'Player')}" aria-label="Player name"><button type="button" data-inline-name-save="${p.id}">Save</button><button type="button" data-inline-name-cancel="${p.id}">Cancel</button></span>${adminBadge}${offlineMark}</b>${adminTools(p)}</div></div>`;
     }
 
     function playerCardById(id) {

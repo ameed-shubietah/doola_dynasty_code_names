@@ -1878,11 +1878,23 @@ function runAdminTableAction(room, action, actorName = 'Admin') {
     }
     if (action === 'shuffleTeams') {
         const players = shuffle(Object.values(room.players).filter(p => p.online !== false && p.team !== 'spectator'));
+        const teams = {blue: [], red: []};
+
         players.forEach((p, i) => {
-            p.team = i % 2 ? 'red' : 'blue';
+            const team = i % 2 ? 'red' : 'blue';
+            p.team = team;
+            p.role = 'operative';
+            teams[team].push(p);
         });
+
+        for (const team of ['blue', 'red']) {
+            if (!teams[team].length) continue;
+            const spymaster = teams[team][Math.floor(Math.random() * teams[team].length)];
+            spymaster.role = 'spymaster';
+        }
+
         room.votes = {};
-        room.log.push(`${actorName} shuffled online players between GOLD and BLACK.`);
+        room.log.push(`${actorName} shuffled online players and randomly assigned one spymaster to each team.`);
         return true;
     }
     return false;
