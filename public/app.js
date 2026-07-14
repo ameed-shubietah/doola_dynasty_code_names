@@ -2,13 +2,15 @@ const initialUiLanguage = localStorage.cc_language === 'ar' ? 'ar' : 'en';
 const socket = io({auth: {language: initialUiLanguage}});
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
 const localFlippedPickedCards = new Set();
-let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null, winRevealHoldUntil = 0, hiddenWinEffectKey = '';
+let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null,
+    winRevealHoldUntil = 0, hiddenWinEffectKey = '';
 let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let boardDealTimers = [];
 let boardDealState = {key: '', phase: 'idle', visibleRows: 5};
 let clueSplashTimer = null, lastClueSplashKey = '';
-let resultSplashTimer = null, resultSplashCleanupTimer = null, resultSplashReleaseTimer = null, lastWinnerSplashKey = '', lastDeathSplashKey = '';
+let resultSplashTimer = null, resultSplashCleanupTimer = null, resultSplashReleaseTimer = null,
+    lastWinnerSplashKey = '', lastDeathSplashKey = '';
 let spectatorMenuOpen = false;
 
 function makePlayerKey() {
@@ -791,44 +793,35 @@ function tone(freq = 440, dur = .16, type = 'sine', gain = .05) {
     }
 }
 
+const gameSounds = {
+    correct: '/sounds/correct.mp3',
+    wrong: '/sounds/wrong.mp3',
+    neutral: '/sounds/neutral.mp3',
+    assassin: '/sounds/death.mp3',
+    gameWin: '/sounds/win.mp3',
+    clue: '/sounds/clue.mp3'
+};
+
 function sound(kind) {
-    if (audio.state === 'suspended') audio.resume();
-    if (kind === 'win' || kind === 'correct') {
-        tone(523, .09, 'sine', .035);
-        setTimeout(() => tone(659, .10, 'sine', .035), 80);
-        setTimeout(() => tone(784, .14, 'triangle', .04), 165);
-        flash('winFlash');
-    }
-    if (kind === 'wrong') {
-        tone(196, .12, 'triangle', .045);
-        setTimeout(() => tone(155, .16, 'sawtooth', .04), 95);
-        setTimeout(() => tone(116, .18, 'sawtooth', .035), 210);
-        flash('loseFlash');
-    }
-    if (kind === 'neutral') {
-        tone(392, .10, 'sine', .028);
-        setTimeout(() => tone(330, .11, 'triangle', .026), 95);
-        setTimeout(() => tone(294, .13, 'sine', .024), 190);
-        flash('neutralFlash');
-    }
-    if (kind === 'gameWin') {
-        [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => tone(f, .16, 'triangle', .045), i * 95));
-        setTimeout(() => tone(1568, .24, 'sine', .035), 520);
-        flash('winFlash');
-    }
-    if (kind === 'lose') {
-        tone(220, .14, 'sawtooth');
-        setTimeout(() => tone(130, .2, 'sawtooth'), 120);
-        flash('loseFlash');
-    }
-    if (kind === 'assassin') {
-        tone(80, .45, 'square', .07);
-        flash('loseFlash');
-    }
-    if (kind === 'clue') {
-        tone(880, .08, 'sine');
-        setTimeout(() => tone(1174, .08, 'sine'), 80);
-    }
+    const soundKind = kind === 'win'
+        ? 'correct'
+        : kind === 'lose'
+            ? 'wrong'
+            : kind;
+
+    const src = gameSounds[soundKind];
+    if (!src) return;
+
+    const audio = new Audio(src);
+
+    const soundVolumes = {
+        clue: 0.7,
+        gameWin: 0.2
+    };
+
+    audio.volume = soundVolumes[soundKind] ?? 0.35;
+    audio.play().catch(() => {
+    });
 }
 
 function flash(cls) {
@@ -954,9 +947,20 @@ function animateBlankDealCard(sourceRect, destination, team, rowIndex) {
     const animation = ghost.animate([
         {transform: 'translate(-50%, -50%) scale(.58) rotate(0deg)', opacity: 0},
         {transform: 'translate(-50%, -50%) scale(.92) rotate(0deg)', opacity: .98, offset: .14},
-        {transform: `translate(calc(-50% + ${dx * .38}px), calc(-50% + ${dy * .28 + arc}px)) scale(1.08) rotate(${team === 'blue' ? -7 : 7}deg)`, opacity: 1, offset: .52},
-        {transform: `translate(calc(-50% + ${dx * .76}px), calc(-50% + ${dy * .72 + arc * .34}px)) scale(.78) rotate(${team === 'blue' ? -13 : 13}deg)`, opacity: .94, offset: .82},
-        {transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.38) rotate(${team === 'blue' ? -18 : 18}deg)`, opacity: 0}
+        {
+            transform: `translate(calc(-50% + ${dx * .38}px), calc(-50% + ${dy * .28 + arc}px)) scale(1.08) rotate(${team === 'blue' ? -7 : 7}deg)`,
+            opacity: 1,
+            offset: .52
+        },
+        {
+            transform: `translate(calc(-50% + ${dx * .76}px), calc(-50% + ${dy * .72 + arc * .34}px)) scale(.78) rotate(${team === 'blue' ? -13 : 13}deg)`,
+            opacity: .94,
+            offset: .82
+        },
+        {
+            transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.38) rotate(${team === 'blue' ? -18 : 18}deg)`,
+            opacity: 0
+        }
     ], {
         duration: 920,
         easing: 'cubic-bezier(.2,.72,.18,1)'
@@ -1071,7 +1075,6 @@ function revealReactionForCard(card, beforeState, nowState) {
 }
 
 
-
 function revealLiftSelector(id) {
     return `.card[data-id="${String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"]`;
 }
@@ -1137,12 +1140,21 @@ function startRevealLiftGhost(card, reaction) {
 
     const peakTimer = setTimeout(() => {
         revealPeakTimers.delete(card.id);
+
         const liveGhost = revealLiftGhosts.get(card.id);
         if (!liveGhost || !document.body.contains(liveGhost)) return;
+
         liveGhost.classList.add('revealPeakActive');
-        if (card.color === 'neutral') crown.src = '/crown-bw.png';
-        else if (card.color === 'assassin') crown.remove();
-        else crown.src = '/crown.png';
+
+        if (card.color === 'neutral') {
+            crown.src = '/crown-bw.png';
+        } else if (card.color === 'assassin') {
+            crown.remove();
+        } else {
+            crown.src = '/crown.png';
+        }
+
+        playRevealSoundForCard(card);
     }, REVEAL_PEAK_MS);
     revealPeakTimers.set(card.id, peakTimer);
 }
@@ -1212,7 +1224,6 @@ function finishDelayedReveal(id, token) {
     renderBoard();
     removeRevealLiftGhost(id);
     renderLog();
-    playRevealSoundForCard(card);
     if (card.color === 'blue' || card.color === 'red') {
         requestAnimationFrame(() => flyCardToTeamScore(card));
     }
@@ -2278,7 +2289,6 @@ function discordJoinPayload(team, role) {
     const finalAvatar = customAvatar || '';
 
 
-
     setPlayerKey(stableDiscordFallbackKey(roomCode));
     myId = playerKey;
     localStorage.cc_name = finalName;
@@ -2778,7 +2788,6 @@ function acceptJoinResponse(res) {
     }
 
 
-
     if (state) {
         if (isDiscordActivity && state.status === 'lobby') {
             game.classList.add('hidden');
@@ -2893,7 +2902,7 @@ async function startSinglePlayer(difficulty = 'medium') {
     if (!aiReady) {
         if (singlePlayerBtn) {
             singlePlayerBtn.disabled = false;
-        singlePlayerBtn.textContent = 'Single Player / لاعب فردي';
+            singlePlayerBtn.textContent = 'Single Player / لاعب فردي';
         }
         toast(tt('offlineAi'));
         return;
@@ -2971,6 +2980,7 @@ socket.on('adminRequest', req => {
     if (!current?.isAdmin || !req) return;
     showAdminRequestPopup(req);
 });
+
 function refreshLobbyAfterKick(roomId) {
     const code = String(roomId || getDiscordActivityRoomCode() || roomInput?.value || '').trim().toUpperCase();
     if (!code) return;
@@ -3400,7 +3410,6 @@ function openPlayerOptionsMenu(wrap, btn) {
 }
 
 
-
 function setSpectatorMenuOpen(open) {
     spectatorMenuOpen = !!open;
     const dropdown = $('spectatorDropdown');
@@ -3764,7 +3773,10 @@ function setupAdminDragAndDrop(adminMode) {
                 document.body.classList.remove('playerDragActive');
                 ghost?.remove();
                 clearDropPreview();
-                try { el.releasePointerCapture(ev.pointerId); } catch {}
+                try {
+                    el.releasePointerCapture(ev.pointerId);
+                } catch {
+                }
             };
 
             const onMove = (moveEv) => {
@@ -3795,7 +3807,10 @@ function setupAdminDragAndDrop(adminMode) {
             };
             const onCancel = () => cleanup();
 
-            try { el.setPointerCapture(ev.pointerId); } catch {}
+            try {
+                el.setPointerCapture(ev.pointerId);
+            } catch {
+            }
             el.addEventListener('pointermove', onMove);
             el.addEventListener('pointerup', onEnd);
             el.addEventListener('pointercancel', onCancel);
@@ -3992,7 +4007,6 @@ function renderBoard() {
     board.classList.toggle('hasPendingReveal', pendingRevealIds.size > 0);
     board.parentElement?.classList.toggle('hasPendingRevealWrap', pendingRevealIds.size > 0);
     const marked = myMarkedIds();
-
 
 
     const boardKey = `${state.id}-${state.board.map(c => `${c.id}:${c.word}`).join('|')}`;
@@ -4358,7 +4372,6 @@ function runOrRequestAdminAction(action, label, confirmText) {
         toast(uiLanguage === 'ar' ? 'ادخل الغرفة أولا.' : 'Join the room first.');
         return;
     }
-
 
 
     if (current.isAdmin || current.role === 'spymaster') {
