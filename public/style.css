@@ -3097,3 +3097,392 @@ html body.discordActivity #landing .discordSpectatorCard .discordRoleJoin {
         max-height: 68px !important;
     }
 }
+
+html body #landing .discordCenterColumn,
+html body.discordActivity #landing .discordCenterColumn {
+    grid-area: spec !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    align-self: start !important;
+    gap: 7px !important;
+}
+
+html body #landing .discordCenterColumn > .discordSpectatorCard,
+html body.discordActivity #landing .discordCenterColumn > .discordSpectatorCard {
+    grid-area: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+html body #landing .spectatorControlsMount,
+html body.discordActivity #landing .spectatorControlsMount {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 7px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+html body #landing .spectatorControlsMount > #landingAdminBar,
+html body.discordActivity #landing .spectatorControlsMount > #landingAdminBar,
+html body #landing .spectatorControlsMount > .modesFloating,
+html body.discordActivity #landing .spectatorControlsMount > .modesFloating {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+html body #landing .spectatorControlsMount > #landingAdminBar:not(.hidden),
+html body.discordActivity #landing .spectatorControlsMount > #landingAdminBar:not(.hidden),
+html body #landing .spectatorControlsMount > .modesFloating,
+html body.discordActivity #landing .spectatorControlsMount > .modesFloating {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 7px !important;
+}
+
+html body #landing .spectatorControlsMount > #landingAdminBar.hidden,
+html body.discordActivity #landing .spectatorControlsMount > #landingAdminBar.hidden {
+    display: none !important;
+}
+
+html body #landing .spectatorControlsMount #landingStartGameBtn,
+html body #landing .spectatorControlsMount #landingOptionsWrap,
+html body #landing .spectatorControlsMount #landingOptionsWrap > .optionsBtn,
+html body #landing .spectatorControlsMount .modesFloating > .modesBtn,
+html body.discordActivity #landing .spectatorControlsMount #landingStartGameBtn,
+html body.discordActivity #landing .spectatorControlsMount #landingOptionsWrap,
+html body.discordActivity #landing .spectatorControlsMount #landingOptionsWrap > .optionsBtn,
+html body.discordActivity #landing .spectatorControlsMount .modesFloating > .modesBtn {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+html body #landing .spectatorControlsMount #landingStartGameBtn,
+html body #landing .spectatorControlsMount #landingOptionsWrap > .optionsBtn,
+html body #landing .spectatorControlsMount .modesFloating > .modesBtn,
+html body.discordActivity #landing .spectatorControlsMount #landingStartGameBtn,
+html body.discordActivity #landing .spectatorControlsMount #landingOptionsWrap > .optionsBtn,
+html body.discordActivity #landing .spectatorControlsMount .modesFloating > .modesBtn {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 5px 10px !important;
+    border-radius: 12px !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+}
+
+html body #landing .spectatorControlsMount #landingOptionsWrap.hidden,
+html body.discordActivity #landing .spectatorControlsMount #landingOptionsWrap.hidden,
+html body #landing .spectatorControlsMount #landingStartGameBtn.hidden,
+html body.discordActivity #landing .spectatorControlsMount #landingStartGameBtn.hidden {
+    display: none !important;
+}
+
+html body #landing .spectatorControlsMount .modesMenu,
+html body #landing .spectatorControlsMount .optionsMenu,
+html body.discordActivity #landing .spectatorControlsMount .modesMenu,
+html body.discordActivity #landing .spectatorControlsMount .optionsMenu {
+    position: relative !important;
+    inset: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+html body #landing .spectatorControlsMount .modesMenu.hidden,
+html body.discordActivity #landing .spectatorControlsMount .modesMenu.hidden {
+    display: none !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge .lobbyAdminCrown,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAdminCrown {
+    position: absolute !important;
+    z-index: 12 !important;
+    top: -10px !important;
+    left: 0 !important;
+    display: block !important;
+    width: 25px !important;
+    height: auto !important;
+    max-width: none !important;
+    object-fit: contain !important;
+    transform: rotate(-12deg) !important;
+    transform-origin: 50% 100% !important;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .86)) !important;
+    pointer-events: none !important;
+    user-select: none !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge.lobbyAdminSeat .avatar .crownMark,
+html body #landing .discordSeatMini.discordSeatLarge.lobbyAdminSeat .lobbyAvatar .crownMark,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge.lobbyAdminSeat .avatar .crownMark,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge.lobbyAdminSeat .lobbyAvatar .crownMark {
+    display: none !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge .lobbyYouBadge,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyYouBadge {
+    top: 2px !important;
+    right: -1px !important;
+}
+
+@media (max-width: 760px) {
+    html body #landing .discordSeatMini.discordSeatLarge .lobbyAdminCrown,
+    html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAdminCrown {
+        top: -8px !important;
+        left: -1px !important;
+        width: 22px !important;
+    }
+
+    html body #landing .spectatorControlsMount #landingStartGameBtn,
+    html body #landing .spectatorControlsMount #landingOptionsWrap > .optionsBtn,
+    html body #landing .spectatorControlsMount .modesFloating > .modesBtn,
+    html body.discordActivity #landing .spectatorControlsMount #landingStartGameBtn,
+    html body.discordActivity #landing .spectatorControlsMount #landingOptionsWrap > .optionsBtn,
+    html body.discordActivity #landing .spectatorControlsMount .modesFloating > .modesBtn {
+        min-height: 30px !important;
+        height: 30px !important;
+        padding: 4px 7px !important;
+        border-radius: 10px !important;
+        font-size: 8.5px !important;
+    }
+}
+
+html body #landing #discordLobby,
+html body.discordActivity #landing #discordLobby {
+    width: 100% !important;
+    max-width: 1120px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+html body #landing .discordRoleGrid,
+html body.discordActivity #landing .discordRoleGrid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) clamp(210px, 22vw, 258px) !important;
+    grid-template-areas: "gold black spec" !important;
+    align-items: start !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+html body #landing .discordGoldCard,
+html body.discordActivity #landing .discordGoldCard {
+    grid-area: gold !important;
+}
+
+html body #landing .discordBlackCard,
+html body.discordActivity #landing .discordBlackCard {
+    grid-area: black !important;
+}
+
+html body #landing .discordCenterColumn,
+html body.discordActivity #landing .discordCenterColumn {
+    grid-area: spec !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 258px !important;
+    justify-self: end !important;
+    align-self: start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 7px !important;
+    margin: 0 !important;
+}
+
+html body #landing .discordTeamCard,
+html body.discordActivity #landing .discordTeamCard {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    align-self: start !important;
+    box-sizing: border-box !important;
+}
+
+html body #landing .discordCenterColumn > .discordSpectatorCard,
+html body.discordActivity #landing .discordCenterColumn > .discordSpectatorCard {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 168px !important;
+    min-height: 168px !important;
+    max-height: 168px !important;
+    align-self: start !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+html body #landing .spectatorControlsMount,
+html body.discordActivity #landing .spectatorControlsMount {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 7px !important;
+    box-sizing: border-box !important;
+}
+
+html body #landing .spectatorControlsMount > #landingAdminBar,
+html body #landing .spectatorControlsMount > .modesFloating,
+html body.discordActivity #landing .spectatorControlsMount > #landingAdminBar,
+html body.discordActivity #landing .spectatorControlsMount > .modesFloating {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+html body #landing .spectatorControlsMount > #landingAdminBar:not(.hidden),
+html body #landing .spectatorControlsMount > .modesFloating,
+html body.discordActivity #landing .spectatorControlsMount > #landingAdminBar:not(.hidden),
+html body.discordActivity #landing .spectatorControlsMount > .modesFloating {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 7px !important;
+}
+
+html body #landing .spectatorControlsMount #landingStartGameBtn,
+html body #landing .spectatorControlsMount #landingOptionsWrap,
+html body #landing .spectatorControlsMount #landingOptionsWrap > .optionsBtn,
+html body #landing .spectatorControlsMount .modesFloating > .modesBtn,
+html body.discordActivity #landing .spectatorControlsMount #landingStartGameBtn,
+html body.discordActivity #landing .spectatorControlsMount #landingOptionsWrap,
+html body.discordActivity #landing .spectatorControlsMount #landingOptionsWrap > .optionsBtn,
+html body.discordActivity #landing .spectatorControlsMount .modesFloating > .modesBtn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+html body #landing .spectatorControlsMount .modesMenu,
+html body #landing .spectatorControlsMount .optionsMenu,
+html body.discordActivity #landing .spectatorControlsMount .modesMenu,
+html body.discordActivity #landing .spectatorControlsMount .optionsMenu {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 900px) {
+    html body #landing .discordRoleGrid,
+    html body.discordActivity #landing .discordRoleGrid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        grid-template-areas:
+            "gold black"
+            "spec spec" !important;
+        gap: 9px !important;
+    }
+
+    html body #landing .discordCenterColumn,
+    html body.discordActivity #landing .discordCenterColumn {
+        width: min(100%, 258px) !important;
+        max-width: 258px !important;
+        justify-self: center !important;
+    }
+}
+
+@media (max-width: 560px) {
+    html body #landing .discordRoleGrid,
+    html body.discordActivity #landing .discordRoleGrid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-areas:
+            "gold"
+            "black"
+            "spec" !important;
+    }
+}
+
+html body #landing .discordRoleGrid,
+html body.discordActivity #landing .discordRoleGrid {
+    grid-template-columns: minmax(0, 1fr) clamp(210px, 22vw, 258px) minmax(0, 1fr) !important;
+    grid-template-areas: "gold spec black" !important;
+}
+
+html body #landing .discordCenterColumn,
+html body.discordActivity #landing .discordCenterColumn {
+    justify-self: center !important;
+}
+
+html body #landing .discordRoleBox:has(> .discordRoleJoin[data-role="operative"]) .discordSeatList,
+html body.discordActivity #landing .discordRoleBox:has(> .discordRoleJoin[data-role="operative"]) .discordSeatList {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    align-content: flex-start !important;
+    width: min(100%, 210px) !important;
+    max-width: 210px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    gap: 5px 6px !important;
+}
+
+html body #landing .discordRoleBox:has(> .discordRoleJoin[data-role="operative"]) .discordSeatList > .discordSeatMini,
+html body.discordActivity #landing .discordRoleBox:has(> .discordRoleJoin[data-role="operative"]) .discordSeatList > .discordSeatMini {
+    flex: 0 0 66px !important;
+    width: 66px !important;
+    max-width: 66px !important;
+}
+
+@media (max-width: 900px) {
+    html body #landing .discordRoleGrid,
+    html body.discordActivity #landing .discordRoleGrid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        grid-template-areas:
+            "gold black"
+            "spec spec" !important;
+    }
+}
+
+@media (max-width: 560px) {
+    html body #landing .discordRoleGrid,
+    html body.discordActivity #landing .discordRoleGrid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-areas:
+            "gold"
+            "spec"
+            "black" !important;
+    }
+}

@@ -356,7 +356,7 @@ function applyLanguage() {
     document.documentElement.dir = uiLanguage === 'ar' ? 'rtl' : 'ltr';
     document.body.dataset.lang = uiLanguage;
     const modesButton = $('modesBtn');
-    if (modesButton) modesButton.textContent = 'Modes / الأوضاع';
+    if (modesButton) modesButton.textContent = 'Modes';
     const singleModeButton = $('singlePlayerBtn');
     if (singleModeButton) singleModeButton.textContent = 'Single Player / لاعب فردي';
     const languageModeButton = $('arabicModeBtn');
@@ -385,33 +385,27 @@ function applyLanguage() {
         teamButtons[2].querySelector('span').textContent = tt('spectator');
         teamButtons[2].querySelector('small').textContent = tt('watchOnly');
     }
-    const discordCards = document.querySelectorAll('.discordRoleGrid > section');
-    if (discordCards[0]) {
-        discordCards[0].querySelector('h2').textContent = tt('goldTeam');
-        const boxes = discordCards[0].querySelectorAll('.discordRoleBox');
-        if (boxes[0]) {
-            boxes[0].querySelector('b').textContent = tt('operatives');
-        }
-        if (boxes[1]) {
-            boxes[1].querySelector('b').textContent = tt('spymasters');
-        }
+    const goldLobbyCard = document.querySelector('.discordRoleGrid > .discordGoldCard');
+    const blackLobbyCard = document.querySelector('.discordRoleGrid > .discordBlackCard');
+    const spectatorLobbyCard = document.querySelector('.discordRoleGrid .discordSpectatorCard');
+    if (goldLobbyCard) {
+        goldLobbyCard.querySelector('h2').textContent = tt('goldTeam');
+        const boxes = goldLobbyCard.querySelectorAll('.discordRoleBox');
+        if (boxes[0]) boxes[0].querySelector('b').textContent = tt('operatives');
+        if (boxes[1]) boxes[1].querySelector('b').textContent = tt('spymasters');
     }
-    if (discordCards[1]) {
-        discordCards[1].querySelector('h2').textContent = uiLanguage === 'ar' ? 'المشاهدون 👁' : 'Spectators 👁';
-        const p = discordCards[1].querySelector('p:not(.discordHelpText)');
+    if (blackLobbyCard) {
+        blackLobbyCard.querySelector('h2').textContent = tt('blackTeam');
+        const boxes = blackLobbyCard.querySelectorAll('.discordRoleBox');
+        if (boxes[0]) boxes[0].querySelector('b').textContent = tt('operatives');
+        if (boxes[1]) boxes[1].querySelector('b').textContent = tt('spymasters');
+    }
+    if (spectatorLobbyCard) {
+        spectatorLobbyCard.querySelector('h2').textContent = uiLanguage === 'ar' ? 'المشاهدون 👁' : 'Spectators 👁';
+        const p = spectatorLobbyCard.querySelector('p:not(.discordHelpText)');
         if (p) p.textContent = uiLanguage === 'ar' ? 'شاهد المباراة بدون تخمين.' : 'Watch the match without guessing.';
-        const help = discordCards[1].querySelector('.discordHelpText');
+        const help = spectatorLobbyCard.querySelector('.discordHelpText');
         if (help) help.textContent = uiLanguage === 'ar' ? 'اختر أي جهة ودور، ثم تفتح غرفة Discord Activity تلقائيا.' : 'Choose any side and role, then your Discord Activity room opens automatically.';
-    }
-    if (discordCards[2]) {
-        discordCards[2].querySelector('h2').textContent = tt('blackTeam');
-        const boxes = discordCards[2].querySelectorAll('.discordRoleBox');
-        if (boxes[0]) {
-            boxes[0].querySelector('b').textContent = tt('operatives');
-        }
-        if (boxes[1]) {
-            boxes[1].querySelector('b').textContent = tt('spymasters');
-        }
     }
     document.querySelectorAll('.discordRoleJoin').forEach(btn => {
         const role = btn.dataset.role;
@@ -2099,10 +2093,26 @@ function closeRolePopup() {
     if (o) o.classList.add('hidden');
 }
 
+function placeHomepageLobbyControls() {
+    const adminBar = $('landingAdminBar');
+    const modes = document.querySelector('.modesFloating');
+    const spectatorMount = $('spectatorControlsMount');
+    const adminHome = $('homepageAdminHome');
+    const modesHome = $('homepageModesHome');
+    if (isDiscordActivity && spectatorMount) {
+        if (adminBar && adminBar.parentElement !== spectatorMount) spectatorMount.appendChild(adminBar);
+        if (modes && modes.parentElement !== spectatorMount) spectatorMount.appendChild(modes);
+        return;
+    }
+    if (adminBar && adminHome && adminBar.parentElement !== adminHome) adminHome.appendChild(adminBar);
+    if (modes && modesHome && modes.parentElement !== modesHome) modesHome.appendChild(modes);
+}
+
 function syncDiscordLanding() {
     document.body.classList.toggle('discordActivity', !!isDiscordActivity);
     const dl = $('discordLobby');
     if (dl) dl.classList.toggle('hidden', !isDiscordActivity);
+    placeHomepageLobbyControls();
     const teamChoice = $('teamChoice');
     if (teamChoice) teamChoice.classList.toggle('hidden', !!isDiscordActivity);
     const actions = document.querySelector('.actions');
@@ -2478,7 +2488,7 @@ function roleListHtml(players) {
         seen.add(key);
         unique.push(p);
     }
-    return unique.map(p => `<div class="discordSeatMini discordSeatLarge ${p.isPreview ? 'pendingSeat' : ''}">${avatarHtml(p, 'lobbyAvatar')}<span class="seatName">${escapeHtml(p.name || (uiLanguage === 'ar' ? 'لاعب' : 'Player'))}</span>${p.isAdmin ? `<em>${uiLanguage === 'ar' ? 'مدير' : 'Admin'}</em>` : ''}${p.isPreview ? `<em>${uiLanguage === 'ar' ? 'أنت' : 'You'}</em>` : ''}</div>`).join('');
+    return unique.map(p => `<div class="discordSeatMini discordSeatLarge ${p.isPreview ? 'pendingSeat' : ''} ${p.isAdmin ? 'lobbyAdminSeat' : ''}">${p.isAdmin ? '<img class="lobbyAdminCrown" src="/crown.png" alt="" aria-hidden="true">' : ''}${avatarHtml(p, 'lobbyAvatar')}<span class="seatName">${escapeHtml(p.name || (uiLanguage === 'ar' ? 'لاعب' : 'Player'))}</span>${p.isPreview ? `<em class="lobbyYouBadge">${uiLanguage === 'ar' ? 'أنت' : 'You'}</em>` : ''}</div>`).join('');
 }
 
 function paintDiscordLobby(info) {

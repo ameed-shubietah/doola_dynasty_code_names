@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>CODENAMES DSTY</title>
-    <link rel="stylesheet" href="/style.css?v=184"/>
+    <link rel="stylesheet" href="/style.css?v=197"/>
     <link rel="stylesheet" href="/10-game-start-and-deal.css?v=2"/>
 </head>
 <body>
@@ -101,11 +101,14 @@
                         </button>
                     </div>
                 </section>
-                <section class="discordSpectatorCard">
-                    <h2>Spectators 👁</h2>
-                    <div class="discordSeatList"></div>
-                    <button type="button" class="discordRoleJoin" data-team="spectator" data-role="spectator">Join</button>
-                </section>
+                <div class="discordCenterColumn">
+                    <section class="discordSpectatorCard">
+                        <h2>Spectators 👁</h2>
+                        <div class="discordSeatList"></div>
+                        <button type="button" class="discordRoleJoin" data-team="spectator" data-role="spectator">Join</button>
+                    </section>
+                    <div id="spectatorControlsMount" class="spectatorControlsMount"></div>
+                </div>
                 <section class="discordTeamCard discordBlackCard">
                     <h2>Black Team</h2>
                     <div class="discordRoleBox">
@@ -125,14 +128,16 @@
                 </section>
             </div>
         </div>
-        <div id="landingAdminBar" class="landingAdminBar hidden">
-            <button id="landingStartGameBtn" class="primary landingStartGameBtn hidden" type="button">Start
-            </button>
-            <div id="landingOptionsWrap" class="optionsWrap hidden">
-                <button class="optionsBtn" type="button">Options ▾</button>
-                <div class="optionsMenu">
-                    <button id="landingResetTableBtn" type="button">Reset Table</button>
-                    <button id="landingShuffleTeamsBtn" type="button">Shuffle Teams</button>
+        <div id="homepageAdminHome" class="homepageAdminHome">
+            <div id="landingAdminBar" class="landingAdminBar hidden">
+                <button id="landingStartGameBtn" class="primary landingStartGameBtn hidden" type="button">Start
+                </button>
+                <div id="landingOptionsWrap" class="optionsWrap hidden">
+                    <button class="optionsBtn" type="button">Options ▾</button>
+                    <div class="optionsMenu">
+                        <button id="landingResetTableBtn" type="button">Reset Table</button>
+                        <button id="landingShuffleTeamsBtn" type="button">Shuffle Teams</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -140,20 +145,22 @@
             <button id="createBtn" class="primary" disabled>Create Room</button>
             <button id="joinBtn" disabled>Join Room</button>
         </div>
-        <div class="modesFloating">
-            <button id="modesBtn" class="modesBtn" type="button">Modes / الأوضاع</button>
-            <div id="modesMenu" class="modesMenu hidden">
-                <button id="singlePlayerBtn" class="modeChoice" type="button">Single Player / لاعب فردي</button>
-                <button id="arabicModeBtn" class="modeChoice" type="button">Arabic Mode / الوضع العربي</button>
-            </div>
-            <button id="backgroundBtn" class="modesBtn backgroundBtn" type="button">Backgrounds</button>
-            <div id="backgroundMenu" class="modesMenu hidden backgroundMenu">
-                <button class="modeChoice bgChoice" type="button" data-bg-theme="royal-noir">Royal Gold</button>
-                <button class="modeChoice bgChoice" type="button" data-bg-theme="violet-crown">Violet Crown</button>
-                <button class="modeChoice bgChoice" type="button" data-bg-theme="ember-royal">Ember Royal</button>
-                <button class="modeChoice bgChoice" type="button" data-bg-theme="emerald-night">Emerald Night</button>
-                <button class="modeChoice bgChoice" type="button" data-bg-theme="azure-luxe">Azure Luxe</button>
-                <button class="modeChoice bgChoice" type="button" data-bg-theme="obsidian-rose">Obsidian Rose</button>
+        <div id="homepageModesHome" class="homepageModesHome">
+            <div class="modesFloating">
+                <button id="modesBtn" class="modesBtn" type="button">Modes</button>
+                <div id="modesMenu" class="modesMenu hidden">
+                    <button id="singlePlayerBtn" class="modeChoice" type="button">Single Player / لاعب فردي</button>
+                    <button id="arabicModeBtn" class="modeChoice" type="button">Arabic Mode / الوضع العربي</button>
+                </div>
+                <button id="backgroundBtn" class="modesBtn backgroundBtn" type="button">Backgrounds</button>
+                <div id="backgroundMenu" class="modesMenu hidden backgroundMenu">
+                    <button class="modeChoice bgChoice" type="button" data-bg-theme="royal-noir">Royal Gold</button>
+                    <button class="modeChoice bgChoice" type="button" data-bg-theme="violet-crown">Violet Crown</button>
+                    <button class="modeChoice bgChoice" type="button" data-bg-theme="ember-royal">Ember Royal</button>
+                    <button class="modeChoice bgChoice" type="button" data-bg-theme="emerald-night">Emerald Night</button>
+                    <button class="modeChoice bgChoice" type="button" data-bg-theme="azure-luxe">Azure Luxe</button>
+                    <button class="modeChoice bgChoice" type="button" data-bg-theme="obsidian-rose">Obsidian Rose</button>
+                </div>
             </div>
         </div>
         <div id="singleDifficultyOverlay" class="singleDifficultyOverlay hidden" aria-live="polite">
@@ -342,6 +349,6 @@
 </script>
 <script type="module" src="/discord-sdk.js?v=62"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="/app.js?v=183"></script>
+<script src="/app.js?v=197"></script>
 </body>
 </html>
