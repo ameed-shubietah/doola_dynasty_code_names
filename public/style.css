@@ -1890,3 +1890,189 @@ body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.r
     }
 }
 
+
+html body #app #game.gameV9 .logAvatarHover,
+html body.discordActivity #app #game.gameV9 .logAvatarHover,
+html body #app #game.gameV9 .characterLogFace,
+html body #app #game.gameV9 .logUserAvatar,
+html body #app #game.gameV9 .logSpyAvatar,
+html body.discordActivity #app #game.gameV9 .characterLogFace,
+html body.discordActivity #app #game.gameV9 .logUserAvatar,
+html body.discordActivity #app #game.gameV9 .logSpyAvatar {
+    position: relative !important;
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    flex: 0 0 20px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    border: 0 !important;
+    outline: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    cursor: pointer !important;
+    z-index: 20 !important;
+}
+
+html body #app #game.gameV9 .logAvatarVisual,
+html body.discordActivity #app #game.gameV9 .logAvatarVisual {
+    width: 100% !important;
+    height: 100% !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+}
+
+html body #app #game.gameV9 .logAvatarVisual img,
+html body.discordActivity #app #game.gameV9 .logAvatarVisual img {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+html body #app #game.gameV9 .logAvatarCrown,
+html body.discordActivity #app #game.gameV9 .logAvatarCrown {
+    position: absolute !important;
+    left: -5px !important;
+    top: -7px !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    transform: rotate(-32deg) !important;
+    transform-origin: center !important;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .95)) drop-shadow(0 0 3px rgba(255, 215, 108, .65)) !important;
+    pointer-events: none !important;
+    z-index: 25 !important;
+}
+
+.logAvatarPopover {
+    position: fixed !important;
+    z-index: 8000000 !important;
+    width: 92px !important;
+    padding: 6px !important;
+    border-radius: 14px !important;
+    pointer-events: none !important;
+    opacity: 1 !important;
+    animation: logAvatarPopoverIn .14s ease-out both !important;
+}
+
+.logAvatarPopover.team-blue {
+    background: linear-gradient(155deg, #fff0a4, #d99d12 58%, #7d5000) !important;
+    border: 1px solid rgba(255, 246, 188, .9) !important;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .55), 0 0 18px rgba(255, 215, 108, .32) !important;
+}
+
+.logAvatarPopover.team-red {
+    background: linear-gradient(155deg, #38383c, #111113 58%, #020203) !important;
+    border: 1px solid rgba(255, 215, 108, .62) !important;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .68), 0 0 16px rgba(255, 215, 108, .2) !important;
+}
+
+.logAvatarPopoverImage {
+    position: relative !important;
+    width: 80px !important;
+    height: 80px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 50% !important;
+    overflow: visible !important;
+}
+
+.logAvatarPopoverImage > img {
+    width: 80px !important;
+    height: 80px !important;
+    display: block !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+.logAvatarPopoverImage:not(:has(> img)) {
+    overflow: hidden !important;
+    background: rgba(0, 0, 0, .18) !important;
+    font-size: 44px !important;
+    line-height: 1 !important;
+}
+
+.logAvatarPopoverName {
+    position: absolute !important;
+    left: 50% !important;
+    bottom: -3px !important;
+    transform: translateX(-50%) !important;
+    max-width: 86px !important;
+    padding: 3px 8px !important;
+    border-radius: 999px !important;
+    background: rgba(0, 0, 0, .84) !important;
+    color: #fff8d8 !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 1000 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .95) !important;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, .42) !important;
+    z-index: 4 !important;
+}
+
+.logAvatarPopoverCrown {
+    position: absolute !important;
+    left: -5px !important;
+    top: -8px !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+    transform: rotate(-32deg) !important;
+    transform-origin: center !important;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .95)) drop-shadow(0 0 6px rgba(255, 215, 108, .55)) !important;
+    pointer-events: none !important;
+    z-index: 5 !important;
+}
+
+@keyframes logAvatarPopoverIn {
+    from {
+        opacity: 0;
+        scale: .88;
+    }
+    to {
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:has(> .avatar.characterAvatar:not(.customAvatar)) > .playerBody,
+html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:has(> .avatar.characterAvatar:not(.customAvatar)) > .playerBody {
+    bottom: 5px !important;
+}
+
+.logAvatarPopoverImage:not(:has(> img)) {
+    overflow: visible !important;
+}
+
+.logAvatarPopoverImage:not(:has(> img)) > .logAvatarPopoverName {
+    bottom: 4px !important;
+}

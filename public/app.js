@@ -4041,12 +4041,15 @@ function renderLog() {
         return p?.character || 'raiden';
     }
 
-    function logFace(character, by, cls, avatar = '') {
-        const ch = character || characterForName(by);
+    function logFace(character, by, cls, avatar = '', team = '', isSpymaster = false) {
+        const ch = character || characterForName(by, team);
         const src = safeAvatarSrc(avatar);
         const title = escapeHtml(by || 'player');
-        if (src) return `<span class="${cls} characterLogFace customAvatar" style="--a:${charAccent(ch)}" title="${title}"><img src="${src}" alt="${title}"></span>`;
-        return `<span class="${cls} characterLogFace" style="--a:${charAccent(ch)}" title="${title}">${charEmoji(ch)}</span>`;
+        const visual = src
+            ? `<span class="logAvatarVisual customAvatar"><img src="${src}" alt="${title}"></span>`
+            : `<span class="logAvatarVisual">${charEmoji(ch)}</span>`;
+        const crown = isSpymaster ? '<span class="logAvatarCrown" aria-hidden="true">👑</span>' : '';
+        return `<span class="${cls} characterLogFace logAvatarHover team-${team} ${src ? 'customAvatar' : ''}" style="--a:${charAccent(ch)}" data-log-name="${title}" data-log-team="${team}" data-log-spymaster="${isSpymaster ? '1' : '0'}" aria-label="${title}">${visual}${crown}</span>`;
     }
 
     function lenClass(word) {
@@ -4069,7 +4072,7 @@ function renderLog() {
         const by = parts[4] || '';
         const avatar = parts[5] || '';
         const character = parts[6] || characterForName(by, team);
-        const face = logFace(character, by, 'logSpyAvatar', avatar);
+        const face = logFace(character, by, 'logSpyAvatar', avatar, team, true);
         return `<div class="gameLogEntry hintLog ${team} ${lenClass(word)}">${face}<b>${word}</b><span>${num}</span></div>`;
     }
 
@@ -4080,7 +4083,7 @@ function renderLog() {
         const by = parts[4] || '';
         const avatar = parts[5] || '';
         const character = parts[6] || characterForName(by, team);
-        const face = logFace(character, by, 'logUserAvatar', avatar);
+        const face = logFace(character, by, 'logUserAvatar', avatar, team, false);
         const title = uiLanguage === 'ar' ? `${by || 'لاعب'} اختار ${word}` : `${by || 'Player'} chose ${word}`;
         return `<div class="gameLogEntry pickLog ${color} ${lenClass(word)}" title="${title}"><b class="logPickWord">${face}<span>${word}</span></b></div>`;
     }
@@ -4090,7 +4093,7 @@ function renderLog() {
         const by = parts[2] || '';
         const avatar = parts[3] || '';
         const character = parts[4] || characterForName(by, team);
-        const face = logFace(character, by, 'logUserAvatar', avatar);
+        const face = logFace(character, by, 'logUserAvatar', avatar, team, false);
         const title = uiLanguage === 'ar' ? `${by || 'لاعب'} مرر الدور` : `${by || 'Player'} passed`;
         return `<div class="gameLogEntry passLog ${team}" title="${title}"><b class="logPickWord">${face}<span class="teamTick">✓</span></b></div>`;
     }
@@ -4141,6 +4144,73 @@ function renderLog() {
         });
     }
 }
+
+let logAvatarPopover = null;
+let logAvatarPopoverSource = null;
+
+function removeLogAvatarPopover() {
+    if (logAvatarPopover) logAvatarPopover.remove();
+    logAvatarPopover = null;
+    logAvatarPopoverSource = null;
+}
+
+function positionLogAvatarPopover(source, popover) {
+    if (!source?.isConnected || !popover?.isConnected) return removeLogAvatarPopover();
+    const rect = source.getBoundingClientRect();
+    popover.style.left = `${rect.left + rect.width / 2}px`;
+    popover.style.top = `${rect.top - 9}px`;
+    popover.style.transform = 'translate(-50%, -100%)';
+    const box = popover.getBoundingClientRect();
+    const pad = 8;
+    let x = 0;
+    let y = 0;
+    if (box.left < pad) x = pad - box.left;
+    if (box.right > window.innerWidth - pad) x = window.innerWidth - pad - box.right;
+    if (box.top < pad) {
+        popover.style.top = `${rect.bottom + 9}px`;
+        popover.style.transform = 'translate(-50%, 0)';
+        const below = popover.getBoundingClientRect();
+        if (below.left < pad) x = pad - below.left;
+        if (below.right > window.innerWidth - pad) x = window.innerWidth - pad - below.right;
+    }
+    if (x || y) popover.style.marginLeft = `${x}px`;
+}
+
+function showLogAvatarPopover(source) {
+    removeLogAvatarPopover();
+    const visual = source.querySelector('.logAvatarVisual');
+    if (!visual) return;
+    const team = source.dataset.logTeam === 'blue' ? 'blue' : 'red';
+    const name = source.dataset.logName || 'Player';
+    const isSpymaster = source.dataset.logSpymaster === '1';
+    const popover = document.createElement('div');
+    popover.className = `logAvatarPopover team-${team}`;
+    popover.innerHTML = `<div class="logAvatarPopoverImage">${visual.innerHTML}${isSpymaster ? '<span class="logAvatarPopoverCrown" aria-hidden="true">👑</span>' : ''}<span class="logAvatarPopoverName">${escapeHtml(name)}</span></div>`;
+    document.body.appendChild(popover);
+    logAvatarPopover = popover;
+    logAvatarPopoverSource = source;
+    requestAnimationFrame(() => positionLogAvatarPopover(source, popover));
+}
+
+document.addEventListener('pointerover', event => {
+    const source = event.target.closest?.('.logAvatarHover');
+    if (!source || source.contains(event.relatedTarget)) return;
+    showLogAvatarPopover(source);
+});
+
+document.addEventListener('pointerout', event => {
+    const source = event.target.closest?.('.logAvatarHover');
+    if (!source || source.contains(event.relatedTarget)) return;
+    removeLogAvatarPopover();
+});
+
+window.addEventListener('resize', () => {
+    if (logAvatarPopoverSource && logAvatarPopover) positionLogAvatarPopover(logAvatarPopoverSource, logAvatarPopover);
+});
+
+document.addEventListener('scroll', () => {
+    if (logAvatarPopoverSource && logAvatarPopover) positionLogAvatarPopover(logAvatarPopoverSource, logAvatarPopover);
+}, true);
 
 const adminRequestYes = $('adminRequestYes');
 if (adminRequestYes) adminRequestYes.onclick = () => {
