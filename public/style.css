@@ -2799,3 +2799,301 @@ html body.discordActivity .spymasterClueSplash.red .spymasterClueNumber em {
         font-size: clamp(21px, 5.8vw, 33px) !important;
     }
 }
+
+html body #landing .discordRoleGrid,
+html body.discordActivity #landing .discordRoleGrid {
+    align-items: start !important;
+}
+
+html body #landing .discordTeamCard,
+html body.discordActivity #landing .discordTeamCard {
+    align-self: start !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+html body #landing .discordRoleBox,
+html body.discordActivity #landing .discordRoleBox {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 4px !important;
+    height: auto !important;
+    min-height: 82px !important;
+    padding: 8px 7px 9px !important;
+    overflow: visible !important;
+}
+
+html body #landing .discordRoleBox > div:first-child,
+html body.discordActivity #landing .discordRoleBox > div:first-child {
+    width: 100% !important;
+    text-align: center !important;
+}
+
+html body #landing .discordRoleBox .discordSeatList,
+html body.discordActivity #landing .discordRoleBox .discordSeatList,
+html body #landing .discordSpectatorCard .discordSeatList,
+html body.discordActivity #landing .discordSpectatorCard .discordSeatList {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-auto-flow: row !important;
+    align-items: start !important;
+    justify-content: center !important;
+    align-content: start !important;
+    gap: 5px 6px !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+}
+
+html body #landing .discordRoleBox:has(> .discordRoleJoin[data-role="operative"]) .discordSeatList,
+html body.discordActivity #landing .discordRoleBox:has(> .discordRoleJoin[data-role="operative"]) .discordSeatList {
+    grid-template-columns: repeat(3, minmax(48px, 66px)) !important;
+}
+
+html body #landing .discordRoleBox:has(> .discordRoleJoin[data-role="spymaster"]) .discordSeatList,
+html body.discordActivity #landing .discordRoleBox:has(> .discordRoleJoin[data-role="spymaster"]) .discordSeatList {
+    grid-template-columns: minmax(48px, 66px) !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge,
+html body #landing .discordLobby .discordSeatMini.discordSeatLarge,
+html body.discordActivity #landing .discordLobby .discordSeatMini.discordSeatLarge {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 66px !important;
+    min-width: 0 !important;
+    min-height: 66px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge .avatar,
+html body #landing .discordSeatMini.discordSeatLarge .lobbyAvatar,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .avatar,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAvatar {
+    position: relative !important;
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    flex: 0 0 52px !important;
+    display: grid !important;
+    place-items: center !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+    font-size: 31px !important;
+    line-height: 1 !important;
+    overflow: visible !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge .avatar.customAvatar,
+html body #landing .discordSeatMini.discordSeatLarge .lobbyAvatar.customAvatar,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .avatar.customAvatar,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAvatar.customAvatar {
+    overflow: visible !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge .avatar img,
+html body #landing .discordSeatMini.discordSeatLarge .lobbyAvatar img,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .avatar img,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAvatar img {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    object-fit: cover !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    box-shadow: none !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge .seatName,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .seatName {
+    position: relative !important;
+    z-index: 5 !important;
+    width: max-content !important;
+    max-width: 66px !important;
+    min-width: 0 !important;
+    min-height: 17px !important;
+    display: block !important;
+    margin: -5px auto 0 !important;
+    padding: 3px 7px 4px !important;
+    border-radius: 999px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    text-align: center !important;
+    unicode-bidi: plaintext !important;
+    font-family: "Segoe UI Black", "Arial Black", system-ui, sans-serif !important;
+    font-size: 8px !important;
+    font-weight: 1000 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    box-sizing: border-box !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge .avatar:not(.customAvatar) + .seatName,
+html body #landing .discordSeatMini.discordSeatLarge .lobbyAvatar:not(.customAvatar) + .seatName,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .avatar:not(.customAvatar) + .seatName,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAvatar:not(.customAvatar) + .seatName {
+    margin-top: -10px !important;
+}
+
+html body #landing .discordGoldCard .discordSeatMini.discordSeatLarge .seatName,
+html body.discordActivity #landing .discordGoldCard .discordSeatMini.discordSeatLarge .seatName {
+    color: #130b00 !important;
+    background: linear-gradient(180deg, #fff1a1 0%, #efbd20 52%, #9a6100 100%) !important;
+    border: 1px solid rgba(255, 242, 164, .9) !important;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, .62), inset 0 1px 0 rgba(255, 255, 255, .52) !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .28) !important;
+}
+
+html body #landing .discordBlackCard .discordSeatMini.discordSeatLarge .seatName,
+html body.discordActivity #landing .discordBlackCard .discordSeatMini.discordSeatLarge .seatName {
+    color: #fff3b9 !important;
+    background: linear-gradient(180deg, #2b2b2f 0%, #09090b 58%, #000 100%) !important;
+    border: 1px solid rgba(255, 214, 90, .42) !important;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, .72), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .95) !important;
+}
+
+html body #landing .discordSpectatorCard .discordSeatMini.discordSeatLarge .seatName,
+html body.discordActivity #landing .discordSpectatorCard .discordSeatMini.discordSeatLarge .seatName {
+    color: #f7f7f7 !important;
+    background: linear-gradient(180deg, #55565d 0%, #202126 58%, #0e0f12 100%) !important;
+    border: 1px solid rgba(255, 255, 255, .26) !important;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, .66) !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge em,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge em {
+    position: absolute !important;
+    z-index: 7 !important;
+    top: 2px !important;
+    right: -1px !important;
+    margin: 0 !important;
+    padding: 2px 4px !important;
+    border-radius: 999px !important;
+    font-size: 6px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge em:nth-of-type(2),
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge em:nth-of-type(2) {
+    top: 13px !important;
+}
+
+html body #landing .discordSeatMini.discordSeatLarge .crownMark,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .crownMark {
+    position: absolute !important;
+    z-index: 8 !important;
+    top: -10px !important;
+    left: -7px !important;
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    font-size: 17px !important;
+    line-height: 1 !important;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .8)) !important;
+    pointer-events: none !important;
+}
+
+html body #landing .discordRoleBox .discordRoleJoin,
+html body.discordActivity #landing .discordRoleBox .discordRoleJoin {
+    align-self: center !important;
+    margin: 3px auto 0 !important;
+}
+
+html body #landing .discordSpectatorCard,
+html body.discordActivity #landing .discordSpectatorCard {
+    align-self: start !important;
+    height: 168px !important;
+    min-height: 168px !important;
+    max-height: 168px !important;
+    overflow: hidden !important;
+}
+
+html body #landing .discordSpectatorCard .discordSeatList,
+html body.discordActivity #landing .discordSpectatorCard .discordSeatList {
+    grid-template-columns: repeat(2, minmax(48px, 62px)) !important;
+    max-height: 92px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin !important;
+}
+
+html body #landing .discordSpectatorCard .discordRoleJoin,
+html body.discordActivity #landing .discordSpectatorCard .discordRoleJoin {
+    margin-top: auto !important;
+}
+
+@media (max-width: 760px) {
+    html body #landing .discordRoleBox:has(> .discordRoleJoin[data-role="operative"]) .discordSeatList,
+    html body.discordActivity #landing .discordRoleBox:has(> .discordRoleJoin[data-role="operative"]) .discordSeatList {
+        grid-template-columns: repeat(3, minmax(42px, 50px)) !important;
+        gap: 4px !important;
+    }
+
+    html body #landing .discordRoleBox:has(> .discordRoleJoin[data-role="spymaster"]) .discordSeatList,
+    html body.discordActivity #landing .discordRoleBox:has(> .discordRoleJoin[data-role="spymaster"]) .discordSeatList {
+        grid-template-columns: minmax(42px, 50px) !important;
+    }
+
+    html body #landing .discordSeatMini.discordSeatLarge,
+    html body.discordActivity #landing .discordSeatMini.discordSeatLarge {
+        max-width: 50px !important;
+        min-height: 56px !important;
+    }
+
+    html body #landing .discordSeatMini.discordSeatLarge .avatar,
+    html body #landing .discordSeatMini.discordSeatLarge .lobbyAvatar,
+    html body.discordActivity #landing .discordSeatMini.discordSeatLarge .avatar,
+    html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAvatar {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        flex-basis: 44px !important;
+        font-size: 26px !important;
+    }
+
+    html body #landing .discordSeatMini.discordSeatLarge .seatName,
+    html body.discordActivity #landing .discordSeatMini.discordSeatLarge .seatName {
+        max-width: 50px !important;
+        min-height: 15px !important;
+        padding: 3px 5px !important;
+        font-size: 6.8px !important;
+    }
+
+    html body #landing .discordSpectatorCard,
+    html body.discordActivity #landing .discordSpectatorCard {
+        height: 132px !important;
+        min-height: 132px !important;
+        max-height: 132px !important;
+    }
+
+    html body #landing .discordSpectatorCard .discordSeatList,
+    html body.discordActivity #landing .discordSpectatorCard .discordSeatList {
+        grid-template-columns: repeat(2, minmax(42px, 50px)) !important;
+        max-height: 68px !important;
+    }
+}
