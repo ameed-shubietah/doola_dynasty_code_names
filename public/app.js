@@ -883,6 +883,10 @@ function currentBoardDealKey(s = state) {
     return gameIntroIdentity(s);
 }
 
+function boardDealInteractionLocked() {
+    return boardDealState.phase === 'pending' || boardDealState.phase === 'running';
+}
+
 function applyBoardDealVisualState() {
     if (!board) return;
     const key = currentBoardDealKey();
@@ -894,6 +898,7 @@ function applyBoardDealVisualState() {
 
     board.classList.toggle('boardDealPending', active && boardDealState.phase === 'pending');
     board.classList.toggle('boardDealRunning', active && boardDealState.phase === 'running');
+    board.setAttribute('aria-busy', active ? 'true' : 'false');
 
     board.querySelectorAll('.card').forEach((card, index) => {
         const row = Math.floor(index / 5);
@@ -1364,8 +1369,11 @@ function showSpymasterClueSplash(clue) {
     img.alt = spymasterClueSplashAlt(team);
     label.textContent = tt('currentClue');
     word.textContent = formatSplashClueWord(clue.word);
-    number.textContent = String(Number(clue.number || 0));
-    cardsLabel.textContent = uiLanguage === 'ar' ? 'بطاقات' : 'CARDS';
+    const clueCount = Number(clue.number || 0);
+    number.textContent = String(clueCount);
+    cardsLabel.textContent = uiLanguage === 'ar'
+        ? (clueCount === 1 ? 'بطاقة' : 'بطاقات')
+        : (clueCount === 1 ? 'CARD' : 'CARDS');
 
     overlay.classList.remove('hidden', 'clueSplashLive', 'clueSplashOut', 'blue', 'red');
     overlay.classList.add(team);
@@ -3927,6 +3935,7 @@ function renderBoard() {
     board.querySelectorAll('.card').forEach(el => {
         el.onclick = (ev) => {
             if (ev.target.closest('.cardConfirm')) return;
+            if (boardDealInteractionLocked()) return;
             const id = Number(el.dataset.id);
             const card = state.board.find(c => c.id === id);
             const p = me();
@@ -3970,6 +3979,7 @@ function renderBoard() {
         btn.onclick = (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
+            if (boardDealInteractionLocked()) return;
             socket.emit('confirmVote', {id: Number(btn.dataset.confirmId)});
         };
     });
