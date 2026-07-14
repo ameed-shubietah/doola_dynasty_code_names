@@ -7,8 +7,10 @@ let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let boardDealTimers = [];
 let boardDealState = {key: '', phase: 'idle', visibleRows: 5};
-let clueSplashTimer = null, lastClueSplashKey = '';
-let resultSplashTimer = null, resultSplashCleanupTimer = null, resultSplashReleaseTimer = null, lastWinnerSplashKey = '', lastDeathSplashKey = '';
+let clueSplashTimer = null, lastClueSplashKey = '', clueSplashImageRequestId = 0;
+const clueSplashImagePromises = new Map();
+let resultSplashTimer = null, resultSplashCleanupTimer = null, resultSplashReleaseTimer = null, lastWinnerSplashKey = '', lastDeathSplashKey = '', lastResultSequenceKey = '', resultSplashSequenceId = 0;
+const resultImagePromises = new Map();
 let spectatorMenuOpen = false;
 
 function makePlayerKey() {
@@ -799,6 +801,17 @@ const gameSounds = {
     gameWin: '/sounds/win.mp3',
     clue: '/sounds/clue.mp3'
 };
+const gameSoundPlayers = new Map();
+
+function preloadGameSounds() {
+    Object.entries(gameSounds).forEach(([kind, src]) => {
+        const clip = new Audio();
+        clip.preload = 'auto';
+        clip.src = src;
+        clip.load();
+        gameSoundPlayers.set(kind, clip);
+    });
+}
 
 function sound(kind) {
     const soundKind = kind === 'win'
@@ -808,17 +821,24 @@ function sound(kind) {
             : kind;
     const src = gameSounds[soundKind];
     if (!src) return;
-    const clip = new Audio(src);
+    const clip = gameSoundPlayers.get(soundKind) || new Audio(src);
     const soundVolumes = {
         clue: 0.7,
-        gameWin: 0.2
+        gameWin: 0.05
     };
+    clip.pause();
+    try {
+        clip.currentTime = 0;
+    } catch {
+    }
     clip.volume = soundVolumes[soundKind] ?? 0.35;
     clip.play().catch(() => {});
     if (soundKind === 'correct') flash('winFlash');
     else if (soundKind === 'wrong' || soundKind === 'assassin') flash('loseFlash');
     else if (soundKind === 'neutral') flash('neutralFlash');
 }
+
+preloadGameSounds();
 
 function flash(cls) {
     const d = document.createElement('div');
@@ -1132,7 +1152,7 @@ function startRevealLiftGhost(card, reaction) {
         if (card.color === 'neutral') crown.src = '/crown-bw.png';
         else if (card.color === 'assassin') crown.remove();
         else crown.src = '/crown.png';
-        playRevealSoundForCard(card);
+        playRevealSoundForCard(card, reaction);
     }, REVEAL_PEAK_MS);
     revealPeakTimers.set(card.id, peakTimer);
 }
@@ -1146,6 +1166,11 @@ function clearDelayedReveals() {
         clearTimeout(delayedWinRevealTimer);
         delayedWinRevealTimer = null;
     }
+    if (resultSplashReleaseTimer) {
+        clearTimeout(resultSplashReleaseTimer);
+        resultSplashReleaseTimer = null;
+    }
+    resultSplashSequenceId += 1;
     winRevealHoldUntil = 0;
     delayedRevealTimers.forEach(timer => clearTimeout(timer));
     delayedRevealTimers.clear();
@@ -1154,6 +1179,7 @@ function clearDelayedReveals() {
     pendingRevealIds.clear();
     revealPeakTimers.forEach(timer => clearTimeout(timer));
     revealPeakTimers.clear();
+    hideResultImageSplash();
     clearRevealLiftGhosts();
 }
 
@@ -1167,12 +1193,13 @@ function newlyRevealedCards(beforeState, nowState) {
         });
 }
 
-function playRevealSoundForCard(card) {
+function playRevealSoundForCard(card, reaction = null) {
     if (!card) return;
-    const p = me();
-    if (card.color === 'assassin') return sound('assassin');
-    if (card.color === 'neutral') return sound('neutral');
-    if (p && p.team !== 'spectator') return sound(card.color === p.team ? 'correct' : 'wrong');
+    const reactionKind = reaction?.kind || '';
+    if (reactionKind === 'death' || card.color === 'assassin') return sound('assassin');
+    if (reactionKind === 'grey' || card.color === 'neutral') return sound('neutral');
+    if (reactionKind === 'correct') return sound('correct');
+    if (reactionKind === 'wrong') return sound('wrong');
     return sound(card.color === 'blue' || card.color === 'red' ? 'correct' : 'neutral');
 }
 
@@ -1205,29 +1232,9 @@ function finishDelayedReveal(id, token) {
     if (card.color === 'blue' || card.color === 'red') {
         requestAnimationFrame(() => flyCardToTeamScore(card));
     }
-    if (reaction?.kind === 'death') showDeathResultSplash();
 
     if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
-        if (delayedWinRevealTimer) clearTimeout(delayedWinRevealTimer);
-        if (resultSplashReleaseTimer) clearTimeout(resultSplashReleaseTimer);
-        const winnerDelay = reaction?.kind === 'death' ? 4100 : 1100;
-        const winnerTotalMs = 6200;
-        winRevealHoldUntil = Date.now() + winnerDelay + winnerTotalMs;
-        hideWinEffectsForCurrentView();
-        delayedWinRevealTimer = setTimeout(() => {
-            delayedWinRevealTimer = null;
-            if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
-                playGameWinSoundOnce();
-                showWinnerResultSplash(state.winner);
-            }
-        }, winnerDelay);
-        resultSplashReleaseTimer = setTimeout(() => {
-            resultSplashReleaseTimer = null;
-            winRevealHoldUntil = 0;
-            if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
-                render();
-            }
-        }, winnerDelay + winnerTotalMs);
+        runFinishedResultSequence(reaction);
     }
 
     if (pendingRevealIds.size === 0) {
@@ -1273,35 +1280,55 @@ function assetImageCandidates(file, version = 137) {
 
 function spymasterClueSplashImageCandidates(team) {
     const file = team === 'red' ? 'blackspymaster.png' : 'goldspymaster.png';
-    return assetImageCandidates(file, 137);
+    return assetImageCandidates(file, 234);
 }
 
-function setSpymasterClueSplashImage(img, team) {
-    if (!img) return;
-    const candidates = spymasterClueSplashImageCandidates(team);
-    img.dataset.spyTeam = team;
-    img.dataset.srcIndex = '0';
+function resolveSpymasterClueSplashImage(team) {
+    const safeTeam = team === 'red' ? 'red' : 'blue';
+    if (clueSplashImagePromises.has(safeTeam)) return clueSplashImagePromises.get(safeTeam);
+    const promise = new Promise(resolve => {
+        const candidates = spymasterClueSplashImageCandidates(safeTeam);
+        const tryCandidate = index => {
+            if (index >= candidates.length) return resolve('');
+            const preload = new Image();
+            preload.onload = () => resolve(candidates[index]);
+            preload.onerror = () => tryCandidate(index + 1);
+            preload.src = candidates[index];
+        };
+        tryCandidate(0);
+    });
+    clueSplashImagePromises.set(safeTeam, promise);
+    return promise;
+}
+
+async function setSpymasterClueSplashImage(img, team, requestId) {
+    if (!img) return false;
+    const safeTeam = team === 'red' ? 'red' : 'blue';
+    img.dataset.spyTeam = safeTeam;
     img.classList.remove('spymasterImageMissing');
+    img.style.opacity = '0';
+    img.style.visibility = 'hidden';
+    img.removeAttribute('src');
+    const resolvedSrc = await resolveSpymasterClueSplashImage(safeTeam);
+    if (requestId !== clueSplashImageRequestId || img.dataset.spyTeam !== safeTeam) return false;
+    if (!resolvedSrc) {
+        img.classList.add('spymasterImageMissing');
+        return false;
+    }
+    img.src = resolvedSrc;
+    try {
+        if (typeof img.decode === 'function') await img.decode();
+    } catch {
+    }
+    if (requestId !== clueSplashImageRequestId || img.dataset.spyTeam !== safeTeam) return false;
     img.style.opacity = '1';
     img.style.visibility = 'visible';
+    return true;
+}
 
-    img.onerror = () => {
-        const list = spymasterClueSplashImageCandidates(img.dataset.spyTeam === 'red' ? 'red' : 'blue');
-        const nextIndex = (parseInt(img.dataset.srcIndex || '0', 10) || 0) + 1;
-        if (nextIndex >= list.length) {
-            img.onerror = null;
-            img.classList.add('spymasterImageMissing');
-            return;
-        }
-        img.dataset.srcIndex = String(nextIndex);
-        img.src = list[nextIndex];
-    };
-    img.onload = () => {
-        img.classList.remove('spymasterImageMissing');
-        img.style.opacity = '1';
-        img.style.visibility = 'visible';
-    };
-    img.src = candidates[0];
+function preloadSpymasterClueSplashImages() {
+    resolveSpymasterClueSplashImage('blue');
+    resolveSpymasterClueSplashImage('red');
 }
 
 function spymasterClueSplashAlt(team) {
@@ -1346,12 +1373,13 @@ function hideSpymasterClueSplash(overlay) {
     }, 420);
 }
 
-function showSpymasterClueSplash(clue) {
+async function showSpymasterClueSplash(clue) {
     if (!clue || !clue.word) return;
     const team = clue.team === 'red' ? 'red' : 'blue';
     const key = `${state?.id || ''}:${state?.round || 0}:${team}:${clue.at || ''}:${clue.word}:${clue.number}`;
     if (lastClueSplashKey === key) return;
     lastClueSplashKey = key;
+    const requestId = ++clueSplashImageRequestId;
 
     const overlay = ensureSpymasterClueSplash();
     const img = $('spymasterClueImg');
@@ -1362,7 +1390,10 @@ function showSpymasterClueSplash(clue) {
     if (!img || !label || !word || !number || !cardsLabel) return;
 
     if (clueSplashTimer) clearTimeout(clueSplashTimer);
-    setSpymasterClueSplashImage(img, team);
+    overlay.classList.add('hidden');
+    overlay.classList.remove('clueSplashLive', 'clueSplashOut', 'blue', 'red');
+    overlay.classList.add(team);
+    overlay.setAttribute('aria-hidden', 'true');
     img.alt = spymasterClueSplashAlt(team);
     label.textContent = tt('currentClue');
     const formattedClueWord = formatSplashClueWord(clue.word);
@@ -1375,14 +1406,16 @@ function showSpymasterClueSplash(clue) {
         ? (clueCount === 1 ? 'بطاقة' : 'بطاقات')
         : (clueCount === 1 ? 'CARD' : 'CARDS');
 
-    overlay.classList.remove('hidden', 'clueSplashLive', 'clueSplashOut', 'blue', 'red');
-    overlay.classList.add(team);
+    const imageReady = await setSpymasterClueSplashImage(img, team, requestId);
+    if (!imageReady || requestId !== clueSplashImageRequestId) return;
+    overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
     void overlay.offsetWidth;
     overlay.classList.add('clueSplashLive');
-
     clueSplashTimer = setTimeout(() => hideSpymasterClueSplash(overlay), 2700);
 }
+
+preloadSpymasterClueSplashImages();
 
 
 function ensureResultImageSplash() {
@@ -1401,6 +1434,29 @@ function ensureResultImageSplash() {
     return overlay;
 }
 
+function waitMs(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function waitForVisualTransition(element, timeoutMs) {
+    return new Promise(resolve => {
+        if (!element) return resolve();
+        let finished = false;
+        const done = () => {
+            if (finished) return;
+            finished = true;
+            element.removeEventListener('transitionend', onEnd);
+            clearTimeout(timer);
+            resolve();
+        };
+        const onEnd = event => {
+            if (event.target === element && (event.propertyName === 'transform' || event.propertyName === 'opacity')) done();
+        };
+        const timer = setTimeout(done, timeoutMs);
+        element.addEventListener('transitionend', onEnd);
+    });
+}
+
 function hideResultImageSplash() {
     const overlay = $('resultImageSplash');
     if (!overlay) return;
@@ -1417,74 +1473,101 @@ function hideResultImageSplash() {
     overlay.setAttribute('aria-hidden', 'true');
 }
 
-function setResultImageSplashAsset(img, file, alt = '') {
-    if (!img) return;
-    const candidates = assetImageCandidates(file, 189);
-    img.dataset.srcIndex = '0';
-    img.classList.remove('resultImageMissing');
-    img.alt = alt;
-    img.onerror = () => {
-        const nextIndex = (parseInt(img.dataset.srcIndex || '0', 10) || 0) + 1;
-        if (nextIndex >= candidates.length) {
-            img.onerror = null;
-            img.classList.add('resultImageMissing');
-            return;
-        }
-        img.dataset.srcIndex = String(nextIndex);
-        img.src = candidates[nextIndex];
-    };
-    img.onload = () => img.classList.remove('resultImageMissing');
-    img.src = candidates[0];
+function resolveResultImage(file) {
+    const safeFile = String(file || '').trim();
+    if (!safeFile) return Promise.resolve('');
+    if (resultImagePromises.has(safeFile)) return resultImagePromises.get(safeFile);
+    const promise = new Promise(resolve => {
+        const candidates = assetImageCandidates(safeFile, 235);
+        const tryCandidate = index => {
+            if (index >= candidates.length) return resolve('');
+            const preload = new Image();
+            preload.onload = async () => {
+                try {
+                    if (typeof preload.decode === 'function') await preload.decode();
+                } catch {
+                }
+                resolve(candidates[index]);
+            };
+            preload.onerror = () => tryCandidate(index + 1);
+            preload.src = candidates[index];
+        };
+        tryCandidate(0);
+    });
+    resultImagePromises.set(safeFile, promise);
+    return promise;
 }
 
-function showResultImageSplash(options = {}) {
+function preloadResultImages() {
+    resolveResultImage('death.png');
+    resolveResultImage('blackspymasterwin.png');
+    resolveResultImage('goldspymasterwin.png');
+}
+
+async function showResultImageSplash(options = {}, sequenceId = resultSplashSequenceId) {
     const overlay = ensureResultImageSplash();
+    const stage = $('resultImageSplashStage');
     const img = $('resultImageSplashImg');
     const file = String(options.file || '').trim();
-    if (!overlay || !img || !file) return;
+    if (!overlay || !stage || !img || !file) return false;
 
-    if (resultSplashTimer) clearTimeout(resultSplashTimer);
-    if (resultSplashCleanupTimer) clearTimeout(resultSplashCleanupTimer);
+    const resolvedSrc = await resolveResultImage(file);
+    if (!resolvedSrc || sequenceId !== resultSplashSequenceId) return false;
 
-    overlay.classList.remove('hidden', 'resultSplashLive', 'resultSplashOut', 'resultSplashToBlue', 'resultSplashToRed', 'death', 'winBlue', 'winRed');
+    hideResultImageSplash();
     if (options.kind === 'death') overlay.classList.add('death');
     else if (options.team === 'red') overlay.classList.add('winRed');
     else overlay.classList.add('winBlue');
-    setResultImageSplashAsset(img, file, options.alt || '');
+    img.alt = options.alt || '';
+    img.src = resolvedSrc;
+    try {
+        if (typeof img.decode === 'function') await img.decode();
+    } catch {
+    }
+    if (sequenceId !== resultSplashSequenceId) {
+        hideResultImageSplash();
+        return false;
+    }
+
+    overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
     void overlay.offsetWidth;
     overlay.classList.add('resultSplashLive');
 
-    const holdMs = Number(options.holdMs || 3000);
-    const exitClass = options.exit === 'team-red' ? 'resultSplashToRed' : options.exit === 'team-blue' ? 'resultSplashToBlue' : 'resultSplashOut';
-    resultSplashTimer = setTimeout(() => {
-        overlay.classList.add(exitClass);
-        resultSplashTimer = null;
-        resultSplashCleanupTimer = setTimeout(() => {
-            hideResultImageSplash();
-        }, options.kind === 'death' ? 900 : 1100);
-    }, holdMs);
+    await waitMs(Number(options.holdMs || 3000));
+    if (sequenceId !== resultSplashSequenceId) return false;
+
+    const exitClass = options.exit === 'team-red'
+        ? 'resultSplashToRed'
+        : options.exit === 'team-blue'
+            ? 'resultSplashToBlue'
+            : 'resultSplashOut';
+    overlay.classList.add(exitClass);
+    await waitForVisualTransition(stage, options.kind === 'death' ? 1050 : 1250);
+    if (sequenceId !== resultSplashSequenceId) return false;
+    hideResultImageSplash();
+    return true;
 }
 
-function showDeathResultSplash() {
+function showDeathResultSplash(sequenceId = resultSplashSequenceId) {
     const key = `${state?.id || ''}:${state?.round || 0}:${state?.winner || ''}:death`;
-    if (lastDeathSplashKey === key) return;
+    if (lastDeathSplashKey === key) return Promise.resolve(false);
     lastDeathSplashKey = key;
-    showResultImageSplash({
+    return showResultImageSplash({
         kind: 'death',
         file: 'death.png',
         holdMs: 3000,
         exit: 'fade',
         alt: uiLanguage === 'ar' ? 'نهاية اللعبة' : 'Death card'
-    });
+    }, sequenceId);
 }
 
-function showWinnerResultSplash(team) {
+function showWinnerResultSplash(team, sequenceId = resultSplashSequenceId) {
     const winnerTeam = team === 'red' ? 'red' : 'blue';
     const key = `${state?.id || ''}:${state?.round || 0}:${winnerTeam}:winner`;
-    if (lastWinnerSplashKey === key) return;
+    if (lastWinnerSplashKey === key) return Promise.resolve(false);
     lastWinnerSplashKey = key;
-    showResultImageSplash({
+    return showResultImageSplash({
         kind: 'winner',
         team: winnerTeam,
         file: winnerTeam === 'red' ? 'blackspymasterwin.png' : 'goldspymasterwin.png',
@@ -1493,8 +1576,36 @@ function showWinnerResultSplash(team) {
         alt: winnerTeam === 'red'
             ? (uiLanguage === 'ar' ? 'فوز صاحب تلميح الفريق الأسود' : 'Black spymaster wins')
             : (uiLanguage === 'ar' ? 'فوز صاحب تلميح الفريق الذهبي' : 'Gold spymaster wins')
-    });
+    }, sequenceId);
 }
+
+async function runFinishedResultSequence(reaction) {
+    if (!(state?.status === 'finished' && state?.winner)) return;
+    const key = `${state.id || ''}:${state.round || 0}:${state.winner}:${reaction?.kind || 'win'}`;
+    if (lastResultSequenceKey === key) return;
+    lastResultSequenceKey = key;
+    const sequenceId = ++resultSplashSequenceId;
+    const isDeath = reaction?.kind === 'death';
+    const totalHold = isDeath ? 10500 : 7200;
+    winRevealHoldUntil = Date.now() + totalHold;
+    hideWinEffectsForCurrentView();
+
+    if (isDeath) {
+        await showDeathResultSplash(sequenceId);
+        if (sequenceId !== resultSplashSequenceId) return;
+    } else {
+        await waitMs(650);
+        if (sequenceId !== resultSplashSequenceId) return;
+    }
+
+    playGameWinSoundOnce();
+    await showWinnerResultSplash(state.winner, sequenceId);
+    if (sequenceId !== resultSplashSequenceId) return;
+    winRevealHoldUntil = 0;
+    render();
+}
+
+preloadResultImages();
 
 function toast(msg, variant = '') {
     const t = $('toast');
@@ -3230,11 +3341,7 @@ function detectRevealSound(before, now) {
     for (const c of now.board) {
         const old = before.board.find(x => x.id === c.id);
         if (old && !old.revealed && c.revealed) {
-            const p = me();
-            if (c.color === 'assassin') return sound('assassin');
-            if (c.color === 'neutral') return sound('neutral');
-            if (p && p.team !== 'spectator') return sound(c.color === p.team ? 'correct' : 'wrong');
-            return sound(c.color === 'blue' || c.color === 'red' ? 'correct' : 'neutral');
+            return playRevealSoundForCard(c, revealReactionForCard(c, before, now));
         }
     }
 }
@@ -3349,6 +3456,8 @@ function renderWinModal() {
         winRevealHoldUntil = 0;
         lastWinnerSplashKey = '';
         lastDeathSplashKey = '';
+        lastResultSequenceKey = '';
+        resultSplashSequenceId += 1;
         hideResultImageSplash();
     }
 }

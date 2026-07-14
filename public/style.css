@@ -4815,3 +4815,17 @@ html body.discordActivity .gameIntroRing img {
         box-sizing: border-box !important;
     }
 }
+
+@media (min-width: 981px) {
+    html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar)) > .playerBody,
+    html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar)) > .playerBody {
+        bottom: 5px !important;
+    }
+}
+
+@media (min-width: 761px) and (max-width: 980px) {
+    html body #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar)) > .playerBody,
+    html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sideLogSection) > .teamList > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar)) > .playerBody {
+        bottom: 7px !important;
+    }
+}
