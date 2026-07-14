@@ -1382,7 +1382,10 @@ function showSpymasterClueSplash(clue) {
     setSpymasterClueSplashImage(img, team);
     img.alt = spymasterClueSplashAlt(team);
     label.textContent = tt('currentClue');
-    word.textContent = formatSplashClueWord(clue.word);
+    const formattedClueWord = formatSplashClueWord(clue.word);
+    word.textContent = formattedClueWord;
+    word.classList.toggle('spymasterClueWordLong', formattedClueWord.length > 12);
+    word.classList.toggle('spymasterClueWordVeryLong', formattedClueWord.length > 16);
     const clueCount = Number(clue.number || 0);
     number.textContent = String(clueCount);
     cardsLabel.textContent = uiLanguage === 'ar'

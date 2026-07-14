@@ -2749,3 +2749,53 @@ html body.discordActivity #app #game.gameV9 > aside.teamPanel > section:not(.sid
         filter: brightness(1.16) drop-shadow(0 0 10px var(--side-turn-pulse, rgba(255, 215, 95, .72)));
     }
 }
+
+html body .spymasterClueBox,
+html body.discordActivity .spymasterClueBox {
+    max-width: min(84vw, 760px) !important;
+}
+
+html body #spymasterClueWord.spymasterClueWordLong,
+html body.discordActivity #spymasterClueWord.spymasterClueWordLong {
+    font-size: clamp(27px, 3.35vw, 47px) !important;
+}
+
+html body #spymasterClueWord.spymasterClueWordVeryLong,
+html body.discordActivity #spymasterClueWord.spymasterClueWordVeryLong {
+    font-size: clamp(23px, 2.75vw, 39px) !important;
+    letter-spacing: .8px !important;
+}
+
+html body .spymasterClueSplash.red #spymasterClueWord,
+html body.discordActivity .spymasterClueSplash.red #spymasterClueWord {
+    color: #050505 !important;
+    font-weight: 1000 !important;
+    -webkit-text-stroke: .55px rgba(0, 0, 0, .98) !important;
+    text-shadow: 0 2px 1px rgba(255, 255, 255, .98), 0 4px 6px rgba(255, 255, 255, .78), 0 0 10px rgba(255, 255, 255, .58) !important;
+    filter: drop-shadow(0 2px 3px rgba(255, 255, 255, .68)) !important;
+}
+
+html body .spymasterClueSplash.red .spymasterClueNumber,
+html body .spymasterClueSplash.red .spymasterClueNumber span,
+html body .spymasterClueSplash.red .spymasterClueNumber em,
+html body.discordActivity .spymasterClueSplash.red .spymasterClueNumber,
+html body.discordActivity .spymasterClueSplash.red .spymasterClueNumber span,
+html body.discordActivity .spymasterClueSplash.red .spymasterClueNumber em {
+    color: #050505 !important;
+    font-weight: 1000 !important;
+    -webkit-text-stroke: .4px rgba(0, 0, 0, .96) !important;
+    text-shadow: 0 2px 1px rgba(255, 255, 255, .98), 0 3px 5px rgba(255, 255, 255, .78), 0 0 8px rgba(255, 255, 255, .58) !important;
+    filter: drop-shadow(0 2px 2px rgba(255, 255, 255, .64)) !important;
+}
+
+@media (max-width: 760px) {
+    html body #spymasterClueWord.spymasterClueWordLong,
+    html body.discordActivity #spymasterClueWord.spymasterClueWordLong {
+        font-size: clamp(24px, 6.7vw, 38px) !important;
+    }
+
+    html body #spymasterClueWord.spymasterClueWordVeryLong,
+    html body.discordActivity #spymasterClueWord.spymasterClueWordVeryLong {
+        font-size: clamp(21px, 5.8vw, 33px) !important;
+    }
+}
