@@ -4731,3 +4731,87 @@ html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAvata
         max-width: calc(100vw - 30px) !important;
     }
 }
+
+html body.discordActivity .gameIntroCard {
+    width: min(72vmin, 590px) !important;
+    max-width: calc(100vw - 28px) !important;
+    max-height: calc(100vh - 28px) !important;
+    justify-items: center !important;
+}
+
+html body.discordActivity .gameIntroRing {
+    width: min(66vmin, 560px) !important;
+    height: min(66vmin, 560px) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: min(66vmin, 560px) !important;
+    max-height: min(66vmin, 560px) !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+    padding: clamp(16px, 3vmin, 28px) !important;
+    overflow: hidden !important;
+}
+
+html body.discordActivity .gameIntroRing img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: contain !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 760px) {
+    html body.discordActivity .gameIntroCard {
+        width: min(88vmin, 440px) !important;
+        max-width: calc(100vw - 22px) !important;
+        max-height: calc(100vh - 22px) !important;
+    }
+
+    html body.discordActivity .gameIntroRing {
+        width: min(78vmin, 420px) !important;
+        height: min(78vmin, 420px) !important;
+        max-width: min(78vmin, 420px) !important;
+        max-height: min(78vmin, 420px) !important;
+        padding: clamp(13px, 2.8vmin, 22px) !important;
+    }
+}
+
+@media (max-width: 760px) {
+    html body #app #game.gameV9:not(.hidden) > .boardWrap,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .boardWrap {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .boardWrap > #board.board,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .boardWrap > #board.board {
+        display: grid !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        grid-template-rows: repeat(5, auto) !important;
+        grid-auto-rows: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        gap: 3px !important;
+        overflow: visible !important;
+    }
+
+    html body #app #game.gameV9:not(.hidden) > .boardWrap > #board.board > button.card,
+    html body.discordActivity #app #game.gameV9:not(.hidden) > .boardWrap > #board.board > button.card {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: clamp(58px, 16vw, 68px) !important;
+        min-height: clamp(58px, 16vw, 68px) !important;
+        max-height: clamp(58px, 16vw, 68px) !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+}
