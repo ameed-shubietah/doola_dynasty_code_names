@@ -1606,3 +1606,287 @@ html body #app #game.gameV9 #board.board:has(.cardRevealLiftGhost.revealPeakActi
 body.discordActivity .cardRevealLiftGhost.revealPeakActive {
     overflow: visible !important;
 }
+
+
+.cardRevealFullGhost.cardRevealLiftGhost,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost {
+    animation: revealGhostSlowApproachHoldReturn var(--reveal-ms, 2800ms) cubic-bezier(.22, .64, .18, 1) both !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealGhostCorrect.revealGhost-blue {
+    --firework-color: #f5b900;
+    --firework-color-soft: #fff0a3;
+    --firework-tip: #fffbe3;
+    --firework-glow: rgba(255, 204, 35, .98);
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealGhostCorrect.revealGhost-red {
+    --firework-color: #09090c;
+    --firework-color-soft: #5f6069;
+    --firework-tip: #e8e8ed;
+    --firework-glow: rgba(20, 20, 25, .96);
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost > .cardFireworkLayer,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost > .cardFireworkLayer {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+    z-index: 45 !important;
+    opacity: 0 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer {
+    opacity: 1 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer::before,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 24% !important;
+    aspect-ratio: 1 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle, var(--firework-tip) 0 8%, var(--firework-color-soft) 15%, var(--firework-color) 34%, transparent 72%) !important;
+    opacity: 0 !important;
+    transform: translate(-50%, -50%) scale(.12) !important;
+    filter: drop-shadow(0 0 10px var(--firework-color-soft)) drop-shadow(0 0 22px var(--firework-glow)) !important;
+    animation: revealPeakFireworkFlash 900ms ease-out both !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer > i,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer > i {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: var(--ray-length, 54px) !important;
+    height: var(--ray-thickness, 4px) !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: linear-gradient(90deg, transparent 0%, var(--firework-color) 18%, var(--firework-color-soft) 66%, var(--firework-tip) 100%) !important;
+    box-shadow: 0 0 5px var(--firework-color-soft), 0 0 12px var(--firework-glow) !important;
+    opacity: 0 !important;
+    transform-origin: 0 50% !important;
+    transform: translate(0, -50%) rotate(var(--ray-angle)) translateX(0) scaleX(.06) !important;
+    animation: revealPeakFireworkRay 940ms cubic-bezier(.12, .64, .18, 1) var(--ray-delay, 0ms) both !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer > i::after,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .cardFireworkLayer > i::after {
+    content: "" !important;
+    position: absolute !important;
+    right: -3px !important;
+    top: 50% !important;
+    width: calc(var(--ray-thickness, 4px) + 4px) !important;
+    height: calc(var(--ray-thickness, 4px) + 4px) !important;
+    border-radius: 50% !important;
+    background: var(--firework-tip) !important;
+    transform: translateY(-50%) !important;
+    box-shadow: 0 0 8px var(--firework-color-soft), 0 0 16px var(--firework-glow) !important;
+}
+
+@keyframes revealGhostSlowApproachHoldReturn {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+    }
+    42% {
+        transform: translate3d(0, -8px, 0) scale(1.56);
+        opacity: 1;
+    }
+    75% {
+        transform: translate3d(0, -8px, 0) scale(1.56);
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes revealPeakFireworkFlash {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.08);
+    }
+    12% {
+        opacity: 1;
+    }
+    48% {
+        opacity: .98;
+        transform: translate(-50%, -50%) scale(1.3);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2.2);
+    }
+}
+
+@keyframes revealPeakFireworkRay {
+    0% {
+        opacity: 0;
+        transform: translate(0, -50%) rotate(var(--ray-angle)) translateX(0) scaleX(.05);
+    }
+    10% {
+        opacity: 1;
+    }
+    64% {
+        opacity: 1;
+        transform: translate(0, -50%) rotate(var(--ray-angle)) translateX(var(--ray-distance-mid)) scaleX(.74);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(0, -50%) rotate(var(--ray-angle)) translateX(var(--ray-distance)) scaleX(1);
+    }
+}
+
+
+.cardRevealFullGhost.cardRevealLiftGhost > .revealFireworkBurst,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost > .revealFireworkBurst {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+    z-index: 80 !important;
+    opacity: 0 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealGhostCorrect.revealGhost-blue {
+    --burst-main: #f6bc00;
+    --burst-soft: #ffe477;
+    --burst-tip: #fffbe6;
+    --burst-glow: rgba(255, 196, 0, .98);
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealGhostCorrect.revealGhost-red {
+    --burst-main: #050507;
+    --burst-soft: #5d5f69;
+    --burst-tip: #f0f0f4;
+    --burst-glow: rgba(18, 18, 23, .98);
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst {
+    opacity: 1 !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst::before,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--burst-tip) 0 8%, var(--burst-soft) 18%, var(--burst-main) 38%, transparent 74%);
+    filter: drop-shadow(0 0 12px var(--burst-soft)) drop-shadow(0 0 28px var(--burst-glow));
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.08);
+    animation: revealFireworkCore 980ms ease-out both;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst::after,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--burst-soft);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--burst-glow), inset 0 0 10px var(--burst-glow);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.18);
+    animation: revealFireworkRing 820ms ease-out 40ms both;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst > i,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst > i {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    display: block !important;
+    width: var(--burst-length, 70px) !important;
+    height: var(--burst-thickness, 4px) !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: linear-gradient(90deg, transparent 0%, var(--burst-main) 17%, var(--burst-soft) 66%, var(--burst-tip) 100%) !important;
+    box-shadow: 0 0 6px var(--burst-soft), 0 0 15px var(--burst-glow) !important;
+    transform-origin: 0 50% !important;
+    opacity: 0;
+    transform: translate(0, -50%) rotate(var(--burst-angle)) translateX(0) scaleX(.04);
+    animation: revealFireworkRay 1020ms cubic-bezier(.12, .65, .18, 1) var(--burst-delay, 0ms) both !important;
+}
+
+.cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst > i::after,
+body.discordActivity .cardRevealFullGhost.cardRevealLiftGhost.revealPeakActive.revealGhostCorrect > .revealFireworkBurst > i::after {
+    content: "" !important;
+    position: absolute !important;
+    right: -4px !important;
+    top: 50% !important;
+    width: calc(var(--burst-thickness, 4px) + 5px) !important;
+    height: calc(var(--burst-thickness, 4px) + 5px) !important;
+    border-radius: 50% !important;
+    background: var(--burst-tip) !important;
+    transform: translateY(-50%) !important;
+    box-shadow: 0 0 9px var(--burst-soft), 0 0 18px var(--burst-glow) !important;
+}
+
+@keyframes revealFireworkCore {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.08);
+    }
+    12% {
+        opacity: 1;
+    }
+    48% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.35);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2.5);
+    }
+}
+
+@keyframes revealFireworkRing {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.18);
+    }
+    18% {
+        opacity: .96;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(4.2);
+    }
+}
+
+@keyframes revealFireworkRay {
+    0% {
+        opacity: 0;
+        transform: translate(0, -50%) rotate(var(--burst-angle)) translateX(0) scaleX(.04);
+    }
+    9% {
+        opacity: 1;
+    }
+    58% {
+        opacity: 1;
+        transform: translate(0, -50%) rotate(var(--burst-angle)) translateX(var(--burst-distance-mid)) scaleX(.72);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(0, -50%) rotate(var(--burst-angle)) translateX(var(--burst-distance)) scaleX(1);
+    }
+}
+

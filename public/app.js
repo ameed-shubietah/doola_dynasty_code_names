@@ -43,8 +43,8 @@ let clueNumberEdited = false;
 let lastClueTargetCount = 0;
 const MAX_CLUE_TARGETS = 25;
 const pendingRevealIds = new Set();
-const REVEAL_ASCEND_MS = 2200;
-const REVEAL_PEAK_MS = 850;
+const REVEAL_ASCEND_MS = 2800;
+const REVEAL_PEAK_MS = 1180;
 const delayedRevealTimers = new Map();
 const delayedRevealTokens = new Map();
 const delayedRevealReactions = new Map();
@@ -3850,14 +3850,20 @@ function revealHeroSvg(color) {
 }
 
 function cardFireworkHtml() {
-    const particles = [
-        [-92, -58, 0, 7], [-66, -82, 20, 5], [-28, -94, 70, 6], [18, -92, 10, 5],
-        [58, -78, 55, 7], [92, -48, 20, 5], [104, -8, 80, 6], [92, 34, 15, 5],
-        [64, 72, 65, 7], [24, 92, 25, 5], [-22, 96, 75, 6], [-62, 74, 15, 5],
-        [-96, 42, 60, 7], [-106, 2, 30, 5], [-76, -24, 90, 6], [0, -72, 120, 5],
-        [74, 8, 130, 6], [0, 76, 110, 5], [-70, 12, 140, 6], [48, 54, 150, 5]
+    const rays = [
+        [-98, 128, 0, 72, 4], [-86, 104, 55, 56, 3], [-74, 138, 18, 82, 5],
+        [-62, 112, 96, 62, 3], [-50, 142, 34, 86, 5], [-38, 106, 122, 58, 3],
+        [-26, 132, 12, 78, 4], [-14, 110, 76, 60, 3], [-2, 146, 26, 88, 5],
+        [10, 108, 112, 58, 3], [22, 136, 42, 80, 4], [34, 104, 132, 56, 3],
+        [46, 144, 8, 86, 5], [58, 112, 88, 62, 3], [70, 134, 30, 78, 4],
+        [82, 106, 118, 58, 3], [94, 146, 20, 88, 5], [106, 110, 72, 60, 3],
+        [118, 138, 38, 82, 4], [130, 104, 126, 56, 3], [142, 142, 14, 86, 5],
+        [154, 112, 92, 62, 3], [166, 134, 28, 78, 4], [178, 106, 116, 58, 3],
+        [190, 144, 6, 86, 5], [202, 110, 82, 60, 3], [214, 136, 36, 80, 4],
+        [226, 104, 130, 56, 3], [238, 142, 16, 86, 5], [250, 112, 98, 62, 3],
+        [262, 134, 24, 78, 4]
     ];
-    return `<span class="cardFireworkLayer" aria-hidden="true">${particles.map(([x, y, delay, size]) => `<i style="--particle-x:${x}px;--particle-y:${y}px;--particle-x-end:${Math.round(x * 1.18)}px;--particle-y-end:${Math.round(y * 1.18)}px;--particle-delay:${delay}ms;--particle-size:${size}px"></i>`).join('')}</span>`;
+    return `<span class="revealFireworkBurst" aria-hidden="true">${rays.map(([angle, distance, delay, length, thickness]) => `<i style="--burst-angle:${angle}deg;--burst-distance:${distance}px;--burst-distance-mid:${Math.round(distance * .5)}px;--burst-delay:${delay}ms;--burst-length:${length}px;--burst-thickness:${thickness}px"></i>`).join('')}</span>`;
 }
 
 function renderBoard() {
