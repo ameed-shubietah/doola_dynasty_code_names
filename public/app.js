@@ -1903,7 +1903,12 @@ function setupProfileControls() {
 }
 
 function avatarHtml(p, extra = '') {
-    const crown = p?.role === 'spymaster' ? '<span class="crownMark">👑</span>' : '';
+    const lobbyAvatar = String(extra || '').split(/\s+/).includes('lobbyAvatar');
+    const crown = p?.role === 'spymaster'
+        ? (lobbyAvatar
+            ? '<span class="crownMark">👑</span>'
+            : '<img class="crownMark gameSpymasterCrown" src="/crown.png" alt="" aria-hidden="true">')
+        : '';
     const character = p?.character || selectedCharacter || 'raiden';
     const src = safeAvatarSrc(playerAvatar(p));
     const face = src ? `<img src="${src}" alt="${escapeHtml(p?.name || 'avatar')}" loading="lazy">` : charEmoji(character);
