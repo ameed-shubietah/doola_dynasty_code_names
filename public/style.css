@@ -4829,3 +4829,97 @@ html body.discordActivity .gameIntroRing img {
         bottom: 7px !important;
     }
 }
+
+@media (max-width: 980px) {
+    html body #app #game.gameV9
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName)
+    > .playerBody,
+
+    html body.discordActivity #app #game.gameV9
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName)
+    > .playerBody {
+        position: absolute !important;
+        left: 0 !important;
+        right: 0 !important;
+
+        /* Pull the name upward against the visible avatar */
+        top: 38px !important;
+        bottom: auto !important;
+
+        width: 100% !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+
+        overflow: visible !important;
+        pointer-events: none !important;
+    }
+
+    html body #app #game.gameV9
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName)
+    > .playerBody > b,
+
+    html body.discordActivity #app #game.gameV9
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName)
+    > .playerBody > b,
+
+    html body #app #game.gameV9
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName)
+    > .playerBody > b.adminNameLine,
+
+    html body.discordActivity #app #game.gameV9
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName)
+    > .playerBody > b.adminNameLine {
+        position: relative !important;
+        width: 100% !important;
+        height: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        overflow: visible !important;
+    }
+
+    html body #app #game.gameV9
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName)
+    .playerNameText,
+
+    html body.discordActivity #app #game.gameV9
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName)
+    .playerNameText {
+        position: absolute !important;
+        left: 50% !important;
+        top: 0 !important;
+        bottom: auto !important;
+
+        transform: translate(-50%, -35%) !important;
+
+        margin: 0 !important;
+        z-index: 30 !important;
+        pointer-events: auto !important;
+    }
+}

@@ -2,14 +2,16 @@ const initialUiLanguage = localStorage.cc_language === 'ar' ? 'ar' : 'en';
 const socket = io({auth: {language: initialUiLanguage}});
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
 const localFlippedPickedCards = new Set();
-let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null, winRevealHoldUntil = 0, hiddenWinEffectKey = '';
+let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null,
+    winRevealHoldUntil = 0, hiddenWinEffectKey = '';
 let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let boardDealTimers = [];
 let boardDealState = {key: '', phase: 'idle', visibleRows: 5};
 let clueSplashTimer = null, lastClueSplashKey = '', clueSplashImageRequestId = 0;
 const clueSplashImagePromises = new Map();
-let resultSplashTimer = null, resultSplashCleanupTimer = null, resultSplashReleaseTimer = null, lastWinnerSplashKey = '', lastDeathSplashKey = '', lastResultSequenceKey = '', resultSplashSequenceId = 0;
+let resultSplashTimer = null, resultSplashCleanupTimer = null, resultSplashReleaseTimer = null,
+    lastWinnerSplashKey = '', lastDeathSplashKey = '', lastResultSequenceKey = '', resultSplashSequenceId = 0;
 const resultImagePromises = new Map();
 let spectatorMenuOpen = false;
 
@@ -823,6 +825,7 @@ function sound(kind) {
     if (!src) return;
     const clip = gameSoundPlayers.get(soundKind) || new Audio(src);
     const soundVolumes = {
+        correct: 0.6,
         clue: 0.7,
         gameWin: 0.05
     };
@@ -832,7 +835,8 @@ function sound(kind) {
     } catch {
     }
     clip.volume = soundVolumes[soundKind] ?? 0.35;
-    clip.play().catch(() => {});
+    clip.play().catch(() => {
+    });
     if (soundKind === 'correct') flash('winFlash');
     else if (soundKind === 'wrong' || soundKind === 'assassin') flash('loseFlash');
     else if (soundKind === 'neutral') flash('neutralFlash');
@@ -963,9 +967,20 @@ function animateBlankDealCard(sourceRect, destination, team, rowIndex) {
     const animation = ghost.animate([
         {transform: 'translate(-50%, -50%) scale(.58) rotate(0deg)', opacity: 0},
         {transform: 'translate(-50%, -50%) scale(.92) rotate(0deg)', opacity: .98, offset: .14},
-        {transform: `translate(calc(-50% + ${dx * .38}px), calc(-50% + ${dy * .28 + arc}px)) scale(1.08) rotate(${team === 'blue' ? -7 : 7}deg)`, opacity: 1, offset: .52},
-        {transform: `translate(calc(-50% + ${dx * .76}px), calc(-50% + ${dy * .72 + arc * .34}px)) scale(.78) rotate(${team === 'blue' ? -13 : 13}deg)`, opacity: .94, offset: .82},
-        {transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.38) rotate(${team === 'blue' ? -18 : 18}deg)`, opacity: 0}
+        {
+            transform: `translate(calc(-50% + ${dx * .38}px), calc(-50% + ${dy * .28 + arc}px)) scale(1.08) rotate(${team === 'blue' ? -7 : 7}deg)`,
+            opacity: 1,
+            offset: .52
+        },
+        {
+            transform: `translate(calc(-50% + ${dx * .76}px), calc(-50% + ${dy * .72 + arc * .34}px)) scale(.78) rotate(${team === 'blue' ? -13 : 13}deg)`,
+            opacity: .94,
+            offset: .82
+        },
+        {
+            transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.38) rotate(${team === 'blue' ? -18 : 18}deg)`,
+            opacity: 0
+        }
     ], {
         duration: 920,
         easing: 'cubic-bezier(.2,.72,.18,1)'
@@ -1078,7 +1093,6 @@ function revealReactionForCard(card, beforeState, nowState) {
     if (pickerTeam && card.color === pickerTeam) return {kind: 'correct', pickerTeam};
     return {kind: 'wrong', pickerTeam};
 }
-
 
 
 function revealLiftSelector(id) {
@@ -2472,7 +2486,6 @@ function discordJoinPayload(team, role) {
     const finalAvatar = customAvatar || '';
 
 
-
     setPlayerKey(stableDiscordFallbackKey(roomCode));
     myId = playerKey;
     localStorage.cc_name = finalName;
@@ -2976,7 +2989,6 @@ function acceptJoinResponse(res) {
     }
 
 
-
     if (state) {
         if (isDiscordActivity && state.status === 'lobby') {
             game.classList.add('hidden');
@@ -3091,7 +3103,7 @@ async function startSinglePlayer(difficulty = 'medium') {
     if (!aiReady) {
         if (singlePlayerBtn) {
             singlePlayerBtn.disabled = false;
-        singlePlayerBtn.textContent = 'Single Player / لاعب فردي';
+            singlePlayerBtn.textContent = 'Single Player / لاعب فردي';
         }
         toast(tt('offlineAi'));
         return;
@@ -3169,6 +3181,7 @@ socket.on('adminRequest', req => {
     if (!current?.isAdmin || !req) return;
     showAdminRequestPopup(req);
 });
+
 function refreshLobbyAfterKick(roomId) {
     const code = String(roomId || getDiscordActivityRoomCode() || roomInput?.value || '').trim().toUpperCase();
     if (!code) return;
@@ -3654,7 +3667,6 @@ function openPlayerOptionsMenu(wrap, btn) {
 }
 
 
-
 function setSpectatorMenuOpen(open) {
     spectatorMenuOpen = !!open;
     const dropdown = $('spectatorDropdown');
@@ -4018,7 +4030,10 @@ function setupAdminDragAndDrop(adminMode) {
                 document.body.classList.remove('playerDragActive');
                 ghost?.remove();
                 clearDropPreview();
-                try { el.releasePointerCapture(ev.pointerId); } catch {}
+                try {
+                    el.releasePointerCapture(ev.pointerId);
+                } catch {
+                }
             };
 
             const onMove = (moveEv) => {
@@ -4049,7 +4064,10 @@ function setupAdminDragAndDrop(adminMode) {
             };
             const onCancel = () => cleanup();
 
-            try { el.setPointerCapture(ev.pointerId); } catch {}
+            try {
+                el.setPointerCapture(ev.pointerId);
+            } catch {
+            }
             el.addEventListener('pointermove', onMove);
             el.addEventListener('pointerup', onEnd);
             el.addEventListener('pointercancel', onCancel);
@@ -4246,7 +4264,6 @@ function renderBoard() {
     board.classList.toggle('hasPendingReveal', pendingRevealIds.size > 0);
     board.parentElement?.classList.toggle('hasPendingRevealWrap', pendingRevealIds.size > 0);
     const marked = myMarkedIds();
-
 
 
     const boardKey = `${state.id}-${state.board.map(c => `${c.id}:${c.word}`).join('|')}`;
@@ -4612,7 +4629,6 @@ function runOrRequestAdminAction(action, label, confirmText) {
         toast(uiLanguage === 'ar' ? 'ادخل الغرفة أولا.' : 'Join the room first.');
         return;
     }
-
 
 
     if (current.isAdmin || current.role === 'spymaster') {
