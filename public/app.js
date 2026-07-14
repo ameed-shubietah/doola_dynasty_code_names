@@ -2,15 +2,13 @@ const initialUiLanguage = localStorage.cc_language === 'ar' ? 'ar' : 'en';
 const socket = io({auth: {language: initialUiLanguage}});
 let state = null, selectedCharacter = 'raiden', targetIds = new Set(), lastRevealed = new Set();
 const localFlippedPickedCards = new Set();
-let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null,
-    winRevealHoldUntil = 0, hiddenWinEffectKey = '';
+let lastWinKey = null, winDockTimer = null, lastGameWinSoundKey = null, delayedWinRevealTimer = null, winRevealHoldUntil = 0, hiddenWinEffectKey = '';
 let lastBoardKey = '', lastBoardSpawnAt = 0;
 let gameIntroTimer = null, lastIntroKey = '';
 let boardDealTimers = [];
 let boardDealState = {key: '', phase: 'idle', visibleRows: 5};
 let clueSplashTimer = null, lastClueSplashKey = '';
-let resultSplashTimer = null, resultSplashCleanupTimer = null, resultSplashReleaseTimer = null,
-    lastWinnerSplashKey = '', lastDeathSplashKey = '';
+let resultSplashTimer = null, resultSplashCleanupTimer = null, resultSplashReleaseTimer = null, lastWinnerSplashKey = '', lastDeathSplashKey = '';
 let spectatorMenuOpen = false;
 
 function makePlayerKey() {
@@ -808,20 +806,18 @@ function sound(kind) {
         : kind === 'lose'
             ? 'wrong'
             : kind;
-
     const src = gameSounds[soundKind];
     if (!src) return;
-
-    const audio = new Audio(src);
-
+    const clip = new Audio(src);
     const soundVolumes = {
         clue: 0.7,
         gameWin: 0.2
     };
-
-    audio.volume = soundVolumes[soundKind] ?? 0.35;
-    audio.play().catch(() => {
-    });
+    clip.volume = soundVolumes[soundKind] ?? 0.35;
+    clip.play().catch(() => {});
+    if (soundKind === 'correct') flash('winFlash');
+    else if (soundKind === 'wrong' || soundKind === 'assassin') flash('loseFlash');
+    else if (soundKind === 'neutral') flash('neutralFlash');
 }
 
 function flash(cls) {
@@ -947,20 +943,9 @@ function animateBlankDealCard(sourceRect, destination, team, rowIndex) {
     const animation = ghost.animate([
         {transform: 'translate(-50%, -50%) scale(.58) rotate(0deg)', opacity: 0},
         {transform: 'translate(-50%, -50%) scale(.92) rotate(0deg)', opacity: .98, offset: .14},
-        {
-            transform: `translate(calc(-50% + ${dx * .38}px), calc(-50% + ${dy * .28 + arc}px)) scale(1.08) rotate(${team === 'blue' ? -7 : 7}deg)`,
-            opacity: 1,
-            offset: .52
-        },
-        {
-            transform: `translate(calc(-50% + ${dx * .76}px), calc(-50% + ${dy * .72 + arc * .34}px)) scale(.78) rotate(${team === 'blue' ? -13 : 13}deg)`,
-            opacity: .94,
-            offset: .82
-        },
-        {
-            transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.38) rotate(${team === 'blue' ? -18 : 18}deg)`,
-            opacity: 0
-        }
+        {transform: `translate(calc(-50% + ${dx * .38}px), calc(-50% + ${dy * .28 + arc}px)) scale(1.08) rotate(${team === 'blue' ? -7 : 7}deg)`, opacity: 1, offset: .52},
+        {transform: `translate(calc(-50% + ${dx * .76}px), calc(-50% + ${dy * .72 + arc * .34}px)) scale(.78) rotate(${team === 'blue' ? -13 : 13}deg)`, opacity: .94, offset: .82},
+        {transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.38) rotate(${team === 'blue' ? -18 : 18}deg)`, opacity: 0}
     ], {
         duration: 920,
         easing: 'cubic-bezier(.2,.72,.18,1)'
@@ -1075,6 +1060,7 @@ function revealReactionForCard(card, beforeState, nowState) {
 }
 
 
+
 function revealLiftSelector(id) {
     return `.card[data-id="${String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"]`;
 }
@@ -1140,20 +1126,12 @@ function startRevealLiftGhost(card, reaction) {
 
     const peakTimer = setTimeout(() => {
         revealPeakTimers.delete(card.id);
-
         const liveGhost = revealLiftGhosts.get(card.id);
         if (!liveGhost || !document.body.contains(liveGhost)) return;
-
         liveGhost.classList.add('revealPeakActive');
-
-        if (card.color === 'neutral') {
-            crown.src = '/crown-bw.png';
-        } else if (card.color === 'assassin') {
-            crown.remove();
-        } else {
-            crown.src = '/crown.png';
-        }
-
+        if (card.color === 'neutral') crown.src = '/crown-bw.png';
+        else if (card.color === 'assassin') crown.remove();
+        else crown.src = '/crown.png';
         playRevealSoundForCard(card);
     }, REVEAL_PEAK_MS);
     revealPeakTimers.set(card.id, peakTimer);
@@ -1779,6 +1757,100 @@ function clearSavedDiscordActivitySeat() {
     }
 }
 
+
+const LOCAL_SEAT_STORAGE_KEY = 'cc_localSeat_v1';
+const LOCAL_SEAT_MAX_AGE_MS = 1000 * 60 * 60 * 12;
+let localSeatRestoreInFlight = false;
+let lastLocalSeatRestoreAt = 0;
+
+function readSavedLocalSeat() {
+    if (isDiscordActivity) return null;
+    try {
+        const raw = sessionStorage.getItem(LOCAL_SEAT_STORAGE_KEY);
+        if (!raw) return null;
+        const seat = JSON.parse(raw);
+        if (!seat || typeof seat !== 'object') return null;
+        const savedAt = Number(seat.savedAt || 0);
+        if (!savedAt || Date.now() - savedAt > LOCAL_SEAT_MAX_AGE_MS) {
+            sessionStorage.removeItem(LOCAL_SEAT_STORAGE_KEY);
+            return null;
+        }
+        return seat;
+    } catch {
+        return null;
+    }
+}
+
+function saveLocalSeat(roomState = state, player = null) {
+    if (isDiscordActivity) return;
+    const current = player || roomState?.players?.[playerKey] || roomState?.players?.[myId] || null;
+    const roomId = String(roomState?.id || roomInput?.value || '').trim().toUpperCase();
+    if (!roomId || !current?.team || !current?.role) return;
+    const seat = {
+        roomId,
+        team: current.team,
+        role: current.role,
+        playerKey: current.id || playerKey,
+        character: current.character || '',
+        name: current.name || currentDisplayName() || 'Agent',
+        avatar: current.avatar || customAvatar || '',
+        savedAt: Date.now()
+    };
+    try {
+        sessionStorage.setItem(LOCAL_SEAT_STORAGE_KEY, JSON.stringify(seat));
+    } catch {
+    }
+}
+
+function clearSavedLocalSeat() {
+    try {
+        sessionStorage.removeItem(LOCAL_SEAT_STORAGE_KEY);
+    } catch {
+    }
+}
+
+function restoreLocalSeat(reason = '') {
+    if (isDiscordActivity || !socket?.connected || localSeatRestoreInFlight) return false;
+    if (Date.now() - lastLocalSeatRestoreAt < 700) return false;
+    const saved = readSavedLocalSeat();
+    if (!saved?.roomId || !saved?.team || !saved?.role || !saved?.playerKey) return false;
+
+    localSeatRestoreInFlight = true;
+    lastLocalSeatRestoreAt = Date.now();
+    roomInput.value = saved.roomId;
+    setPlayerKey(saved.playerKey);
+    myId = playerKey;
+    selectedTeamChoice = saved.team;
+    selectedRoleChoice = saved.role;
+    const teamSel = $('team'), roleSel = $('role');
+    if (teamSel) teamSel.value = saved.team;
+    if (roleSel) roleSel.value = saved.role;
+    if (saved.character && !hasCustomAvatar()) selectedCharacter = saved.character;
+
+    socket.emit('joinRoom', {
+        roomId: saved.roomId,
+        name: saved.name || currentDisplayName(),
+        avatar: saved.avatar || customAvatar || '',
+        team: saved.team,
+        role: saved.role,
+        character: saved.character || outboundCharacter(),
+        playerKey: saved.playerKey,
+        adminToken: getAdminToken(saved.roomId),
+        language: uiLanguage,
+        arabicMode: uiLanguage === 'ar',
+        resume: true,
+        restoreReason: reason
+    }, res => {
+        localSeatRestoreInFlight = false;
+        if (res?.ok) acceptJoinResponse(res);
+        else {
+            clearSavedLocalSeat();
+            requestLobbyInfo();
+        }
+    });
+    return true;
+}
+
 function stableDiscordFallbackKey(roomCode = '') {
     const room = String(roomCode || getDiscordActivityRoomCode?.() || 'room').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12) || 'room';
     const storageKey = `cc_activitySeatSeed_${room}`;
@@ -2289,6 +2361,7 @@ function discordJoinPayload(team, role) {
     const finalAvatar = customAvatar || '';
 
 
+
     setPlayerKey(stableDiscordFallbackKey(roomCode));
     myId = playerKey;
     localStorage.cc_name = finalName;
@@ -2452,8 +2525,12 @@ window.addEventListener('pageshow', () => {
 
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-        refreshDiscordLobbyPreview(true);
-        restoreDiscordActivitySeat('visible', {force: true});
+        if (isDiscordActivity) {
+            refreshDiscordLobbyPreview(true);
+            restoreDiscordActivitySeat('visible', {force: true});
+        } else if (!socket.connected) {
+            socket.connect();
+        }
     }
 });
 
@@ -2788,6 +2865,7 @@ function acceptJoinResponse(res) {
     }
 
 
+
     if (state) {
         if (isDiscordActivity && state.status === 'lobby') {
             game.classList.add('hidden');
@@ -2902,7 +2980,7 @@ async function startSinglePlayer(difficulty = 'medium') {
     if (!aiReady) {
         if (singlePlayerBtn) {
             singlePlayerBtn.disabled = false;
-            singlePlayerBtn.textContent = 'Single Player / لاعب فردي';
+        singlePlayerBtn.textContent = 'Single Player / لاعب فردي';
         }
         toast(tt('offlineAi'));
         return;
@@ -2964,7 +3042,7 @@ socket.on('connect', () => {
         restoreDiscordActivitySeat('socket-connect', {force: true});
         return;
     }
-    requestLobbyInfo();
+    if (!restoreLocalSeat('socket-connect')) requestLobbyInfo();
 });
 socket.on('lobbyInfo', res => {
     applyLobbyInfo(res);
@@ -2980,7 +3058,6 @@ socket.on('adminRequest', req => {
     if (!current?.isAdmin || !req) return;
     showAdminRequestPopup(req);
 });
-
 function refreshLobbyAfterKick(roomId) {
     const code = String(roomId || getDiscordActivityRoomCode() || roomInput?.value || '').trim().toUpperCase();
     if (!code) return;
@@ -3016,6 +3093,7 @@ socket.on('kicked', ({roomId, message} = {}) => {
         activityScopeWaitTimer = null;
     }
     if (isDiscordActivity) clearSavedDiscordActivitySeat();
+    else clearSavedLocalSeat();
 
     state = null;
     lastLobbyInfo = null;
@@ -3065,6 +3143,25 @@ socket.on('state', s => {
         lastClueTargetCount = 0;
     }
     state = s;
+    const authoritativePlayer = s?.players?.[playerKey] || s?.players?.[myId] || null;
+    if (authoritativePlayer) {
+        selectedTeamChoice = authoritativePlayer.team || selectedTeamChoice;
+        selectedRoleChoice = authoritativePlayer.role || selectedRoleChoice;
+        const teamSel = $('team'), roleSel = $('role');
+        if (teamSel && authoritativePlayer.team) teamSel.value = authoritativePlayer.team;
+        if (roleSel && authoritativePlayer.role) roleSel.value = authoritativePlayer.role;
+        if (isDiscordActivity) {
+            saveDiscordActivitySeat({
+                roomId: s.id,
+                playerKey: authoritativePlayer.id || playerKey,
+                team: authoritativePlayer.team,
+                role: authoritativePlayer.role,
+                character: authoritativePlayer.character || ''
+            });
+        } else {
+            saveLocalSeat(s, authoritativePlayer);
+        }
+    }
     if (optimisticDiscordJoin) {
         const joinedPlayer = s?.players?.[myId];
         if (joinedPlayer &&
@@ -3408,6 +3505,7 @@ function openPlayerOptionsMenu(wrap, btn) {
     menu.style.left = `${left}px`;
     menu.style.top = `${top}px`;
 }
+
 
 
 function setSpectatorMenuOpen(open) {
@@ -3773,10 +3871,7 @@ function setupAdminDragAndDrop(adminMode) {
                 document.body.classList.remove('playerDragActive');
                 ghost?.remove();
                 clearDropPreview();
-                try {
-                    el.releasePointerCapture(ev.pointerId);
-                } catch {
-                }
+                try { el.releasePointerCapture(ev.pointerId); } catch {}
             };
 
             const onMove = (moveEv) => {
@@ -3807,10 +3902,7 @@ function setupAdminDragAndDrop(adminMode) {
             };
             const onCancel = () => cleanup();
 
-            try {
-                el.setPointerCapture(ev.pointerId);
-            } catch {
-            }
+            try { el.setPointerCapture(ev.pointerId); } catch {}
             el.addEventListener('pointermove', onMove);
             el.addEventListener('pointerup', onEnd);
             el.addEventListener('pointercancel', onCancel);
@@ -4007,6 +4099,7 @@ function renderBoard() {
     board.classList.toggle('hasPendingReveal', pendingRevealIds.size > 0);
     board.parentElement?.classList.toggle('hasPendingRevealWrap', pendingRevealIds.size > 0);
     const marked = myMarkedIds();
+
 
 
     const boardKey = `${state.id}-${state.board.map(c => `${c.id}:${c.word}`).join('|')}`;
@@ -4374,6 +4467,7 @@ function runOrRequestAdminAction(action, label, confirmText) {
     }
 
 
+
     if (current.isAdmin || current.role === 'spymaster') {
         targetIds.clear();
         socket.emit(action);
@@ -4543,6 +4637,7 @@ if (backToLobbyBtn) backToLobbyBtn.onclick = () => {
         setPlayerKey(makePlayerKey());
         if (currentRoom) roomInput.value = currentRoom;
         if (isDiscordActivity) clearSavedDiscordActivitySeat();
+        else clearSavedLocalSeat();
         selectedTeamChoice = '';
         selectedRoleChoice = '';
         document.querySelectorAll('.teamPick,.rolePick').forEach(b => b.classList.remove('selected'));

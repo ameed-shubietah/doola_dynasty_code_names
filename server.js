@@ -2026,12 +2026,14 @@ io.on('connection', socket => {
                                playerKey,
                                adminToken,
                                language = 'en',
-                               arabicMode = false
+                               arabicMode = false,
+                               resume = false,
+                               restoreReason = ''
                            } = {}, cb = () => {
     }) => {
         const room = rooms.get(String(roomId || '').toUpperCase());
         if (!room) return cb({ok: false, error: 'Room not found.'});
-        const joined = joinRoom(socket, room, {name, avatar, discordId, team, role, character, playerKey, adminToken, language, arabicMode});
+        const joined = joinRoom(socket, room, {name, avatar, discordId, team, role, character, playerKey, adminToken, language, arabicMode, resume, restoreReason});
         if (joined?.ok === false) return cb(joined);
         cb({
             ok: true,
@@ -2056,7 +2058,9 @@ io.on('connection', socket => {
                                                playerKey,
                                                adminToken,
                                                language = 'en',
-                                               arabicMode = false
+                                               arabicMode = false,
+                                               resume = false,
+                                               restoreReason = ''
                                            } = {}, cb = () => {
     }) => {
         const cleanChannelId = String(channelId || '').trim().replace(/[^0-9A-Za-z_-]/g, '').slice(0, 100);
@@ -2093,7 +2097,9 @@ io.on('connection', socket => {
             adminToken: forceAdmin ? room.adminToken : adminToken,
             forceAdmin,
             language,
-            arabicMode
+            arabicMode,
+            resume,
+            restoreReason
         });
         if (joined?.ok === false) return cb(joined);
         cb({
@@ -2202,7 +2208,9 @@ io.on('connection', socket => {
         adminToken,
         language = 'en',
         arabicMode = false,
-        forceAdmin = false
+        forceAdmin = false,
+        resume = false,
+        restoreReason = ''
     }) {
         socket.join(room.id);
         let key = safePlayerKey(playerKey);
@@ -2230,7 +2238,7 @@ io.on('connection', socket => {
 
 
 
-        if (existing && existing.online !== false && existing.socketId !== socket.id && !discordId && !String(key).startsWith('d_')) {
+        if (!resume && existing && existing.online !== false && existing.socketId !== socket.id && !discordId && !String(key).startsWith('d_')) {
             key = freshPlayerKey(room);
             existing = null;
             previousPlayer = null;
@@ -2251,10 +2259,14 @@ io.on('connection', socket => {
             char = freeCharacter ? freeCharacter.id : '';
         }
 
+        if (resume && existing) {
+            team = existing.team;
+            role = existing.role;
+        }
         team = ['blue', 'red', 'spectator'].includes(team) ? team : 'spectator';
         role = ['operative', 'spymaster', 'spectator'].includes(role) ? role : 'operative';
         if (team === 'spectator') role = 'spectator';
-        if (role === 'spymaster' && team !== 'spectator') {
+        if (!resume && role === 'spymaster' && team !== 'spectator') {
             const occupyingSpy = Object.values(room.players || {}).find(old =>
                 old.online !== false &&
                 old.team === team &&
@@ -2327,6 +2339,10 @@ io.on('connection', socket => {
         if (mayChangeRoomLanguage) applyRoomLanguage(room, requestedLanguage, incomingName || 'Admin');
 
         if (existing) {
+            if (resume) {
+                team = existing.team;
+                role = existing.role;
+            }
             existing.socketId = socket.id;
             existing.online = true;
             existing.lastSeenAt = Date.now();
