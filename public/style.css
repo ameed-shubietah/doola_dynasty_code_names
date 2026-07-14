@@ -3486,3 +3486,13 @@ html body.discordActivity #landing .discordRoleBox:has(> .discordRoleJoin[data-r
             "black" !important;
     }
 }
+
+html body #landing .discordSeatMini.discordSeatLarge .avatar:not(.customAvatar) + .seatName,
+html body #landing .discordSeatMini.discordSeatLarge .lobbyAvatar:not(.customAvatar) + .seatName,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .avatar:not(.customAvatar) + .seatName,
+html body.discordActivity #landing .discordSeatMini.discordSeatLarge .lobbyAvatar:not(.customAvatar) + .seatName {
+    height: 17px !important;
+    min-height: 17px !important;
+    padding: 0 7px !important;
+    line-height: 15px !important;
+}
