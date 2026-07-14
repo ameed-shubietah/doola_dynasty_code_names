@@ -8,6 +8,7 @@ let gameIntroTimer = null, lastIntroKey = '';
 let boardDealTimers = [];
 let boardDealState = {key: '', phase: 'idle', visibleRows: 5};
 let clueSplashTimer = null, lastClueSplashKey = '';
+let resultSplashTimer = null, resultSplashCleanupTimer = null, resultSplashReleaseTimer = null, lastWinnerSplashKey = '', lastDeathSplashKey = '';
 let spectatorMenuOpen = false;
 
 function makePlayerKey() {
@@ -1221,24 +1222,33 @@ function finishDelayedReveal(id, token) {
     if (card.color === 'blue' || card.color === 'red') {
         requestAnimationFrame(() => flyCardToTeamScore(card));
     }
-
-    if (pendingRevealIds.size === 0) {
-        render();
-    }
+    if (reaction?.kind === 'death') showDeathResultSplash();
 
     if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
         if (delayedWinRevealTimer) clearTimeout(delayedWinRevealTimer);
-        const delay = reaction ? (reaction.kind === 'death' ? 2800 : 2100) : 1400;
-        winRevealHoldUntil = Date.now() + delay;
+        if (resultSplashReleaseTimer) clearTimeout(resultSplashReleaseTimer);
+        const winnerDelay = reaction?.kind === 'death' ? 4100 : 1100;
+        const winnerTotalMs = 6200;
+        winRevealHoldUntil = Date.now() + winnerDelay + winnerTotalMs;
         hideWinEffectsForCurrentView();
         delayedWinRevealTimer = setTimeout(() => {
             delayedWinRevealTimer = null;
-            winRevealHoldUntil = 0;
             if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
                 playGameWinSoundOnce();
+                showWinnerResultSplash(state.winner);
+            }
+        }, winnerDelay);
+        resultSplashReleaseTimer = setTimeout(() => {
+            resultSplashReleaseTimer = null;
+            winRevealHoldUntil = 0;
+            if (pendingRevealIds.size === 0 && state?.status === 'finished' && state?.winner) {
                 render();
             }
-        }, delay);
+        }, winnerDelay + winnerTotalMs);
+    }
+
+    if (pendingRevealIds.size === 0) {
+        render();
     }
 }
 
@@ -1264,8 +1274,7 @@ function scheduleDelayedReveals(beforeState, nowState) {
 }
 
 
-function spymasterClueSplashImageCandidates(team) {
-    const file = team === 'red' ? 'blackspymaster.png' : 'goldspymaster.png';
+function assetImageCandidates(file, version = 137) {
     const basePath = window.location.pathname.replace(/[^/]*$/, '');
     const rawCandidates = [
         `/${file}`,
@@ -1276,7 +1285,12 @@ function spymasterClueSplashImageCandidates(team) {
         `./public/${file}`,
         `/public/${file}`
     ];
-    return [...new Set(rawCandidates)].map(src => `${src}${src.includes('?') ? '&' : '?'}v=137`);
+    return [...new Set(rawCandidates)].map(src => `${src}${src.includes('?') ? '&' : '?'}v=${version}`);
+}
+
+function spymasterClueSplashImageCandidates(team) {
+    const file = team === 'red' ? 'blackspymaster.png' : 'goldspymaster.png';
+    return assetImageCandidates(file, 137);
 }
 
 function setSpymasterClueSplashImage(img, team) {
@@ -1382,6 +1396,118 @@ function showSpymasterClueSplash(clue) {
     overlay.classList.add('clueSplashLive');
 
     clueSplashTimer = setTimeout(() => hideSpymasterClueSplash(overlay), 2700);
+}
+
+
+function ensureResultImageSplash() {
+    let overlay = $('resultImageSplash');
+    if (overlay) return overlay;
+    overlay = document.createElement('div');
+    overlay.id = 'resultImageSplash';
+    overlay.className = 'resultImageSplash hidden';
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = `
+        <div id="resultImageSplashStage" class="resultImageSplashStage" role="presentation">
+            <img id="resultImageSplashImg" class="resultImageSplashImg" src="" alt="" draggable="false">
+        </div>`;
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function hideResultImageSplash() {
+    const overlay = $('resultImageSplash');
+    if (!overlay) return;
+    if (resultSplashTimer) {
+        clearTimeout(resultSplashTimer);
+        resultSplashTimer = null;
+    }
+    if (resultSplashCleanupTimer) {
+        clearTimeout(resultSplashCleanupTimer);
+        resultSplashCleanupTimer = null;
+    }
+    overlay.classList.add('hidden');
+    overlay.classList.remove('resultSplashLive', 'resultSplashOut', 'resultSplashToBlue', 'resultSplashToRed', 'death', 'winBlue', 'winRed');
+    overlay.setAttribute('aria-hidden', 'true');
+}
+
+function setResultImageSplashAsset(img, file, alt = '') {
+    if (!img) return;
+    const candidates = assetImageCandidates(file, 189);
+    img.dataset.srcIndex = '0';
+    img.classList.remove('resultImageMissing');
+    img.alt = alt;
+    img.onerror = () => {
+        const nextIndex = (parseInt(img.dataset.srcIndex || '0', 10) || 0) + 1;
+        if (nextIndex >= candidates.length) {
+            img.onerror = null;
+            img.classList.add('resultImageMissing');
+            return;
+        }
+        img.dataset.srcIndex = String(nextIndex);
+        img.src = candidates[nextIndex];
+    };
+    img.onload = () => img.classList.remove('resultImageMissing');
+    img.src = candidates[0];
+}
+
+function showResultImageSplash(options = {}) {
+    const overlay = ensureResultImageSplash();
+    const img = $('resultImageSplashImg');
+    const file = String(options.file || '').trim();
+    if (!overlay || !img || !file) return;
+
+    if (resultSplashTimer) clearTimeout(resultSplashTimer);
+    if (resultSplashCleanupTimer) clearTimeout(resultSplashCleanupTimer);
+
+    overlay.classList.remove('hidden', 'resultSplashLive', 'resultSplashOut', 'resultSplashToBlue', 'resultSplashToRed', 'death', 'winBlue', 'winRed');
+    if (options.kind === 'death') overlay.classList.add('death');
+    else if (options.team === 'red') overlay.classList.add('winRed');
+    else overlay.classList.add('winBlue');
+    setResultImageSplashAsset(img, file, options.alt || '');
+    overlay.setAttribute('aria-hidden', 'false');
+    void overlay.offsetWidth;
+    overlay.classList.add('resultSplashLive');
+
+    const holdMs = Number(options.holdMs || 3000);
+    const exitClass = options.exit === 'team-red' ? 'resultSplashToRed' : options.exit === 'team-blue' ? 'resultSplashToBlue' : 'resultSplashOut';
+    resultSplashTimer = setTimeout(() => {
+        overlay.classList.add(exitClass);
+        resultSplashTimer = null;
+        resultSplashCleanupTimer = setTimeout(() => {
+            hideResultImageSplash();
+        }, options.kind === 'death' ? 900 : 1100);
+    }, holdMs);
+}
+
+function showDeathResultSplash() {
+    const key = `${state?.id || ''}:${state?.round || 0}:${state?.winner || ''}:death`;
+    if (lastDeathSplashKey === key) return;
+    lastDeathSplashKey = key;
+    showResultImageSplash({
+        kind: 'death',
+        file: 'death.png',
+        holdMs: 3000,
+        exit: 'fade',
+        alt: uiLanguage === 'ar' ? 'نهاية اللعبة' : 'Death card'
+    });
+}
+
+function showWinnerResultSplash(team) {
+    const winnerTeam = team === 'red' ? 'red' : 'blue';
+    const key = `${state?.id || ''}:${state?.round || 0}:${winnerTeam}:winner`;
+    if (lastWinnerSplashKey === key) return;
+    lastWinnerSplashKey = key;
+    showResultImageSplash({
+        kind: 'winner',
+        team: winnerTeam,
+        file: winnerTeam === 'red' ? 'blackspymasterwin.png' : 'goldspymasterwin.png',
+        holdMs: 5000,
+        exit: winnerTeam === 'red' ? 'team-red' : 'team-blue',
+        alt: winnerTeam === 'red'
+            ? (uiLanguage === 'ar' ? 'فوز صاحب تلميح الفريق الأسود' : 'Black spymaster wins')
+            : (uiLanguage === 'ar' ? 'فوز صاحب تلميح الفريق الذهبي' : 'Gold spymaster wins')
+    });
 }
 
 function toast(msg, variant = '') {
@@ -3067,8 +3193,7 @@ function currentWinEffectKey() {
     return `${state.id || ''}-${state.round || 0}-${state.winner}-${state.status}`;
 }
 
-function hideWinEffectsForCurrentView(options = {}) {
-    const keepCup = !!options.keepCup;
+function hideWinEffectsForCurrentView() {
     const modal = $('winModal');
     if (modal) {
         modal.classList.add('hidden');
@@ -3079,70 +3204,27 @@ function hideWinEffectsForCurrentView(options = {}) {
         badge.className = 'hidden';
         badge.textContent = '';
     }
-    $('goldPanel')?.classList.remove('winnerPanel');
-    $('blackPanel')?.classList.remove('winnerPanel');
-    if (!keepCup) {
-        $('goldPanel')?.classList.remove('winnerCupPanel');
-        $('blackPanel')?.classList.remove('winnerCupPanel');
-    }
+    $('goldPanel')?.classList.remove('winnerPanel', 'winnerCupPanel');
+    $('blackPanel')?.classList.remove('winnerPanel', 'winnerCupPanel');
 }
 
 function renderWinModal() {
     const modal = $('winModal');
-    if (!modal) return;
-    const key = currentWinEffectKey();
-    const won = !!key;
-    if (won && pendingRevealIds.size > 0) {
+    if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('docked', 'winBlue', 'winRed');
-        if (winDockTimer) {
-            clearTimeout(winDockTimer);
-            winDockTimer = null;
-        }
-        return;
     }
-    if (won && winRevealHoldUntil && Date.now() < winRevealHoldUntil) {
-        modal.classList.add('hidden');
-        modal.classList.remove('docked', 'winBlue', 'winRed');
-        if (winDockTimer) {
-            clearTimeout(winDockTimer);
-            winDockTimer = null;
-        }
-        return;
+    if (winDockTimer) {
+        clearTimeout(winDockTimer);
+        winDockTimer = null;
     }
-    if (!won) {
-        modal.classList.add('hidden');
-        modal.classList.remove('docked', 'winBlue', 'winRed');
-        if (winDockTimer) {
-            clearTimeout(winDockTimer);
-            winDockTimer = null;
-        }
+    if (!(state?.status === 'finished' && state?.winner)) {
         lastWinKey = null;
         hiddenWinEffectKey = '';
         winRevealHoldUntil = 0;
-        return;
-    }
-
-    if (hiddenWinEffectKey === key) {
-        hideWinEffectsForCurrentView({keepCup: true});
-        return;
-    }
-
-    const name = teamUpper(state.winner);
-    $('winModalTitle').textContent = tt('teamWon', {team: name});
-    $('winModalText').textContent = tt('congratulations');
-    modal.classList.remove('hidden', 'docked', 'winBlue', 'winRed');
-
-    if (lastWinKey !== key) {
-        lastWinKey = key;
-        if (winDockTimer) clearTimeout(winDockTimer);
-
-        winDockTimer = setTimeout(() => {
-            winDockTimer = null;
-            if (currentWinEffectKey() !== key) return;
-            hiddenWinEffectKey = key;
-            hideWinEffectsForCurrentView({keepCup: true});
-        }, 3200);
+        lastWinnerSplashKey = '';
+        lastDeathSplashKey = '';
+        hideResultImageSplash();
     }
 }
 
@@ -3161,22 +3243,20 @@ function render() {
     $('clueBadge').innerHTML = revealTransitionActive ? '' : turnStatusHtml();
     const activeWinKey = currentWinEffectKey();
     const winEffectsBlocked = pendingRevealIds.size > 0 || !!(winRevealHoldUntil && Date.now() < winRevealHoldUntil);
-    const showWinEffects = !!(state.winner && hiddenWinEffectKey !== activeWinKey && !winEffectsBlocked);
-    const showWinnerCup = !!(state.winner && !winEffectsBlocked);
-    $('winnerBadge').className = showWinEffects ? `badge ${state.winner}` : 'hidden';
-    $('winnerBadge').textContent = showWinEffects ? tt('wins', {team: teamUpper(state.winner)}) : '';
+    const showWinEffects = false;
+    const showWinnerCup = false;
+    $('winnerBadge').className = 'hidden';
+    $('winnerBadge').textContent = '';
     updateScoreDisplay(state.points?.blue ?? 9, state.points?.red ?? 9);
     const gs = $('goldSideScore'), bs = $('blackSideScore');
     if (gs) gs.textContent = state.points?.blue ?? 9;
     if (bs) bs.textContent = state.points?.red ?? 9;
     const gp = $('goldPanel'), bp = $('blackPanel');
     if (gp) {
-        gp.classList.toggle('winnerPanel', showWinEffects && state.winner === 'blue');
-        gp.classList.toggle('winnerCupPanel', showWinnerCup && state.winner === 'blue');
+        gp.classList.remove('winnerPanel', 'winnerCupPanel');
     }
     if (bp) {
-        bp.classList.toggle('winnerPanel', showWinEffects && state.winner === 'red');
-        bp.classList.toggle('winnerCupPanel', showWinnerCup && state.winner === 'red');
+        bp.classList.remove('winnerPanel', 'winnerCupPanel');
     }
     renderMe();
     renderPlayers();
@@ -3899,7 +3979,8 @@ function renderBoard() {
     lastBoardKey = boardKey;
     board.innerHTML = state.board.map((c, i) => {
         const pendingReveal = !!(c.revealed && pendingRevealIds.has(c.id));
-        const showOrigin = state.status === 'finished' && !pendingReveal;
+        const finishedRevealBlocked = state.status === 'finished' && (!!delayedWinRevealTimer || !!resultSplashReleaseTimer || !!(winRevealHoldUntil && Date.now() < winRevealHoldUntil));
+        const showOrigin = state.status === 'finished' && !pendingReveal && !finishedRevealBlocked;
         const visuallyRevealed = !!c.revealed && !pendingReveal;
         const colorClass = pendingReveal ? '' : (((visuallyRevealed || spy || showOrigin) && c.color) ? c.color : '');
 
@@ -3914,6 +3995,7 @@ function renderBoard() {
         const teamReveal = !!(!showOrigin && visuallyRevealed && (c.color === 'blue' || c.color === 'red'));
         const correctReveal = !!(teamReveal && revealer?.team === c.color);
         const neutralReveal = !!(!showOrigin && visuallyRevealed && c.color === 'neutral');
+        const assassinReveal = !!(!showOrigin && visuallyRevealed && c.color === 'assassin');
         const localFlippedReveal = false;
         const playableSpyTarget = spy && p?.team === state.turn && state.status === 'waiting-clue' && c.color === p.team && !c.revealed;
         const canConfirmThis = p?.role === 'operative' && p.team === state.turn && state.status === 'guessing' && myVote && !c.revealed;
@@ -3929,7 +4011,7 @@ function renderBoard() {
         const crownOnlyReveal = teamReveal || neutralReveal;
         const finalWordStyle = `--letters:${String(c.word).length}`;
         const wordLayer = `<span class="word ${cardLengthClass(c.word)} ${showOrigin ? 'finalWordBox' : ''}" style="${finalWordStyle}">${c.word}</span>`;
-        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${visuallyRevealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${localFlippedReveal ? 'localWordFlipped' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${visuallyRevealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
+        return `<button class="card ${shouldSpawn ? 'spawnCard' : ''} ${colorClass} ${visuallyRevealed ? 'revealed' : ''} ${pendingReveal ? 'pendingReveal' : ''} ${correctReveal ? 'correctReveal' : ''} ${teamReveal ? 'teamReveal' : ''} ${neutralReveal ? 'neutralReveal' : ''} ${assassinReveal ? 'assassinReveal' : ''} ${crownOnlyReveal ? 'crownOnlyReveal' : ''} ${localFlippedReveal ? 'localWordFlipped' : ''} ${showOrigin ? 'originShown finalOriginShown' : ''} ${spyClueTarget ? 'spyClueTarget' : ''} ${hasCrownLayer ? 'hasCrownLayer' : ''} ${playableSpyTarget ? 'spyPickable' : ''} ${voted ? 'voted pickedByOperative' : ''} ${visuallyRevealed ? 'pickedByOperative' : ''} ${agreed ? 'agreed' : ''} ${myVote ? 'myVote' : ''}" data-id="${c.id}" title="${c.word}" style="--spawn:${i}">${revealBadge}${crownLayer}${wordLayer}${voteBadge}${voteFaces}${confirmMini}</button>`;
     }).join('');
     applyBoardDealVisualState();
     board.querySelectorAll('.card').forEach(el => {
