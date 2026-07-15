@@ -2743,12 +2743,22 @@ function refreshLandingAdminControls() {
     const bar = document.getElementById('landingAdminBar');
     const start = document.getElementById('landingStartGameBtn');
     const opts = document.getElementById('landingOptionsWrap');
+
     if (!bar) return;
+
     const inLobby = !!(state && state.status === 'lobby');
-    const canStart = !!(p?.isAdmin && inLobby);
+
+
+    const canStart = !!(p && p.online !== false && inLobby);
 
     bar.classList.toggle('hidden', !inLobby);
-    if (start) start.classList.toggle('hidden', !canStart);
+
+    if (start) {
+        start.classList.toggle('hidden', !canStart);
+        start.disabled = !canStart;
+    }
+
+    
     if (opts) opts.classList.add('hidden');
 }
 

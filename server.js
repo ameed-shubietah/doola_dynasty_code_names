@@ -2416,18 +2416,29 @@ io.on('connection', socket => {
 
 
     socket.on('startGame', () => {
-        const room = getPlayerRoom(socket.id);
-        if (!room) return;
-        const p = getPlayerBySocket(room, socket.id);
-        if (!canAdmin(room, socket.id)) return socket.emit('toast', 'Only the room admin can start the game.');
-        if (room.status !== 'lobby') return socket.emit('toast', 'Game already started.');
-        room.status = 'waiting-clue';
-        room.roundStartedAt = Date.now();
-        room.gameStartedAt = Date.now();
-        room.log = [];
-        emitRoom(room);
-        scheduleSinglePlayerBot(room);
-    });
+    const room = getPlayerRoom(socket.id);
+    if (!room) {
+        return socket.emit('toast', 'Join the room before starting the game.');
+    }
+
+    const p = getPlayerBySocket(room, socket.id);
+    if (!p || p.online === false) {
+        return socket.emit('toast', 'Join the room before starting the game.');
+    }
+
+   
+    if (room.status !== 'lobby') {
+        return socket.emit('toast', 'Game already started.');
+    }
+
+    room.status = 'waiting-clue';
+    room.roundStartedAt = Date.now();
+    room.gameStartedAt = Date.now();
+    room.log = [];
+
+    emitRoom(room);
+    scheduleSinglePlayerBot(room);
+});
 
     socket.on('newGame', () => {
         const room = getPlayerRoom(socket.id);
