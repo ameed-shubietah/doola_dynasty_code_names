@@ -484,6 +484,21 @@ function applyLanguage() {
     if (document.body.classList.contains('discordActivity')) refreshDiscordLobbyPreview(true);
 }
 
+function syncRoomLanguage(language) {
+    const nextLanguage =
+        language === 'ar'
+            ? 'ar'
+            : language === 'en'
+                ? 'en'
+                : '';
+
+    if (!nextLanguage || nextLanguage === uiLanguage) return;
+
+    uiLanguage = nextLanguage;
+    applyLanguage();
+    renderCharacters();
+}
+
 function lockDiscordNameField() {
 
 
@@ -768,6 +783,7 @@ function requestLobbyInfo() {
             return;
         }
         lastLobbyInfo = res;
+        syncRoomLanguage(res.language);
         renderCharacters();
         if (isDiscordActivity) paintDiscordLobby(res);
         setJoinButtonsReady();
@@ -2758,7 +2774,7 @@ function refreshLandingAdminControls() {
         start.disabled = !canStart;
     }
 
-    
+
     if (opts) opts.classList.add('hidden');
 }
 
@@ -2799,6 +2815,8 @@ function lobbyInfoFromState(s) {
 
 function applyLobbyInfo(res) {
     if (!res?.ok) return;
+
+    syncRoomLanguage(res.language);
     const visibleCode = String(roomInput?.value || '').trim().toUpperCase();
     if (visibleCode && String(res.roomId || '').toUpperCase() !== visibleCode) return;
     lastLobbyInfo = res;
@@ -3057,17 +3075,82 @@ if (backgroundBtn && backgroundMenu) {
 if (arabicModeBtn) {
     arabicModeBtn.onclick = ev => {
         ev.preventDefault();
-        withModeHostAccess(() => {
-            if (state && game && !game.classList.contains('hidden')) {
-                toast(uiLanguage === 'ar' ? 'ارجع للصفحة الرئيسية لتغيير وضع اللغة.' : 'Go back to the home page to change the room mode.');
-                modesMenu?.classList.add('hidden');
-                return;
-            }
-            uiLanguage = uiLanguage === 'ar' ? 'en' : 'ar';
+        ev.stopPropagation();
+
+        const nextLanguage = uiLanguage === 'ar' ? 'en' : 'ar';
+        const currentPlayer = me();
+        const joinedRoom = !!state?.id;
+
+        /*
+         * Before a room exists, save the local choice.
+         * The room will be created using this language.
+         */
+        if (!joinedRoom) {
+            uiLanguage = nextLanguage;
             applyLanguage();
             renderCharacters();
             modesMenu?.classList.add('hidden');
-        });
+            return;
+        }
+
+        /*
+         * Once the room exists, the server becomes authoritative.
+         * Admins and spymasters may change it for everyone.
+         */
+        const canChangeRoomLanguage =
+            currentPlayer?.isAdmin === true ||
+            currentPlayer?.role === 'spymaster';
+
+        if (!canChangeRoomLanguage) {
+            toast(
+                uiLanguage === 'ar'
+                    ? 'فقط المدير أو صاحب التلميح يمكنه تغيير لغة الغرفة.'
+                    : 'Only an admin or spymaster can change the room language.'
+            );
+
+            modesMenu?.classList.add('hidden');
+            return;
+        }
+
+        if (game && !game.classList.contains('hidden')) {
+            toast(
+                uiLanguage === 'ar'
+                    ? 'ارجع إلى الصفحة الرئيسية قبل تغيير لغة الغرفة.'
+                    : 'Return to the lobby before changing the room language.'
+            );
+
+            modesMenu?.classList.add('hidden');
+            return;
+        }
+
+        arabicModeBtn.disabled = true;
+
+        socket.emit(
+            'changeRoomLanguage',
+            {language: nextLanguage},
+            res => {
+                arabicModeBtn.disabled = false;
+
+                if (!res?.ok) {
+                    toast(
+                        res?.error ||
+                        'Could not change the room language.'
+                    );
+                    return;
+                }
+
+                // The server also broadcasts state to every player.
+                syncRoomLanguage(res.language);
+
+                toast(
+                    res.language === 'ar'
+                        ? 'تم تحويل الغرفة إلى العربية.'
+                        : 'Room switched to English.'
+                );
+
+                modesMenu?.classList.add('hidden');
+            }
+        );
     };
 }
 if (singlePlayerBtn) {
@@ -3200,7 +3283,6 @@ function refreshLobbyAfterKick(roomId) {
     const refresh = () => {
         if (!socket?.connected) return;
         socket.emit('getRoomInfo', roomInfoPayload(code), res => {
-            if (!res?.ok) return;
             lastLobbyInfo = res;
             renderCharacters();
             if (isDiscordActivity) paintDiscordLobby(res);

@@ -234,8 +234,6 @@ ARABIC_WORDS = [...new Set(ARABIC_WORDS)].filter(w => isArabicWord(w));
 if (ARABIC_WORDS.length < 25) ARABIC_WORDS = ['ملك', 'ملكة', 'تاج', 'قصر', 'بحر', 'موج', 'نهر', 'جزيرة', 'طبيب', 'مستشفى', 'مدرسة', 'معلم', 'طالب', 'كتاب', 'هاتف', 'حاسوب', 'ذهب', 'فضة', 'شجرة', 'وردة', 'مطر', 'قمر', 'طائرة', 'سيارة', 'كرة'];
 
 
-
-
 const SEMANTIC_CLUSTERS = [
     ['KING', 'QUEEN', 'CROWN', 'THRONE', 'PALACE', 'ROYAL', 'MONARCH', 'CASTLE'],
     ['OCEAN', 'SEA', 'WAVE', 'BEACH', 'ISLAND', 'REEF', 'ANCHOR', 'SHIP', 'SAIL'],
@@ -490,7 +488,6 @@ function newRoom(id, language = 'en') {
 }
 
 
-
 function recentSeatKeys(player = {}) {
     const keys = [];
     if (player.id) keys.push(`player:${player.id}`);
@@ -552,6 +549,7 @@ function roomLobbyInfo(room) {
         round: room.round,
         status: room.status,
         playersTotal: online.length,
+        language: room.language || 'en',
         counts: {
             blue: byTeam('blue').length,
             red: byTeam('red').length,
@@ -752,80 +750,364 @@ const SINGLE_BOT_IDS = {
 };
 
 const BOT_CLUE_CATEGORY_SPECS = [
-    {id: 'royalty', clues: ['ROYALTY', 'KINGDOM', 'MONARCHY', 'CROWNED', 'NOBILITY', 'PALACE'], words: ['KING', 'QUEEN', 'PRINCE', 'PRINCESS', 'EMPEROR', 'CAESAR', 'NAPOLEON', 'CLEOPATRA', 'CROWN', 'THRONE', 'PALACE', 'CASTLE', 'KINGDOM', 'KNIGHT']},
-    {id: 'water', clues: ['AQUATIC', 'MARINE', 'SEASIDE', 'NAUTICAL', 'OCEANIC', 'WATER'], words: ['OCEAN', 'SEA', 'WAVE', 'WATER', 'RIVER', 'LAKE', 'BEACH', 'ISLAND', 'HARBOR', 'FOUNTAIN', 'WATERFALL', 'PUDDLE', 'SWAMP', 'NILE', 'ATLANTIS', 'SAIL', 'ANCHOR', 'RUDDER', 'BOAT', 'SHIP', 'FERRY', 'SAILOR']},
-    {id: 'sea-life', clues: ['AQUARIUM', 'SEAFOOD', 'REEF', 'UNDERSEA', 'FISHERY', 'DIVING'], words: ['FISH', 'SHARK', 'WHALE', 'DOLPHIN', 'OCTOPUS', 'SQUID', 'LOBSTER', 'CRAB', 'SALMON', 'TURTLE', 'PENGUIN', 'GOOSE', 'DUCK', 'SWAN']},
-    {id: 'animals', clues: ['ANIMALS', 'WILDLIFE', 'BEASTS', 'ZOO', 'MAMMALS', 'FAUNA'], words: ['DOG', 'CAT', 'HORSE', 'COW', 'GOAT', 'SHEEP', 'PIG', 'CHICKEN', 'ROOSTER', 'TURKEY', 'RABBIT', 'MOUSE', 'RAT', 'DEER', 'BEAR', 'WOLF', 'FOX', 'LION', 'TIGER', 'GORILLA', 'MONKEY', 'ELEPHANT', 'GIRAFFE', 'ZEBRA', 'KANGAROO', 'KOALA', 'PANDA', 'CAMEL', 'BEAVER']},
-    {id: 'birds', clues: ['BIRD', 'FEATHER', 'AVIAN', 'WINGED', 'FLOCK', 'FLYING'], words: ['BIRD', 'FEATHER', 'EAGLE', 'HAWK', 'FALCON', 'CROW', 'RAVEN', 'PARROT', 'OWL', 'PIGEON', 'FLAMINGO', 'GOOSE', 'DUCK', 'SWAN', 'ROOSTER']},
-    {id: 'bugs-reptiles', clues: ['CRAWLERS', 'REPTILE', 'INSECTS', 'VENOM', 'SCALES', 'BUGS'], words: ['ANT', 'BEE', 'BEETLE', 'BUTTERFLY', 'MOSQUITO', 'SPIDER', 'SCORPION', 'SNAKE', 'COBRA', 'LIZARD', 'FROG', 'TURTLE', 'DINOSAUR']},
-    {id: 'food', clues: ['FOOD', 'MEAL', 'EDIBLE', 'CUISINE', 'SNACK', 'FLAVOR'], words: ['BREAD', 'CHEESE', 'BUTTER', 'MILK', 'COOKIE', 'CAKE', 'PIE', 'CANDY', 'CHOCOLATE', 'BURGER', 'PIZZA', 'PASTA', 'SOUP', 'SALAD', 'RICE', 'BEAN', 'CORN', 'POTATO', 'CARROT', 'ONION', 'GARLIC', 'TOMATO', 'PEPPER', 'OLIVE', 'SALT', 'SUGAR', 'HONEY', 'KETCHUP', 'MUSTARD', 'SAUCE', 'SPICE', 'FLAVOR']},
-    {id: 'fruit', clues: ['FRUIT', 'JUICY', 'ORCHARD', 'TROPICAL', 'CITRUS', 'SWEET'], words: ['APPLE', 'APRICOT', 'BANANA', 'BERRY', 'CHERRY', 'FIG', 'GRAPE', 'KIWI', 'LEMON', 'LIME', 'MANGO', 'MELON', 'ORANGE', 'PEA', 'PEACH', 'PEAR', 'PINEAPPLE', 'PLUM', 'COCONUT', 'JUICE']},
-    {id: 'kitchen', clues: ['KITCHEN', 'COOKING', 'DINING', 'UTENSIL', 'BAKERY', 'CHEF'], words: ['KITCHEN', 'OVEN', 'STOVE', 'FRIDGE', 'KETTLE', 'PAN', 'POT', 'BOWL', 'PLATE', 'CUP', 'FORK', 'SPOON', 'NAPKIN', 'BAKERY', 'BAKER', 'CHEF', 'RESTAURANT', 'CAFE', 'COFFEE', 'TEA']},
-    {id: 'home', clues: ['HOME', 'HOUSEHOLD', 'FURNITURE', 'ROOMS', 'INDOOR', 'DOMESTIC'], words: ['HOME', 'HOUSE', 'ROOM', 'DOOR', 'WINDOW', 'ROOF', 'WALL', 'FLOOR', 'STAIRS', 'BASEMENT', 'ATTIC', 'CELLAR', 'GARAGE', 'CABIN', 'KITCHEN', 'BATH', 'CLOSET', 'CABINET', 'DRAWER', 'SHELF', 'TABLE', 'DESK', 'CHAIR', 'SOFA', 'COUCH', 'BED', 'PILLOW', 'BLANKET', 'CARPET', 'LAMP', 'LANTERN', 'MIRROR', 'CANDLE', 'VACUUM', 'WASHER', 'DRYER']},
-    {id: 'clothing', clues: ['CLOTHING', 'FASHION', 'OUTFIT', 'WEARABLE', 'WARDROBE', 'DRESS'], words: ['SHOE', 'BOOT', 'SLIPPER', 'SOCK', 'GLOVE', 'HAT', 'CAP', 'HELMET', 'DRESS', 'SUIT', 'TUXEDO', 'JACKET', 'SCARF', 'BELT', 'COLLAR', 'APRON', 'TUTU', 'COSTUME', 'MASK', 'ARMOR', 'SHIELD']},
-    {id: 'body', clues: ['BODY', 'ANATOMY', 'HUMAN', 'HEALTH', 'PHYSICAL', 'ORGAN'], words: ['BODY', 'HEAD', 'FACE', 'EYE', 'EAR', 'NOSE', 'MOUTH', 'TONGUE', 'TOOTH', 'BEARD', 'HAIR', 'SKIN', 'HAND', 'FINGER', 'THUMB', 'ARM', 'ELBOW', 'SHOULDER', 'BACK', 'LEG', 'KNEE', 'FOOT', 'HEART', 'BRAIN', 'BLOOD', 'BONE', 'ORGAN']},
-    {id: 'medical', clues: ['MEDICAL', 'CLINICAL', 'HOSPITAL', 'DOCTOR', 'NURSING', 'PHARMACY'], words: ['DOCTOR', 'NURSE', 'HOSPITAL', 'CLINIC', 'PHARMACY', 'VIRUS', 'NEEDLE', 'BLOOD', 'HEART', 'BRAIN', 'ORGAN', 'HEALTH']},
-    {id: 'colors', clues: ['COLOR', 'PALETTE', 'PAINT', 'SHADE', 'HUE', 'BRIGHT'], words: ['RED', 'BLUE', 'GREEN', 'YELLOW', 'BLACK', 'WHITE', 'GREY', 'BROWN', 'PURPLE', 'PINK', 'ORANGE', 'CYAN', 'AZURE', 'VIOLET', 'INDIGO', 'CRIMSON', 'SCARLET', 'AMBER', 'BRONZE', 'SILVER', 'GOLD', 'COPPER', 'JADE', 'EMERALD', 'OPAL', 'PEARL']},
-    {id: 'gems-metals', clues: ['PRECIOUS', 'JEWELRY', 'METAL', 'GEMS', 'MINERAL', 'TREASURE'], words: ['GOLD', 'SILVER', 'BRONZE', 'COPPER', 'IRON', 'STEEL', 'METAL', 'COAL', 'STONE', 'ROCK', 'MARBLE', 'CRYSTAL', 'DIAMOND', 'RUBY', 'EMERALD', 'OPAL', 'JADE', 'PEARL', 'JEWEL', 'TREASURE', 'COIN']},
-    {id: 'nature', clues: ['NATURE', 'OUTDOORS', 'WILD', 'EARTHY', 'SCENERY', 'LANDSCAPE'], words: ['FOREST', 'JUNGLE', 'GARDEN', 'PARK', 'FIELD', 'VALLEY', 'HILL', 'MOUNTAIN', 'CLIFF', 'CANYON', 'CAVE', 'DESERT', 'SAHARA', 'EVEREST', 'HIMALAYAS', 'VOLCANO', 'LAVA', 'MUD', 'SAND', 'GRAVEL', 'CLAY', 'DUST', 'ASH', 'OASIS', 'SWAMP', 'WATERFALL']},
-    {id: 'plants', clues: ['PLANTS', 'BOTANY', 'GROWTH', 'FLORAL', 'GREENERY', 'GARDEN'], words: ['TREE', 'BRANCH', 'ROOT', 'LEAF', 'FLOWER', 'ROSE', 'TULIP', 'ORCHID', 'BLOSSOM', 'GRASS', 'BUSH', 'MOSS', 'VINE', 'CEDAR']},
-    {id: 'weather', clues: ['WEATHER', 'SKY', 'CLIMATE', 'STORMY', 'FORECAST', 'AIR'], words: ['SUN', 'MOON', 'STAR', 'CLOUD', 'RAIN', 'SNOW', 'ICE', 'FROST', 'STORM', 'THUNDER', 'LIGHTNING', 'TORNADO', 'HURRICANE', 'WIND', 'SMOKE', 'FIRE', 'FLAME', 'GLOW', 'LIGHT', 'BEACON', 'MORNING', 'EVENING', 'NIGHT']},
-    {id: 'space', clues: ['SPACE', 'COSMIC', 'ORBITAL', 'ASTRO', 'GALAXY', 'PLANETARY'], words: ['SPACE', 'GALAXY', 'ORBIT', 'PLANET', 'EARTH', 'MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'NEPTUNE', 'PLUTO', 'MOON', 'STAR', 'COMET', 'METEOR', 'ASTEROID', 'ECLIPSE', 'ROCKET', 'SATELLITE']},
-    {id: 'travel', clues: ['TRAVEL', 'TRANSIT', 'VEHICLE', 'TRANSPORT', 'JOURNEY', 'ROAD'], words: ['CAR', 'TAXI', 'BUS', 'TRUCK', 'TRAIN', 'SUBWAY', 'STATION', 'TRACK', 'ENGINE', 'TICKET', 'PLANE', 'JET', 'HELICOPTER', 'AIRPORT', 'PILOT', 'DRIVER', 'BICYCLE', 'SCOOTER', 'MOTORCYCLE', 'FERRY', 'BOAT', 'SHIP', 'ROAD', 'TRAFFIC', 'PARKING', 'BRAKE', 'WHEEL', 'TIRE', 'COMPASS', 'MAP']},
-    {id: 'places', clues: ['GEOGRAPHY', 'WORLD', 'COUNTRY', 'CITY', 'GLOBAL', 'TRAVEL'], words: ['COUNTRY', 'NATION', 'AMERICA', 'CANADA', 'BRAZIL', 'MEXICO', 'EUROPE', 'ASIA', 'AFRICA', 'INDIA', 'CHINA', 'EGYPT', 'GREECE', 'ROME', 'PARIS', 'LONDON', 'TOKYO', 'DUBAI', 'CAIRO', 'AMAZON', 'NILE', 'HIMALAYAS', 'EVEREST', 'SAHARA', 'CITY', 'VILLAGE', 'STREET', 'ROAD', 'BRIDGE', 'TUNNEL', 'MALL', 'MARKET', 'STORE', 'HOTEL', 'UNIVERSITY', 'COLLEGE', 'SCHOOL', 'LIBRARY', 'MUSEUM', 'THEATER', 'CINEMA', 'CHURCH', 'MOSQUE', 'TEMPLE', 'PRISON', 'FACTORY', 'OFFICE', 'LABORATORY', 'FARM', 'ZOO', 'AQUARIUM', 'STADIUM', 'ARENA', 'COURT']},
-    {id: 'people', clues: ['PEOPLE', 'PERSON', 'ROLE', 'WORKER', 'HUMAN', 'CHARACTER'], words: ['FATHER', 'FARMER', 'BAKER', 'CHEF', 'DOCTOR', 'NURSE', 'TEACHER', 'STUDENT', 'ATHLETE', 'COACH', 'REFEREE', 'LAWYER', 'JUDGE', 'POLICE', 'SHERIFF', 'GUARD', 'SOLDIER', 'ARMY', 'CAPTAIN', 'GENERAL', 'PRESIDENT', 'MAYOR', 'PIRATE', 'SAILOR', 'COWBOY', 'VIKING', 'SAMURAI', 'NINJA', 'SPY', 'AGENT', 'ROBBER', 'DEALER', 'DRIVER', 'PILOT', 'MINER', 'HUNTER', 'ARTIST', 'WRITER', 'POET', 'ACTOR', 'DANCER', 'SINGER', 'HERO', 'VILLAIN', 'BRIDE', 'GROOM']},
-    {id: 'history', clues: ['HISTORY', 'FAMOUS', 'LEGEND', 'CLASSIC', 'GENIUS', 'ANCIENT'], words: ['EDISON', 'EINSTEIN', 'TESLA', 'NEWTON', 'LINCOLN', 'COLUMBUS', 'SHAKESPEARE', 'MOZART', 'PICASSO', 'CAESAR', 'CLEOPATRA', 'NAPOLEON', 'SAMURAI', 'VIKING', 'EGYPT', 'ROME', 'GREECE']},
-    {id: 'arts', clues: ['ARTS', 'STAGE', 'CREATIVE', 'PERFORM', 'CULTURE', 'SHOW'], words: ['MUSIC', 'SONG', 'BAND', 'ORCHESTRA', 'PIANO', 'GUITAR', 'VIOLIN', 'FLUTE', 'TRUMPET', 'DRUM', 'MICROPHONE', 'SPEAKER', 'RADIO', 'HEADPHONE', 'SOUND', 'NOISE', 'VOICE', 'BEAT', 'DANCE', 'DANCER', 'BALLET', 'THEATER', 'CINEMA', 'COMEDY', 'CIRCUS', 'PARADE', 'FESTIVAL', 'PARTY', 'ALBUM', 'CAMERA', 'PAINT', 'CRAYON', 'INK', 'STATUE', 'ARTIST', 'WRITER', 'POET', 'STORY', 'FABLE', 'JOKE', 'RIDDLE']},
-    {id: 'sports-games', clues: ['SPORTS', 'GAME', 'PLAY', 'COMPETITION', 'SCORE', 'MATCH'], words: ['SPORT', 'ATHLETE', 'TEAM', 'GOAL', 'SCORE', 'MATCH', 'BALL', 'SOCCER', 'TENNIS', 'GOLF', 'HOCKEY', 'BOWLING', 'BOXING', 'RACING', 'MARATHON', 'SWIMMING', 'SURFING', 'SKIING', 'SKATE', 'RACKET', 'COURT', 'ARENA', 'STADIUM', 'REFEREE', 'COACH', 'TROPHY', 'MEDAL', 'CHESS', 'CHECKER', 'DICE', 'CARD', 'ACE', 'CASINO', 'ARCADE', 'CONTROLLER', 'PUZZLE', 'TOY', 'DOLL', 'BALLOON']},
-    {id: 'technology', clues: ['TECH', 'DIGITAL', 'ELECTRONIC', 'COMPUTING', 'DEVICE', 'CIRCUIT'], words: ['COMPUTER', 'LAPTOP', 'KEYBOARD', 'SCREEN', 'PHONE', 'SERVER', 'PROGRAM', 'CODE', 'PIXEL', 'ROBOT', 'PRINTER', 'CIRCUIT', 'CHIP', 'BATTERY', 'CABLE', 'WIRE', 'SWITCH', 'FILTER', 'SIGNAL', 'LASER', 'CAMERA', 'RADIO', 'SPEAKER', 'HEADPHONE']},
-    {id: 'tools', clues: ['TOOLS', 'HARDWARE', 'WORKSHOP', 'BUILD', 'REPAIR', 'EQUIPMENT'], words: ['HAMMER', 'ANVIL', 'CHISEL', 'AXE', 'KNIFE', 'DAGGER', 'SWORD', 'SPEAR', 'CANNON', 'GUN', 'ARROW', 'BOW', 'ROPE', 'CHAIN', 'LADDER', 'BUCKET', 'TAPE', 'GLUE', 'NEEDLE', 'THREAD', 'BUTTON', 'ZIPPER', 'SCISSORS']},
-    {id: 'law-danger', clues: ['DANGER', 'RISKY', 'CRIME', 'LEGAL', 'SECURITY', 'WARNING'], words: ['DANGER', 'RISK', 'CHAOS', 'SECRET', 'TRUTH', 'LIE', 'LAW', 'RULE', 'ORDER', 'LAWYER', 'JUDGE', 'POLICE', 'SHERIFF', 'GUARD', 'PRISON', 'ROBBER', 'SPY', 'AGENT', 'ARMY', 'SOLDIER', 'BADGE', 'SHIELD', 'SAFE', 'VAULT', 'COFFIN']},
-    {id: 'money', clues: ['MONEY', 'FINANCE', 'PAYMENT', 'BANKING', 'VALUE', 'PRICE'], words: ['MONEY', 'CASH', 'COIN', 'DOLLAR', 'EURO', 'POUND', 'SHEKEL', 'BANK', 'VAULT', 'WALLET', 'CARD', 'BILL', 'PRICE', 'TAX', 'TRADE', 'DEALER', 'MARKET', 'STORE', 'MALL', 'CHECK', 'ORDER']},
-    {id: 'magic-horror', clues: ['MAGIC', 'MYSTIC', 'FANTASY', 'SUPERNATURAL', 'HORROR', 'MYTH'], words: ['MAGICIAN', 'WIZARD', 'WITCH', 'FAIRY', 'ANGEL', 'GHOST', 'SPIRIT', 'PHOENIX', 'DRAGON', 'UNICORN', 'GIANT', 'MONSTER', 'ZOMBIE', 'VAMPIRE', 'DEMON', 'CLOWN', 'VILLAIN', 'SHADOW', 'DARK', 'DREAM', 'LUCK']},
-    {id: 'time', clues: ['TIME', 'CALENDAR', 'CLOCK', 'SEASON', 'DATE', 'DURATION'], words: ['TIME', 'CLOCK', 'WATCH', 'HOUR', 'MINUTE', 'SECOND', 'DAY', 'WEEK', 'MONTH', 'YEAR', 'DATE', 'MORNING', 'EVENING', 'NIGHT', 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER', 'HOLIDAY', 'BIRTHDAY', 'WEDDING']},
-    {id: 'language', clues: ['LANGUAGE', 'WRITING', 'MESSAGE', 'IDEA', 'ANSWER', 'MEMORY'], words: ['WORD', 'LETTER', 'PAGE', 'PAPER', 'BOOK', 'NOTE', 'NAME', 'QUESTION', 'ANSWER', 'CLUE', 'SIGN', 'SYMBOL', 'MAIL', 'FOLDER', 'MEMORY', 'IDEA', 'STORY', 'FABLE', 'RIDDLE', 'JOKE', 'TRUTH', 'LIE', 'SECRET']},
-    {id: 'school', clues: ['SCHOOL', 'EDUCATION', 'CLASSROOM', 'STUDY', 'LEARNING', 'ACADEMIC'], words: ['SCHOOL', 'UNIVERSITY', 'COLLEGE', 'TEACHER', 'STUDENT', 'BOOK', 'PENCIL', 'PEN', 'PAPER', 'PAGE', 'LETTER', 'NOTE', 'QUESTION', 'ANSWER', 'LIBRARY', 'LABORATORY']},
-    {id: 'materials', clues: ['MATERIAL', 'TEXTILE', 'SUBSTANCE', 'SURFACE', 'FABRIC', 'SOLID'], words: ['WOOD', 'PLASTIC', 'RUBBER', 'GLASS', 'PAPER', 'COTTON', 'WOOL', 'SILK', 'VELVET', 'LEATHER', 'FABRIC', 'THREAD', 'METAL', 'IRON', 'STEEL', 'COPPER', 'STONE', 'ROCK', 'MARBLE', 'CLAY', 'BRICK', 'CARTON', 'BOX', 'BOTTLE', 'SOAP', 'SHAMPOO', 'SPONGE', 'TOWEL']},
-    {id: 'objects', clues: ['OBJECT', 'ITEM', 'THING', 'GEAR', 'SUPPLY', 'EQUIPMENT'], words: ['BAG', 'BANNER', 'BARREL', 'BASKET', 'BEACON', 'BELL', 'BLOCK', 'BOTTLE', 'BOX', 'BROOM', 'CABINET', 'CANDLE', 'CARTON', 'CHEST', 'CIRCLE', 'CLUB', 'COMPASS', 'CRADLE', 'FILTER', 'FOLDER', 'GLASS', 'HORN', 'KEYBOARD', 'LAMP', 'LANTERN', 'MAIL', 'MAP', 'MIRROR', 'NET', 'PENCIL', 'PEN', 'PLATE', 'POCKET', 'RING', 'ROPE', 'SADDLE', 'SHELF', 'SIGN', 'SLIDER', 'SOAP', 'SPONGE', 'SWITCH', 'TAPE', 'TICKET', 'TOOTHBRUSH', 'TOWEL', 'TROPHY', 'UMBRELLA', 'WALLET', 'WHISTLE']},
-    {id: 'shapes-positions', clues: ['SHAPE', 'POSITION', 'DIRECTION', 'CENTER', 'EDGE', 'FORM'], words: ['ROUND', 'CIRCLE', 'CENTER', 'CORNER', 'BACK', 'HEAD', 'FOOT', 'FIELD', 'TRACK', 'ROAD', 'BRIDGE', 'TUNNEL', 'STAIRS', 'WALL', 'FLOOR', 'ROOF']},
-    {id: 'emotion-abstract', clues: ['ABSTRACT', 'FEELING', 'THOUGHT', 'MOOD', 'CONCEPT', 'MENTAL'], words: ['CHANCE', 'CHAOS', 'DREAM', 'IDEA', 'LUCK', 'MEMORY', 'ORDER', 'QUESTION', 'ANSWER', 'RISK', 'RULE', 'SECRET', 'SILENCE', 'SMILE', 'TRUTH', 'LIE', 'SOUND', 'TIME']}
+    {
+        id: 'royalty',
+        clues: ['ROYALTY', 'KINGDOM', 'MONARCHY', 'CROWNED', 'NOBILITY', 'PALACE'],
+        words: ['KING', 'QUEEN', 'PRINCE', 'PRINCESS', 'EMPEROR', 'CAESAR', 'NAPOLEON', 'CLEOPATRA', 'CROWN', 'THRONE', 'PALACE', 'CASTLE', 'KINGDOM', 'KNIGHT']
+    },
+    {
+        id: 'water',
+        clues: ['AQUATIC', 'MARINE', 'SEASIDE', 'NAUTICAL', 'OCEANIC', 'WATER'],
+        words: ['OCEAN', 'SEA', 'WAVE', 'WATER', 'RIVER', 'LAKE', 'BEACH', 'ISLAND', 'HARBOR', 'FOUNTAIN', 'WATERFALL', 'PUDDLE', 'SWAMP', 'NILE', 'ATLANTIS', 'SAIL', 'ANCHOR', 'RUDDER', 'BOAT', 'SHIP', 'FERRY', 'SAILOR']
+    },
+    {
+        id: 'sea-life',
+        clues: ['AQUARIUM', 'SEAFOOD', 'REEF', 'UNDERSEA', 'FISHERY', 'DIVING'],
+        words: ['FISH', 'SHARK', 'WHALE', 'DOLPHIN', 'OCTOPUS', 'SQUID', 'LOBSTER', 'CRAB', 'SALMON', 'TURTLE', 'PENGUIN', 'GOOSE', 'DUCK', 'SWAN']
+    },
+    {
+        id: 'animals',
+        clues: ['ANIMALS', 'WILDLIFE', 'BEASTS', 'ZOO', 'MAMMALS', 'FAUNA'],
+        words: ['DOG', 'CAT', 'HORSE', 'COW', 'GOAT', 'SHEEP', 'PIG', 'CHICKEN', 'ROOSTER', 'TURKEY', 'RABBIT', 'MOUSE', 'RAT', 'DEER', 'BEAR', 'WOLF', 'FOX', 'LION', 'TIGER', 'GORILLA', 'MONKEY', 'ELEPHANT', 'GIRAFFE', 'ZEBRA', 'KANGAROO', 'KOALA', 'PANDA', 'CAMEL', 'BEAVER']
+    },
+    {
+        id: 'birds',
+        clues: ['BIRD', 'FEATHER', 'AVIAN', 'WINGED', 'FLOCK', 'FLYING'],
+        words: ['BIRD', 'FEATHER', 'EAGLE', 'HAWK', 'FALCON', 'CROW', 'RAVEN', 'PARROT', 'OWL', 'PIGEON', 'FLAMINGO', 'GOOSE', 'DUCK', 'SWAN', 'ROOSTER']
+    },
+    {
+        id: 'bugs-reptiles',
+        clues: ['CRAWLERS', 'REPTILE', 'INSECTS', 'VENOM', 'SCALES', 'BUGS'],
+        words: ['ANT', 'BEE', 'BEETLE', 'BUTTERFLY', 'MOSQUITO', 'SPIDER', 'SCORPION', 'SNAKE', 'COBRA', 'LIZARD', 'FROG', 'TURTLE', 'DINOSAUR']
+    },
+    {
+        id: 'food',
+        clues: ['FOOD', 'MEAL', 'EDIBLE', 'CUISINE', 'SNACK', 'FLAVOR'],
+        words: ['BREAD', 'CHEESE', 'BUTTER', 'MILK', 'COOKIE', 'CAKE', 'PIE', 'CANDY', 'CHOCOLATE', 'BURGER', 'PIZZA', 'PASTA', 'SOUP', 'SALAD', 'RICE', 'BEAN', 'CORN', 'POTATO', 'CARROT', 'ONION', 'GARLIC', 'TOMATO', 'PEPPER', 'OLIVE', 'SALT', 'SUGAR', 'HONEY', 'KETCHUP', 'MUSTARD', 'SAUCE', 'SPICE', 'FLAVOR']
+    },
+    {
+        id: 'fruit',
+        clues: ['FRUIT', 'JUICY', 'ORCHARD', 'TROPICAL', 'CITRUS', 'SWEET'],
+        words: ['APPLE', 'APRICOT', 'BANANA', 'BERRY', 'CHERRY', 'FIG', 'GRAPE', 'KIWI', 'LEMON', 'LIME', 'MANGO', 'MELON', 'ORANGE', 'PEA', 'PEACH', 'PEAR', 'PINEAPPLE', 'PLUM', 'COCONUT', 'JUICE']
+    },
+    {
+        id: 'kitchen',
+        clues: ['KITCHEN', 'COOKING', 'DINING', 'UTENSIL', 'BAKERY', 'CHEF'],
+        words: ['KITCHEN', 'OVEN', 'STOVE', 'FRIDGE', 'KETTLE', 'PAN', 'POT', 'BOWL', 'PLATE', 'CUP', 'FORK', 'SPOON', 'NAPKIN', 'BAKERY', 'BAKER', 'CHEF', 'RESTAURANT', 'CAFE', 'COFFEE', 'TEA']
+    },
+    {
+        id: 'home',
+        clues: ['HOME', 'HOUSEHOLD', 'FURNITURE', 'ROOMS', 'INDOOR', 'DOMESTIC'],
+        words: ['HOME', 'HOUSE', 'ROOM', 'DOOR', 'WINDOW', 'ROOF', 'WALL', 'FLOOR', 'STAIRS', 'BASEMENT', 'ATTIC', 'CELLAR', 'GARAGE', 'CABIN', 'KITCHEN', 'BATH', 'CLOSET', 'CABINET', 'DRAWER', 'SHELF', 'TABLE', 'DESK', 'CHAIR', 'SOFA', 'COUCH', 'BED', 'PILLOW', 'BLANKET', 'CARPET', 'LAMP', 'LANTERN', 'MIRROR', 'CANDLE', 'VACUUM', 'WASHER', 'DRYER']
+    },
+    {
+        id: 'clothing',
+        clues: ['CLOTHING', 'FASHION', 'OUTFIT', 'WEARABLE', 'WARDROBE', 'DRESS'],
+        words: ['SHOE', 'BOOT', 'SLIPPER', 'SOCK', 'GLOVE', 'HAT', 'CAP', 'HELMET', 'DRESS', 'SUIT', 'TUXEDO', 'JACKET', 'SCARF', 'BELT', 'COLLAR', 'APRON', 'TUTU', 'COSTUME', 'MASK', 'ARMOR', 'SHIELD']
+    },
+    {
+        id: 'body',
+        clues: ['BODY', 'ANATOMY', 'HUMAN', 'HEALTH', 'PHYSICAL', 'ORGAN'],
+        words: ['BODY', 'HEAD', 'FACE', 'EYE', 'EAR', 'NOSE', 'MOUTH', 'TONGUE', 'TOOTH', 'BEARD', 'HAIR', 'SKIN', 'HAND', 'FINGER', 'THUMB', 'ARM', 'ELBOW', 'SHOULDER', 'BACK', 'LEG', 'KNEE', 'FOOT', 'HEART', 'BRAIN', 'BLOOD', 'BONE', 'ORGAN']
+    },
+    {
+        id: 'medical',
+        clues: ['MEDICAL', 'CLINICAL', 'HOSPITAL', 'DOCTOR', 'NURSING', 'PHARMACY'],
+        words: ['DOCTOR', 'NURSE', 'HOSPITAL', 'CLINIC', 'PHARMACY', 'VIRUS', 'NEEDLE', 'BLOOD', 'HEART', 'BRAIN', 'ORGAN', 'HEALTH']
+    },
+    {
+        id: 'colors',
+        clues: ['COLOR', 'PALETTE', 'PAINT', 'SHADE', 'HUE', 'BRIGHT'],
+        words: ['RED', 'BLUE', 'GREEN', 'YELLOW', 'BLACK', 'WHITE', 'GREY', 'BROWN', 'PURPLE', 'PINK', 'ORANGE', 'CYAN', 'AZURE', 'VIOLET', 'INDIGO', 'CRIMSON', 'SCARLET', 'AMBER', 'BRONZE', 'SILVER', 'GOLD', 'COPPER', 'JADE', 'EMERALD', 'OPAL', 'PEARL']
+    },
+    {
+        id: 'gems-metals',
+        clues: ['PRECIOUS', 'JEWELRY', 'METAL', 'GEMS', 'MINERAL', 'TREASURE'],
+        words: ['GOLD', 'SILVER', 'BRONZE', 'COPPER', 'IRON', 'STEEL', 'METAL', 'COAL', 'STONE', 'ROCK', 'MARBLE', 'CRYSTAL', 'DIAMOND', 'RUBY', 'EMERALD', 'OPAL', 'JADE', 'PEARL', 'JEWEL', 'TREASURE', 'COIN']
+    },
+    {
+        id: 'nature',
+        clues: ['NATURE', 'OUTDOORS', 'WILD', 'EARTHY', 'SCENERY', 'LANDSCAPE'],
+        words: ['FOREST', 'JUNGLE', 'GARDEN', 'PARK', 'FIELD', 'VALLEY', 'HILL', 'MOUNTAIN', 'CLIFF', 'CANYON', 'CAVE', 'DESERT', 'SAHARA', 'EVEREST', 'HIMALAYAS', 'VOLCANO', 'LAVA', 'MUD', 'SAND', 'GRAVEL', 'CLAY', 'DUST', 'ASH', 'OASIS', 'SWAMP', 'WATERFALL']
+    },
+    {
+        id: 'plants',
+        clues: ['PLANTS', 'BOTANY', 'GROWTH', 'FLORAL', 'GREENERY', 'GARDEN'],
+        words: ['TREE', 'BRANCH', 'ROOT', 'LEAF', 'FLOWER', 'ROSE', 'TULIP', 'ORCHID', 'BLOSSOM', 'GRASS', 'BUSH', 'MOSS', 'VINE', 'CEDAR']
+    },
+    {
+        id: 'weather',
+        clues: ['WEATHER', 'SKY', 'CLIMATE', 'STORMY', 'FORECAST', 'AIR'],
+        words: ['SUN', 'MOON', 'STAR', 'CLOUD', 'RAIN', 'SNOW', 'ICE', 'FROST', 'STORM', 'THUNDER', 'LIGHTNING', 'TORNADO', 'HURRICANE', 'WIND', 'SMOKE', 'FIRE', 'FLAME', 'GLOW', 'LIGHT', 'BEACON', 'MORNING', 'EVENING', 'NIGHT']
+    },
+    {
+        id: 'space',
+        clues: ['SPACE', 'COSMIC', 'ORBITAL', 'ASTRO', 'GALAXY', 'PLANETARY'],
+        words: ['SPACE', 'GALAXY', 'ORBIT', 'PLANET', 'EARTH', 'MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'NEPTUNE', 'PLUTO', 'MOON', 'STAR', 'COMET', 'METEOR', 'ASTEROID', 'ECLIPSE', 'ROCKET', 'SATELLITE']
+    },
+    {
+        id: 'travel',
+        clues: ['TRAVEL', 'TRANSIT', 'VEHICLE', 'TRANSPORT', 'JOURNEY', 'ROAD'],
+        words: ['CAR', 'TAXI', 'BUS', 'TRUCK', 'TRAIN', 'SUBWAY', 'STATION', 'TRACK', 'ENGINE', 'TICKET', 'PLANE', 'JET', 'HELICOPTER', 'AIRPORT', 'PILOT', 'DRIVER', 'BICYCLE', 'SCOOTER', 'MOTORCYCLE', 'FERRY', 'BOAT', 'SHIP', 'ROAD', 'TRAFFIC', 'PARKING', 'BRAKE', 'WHEEL', 'TIRE', 'COMPASS', 'MAP']
+    },
+    {
+        id: 'places',
+        clues: ['GEOGRAPHY', 'WORLD', 'COUNTRY', 'CITY', 'GLOBAL', 'TRAVEL'],
+        words: ['COUNTRY', 'NATION', 'AMERICA', 'CANADA', 'BRAZIL', 'MEXICO', 'EUROPE', 'ASIA', 'AFRICA', 'INDIA', 'CHINA', 'EGYPT', 'GREECE', 'ROME', 'PARIS', 'LONDON', 'TOKYO', 'DUBAI', 'CAIRO', 'AMAZON', 'NILE', 'HIMALAYAS', 'EVEREST', 'SAHARA', 'CITY', 'VILLAGE', 'STREET', 'ROAD', 'BRIDGE', 'TUNNEL', 'MALL', 'MARKET', 'STORE', 'HOTEL', 'UNIVERSITY', 'COLLEGE', 'SCHOOL', 'LIBRARY', 'MUSEUM', 'THEATER', 'CINEMA', 'CHURCH', 'MOSQUE', 'TEMPLE', 'PRISON', 'FACTORY', 'OFFICE', 'LABORATORY', 'FARM', 'ZOO', 'AQUARIUM', 'STADIUM', 'ARENA', 'COURT']
+    },
+    {
+        id: 'people',
+        clues: ['PEOPLE', 'PERSON', 'ROLE', 'WORKER', 'HUMAN', 'CHARACTER'],
+        words: ['FATHER', 'FARMER', 'BAKER', 'CHEF', 'DOCTOR', 'NURSE', 'TEACHER', 'STUDENT', 'ATHLETE', 'COACH', 'REFEREE', 'LAWYER', 'JUDGE', 'POLICE', 'SHERIFF', 'GUARD', 'SOLDIER', 'ARMY', 'CAPTAIN', 'GENERAL', 'PRESIDENT', 'MAYOR', 'PIRATE', 'SAILOR', 'COWBOY', 'VIKING', 'SAMURAI', 'NINJA', 'SPY', 'AGENT', 'ROBBER', 'DEALER', 'DRIVER', 'PILOT', 'MINER', 'HUNTER', 'ARTIST', 'WRITER', 'POET', 'ACTOR', 'DANCER', 'SINGER', 'HERO', 'VILLAIN', 'BRIDE', 'GROOM']
+    },
+    {
+        id: 'history',
+        clues: ['HISTORY', 'FAMOUS', 'LEGEND', 'CLASSIC', 'GENIUS', 'ANCIENT'],
+        words: ['EDISON', 'EINSTEIN', 'TESLA', 'NEWTON', 'LINCOLN', 'COLUMBUS', 'SHAKESPEARE', 'MOZART', 'PICASSO', 'CAESAR', 'CLEOPATRA', 'NAPOLEON', 'SAMURAI', 'VIKING', 'EGYPT', 'ROME', 'GREECE']
+    },
+    {
+        id: 'arts',
+        clues: ['ARTS', 'STAGE', 'CREATIVE', 'PERFORM', 'CULTURE', 'SHOW'],
+        words: ['MUSIC', 'SONG', 'BAND', 'ORCHESTRA', 'PIANO', 'GUITAR', 'VIOLIN', 'FLUTE', 'TRUMPET', 'DRUM', 'MICROPHONE', 'SPEAKER', 'RADIO', 'HEADPHONE', 'SOUND', 'NOISE', 'VOICE', 'BEAT', 'DANCE', 'DANCER', 'BALLET', 'THEATER', 'CINEMA', 'COMEDY', 'CIRCUS', 'PARADE', 'FESTIVAL', 'PARTY', 'ALBUM', 'CAMERA', 'PAINT', 'CRAYON', 'INK', 'STATUE', 'ARTIST', 'WRITER', 'POET', 'STORY', 'FABLE', 'JOKE', 'RIDDLE']
+    },
+    {
+        id: 'sports-games',
+        clues: ['SPORTS', 'GAME', 'PLAY', 'COMPETITION', 'SCORE', 'MATCH'],
+        words: ['SPORT', 'ATHLETE', 'TEAM', 'GOAL', 'SCORE', 'MATCH', 'BALL', 'SOCCER', 'TENNIS', 'GOLF', 'HOCKEY', 'BOWLING', 'BOXING', 'RACING', 'MARATHON', 'SWIMMING', 'SURFING', 'SKIING', 'SKATE', 'RACKET', 'COURT', 'ARENA', 'STADIUM', 'REFEREE', 'COACH', 'TROPHY', 'MEDAL', 'CHESS', 'CHECKER', 'DICE', 'CARD', 'ACE', 'CASINO', 'ARCADE', 'CONTROLLER', 'PUZZLE', 'TOY', 'DOLL', 'BALLOON']
+    },
+    {
+        id: 'technology',
+        clues: ['TECH', 'DIGITAL', 'ELECTRONIC', 'COMPUTING', 'DEVICE', 'CIRCUIT'],
+        words: ['COMPUTER', 'LAPTOP', 'KEYBOARD', 'SCREEN', 'PHONE', 'SERVER', 'PROGRAM', 'CODE', 'PIXEL', 'ROBOT', 'PRINTER', 'CIRCUIT', 'CHIP', 'BATTERY', 'CABLE', 'WIRE', 'SWITCH', 'FILTER', 'SIGNAL', 'LASER', 'CAMERA', 'RADIO', 'SPEAKER', 'HEADPHONE']
+    },
+    {
+        id: 'tools',
+        clues: ['TOOLS', 'HARDWARE', 'WORKSHOP', 'BUILD', 'REPAIR', 'EQUIPMENT'],
+        words: ['HAMMER', 'ANVIL', 'CHISEL', 'AXE', 'KNIFE', 'DAGGER', 'SWORD', 'SPEAR', 'CANNON', 'GUN', 'ARROW', 'BOW', 'ROPE', 'CHAIN', 'LADDER', 'BUCKET', 'TAPE', 'GLUE', 'NEEDLE', 'THREAD', 'BUTTON', 'ZIPPER', 'SCISSORS']
+    },
+    {
+        id: 'law-danger',
+        clues: ['DANGER', 'RISKY', 'CRIME', 'LEGAL', 'SECURITY', 'WARNING'],
+        words: ['DANGER', 'RISK', 'CHAOS', 'SECRET', 'TRUTH', 'LIE', 'LAW', 'RULE', 'ORDER', 'LAWYER', 'JUDGE', 'POLICE', 'SHERIFF', 'GUARD', 'PRISON', 'ROBBER', 'SPY', 'AGENT', 'ARMY', 'SOLDIER', 'BADGE', 'SHIELD', 'SAFE', 'VAULT', 'COFFIN']
+    },
+    {
+        id: 'money',
+        clues: ['MONEY', 'FINANCE', 'PAYMENT', 'BANKING', 'VALUE', 'PRICE'],
+        words: ['MONEY', 'CASH', 'COIN', 'DOLLAR', 'EURO', 'POUND', 'SHEKEL', 'BANK', 'VAULT', 'WALLET', 'CARD', 'BILL', 'PRICE', 'TAX', 'TRADE', 'DEALER', 'MARKET', 'STORE', 'MALL', 'CHECK', 'ORDER']
+    },
+    {
+        id: 'magic-horror',
+        clues: ['MAGIC', 'MYSTIC', 'FANTASY', 'SUPERNATURAL', 'HORROR', 'MYTH'],
+        words: ['MAGICIAN', 'WIZARD', 'WITCH', 'FAIRY', 'ANGEL', 'GHOST', 'SPIRIT', 'PHOENIX', 'DRAGON', 'UNICORN', 'GIANT', 'MONSTER', 'ZOMBIE', 'VAMPIRE', 'DEMON', 'CLOWN', 'VILLAIN', 'SHADOW', 'DARK', 'DREAM', 'LUCK']
+    },
+    {
+        id: 'time',
+        clues: ['TIME', 'CALENDAR', 'CLOCK', 'SEASON', 'DATE', 'DURATION'],
+        words: ['TIME', 'CLOCK', 'WATCH', 'HOUR', 'MINUTE', 'SECOND', 'DAY', 'WEEK', 'MONTH', 'YEAR', 'DATE', 'MORNING', 'EVENING', 'NIGHT', 'SPRING', 'SUMMER', 'AUTUMN', 'WINTER', 'HOLIDAY', 'BIRTHDAY', 'WEDDING']
+    },
+    {
+        id: 'language',
+        clues: ['LANGUAGE', 'WRITING', 'MESSAGE', 'IDEA', 'ANSWER', 'MEMORY'],
+        words: ['WORD', 'LETTER', 'PAGE', 'PAPER', 'BOOK', 'NOTE', 'NAME', 'QUESTION', 'ANSWER', 'CLUE', 'SIGN', 'SYMBOL', 'MAIL', 'FOLDER', 'MEMORY', 'IDEA', 'STORY', 'FABLE', 'RIDDLE', 'JOKE', 'TRUTH', 'LIE', 'SECRET']
+    },
+    {
+        id: 'school',
+        clues: ['SCHOOL', 'EDUCATION', 'CLASSROOM', 'STUDY', 'LEARNING', 'ACADEMIC'],
+        words: ['SCHOOL', 'UNIVERSITY', 'COLLEGE', 'TEACHER', 'STUDENT', 'BOOK', 'PENCIL', 'PEN', 'PAPER', 'PAGE', 'LETTER', 'NOTE', 'QUESTION', 'ANSWER', 'LIBRARY', 'LABORATORY']
+    },
+    {
+        id: 'materials',
+        clues: ['MATERIAL', 'TEXTILE', 'SUBSTANCE', 'SURFACE', 'FABRIC', 'SOLID'],
+        words: ['WOOD', 'PLASTIC', 'RUBBER', 'GLASS', 'PAPER', 'COTTON', 'WOOL', 'SILK', 'VELVET', 'LEATHER', 'FABRIC', 'THREAD', 'METAL', 'IRON', 'STEEL', 'COPPER', 'STONE', 'ROCK', 'MARBLE', 'CLAY', 'BRICK', 'CARTON', 'BOX', 'BOTTLE', 'SOAP', 'SHAMPOO', 'SPONGE', 'TOWEL']
+    },
+    {
+        id: 'objects',
+        clues: ['OBJECT', 'ITEM', 'THING', 'GEAR', 'SUPPLY', 'EQUIPMENT'],
+        words: ['BAG', 'BANNER', 'BARREL', 'BASKET', 'BEACON', 'BELL', 'BLOCK', 'BOTTLE', 'BOX', 'BROOM', 'CABINET', 'CANDLE', 'CARTON', 'CHEST', 'CIRCLE', 'CLUB', 'COMPASS', 'CRADLE', 'FILTER', 'FOLDER', 'GLASS', 'HORN', 'KEYBOARD', 'LAMP', 'LANTERN', 'MAIL', 'MAP', 'MIRROR', 'NET', 'PENCIL', 'PEN', 'PLATE', 'POCKET', 'RING', 'ROPE', 'SADDLE', 'SHELF', 'SIGN', 'SLIDER', 'SOAP', 'SPONGE', 'SWITCH', 'TAPE', 'TICKET', 'TOOTHBRUSH', 'TOWEL', 'TROPHY', 'UMBRELLA', 'WALLET', 'WHISTLE']
+    },
+    {
+        id: 'shapes-positions',
+        clues: ['SHAPE', 'POSITION', 'DIRECTION', 'CENTER', 'EDGE', 'FORM'],
+        words: ['ROUND', 'CIRCLE', 'CENTER', 'CORNER', 'BACK', 'HEAD', 'FOOT', 'FIELD', 'TRACK', 'ROAD', 'BRIDGE', 'TUNNEL', 'STAIRS', 'WALL', 'FLOOR', 'ROOF']
+    },
+    {
+        id: 'emotion-abstract',
+        clues: ['ABSTRACT', 'FEELING', 'THOUGHT', 'MOOD', 'CONCEPT', 'MENTAL'],
+        words: ['CHANCE', 'CHAOS', 'DREAM', 'IDEA', 'LUCK', 'MEMORY', 'ORDER', 'QUESTION', 'ANSWER', 'RISK', 'RULE', 'SECRET', 'SILENCE', 'SMILE', 'TRUTH', 'LIE', 'SOUND', 'TIME']
+    }
 ];
 
 const ARABIC_CLUE_CATEGORY_SPECS = [
-    {id: 'royalty', clues: ['ملكي', 'تتويج', 'سلطة', 'عرش', 'نبل'], words: ['ملك', 'ملكة', 'امير', 'اميرة', 'تاج', 'عرش', 'قصر', 'قلعة', 'سلطان', 'قيصر']},
-    {id: 'water', clues: ['مائي', 'بحري', 'محيط', 'شاطئ', 'ابحار'], words: ['بحر', 'محيط', 'موج', 'ماء', 'نهر', 'بحيرة', 'شاطئ', 'جزيرة', 'ميناء', 'نافورة', 'شلال', 'سفينة', 'قارب', 'مرساة']},
-    {id: 'sea-life', clues: ['غوص', 'شعاب', 'اسماك', 'بحري'], words: ['سمك', 'قرش', 'حوت', 'دلفين', 'اخطبوط', 'سرطان', 'سلمون', 'سلحفاة']},
-    {id: 'animals', clues: ['حيوان', 'برية', 'قطيع', 'مزرعة'], words: ['كلب', 'قط', 'حصان', 'بقرة', 'ماعز', 'خروف', 'ارنب', 'فأر', 'اسد', 'نمر', 'ذئب', 'ثعلب', 'فيل', 'جمل', 'قرد', 'غزال']},
-    {id: 'birds', clues: ['طائر', 'ريش', 'جناح', 'تحليق'], words: ['طائر', 'ريش', 'نسر', 'صقر', 'غراب', 'ببغاء', 'بومة', 'حمامة', 'بطة', 'ديك']},
-    {id: 'bugs-reptiles', clues: ['زاحف', 'حشرة', 'سم', 'قشور'], words: ['نملة', 'نحلة', 'فراشة', 'عنكبوت', 'عقرب', 'ثعبان', 'كوبرا', 'سحلية', 'ضفدع']},
-    {id: 'food', clues: ['طعام', 'وجبة', 'مطبخ', 'نكهة'], words: ['خبز', 'جبن', 'زبدة', 'حليب', 'كعك', 'حلوى', 'بيتزا', 'ارز', 'فاصوليا', 'ذرة', 'بطاطا', 'جزر', 'بصل', 'ثوم', 'طماطم', 'فلفل', 'ملح', 'سكر', 'عسل']},
-    {id: 'fruit', clues: ['فاكهة', 'عصير', 'حلو', 'بستان'], words: ['تفاح', 'موز', 'كرز', 'عنب', 'ليمون', 'مانجو', 'بطيخ', 'برتقال', 'خوخ', 'كمثرى', 'اناناس', 'جوز', 'عصير']},
-    {id: 'kitchen', clues: ['مطبخ', 'طبخ', 'مائدة', 'ادوات'], words: ['مطبخ', 'فرن', 'موقد', 'ثلاجة', 'غلاية', 'مقلاة', 'قدر', 'وعاء', 'طبق', 'كوب', 'شوكة', 'ملعقة', 'طاه', 'مطعم', 'قهوة', 'شاي']},
-    {id: 'home', clues: ['منزل', 'اثاث', 'غرفة', 'سكن'], words: ['بيت', 'منزل', 'غرفة', 'باب', 'نافذة', 'سقف', 'جدار', 'ارض', 'درج', 'مرآب', 'مطبخ', 'حمام', 'خزانة', 'درج', 'رف', 'طاولة', 'كرسي', 'سرير', 'وسادة', 'مصباح']},
-    {id: 'clothing', clues: ['ملابس', 'ازياء', 'لباس', 'ارتداء'], words: ['حذاء', 'جزمة', 'جورب', 'قفاز', 'قبعة', 'فستان', 'بدلة', 'سترة', 'وشاح', 'حزام', 'قناع', 'درع']},
-    {id: 'body', clues: ['جسم', 'تشريح', 'انسان', 'عضو'], words: ['جسم', 'رأس', 'وجه', 'عين', 'اذن', 'انف', 'فم', 'لسان', 'سن', 'شعر', 'جلد', 'يد', 'اصبع', 'ذراع', 'كتف', 'ظهر', 'قدم', 'قلب', 'دماغ', 'دم', 'عظم']},
-    {id: 'medical', clues: ['طبي', 'صحة', 'مستشفى', 'علاج'], words: ['طبيب', 'ممرض', 'مستشفى', 'عيادة', 'صيدلية', 'فيروس', 'ابرة', 'دم', 'قلب', 'دماغ', 'عضو', 'صحة']},
-    {id: 'colors', clues: ['لون', 'صبغة', 'طلاء', 'درجات'], words: ['احمر', 'ازرق', 'اخضر', 'اصفر', 'اسود', 'ابيض', 'رمادي', 'بني', 'بنفسجي', 'وردي', 'برتقالي', 'ذهبي', 'فضي', 'برونزي']},
-    {id: 'gems-metals', clues: ['معدن', 'مجوهرات', 'كنز', 'ثمين'], words: ['ذهب', 'فضة', 'برونز', 'نحاس', 'حديد', 'فولاذ', 'معدن', 'فحم', 'حجر', 'صخر', 'رخام', 'كريستال', 'ماس', 'ياقوت', 'زمرد', 'لؤلؤ', 'كنز', 'عملة']},
-    {id: 'nature', clues: ['طبيعة', 'منظر', 'ارض', 'خارجي'], words: ['غابة', 'حديقة', 'حقل', 'وادي', 'تل', 'جبل', 'منحدر', 'كهف', 'صحراء', 'بركان', 'حمم', 'رمل', 'غبار', 'واحة', 'مستنقع', 'شلال']},
-    {id: 'plants', clues: ['نبات', 'زهور', 'اخضر', 'حديقة'], words: ['شجرة', 'غصن', 'جذر', 'ورقة', 'زهرة', 'وردة', 'عشب', 'شجيرة', 'طحلب', 'كرمة', 'ارز']},
-    {id: 'weather', clues: ['طقس', 'سماء', 'عاصفة', 'مناخ'], words: ['شمس', 'قمر', 'نجم', 'سحابة', 'مطر', 'ثلج', 'جليد', 'صقيع', 'عاصفة', 'رعد', 'برق', 'رياح', 'دخان', 'نار', 'لهب', 'ليل', 'صباح']},
-    {id: 'space', clues: ['فضاء', 'كوكب', 'مجرة', 'مدار'], words: ['فضاء', 'مجرة', 'مدار', 'كوكب', 'ارض', 'مريخ', 'مشتري', 'زحل', 'قمر', 'نجم', 'مذنب', 'نيزك', 'صاروخ', 'قمرصناعي']},
-    {id: 'travel', clues: ['سفر', 'نقل', 'مركبة', 'طريق'], words: ['سيارة', 'تاكسي', 'حافلة', 'شاحنة', 'قطار', 'محطة', 'سكة', 'محرك', 'تذكرة', 'طائرة', 'مطار', 'طيار', 'سائق', 'دراجة', 'قارب', 'سفينة', 'طريق', 'مرور', 'عجلة', 'خريطة']},
-    {id: 'places', clues: ['مكان', 'مدينة', 'عالم', 'جغرافيا'], words: ['بلد', 'دولة', 'مدينة', 'قرية', 'شارع', 'طريق', 'جسر', 'نفق', 'سوق', 'متجر', 'فندق', 'جامعة', 'مدرسة', 'مكتبة', 'متحف', 'مسرح', 'سينما', 'مسجد', 'معبد', 'سجن', 'مصنع', 'مكتب', 'مزرعة', 'ملعب']},
-    {id: 'people', clues: ['شخص', 'ناس', 'مهنة', 'عامل'], words: ['اب', 'مزارع', 'خباز', 'طاه', 'طبيب', 'ممرض', 'معلم', 'طالب', 'لاعب', 'مدرب', 'حكم', 'محامي', 'قاضي', 'شرطة', 'حارس', 'جندي', 'قبطان', 'رئيس', 'فنان', 'كاتب', 'شاعر', 'ممثل', 'راقص', 'مغني', 'بطل', 'قرصان', 'بحار', 'سائق', 'طيار']},
-    {id: 'arts', clues: ['فن', 'موسيقى', 'مسرح', 'ابداع'], words: ['موسيقى', 'اغنية', 'فرقة', 'اوركسترا', 'بيانو', 'غيتار', 'كمان', 'طبل', 'ميكروفون', 'راديو', 'صوت', 'رقص', 'مسرح', 'سينما', 'كوميديا', 'مهرجان', 'كاميرا', 'طلاء', 'تمثال', 'قصة']},
-    {id: 'sports-games', clues: ['رياضة', 'لعبة', 'فوز', 'منافسة'], words: ['رياضة', 'لاعب', 'فريق', 'هدف', 'نتيجة', 'مباراة', 'كرة', 'تنس', 'غولف', 'سباق', 'سباحة', 'تزلج', 'مضرب', 'ملعب', 'حكم', 'مدرب', 'كأس', 'ميدالية', 'شطرنج', 'نرد', 'بطاقة', 'لغز', 'لعبة']},
-    {id: 'technology', clues: ['تقنية', 'رقمي', 'حاسوب', 'جهاز'], words: ['حاسوب', 'لابتوب', 'لوحة', 'شاشة', 'هاتف', 'خادم', 'برنامج', 'رمز', 'بكسل', 'روبوت', 'طابعة', 'دائرة', 'شريحة', 'بطارية', 'كابل', 'سلك', 'مفتاح', 'ليزر', 'كاميرا', 'راديو']},
-    {id: 'tools', clues: ['اداة', 'ورشة', 'اصلاح', 'معدات'], words: ['مطرقة', 'سندان', 'ازميل', 'فأس', 'سكين', 'خنجر', 'سيف', 'رمح', 'مدفع', 'سلاح', 'سهم', 'حبل', 'سلسلة', 'سلم', 'دلو', 'شريط', 'غراء', 'ابرة', 'خيط', 'مقص']},
-    {id: 'law-danger', clues: ['خطر', 'قانون', 'جريمة', 'امن'], words: ['خطر', 'مخاطرة', 'فوضى', 'سر', 'حقيقة', 'كذب', 'قانون', 'قاعدة', 'نظام', 'محامي', 'قاضي', 'شرطة', 'حارس', 'سجن', 'لص', 'جاسوس', 'عميل', 'جيش', 'جندي', 'درع', 'خزنة']},
-    {id: 'money', clues: ['مال', 'بنك', 'دفع', 'سعر'], words: ['مال', 'نقد', 'عملة', 'دولار', 'يورو', 'دينار', 'بنك', 'خزنة', 'محفظة', 'بطاقة', 'فاتورة', 'سعر', 'ضريبة', 'تجارة', 'سوق', 'متجر', 'طلب']},
-    {id: 'time', clues: ['وقت', 'ساعة', 'تقويم', 'موسم'], words: ['وقت', 'ساعة', 'دقيقة', 'ثانية', 'يوم', 'اسبوع', 'شهر', 'سنة', 'تاريخ', 'صباح', 'مساء', 'ليل', 'ربيع', 'صيف', 'خريف', 'شتاء', 'عيد']},
-    {id: 'language', clues: ['لغة', 'كتابة', 'رسالة', 'فكرة'], words: ['كلمة', 'حرف', 'صفحة', 'ورقة', 'كتاب', 'ملاحظة', 'اسم', 'سؤال', 'جواب', 'تلميح', 'اشارة', 'رمز', 'رسالة', 'ذاكرة', 'فكرة', 'قصة', 'نكتة', 'سر']},
-    {id: 'school', clues: ['تعليم', 'مدرسة', 'دراسة', 'صف'], words: ['مدرسة', 'جامعة', 'كلية', 'معلم', 'طالب', 'كتاب', 'قلم', 'ورقة', 'صفحة', 'حرف', 'ملاحظة', 'سؤال', 'جواب', 'مكتبة', 'مختبر']},
-    {id: 'materials', clues: ['مادة', 'نسيج', 'سطح', 'صلب'], words: ['خشب', 'بلاستيك', 'مطاط', 'زجاج', 'ورق', 'قطن', 'صوف', 'حرير', 'مخمل', 'جلد', 'قماش', 'خيط', 'معدن', 'حديد', 'فولاذ', 'نحاس', 'حجر', 'رخام', 'طين', 'طوب', 'صندوق', 'زجاجة', 'صابون', 'منشفة']},
-    {id: 'objects', clues: ['غرض', 'شيء', 'ادوات', 'مستلزم'], words: ['حقيبة', 'لافتة', 'برميل', 'سلة', 'جرس', 'صندوق', 'مكنسة', 'شمعة', 'دائرة', 'بوصلة', 'خريطة', 'مرآة', 'مصباح', 'قلم', 'طبق', 'جيب', 'خاتم', 'حبل', 'رف', 'اشارة', 'شريط', 'تذكرة', 'محفظة', 'مظلة']},
-    {id: 'emotion-abstract', clues: ['شعور', 'فكرة', 'مزاج', 'معنى'], words: ['فرصة', 'فوضى', 'حلم', 'فكرة', 'حظ', 'ذاكرة', 'نظام', 'سؤال', 'جواب', 'مخاطرة', 'قاعدة', 'سر', 'صمت', 'ابتسامة', 'حقيقة', 'كذب', 'صوت', 'وقت']}
+    {
+        id: 'royalty',
+        clues: ['ملكي', 'تتويج', 'سلطة', 'عرش', 'نبل'],
+        words: ['ملك', 'ملكة', 'امير', 'اميرة', 'تاج', 'عرش', 'قصر', 'قلعة', 'سلطان', 'قيصر']
+    },
+    {
+        id: 'water',
+        clues: ['مائي', 'بحري', 'محيط', 'شاطئ', 'ابحار'],
+        words: ['بحر', 'محيط', 'موج', 'ماء', 'نهر', 'بحيرة', 'شاطئ', 'جزيرة', 'ميناء', 'نافورة', 'شلال', 'سفينة', 'قارب', 'مرساة']
+    },
+    {
+        id: 'sea-life',
+        clues: ['غوص', 'شعاب', 'اسماك', 'بحري'],
+        words: ['سمك', 'قرش', 'حوت', 'دلفين', 'اخطبوط', 'سرطان', 'سلمون', 'سلحفاة']
+    },
+    {
+        id: 'animals',
+        clues: ['حيوان', 'برية', 'قطيع', 'مزرعة'],
+        words: ['كلب', 'قط', 'حصان', 'بقرة', 'ماعز', 'خروف', 'ارنب', 'فأر', 'اسد', 'نمر', 'ذئب', 'ثعلب', 'فيل', 'جمل', 'قرد', 'غزال']
+    },
+    {
+        id: 'birds',
+        clues: ['طائر', 'ريش', 'جناح', 'تحليق'],
+        words: ['طائر', 'ريش', 'نسر', 'صقر', 'غراب', 'ببغاء', 'بومة', 'حمامة', 'بطة', 'ديك']
+    },
+    {
+        id: 'bugs-reptiles',
+        clues: ['زاحف', 'حشرة', 'سم', 'قشور'],
+        words: ['نملة', 'نحلة', 'فراشة', 'عنكبوت', 'عقرب', 'ثعبان', 'كوبرا', 'سحلية', 'ضفدع']
+    },
+    {
+        id: 'food',
+        clues: ['طعام', 'وجبة', 'مطبخ', 'نكهة'],
+        words: ['خبز', 'جبن', 'زبدة', 'حليب', 'كعك', 'حلوى', 'بيتزا', 'ارز', 'فاصوليا', 'ذرة', 'بطاطا', 'جزر', 'بصل', 'ثوم', 'طماطم', 'فلفل', 'ملح', 'سكر', 'عسل']
+    },
+    {
+        id: 'fruit',
+        clues: ['فاكهة', 'عصير', 'حلو', 'بستان'],
+        words: ['تفاح', 'موز', 'كرز', 'عنب', 'ليمون', 'مانجو', 'بطيخ', 'برتقال', 'خوخ', 'كمثرى', 'اناناس', 'جوز', 'عصير']
+    },
+    {
+        id: 'kitchen',
+        clues: ['مطبخ', 'طبخ', 'مائدة', 'ادوات'],
+        words: ['مطبخ', 'فرن', 'موقد', 'ثلاجة', 'غلاية', 'مقلاة', 'قدر', 'وعاء', 'طبق', 'كوب', 'شوكة', 'ملعقة', 'طاه', 'مطعم', 'قهوة', 'شاي']
+    },
+    {
+        id: 'home',
+        clues: ['منزل', 'اثاث', 'غرفة', 'سكن'],
+        words: ['بيت', 'منزل', 'غرفة', 'باب', 'نافذة', 'سقف', 'جدار', 'ارض', 'درج', 'مرآب', 'مطبخ', 'حمام', 'خزانة', 'درج', 'رف', 'طاولة', 'كرسي', 'سرير', 'وسادة', 'مصباح']
+    },
+    {
+        id: 'clothing',
+        clues: ['ملابس', 'ازياء', 'لباس', 'ارتداء'],
+        words: ['حذاء', 'جزمة', 'جورب', 'قفاز', 'قبعة', 'فستان', 'بدلة', 'سترة', 'وشاح', 'حزام', 'قناع', 'درع']
+    },
+    {
+        id: 'body',
+        clues: ['جسم', 'تشريح', 'انسان', 'عضو'],
+        words: ['جسم', 'رأس', 'وجه', 'عين', 'اذن', 'انف', 'فم', 'لسان', 'سن', 'شعر', 'جلد', 'يد', 'اصبع', 'ذراع', 'كتف', 'ظهر', 'قدم', 'قلب', 'دماغ', 'دم', 'عظم']
+    },
+    {
+        id: 'medical',
+        clues: ['طبي', 'صحة', 'مستشفى', 'علاج'],
+        words: ['طبيب', 'ممرض', 'مستشفى', 'عيادة', 'صيدلية', 'فيروس', 'ابرة', 'دم', 'قلب', 'دماغ', 'عضو', 'صحة']
+    },
+    {
+        id: 'colors',
+        clues: ['لون', 'صبغة', 'طلاء', 'درجات'],
+        words: ['احمر', 'ازرق', 'اخضر', 'اصفر', 'اسود', 'ابيض', 'رمادي', 'بني', 'بنفسجي', 'وردي', 'برتقالي', 'ذهبي', 'فضي', 'برونزي']
+    },
+    {
+        id: 'gems-metals',
+        clues: ['معدن', 'مجوهرات', 'كنز', 'ثمين'],
+        words: ['ذهب', 'فضة', 'برونز', 'نحاس', 'حديد', 'فولاذ', 'معدن', 'فحم', 'حجر', 'صخر', 'رخام', 'كريستال', 'ماس', 'ياقوت', 'زمرد', 'لؤلؤ', 'كنز', 'عملة']
+    },
+    {
+        id: 'nature',
+        clues: ['طبيعة', 'منظر', 'ارض', 'خارجي'],
+        words: ['غابة', 'حديقة', 'حقل', 'وادي', 'تل', 'جبل', 'منحدر', 'كهف', 'صحراء', 'بركان', 'حمم', 'رمل', 'غبار', 'واحة', 'مستنقع', 'شلال']
+    },
+    {
+        id: 'plants',
+        clues: ['نبات', 'زهور', 'اخضر', 'حديقة'],
+        words: ['شجرة', 'غصن', 'جذر', 'ورقة', 'زهرة', 'وردة', 'عشب', 'شجيرة', 'طحلب', 'كرمة', 'ارز']
+    },
+    {
+        id: 'weather',
+        clues: ['طقس', 'سماء', 'عاصفة', 'مناخ'],
+        words: ['شمس', 'قمر', 'نجم', 'سحابة', 'مطر', 'ثلج', 'جليد', 'صقيع', 'عاصفة', 'رعد', 'برق', 'رياح', 'دخان', 'نار', 'لهب', 'ليل', 'صباح']
+    },
+    {
+        id: 'space',
+        clues: ['فضاء', 'كوكب', 'مجرة', 'مدار'],
+        words: ['فضاء', 'مجرة', 'مدار', 'كوكب', 'ارض', 'مريخ', 'مشتري', 'زحل', 'قمر', 'نجم', 'مذنب', 'نيزك', 'صاروخ', 'قمرصناعي']
+    },
+    {
+        id: 'travel',
+        clues: ['سفر', 'نقل', 'مركبة', 'طريق'],
+        words: ['سيارة', 'تاكسي', 'حافلة', 'شاحنة', 'قطار', 'محطة', 'سكة', 'محرك', 'تذكرة', 'طائرة', 'مطار', 'طيار', 'سائق', 'دراجة', 'قارب', 'سفينة', 'طريق', 'مرور', 'عجلة', 'خريطة']
+    },
+    {
+        id: 'places',
+        clues: ['مكان', 'مدينة', 'عالم', 'جغرافيا'],
+        words: ['بلد', 'دولة', 'مدينة', 'قرية', 'شارع', 'طريق', 'جسر', 'نفق', 'سوق', 'متجر', 'فندق', 'جامعة', 'مدرسة', 'مكتبة', 'متحف', 'مسرح', 'سينما', 'مسجد', 'معبد', 'سجن', 'مصنع', 'مكتب', 'مزرعة', 'ملعب']
+    },
+    {
+        id: 'people',
+        clues: ['شخص', 'ناس', 'مهنة', 'عامل'],
+        words: ['اب', 'مزارع', 'خباز', 'طاه', 'طبيب', 'ممرض', 'معلم', 'طالب', 'لاعب', 'مدرب', 'حكم', 'محامي', 'قاضي', 'شرطة', 'حارس', 'جندي', 'قبطان', 'رئيس', 'فنان', 'كاتب', 'شاعر', 'ممثل', 'راقص', 'مغني', 'بطل', 'قرصان', 'بحار', 'سائق', 'طيار']
+    },
+    {
+        id: 'arts',
+        clues: ['فن', 'موسيقى', 'مسرح', 'ابداع'],
+        words: ['موسيقى', 'اغنية', 'فرقة', 'اوركسترا', 'بيانو', 'غيتار', 'كمان', 'طبل', 'ميكروفون', 'راديو', 'صوت', 'رقص', 'مسرح', 'سينما', 'كوميديا', 'مهرجان', 'كاميرا', 'طلاء', 'تمثال', 'قصة']
+    },
+    {
+        id: 'sports-games',
+        clues: ['رياضة', 'لعبة', 'فوز', 'منافسة'],
+        words: ['رياضة', 'لاعب', 'فريق', 'هدف', 'نتيجة', 'مباراة', 'كرة', 'تنس', 'غولف', 'سباق', 'سباحة', 'تزلج', 'مضرب', 'ملعب', 'حكم', 'مدرب', 'كأس', 'ميدالية', 'شطرنج', 'نرد', 'بطاقة', 'لغز', 'لعبة']
+    },
+    {
+        id: 'technology',
+        clues: ['تقنية', 'رقمي', 'حاسوب', 'جهاز'],
+        words: ['حاسوب', 'لابتوب', 'لوحة', 'شاشة', 'هاتف', 'خادم', 'برنامج', 'رمز', 'بكسل', 'روبوت', 'طابعة', 'دائرة', 'شريحة', 'بطارية', 'كابل', 'سلك', 'مفتاح', 'ليزر', 'كاميرا', 'راديو']
+    },
+    {
+        id: 'tools',
+        clues: ['اداة', 'ورشة', 'اصلاح', 'معدات'],
+        words: ['مطرقة', 'سندان', 'ازميل', 'فأس', 'سكين', 'خنجر', 'سيف', 'رمح', 'مدفع', 'سلاح', 'سهم', 'حبل', 'سلسلة', 'سلم', 'دلو', 'شريط', 'غراء', 'ابرة', 'خيط', 'مقص']
+    },
+    {
+        id: 'law-danger',
+        clues: ['خطر', 'قانون', 'جريمة', 'امن'],
+        words: ['خطر', 'مخاطرة', 'فوضى', 'سر', 'حقيقة', 'كذب', 'قانون', 'قاعدة', 'نظام', 'محامي', 'قاضي', 'شرطة', 'حارس', 'سجن', 'لص', 'جاسوس', 'عميل', 'جيش', 'جندي', 'درع', 'خزنة']
+    },
+    {
+        id: 'money',
+        clues: ['مال', 'بنك', 'دفع', 'سعر'],
+        words: ['مال', 'نقد', 'عملة', 'دولار', 'يورو', 'دينار', 'بنك', 'خزنة', 'محفظة', 'بطاقة', 'فاتورة', 'سعر', 'ضريبة', 'تجارة', 'سوق', 'متجر', 'طلب']
+    },
+    {
+        id: 'time',
+        clues: ['وقت', 'ساعة', 'تقويم', 'موسم'],
+        words: ['وقت', 'ساعة', 'دقيقة', 'ثانية', 'يوم', 'اسبوع', 'شهر', 'سنة', 'تاريخ', 'صباح', 'مساء', 'ليل', 'ربيع', 'صيف', 'خريف', 'شتاء', 'عيد']
+    },
+    {
+        id: 'language',
+        clues: ['لغة', 'كتابة', 'رسالة', 'فكرة'],
+        words: ['كلمة', 'حرف', 'صفحة', 'ورقة', 'كتاب', 'ملاحظة', 'اسم', 'سؤال', 'جواب', 'تلميح', 'اشارة', 'رمز', 'رسالة', 'ذاكرة', 'فكرة', 'قصة', 'نكتة', 'سر']
+    },
+    {
+        id: 'school',
+        clues: ['تعليم', 'مدرسة', 'دراسة', 'صف'],
+        words: ['مدرسة', 'جامعة', 'كلية', 'معلم', 'طالب', 'كتاب', 'قلم', 'ورقة', 'صفحة', 'حرف', 'ملاحظة', 'سؤال', 'جواب', 'مكتبة', 'مختبر']
+    },
+    {
+        id: 'materials',
+        clues: ['مادة', 'نسيج', 'سطح', 'صلب'],
+        words: ['خشب', 'بلاستيك', 'مطاط', 'زجاج', 'ورق', 'قطن', 'صوف', 'حرير', 'مخمل', 'جلد', 'قماش', 'خيط', 'معدن', 'حديد', 'فولاذ', 'نحاس', 'حجر', 'رخام', 'طين', 'طوب', 'صندوق', 'زجاجة', 'صابون', 'منشفة']
+    },
+    {
+        id: 'objects',
+        clues: ['غرض', 'شيء', 'ادوات', 'مستلزم'],
+        words: ['حقيبة', 'لافتة', 'برميل', 'سلة', 'جرس', 'صندوق', 'مكنسة', 'شمعة', 'دائرة', 'بوصلة', 'خريطة', 'مرآة', 'مصباح', 'قلم', 'طبق', 'جيب', 'خاتم', 'حبل', 'رف', 'اشارة', 'شريط', 'تذكرة', 'محفظة', 'مظلة']
+    },
+    {
+        id: 'emotion-abstract',
+        clues: ['شعور', 'فكرة', 'مزاج', 'معنى'],
+        words: ['فرصة', 'فوضى', 'حلم', 'فكرة', 'حظ', 'ذاكرة', 'نظام', 'سؤال', 'جواب', 'مخاطرة', 'قاعدة', 'سر', 'صمت', 'ابتسامة', 'حقيقة', 'كذب', 'صوت', 'وقت']
+    }
 ];
 
 const BOT_EXTRA_FALLBACK_CLUES = ['KNOWN', 'ASSOCIATED', 'RELATED', 'GENERAL', 'COMMON', 'REFERENCE'];
@@ -970,6 +1252,7 @@ function aiClueLexiconForLanguage(language = 'en') {
 function semanticFamilyLookupForLanguage(language = 'en') {
     return SEMANTIC_FAMILY_LOOKUP_BY_LANGUAGE[language === 'ar' ? 'ar' : 'en'];
 }
+
 const SINGLE_PLAYER_RECENT_LIMIT = 44;
 const singlePlayerRecentClues = [];
 const singlePlayerRecentGroupKeys = [];
@@ -1039,13 +1322,21 @@ function parseStrictClueWord(raw = '', language = 'en') {
         if (!isArabicWord(word)) return {word: '', reason: 'not-one-arabic-word', original};
         if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
         if (GENERIC_BAD_ARABIC_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
-        if (!aiClueLexiconForLanguage(language).has(word)) return {word, reason: 'not-in-local-arabic-clue-vocabulary', original};
+        if (!aiClueLexiconForLanguage(language).has(word)) return {
+            word,
+            reason: 'not-in-local-arabic-clue-vocabulary',
+            original
+        };
         return {word, reason: '', original};
     }
     if (!/^[A-Za-z]+$/.test(original)) return {word: '', reason: 'not-one-raw-word', original};
     if (word.length < 2 || word.length > MAX_CLUE_WORD_LENGTH) return {word, reason: 'bad-length', original};
     if (GENERIC_BAD_CLUES.has(word)) return {word, reason: 'generic-placeholder-clue', original};
-    if (!aiClueLexiconForLanguage(language).has(word)) return {word, reason: 'not-in-local-english-clue-vocabulary', original};
+    if (!aiClueLexiconForLanguage(language).has(word)) return {
+        word,
+        reason: 'not-in-local-english-clue-vocabulary',
+        original
+    };
     return {word, reason: '', original};
 }
 
@@ -1356,10 +1647,10 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
         const prompt = mode === 'single'
             ? aiSingleTargetPromptForClue(room, team, repairTargets[0], allowedClues)
             : mode === 'repair'
-            ? aiRepairPromptForTargets(room, team, repairTargets)
-            : mode === 'compact'
-                ? aiRetryPromptForClue(room, team)
-                : aiPromptForClues(room, team, candidateCount);
+                ? aiRepairPromptForTargets(room, team, repairTargets)
+                : mode === 'compact'
+                    ? aiRetryPromptForClue(room, team)
+                    : aiPromptForClues(room, team, candidateCount);
         const numPredict = mode === 'normal' ? 700 : 220;
         const {content, candidates} = await requestOllamaJson(prompt, numPredict, controller.signal);
         lastAiClueDebug = {
@@ -1392,7 +1683,11 @@ function validateAiClueCandidate(room, team, candidate, rejects = []) {
     const parsedClue = parseStrictClueWord(candidate?.clue, language);
     const clue = parsedClue.word;
     if (parsedClue.reason) {
-        rejects.push({clue: parsedClue.original || String(candidate?.clue || ''), cleaned: clue, reason: parsedClue.reason});
+        rejects.push({
+            clue: parsedClue.original || String(candidate?.clue || ''),
+            cleaned: clue,
+            reason: parsedClue.reason
+        });
         return null;
     }
 
@@ -1761,10 +2056,10 @@ async function botGiveClue(room) {
     const giver = clue.ai
         ? {name: 'Ollama Oracle', character: 'oracle'}
         : clue.aiRescue
-        ? {name: 'DSTY Rescue', character: 'oracle'}
-        : room.turn === 'blue'
-        ? {name: 'DSTY Oracle', character: 'oracle'}
-        : {name: 'Bot Oracle', character: 'ninja'};
+            ? {name: 'DSTY Rescue', character: 'oracle'}
+            : room.turn === 'blue'
+                ? {name: 'DSTY Oracle', character: 'oracle'}
+                : {name: 'Bot Oracle', character: 'ninja'};
     room.clue = {
         word: safeText(clue.word, 24).replace(/\s+/g, '-'),
         number: clue.number,
@@ -1909,8 +2204,67 @@ function emitAdminRequest(room, request) {
 io.on('connection', socket => {
     socket.data.language = socket.handshake?.auth?.language === 'ar' ? 'ar' : 'en';
 
+
     socket.on('setLanguage', ({language = 'en'} = {}) => {
         socket.data.language = language === 'ar' ? 'ar' : 'en';
+    });
+
+
+    socket.on('changeRoomLanguage', ({language = 'en'} = {}, cb = () => {
+    }) => {
+        const nextLanguage = language === 'ar' ? 'ar' : 'en';
+
+        socket.data.language = nextLanguage;
+
+        const room = getPlayerRoom(socket.id);
+        if (!room) {
+            return cb({
+                ok: false,
+                error: 'Join the room before changing its language.'
+            });
+        }
+
+        const player = getPlayerBySocket(room, socket.id);
+
+        if (!player || player.online === false) {
+            return cb({
+                ok: false,
+                error: 'Join the room before changing its language.'
+            });
+        }
+
+        const canChangeLanguage =
+            player.isAdmin === true ||
+            player.role === 'spymaster';
+
+        if (!canChangeLanguage) {
+            return cb({
+                ok: false,
+                error: 'Only an admin or spymaster can change the room language.'
+            });
+        }
+
+        if (room.status !== 'lobby') {
+            return cb({
+                ok: false,
+                error: 'Return to the lobby before changing the room language.'
+            });
+        }
+
+        const changed = applyRoomLanguage(
+            room,
+            nextLanguage,
+            player.name || 'Spymaster'
+        );
+
+
+        emitRoom(room);
+
+        cb({
+            ok: true,
+            changed,
+            language: room.language
+        });
     });
 
     socket.on('getRoomInfo', ({roomId, activityScope = '', channelId = ''} = {}, cb = () => {
@@ -1962,14 +2316,14 @@ io.on('connection', socket => {
     });
 
     socket.on('createSinglePlayerRoom', async ({
-                                             name,
-                                             avatar = '',
-                                             character = 'raiden',
-                                             difficulty = 'medium',
-                                             language = 'en',
-                                             arabicMode = false,
-                                             playerKey
-                                         } = {}, cb = () => {
+                                                   name,
+                                                   avatar = '',
+                                                   character = 'raiden',
+                                                   difficulty = 'medium',
+                                                   language = 'en',
+                                                   arabicMode = false,
+                                                   playerKey
+                                               } = {}, cb = () => {
     }) => {
         if (AI_CLUES_ENABLED && AI_CLUE_PROVIDER === 'ollama') {
             const aiStatus = await checkOllamaReady();
@@ -2012,7 +2366,14 @@ io.on('connection', socket => {
         room.log.push(`Single Player started: GOLD vs DSTY Bot (${room.singlePlayerDifficulty.toUpperCase()} mode).`);
         emitRoom(room);
         scheduleSinglePlayerBot(room);
-        cb({ok: true, roomId, playerKey: socket.data.playerKey, adminToken: room.adminToken, singlePlayer: true, difficulty: room.singlePlayerDifficulty});
+        cb({
+            ok: true,
+            roomId,
+            playerKey: socket.data.playerKey,
+            adminToken: room.adminToken,
+            singlePlayer: true,
+            difficulty: room.singlePlayerDifficulty
+        });
     });
 
     socket.on('joinRoom', ({
@@ -2033,7 +2394,20 @@ io.on('connection', socket => {
     }) => {
         const room = rooms.get(String(roomId || '').toUpperCase());
         if (!room) return cb({ok: false, error: 'Room not found.'});
-        const joined = joinRoom(socket, room, {name, avatar, discordId, team, role, character, playerKey, adminToken, language, arabicMode, resume, restoreReason});
+        const joined = joinRoom(socket, room, {
+            name,
+            avatar,
+            discordId,
+            team,
+            role,
+            character,
+            playerKey,
+            adminToken,
+            language,
+            arabicMode,
+            resume,
+            restoreReason
+        });
         if (joined?.ok === false) return cb(joined);
         cb({
             ok: true,
@@ -2070,7 +2444,6 @@ io.on('connection', socket => {
         let id = String(roomId || activityId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
         if (!id) id = code();
         if (id.length > 5) id = id.slice(0, 5);
-
 
 
         const mappedRoomId = scopeKey ? discordActivityRooms.get(scopeKey) : '';
@@ -2236,8 +2609,6 @@ io.on('connection', socket => {
         }
 
 
-
-
         if (!resume && existing && existing.online !== false && existing.socketId !== socket.id && !discordId && !String(key).startsWith('d_')) {
             key = freshPlayerKey(room);
             existing = null;
@@ -2280,7 +2651,6 @@ io.on('connection', socket => {
         }
 
 
-
         for (const [pid, oldPlayer] of Object.entries(room.players || {})) {
             if (pid === key || oldPlayer.online !== false) continue;
             const sameDiscordUser = !!(discordId && oldPlayer.discordId && oldPlayer.discordId === discordId);
@@ -2291,8 +2661,6 @@ io.on('connection', socket => {
             delete room.votes?.[pid];
         }
         existing = room.players[key];
-
-
 
 
         if (discordId) {
@@ -2306,7 +2674,6 @@ io.on('connection', socket => {
             }
             existing = room.players[key];
         }
-
 
 
         if (previousPlayer && !existing) {
@@ -2329,14 +2696,25 @@ io.on('connection', socket => {
         existing = room.players[key];
 
 
-
-
-
         socket.data.roomId = room.id;
         socket.data.playerKey = key;
-        const requestedLanguage = languageFromPayload({language, arabicMode}, socket);
-        const mayChangeRoomLanguage = !!forceAdmin || !!(adminToken && adminToken === room.adminToken);
-        if (mayChangeRoomLanguage) applyRoomLanguage(room, requestedLanguage, incomingName || 'Admin');
+        const requestedLanguage = languageFromPayload(
+            {language, arabicMode},
+            socket
+        );
+
+
+        const maySetInitialRoomLanguage =
+            !!forceAdmin &&
+            Object.keys(room.players || {}).length === 0;
+
+        if (maySetInitialRoomLanguage) {
+            applyRoomLanguage(
+                room,
+                requestedLanguage,
+                incomingName || 'Admin'
+            );
+        }
 
         if (existing) {
             if (resume) {
@@ -2416,29 +2794,29 @@ io.on('connection', socket => {
 
 
     socket.on('startGame', () => {
-    const room = getPlayerRoom(socket.id);
-    if (!room) {
-        return socket.emit('toast', 'Join the room before starting the game.');
-    }
+        const room = getPlayerRoom(socket.id);
+        if (!room) {
+            return socket.emit('toast', 'Join the room before starting the game.');
+        }
 
-    const p = getPlayerBySocket(room, socket.id);
-    if (!p || p.online === false) {
-        return socket.emit('toast', 'Join the room before starting the game.');
-    }
+        const p = getPlayerBySocket(room, socket.id);
+        if (!p || p.online === false) {
+            return socket.emit('toast', 'Join the room before starting the game.');
+        }
 
-   
-    if (room.status !== 'lobby') {
-        return socket.emit('toast', 'Game already started.');
-    }
 
-    room.status = 'waiting-clue';
-    room.roundStartedAt = Date.now();
-    room.gameStartedAt = Date.now();
-    room.log = [];
+        if (room.status !== 'lobby') {
+            return socket.emit('toast', 'Game already started.');
+        }
 
-    emitRoom(room);
-    scheduleSinglePlayerBot(room);
-});
+        room.status = 'waiting-clue';
+        room.roundStartedAt = Date.now();
+        room.gameStartedAt = Date.now();
+        room.log = [];
+
+        emitRoom(room);
+        scheduleSinglePlayerBot(room);
+    });
 
     socket.on('newGame', () => {
         const room = getPlayerRoom(socket.id);
@@ -2594,7 +2972,10 @@ io.on('connection', socket => {
             if (team === 'spectator') role = 'spectator';
             if (role === 'spymaster' && team !== 'spectator') {
                 const existingSpy = Object.values(room.players || {}).find(p => p.online !== false && p.id !== target.id && p.team === team && p.role === 'spymaster');
-                if (existingSpy) return cb({ok: false, error: `${team === 'blue' ? 'Gold' : 'Black'} Team already has a spymaster.`});
+                if (existingSpy) return cb({
+                    ok: false,
+                    error: `${team === 'blue' ? 'Gold' : 'Black'} Team already has a spymaster.`
+                });
             }
             target.team = team;
             target.role = role;

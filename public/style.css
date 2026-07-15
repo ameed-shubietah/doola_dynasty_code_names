@@ -4923,3 +4923,43 @@ html body.discordActivity .gameIntroRing img {
         pointer-events: auto !important;
     }
 }
+@media (max-width: 980px) {
+    html body #app #game.gameV9:not(.hidden)
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar))
+    > .playerBody,
+
+    html body.discordActivity #app #game.gameV9:not(.hidden)
+    > aside.teamPanel
+    > section:not(.sideLogSection)
+    > .teamList
+    > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar))
+    > .playerBody,
+
+    html body #app #game.gameV9:not(.hidden)
+    #goldOperatives
+    > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar))
+    > .playerBody,
+
+    html body #app #game.gameV9:not(.hidden)
+    #blackOperatives
+    > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar))
+    > .playerBody,
+
+    html body.discordActivity #app #game.gameV9:not(.hidden)
+    #goldOperatives
+    > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar))
+    > .playerBody,
+
+    html body.discordActivity #app #game.gameV9:not(.hidden)
+    #blackOperatives
+    > .player:not(.editingName):has(> .avatar.characterAvatar:not(.customAvatar))
+    > .playerBody {
+        top: auto !important;
+        bottom: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
