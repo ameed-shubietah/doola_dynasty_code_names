@@ -70,9 +70,7 @@ const rooms = new Map();
 
 
 const discordActivityRooms = new Map();
-// Disconnected players stay visible for five seconds, then their seat is removed.
 const OFFLINE_SEAT_TTL_MS = 5000;
-// A lightweight seat snapshot lets the same player return to the same team/role later.
 const RECENT_SEAT_TTL_MS = 1000 * 60 * 30;
 
 function envBool(name, fallback = false) {
@@ -296,44 +294,128 @@ function clueGroupsForBank(bank, language = 'en') {
 function singlePlayerWordsForColors(bank, colors, language = 'en') {
     const words = Array(colors.length).fill('');
     const used = new Set();
-    const groups = clueGroupsForBank(bank, language).sort((a, b) =>
-        singlePlayerRecentGroupPenalty(a.key) - singlePlayerRecentGroupPenalty(b.key) ||
-        Math.random() - 0.5
-    );
-    const teamSlots = team => shuffle(colors.map((color, i) => color === team ? i : -1).filter(i => i >= 0));
-    const globalTeamGroupKeys = new Set();
+    const blocked = new Set();
+    const slotsByColor = new Map();
 
-    const placeTeamClusters = team => {
-        const slots = teamSlots(team);
-        const usedGroupKeys = new Set();
-        for (const group of groups) {
-            if (slots.length < 2) break;
-            if (usedGroupKeys.has(group.key) || globalTeamGroupKeys.has(group.key)) continue;
-            const candidates = shuffle(group.availableWords.filter(w => !used.has(w)));
-            if (candidates.length < 2) continue;
-            const take = Math.min(slots.length, candidates.length, 2 + Math.floor(Math.random() * 3));
-            if (take < 2) continue;
-            for (const word of candidates.slice(0, take)) {
-                const idx = slots.shift();
-                words[idx] = word;
-                used.add(word);
-            }
-            usedGroupKeys.add(group.key);
-            globalTeamGroupKeys.add(group.key);
-            if (Math.random() < .42) break;
-        }
-    };
+    colors.forEach((color, index) => {
+        if (!slotsByColor.has(color)) slotsByColor.set(color, []);
+        slotsByColor.get(color).push(index);
+    });
 
-    placeTeamClusters('blue');
-    placeTeamClusters('red');
+    for (const [color, slots] of slotsByColor.entries()) {
+        slotsByColor.set(color, shuffle(slots));
+    }
 
-    const remaining = shuffle(bank.filter(w => !used.has(w)));
-    for (let i = 0; i < words.length; i++) {
-        if (!words[i]) {
-            words[i] = remaining.shift() || shuffle(bank)[0];
-            used.add(words[i]);
+    const excludedGroupIds = new Set([
+        'objects',
+        'people',
+        'places',
+        'emotion-abstract',
+        'shapes-positions',
+        'language',
+        'colors',
+        'uncategorized'
+    ]);
+
+    const groupsByKey = new Map();
+    for (const group of clueGroupsForBank(bank, language)) {
+        const id = String(group.key || '').replace(/^semantic:/, '');
+        if (excludedGroupIds.has(id)) continue;
+        const availableWords = [...new Set((group.availableWords || []).filter(Boolean))];
+        if (availableWords.length < 4) continue;
+        const current = groupsByKey.get(group.key);
+        if (!current || availableWords.length > current.availableWords.length) {
+            groupsByKey.set(group.key, {...group, id, availableWords});
         }
     }
+
+    const groups = shuffle([...groupsByKey.values()]);
+    const selectedKeys = new Set();
+    const selectedFamilyIds = new Set();
+
+    function familyIdsForGroup(group) {
+        const lookup = semanticFamilyLookupForLanguage(language);
+        return new Set(lookup.get(group.id) || [group.id]);
+    }
+
+    function conflictsWithSelectedFamily(group) {
+        const family = familyIdsForGroup(group);
+        return [...family].some(id => selectedFamilyIds.has(id));
+    }
+
+    function selectGroup(size) {
+        const eligible = allowFamilyOverlap => shuffle(groups.filter(group => {
+            if (selectedKeys.has(group.key)) return false;
+            if (!allowFamilyOverlap && conflictsWithSelectedFamily(group)) return false;
+            return group.availableWords.filter(word => !used.has(word)).length >= size;
+        }));
+
+        const candidates = eligible(false).length ? eligible(false) : eligible(true);
+        const group = candidates[0] || null;
+        if (!group) return null;
+
+        const selectedWords = shuffle(group.availableWords.filter(word => !used.has(word))).slice(0, size);
+        if (selectedWords.length < size) return null;
+
+        selectedKeys.add(group.key);
+        familyIdsForGroup(group).forEach(id => selectedFamilyIds.add(id));
+        selectedWords.forEach(word => used.add(word));
+
+        return {group, words: selectedWords};
+    }
+
+    const plans = [
+        {size: 4, colors: ['blue', 'blue', 'red', 'red']},
+        {size: 6, colors: ['blue', 'blue', 'blue', 'red', 'red', 'red']},
+        {size: 5, colors: ['blue', 'red', 'neutral', 'neutral', 'assassin']}
+    ];
+
+    const selected = new Map();
+    [...plans].sort((a, b) => b.size - a.size).forEach(plan => {
+        selected.set(plan.size, selectGroup(plan.size));
+    });
+
+    function takeSlot(color) {
+        const slots = slotsByColor.get(color) || [];
+        return slots.shift();
+    }
+
+    for (const plan of plans) {
+        const cluster = selected.get(plan.size);
+        if (!cluster) continue;
+        const clusterWords = shuffle(cluster.words);
+        const targetColors = shuffle(plan.colors);
+        for (let i = 0; i < clusterWords.length; i++) {
+            const slot = takeSlot(targetColors[i]);
+            if (slot === undefined) continue;
+            words[slot] = clusterWords[i];
+        }
+    }
+
+    for (const group of groups) {
+        if (!selectedFamilyIds.has(group.id)) continue;
+        group.availableWords.forEach(word => blocked.add(word));
+    }
+
+    const randomPool = shuffle(bank.filter(word => !used.has(word) && !blocked.has(word)));
+    const fallbackPool = shuffle(bank.filter(word => !used.has(word) && !randomPool.includes(word)));
+    const fillPool = [...randomPool, ...fallbackPool];
+
+    for (let i = 0; i < words.length; i++) {
+        if (words[i]) continue;
+        const word = fillPool.shift();
+        if (!word) break;
+        words[i] = word;
+        used.add(word);
+    }
+
+    if (words.some(word => !word)) {
+        const remaining = shuffle(bank.filter(word => !used.has(word)));
+        for (let i = 0; i < words.length; i++) {
+            if (!words[i]) words[i] = remaining.shift() || shuffle(bank)[0];
+        }
+    }
+
     return words;
 }
 
@@ -2595,7 +2677,6 @@ io.on('connection', socket => {
         avatar = safeText(avatar, 120000);
         discordId = safeText(discordId, 80);
 
-        // If the visible seat was already removed, reuse its saved team/role for this identity.
         const recentSeat = !existing ? findRecentSeat(room, {playerKey: key, discordId}) : null;
         if (recentSeat) {
             team = recentSeat.team;
@@ -2604,7 +2685,6 @@ io.on('connection', socket => {
             if (!discordId && recentSeat.discordId) discordId = recentSeat.discordId;
             if (recentSeat.character) character = recentSeat.character;
             if (recentSeat.isAdmin) adminToken = room.adminToken;
-            // Consume old snapshots so later moves or kicks cannot revive stale seat data.
             recentSeatKeys(recentSeat).forEach(seatKey => delete room.recentSeats[seatKey]);
         }
 
@@ -2823,8 +2903,6 @@ io.on('connection', socket => {
         if (!room) return;
         if (room.botTimer) clearTimeout(room.botTimer);
 
-        // Build the next board now, but return everyone to the shared lobby first.
-        // The players object is preserved, so every team/role/character spot remains intact.
         const players = room.players;
         const adminToken = room.adminToken;
         const fresh = newRoom(room.id, room.language || 'en');
@@ -2930,8 +3008,6 @@ io.on('connection', socket => {
         if ((action === 'kick' || action === 'assignAdmin') && !actor.isAdmin) {
             return cb({ok: false, error: 'Only the room admin can use that option.'});
         }
-        // Admins and spymasters may move any seat, including another admin or themselves.
-        // Kicking the room admin remains protected below.
         if (target.isAdmin && target.id !== actor?.id && action === 'kick') {
             return cb({ok: false, error: 'The room admin cannot be kicked by anyone else.'});
         }
@@ -3116,11 +3192,9 @@ io.on('connection', socket => {
             room.log.push(`${p.name} disconnected. The room stays alive and they can rejoin with code ${room.id}.`);
             emitRoom(room);
             setTimeout(() => {
-                // Resolve the current room object because a new-game action may replace it during the grace period.
                 const liveRoom = rooms.get(room.id) || room;
                 const latest = liveRoom.players?.[offlinePlayerId];
                 if (!latest || latest.online !== false) return;
-                // Remove the stale visible player after five seconds, but retain a private resume snapshot.
                 rememberRecentSeat(liveRoom, latest);
                 delete liveRoom.votes?.[offlinePlayerId];
                 delete liveRoom.players[offlinePlayerId];
