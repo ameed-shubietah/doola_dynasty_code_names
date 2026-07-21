@@ -89,9 +89,10 @@ const AI_CLUES_ENABLED = envBool('AI_CLUES_ENABLED', false);
 const AI_CLUE_PROVIDER = String(process.env.AI_CLUE_PROVIDER || 'ollama').trim().toLowerCase();
 const OLLAMA_BASE_URL = String(process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/+$/, '');
 const OLLAMA_MODEL = String(process.env.OLLAMA_MODEL || 'qwen2.5:7b-instruct').trim();
-const AI_CLUE_TIMEOUT_MS = envInt('AI_CLUE_TIMEOUT_MS', 4500, 1200, 120000);
+const AI_CLUE_TIMEOUT_MS = envInt('AI_CLUE_TIMEOUT_MS', 9000, 1200, 120000);
+const AI_CLUE_RESPONSE_BUDGET_MS = envInt('AI_CLUE_RESPONSE_BUDGET_MS', 7000, 1800, 15000);
 const AI_STATUS_TIMEOUT_MS = envInt('AI_STATUS_TIMEOUT_MS', 5000, 1000, 30000);
-const AI_CLUE_CANDIDATES = envInt('AI_CLUE_CANDIDATES', 18, 4, 40);
+const AI_CLUE_CANDIDATES = envInt('AI_CLUE_CANDIDATES', 4, 1, 12);
 const AI_REJECT_SELF_REPORTED_UNSAFE = envBool('AI_REJECT_SELF_REPORTED_UNSAFE', false);
 const OLLAMA_AUTH_HEADER = String(process.env.OLLAMA_AUTH_HEADER || '').trim();
 const AI_ENGINE_OFFLINE_MESSAGE = "the host's pc where he hosts the ai engine that runs this mode is turned off at the moment";
@@ -129,6 +130,36 @@ function ollamaHeaders(extra = {}) {
     return headers;
 }
 
+let ollamaWarmPromise = null;
+let ollamaWarmAt = 0;
+
+async function warmOllamaModel(force = false) {
+    if (!AI_CLUES_ENABLED || AI_CLUE_PROVIDER !== 'ollama' || !OLLAMA_MODEL) return false;
+    if (!force && ollamaWarmAt && Date.now() - ollamaWarmAt < 20 * 60 * 1000) return true;
+    if (ollamaWarmPromise) return ollamaWarmPromise;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), Math.max(AI_STATUS_TIMEOUT_MS, 30000));
+    ollamaWarmPromise = fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: ollamaHeaders({'Content-Type': 'application/json'}),
+        signal: controller.signal,
+        body: JSON.stringify({
+            model: OLLAMA_MODEL,
+            stream: false,
+            keep_alive: '30m',
+            messages: []
+        })
+    }).then(response => {
+        if (!response.ok) throw new Error(`Ollama warmup HTTP ${response.status}`);
+        ollamaWarmAt = Date.now();
+        return true;
+    }).catch(() => false).finally(() => {
+        clearTimeout(timer);
+        ollamaWarmPromise = null;
+    });
+    return ollamaWarmPromise;
+}
+
 async function checkOllamaReady(timeoutMs = AI_STATUS_TIMEOUT_MS) {
     const status = {
         ok: false,
@@ -137,6 +168,7 @@ async function checkOllamaReady(timeoutMs = AI_STATUS_TIMEOUT_MS) {
         model: OLLAMA_MODEL,
         baseUrl: OLLAMA_BASE_URL,
         timeoutMs: AI_CLUE_TIMEOUT_MS,
+        responseBudgetMs: AI_CLUE_RESPONSE_BUDGET_MS,
         statusTimeoutMs: timeoutMs,
         candidates: AI_CLUE_CANDIDATES,
         maxAiTargets: MAX_AI_CLUE_TARGETS,
@@ -167,6 +199,7 @@ async function checkOllamaReady(timeoutMs = AI_STATUS_TIMEOUT_MS) {
         status.ok = response.ok && status.models.includes(OLLAMA_MODEL);
         if (!response.ok) status.error = `Ollama HTTP ${response.status}`;
         else if (!status.models.includes(OLLAMA_MODEL)) status.error = `Ollama is reachable, but model ${OLLAMA_MODEL} is not installed.`;
+        if (status.ok) warmOllamaModel().catch(() => {});
     } catch (err) {
         status.error = err?.name === 'AbortError' ? 'Timed out connecting to Ollama.' : (err?.message || 'Could not connect to Ollama.');
     } finally {
@@ -563,6 +596,9 @@ function newRoom(id, language = 'en') {
         singlePlayerUsedClues: {blue: [], red: []},
         singlePlayerUsedClueGroups: {blue: [], red: []},
         singlePlayerAiClueStatus: null,
+        singlePlayerAiRequestId: 0,
+        singlePlayerBotMistakesThisTurn: 0,
+        singlePlayerBotBonusUsedThisTurn: false,
         language,
         botTimer: null,
         log: []
@@ -723,8 +759,11 @@ function voteInfo(room, viewer = null) {
 
 function publicClue(room, player) {
     if (!room.clue) return null;
-    if (room.singlePlayer && player && room.clue.team !== player.team) return null;
-    return room.clue;
+    const canSeeTargets = !!(player && player.role === 'spymaster' && player.team === room.clue.team);
+    return {
+        ...room.clue,
+        targetIds: canSeeTargets ? [...(room.clue.targetIds || [])] : []
+    };
 }
 
 function publicLog(room, player) {
@@ -753,6 +792,9 @@ function counts(room) {
 function resetRoomTable(room, message = 'Table reset with a fresh board.') {
     const startingTeam = room.singlePlayer ? 'blue' : (Math.random() > 0.5 ? 'blue' : 'red');
     if (room.botTimer) clearTimeout(room.botTimer);
+    room.singlePlayerAiRequestId = Number(room.singlePlayerAiRequestId || 0) + 1;
+    room.singlePlayerBotMistakesThisTurn = 0;
+    room.singlePlayerBotBonusUsedThisTurn = false;
     room.round += 1;
     room.status = 'waiting-clue';
     room.turn = startingTeam;
@@ -778,6 +820,9 @@ function applyRoomLanguage(room, language = 'en', actorName = 'Admin') {
     if (!room || languageOfRoom(room) === language) return false;
     const startingTeam = room.singlePlayer ? 'blue' : (room.turn || (Math.random() > 0.5 ? 'blue' : 'red'));
     if (room.botTimer) clearTimeout(room.botTimer);
+    room.singlePlayerAiRequestId = Number(room.singlePlayerAiRequestId || 0) + 1;
+    room.singlePlayerBotMistakesThisTurn = 0;
+    room.singlePlayerBotBonusUsedThisTurn = false;
     room.language = language;
     room.turn = startingTeam;
     room.board = makeBoard(startingTeam, room.singlePlayer ? 'full' : 'themed', language);
@@ -807,6 +852,10 @@ function removeVoteForCard(room, cardId) {
 }
 
 function switchTurn(room) {
+    if (room.botTimer) clearTimeout(room.botTimer);
+    room.singlePlayerAiRequestId = Number(room.singlePlayerAiRequestId || 0) + 1;
+    room.singlePlayerBotMistakesThisTurn = 0;
+    room.singlePlayerBotBonusUsedThisTurn = false;
     room.turn = room.turn === 'blue' ? 'red' : 'blue';
     room.status = 'waiting-clue';
     room.clue = null;
@@ -822,6 +871,8 @@ function switchTurn(room) {
 }
 
 function finish(room, winner, reason) {
+    if (room.botTimer) clearTimeout(room.botTimer);
+    room.singlePlayerAiRequestId = Number(room.singlePlayerAiRequestId || 0) + 1;
     room.status = 'finished';
     room.winner = winner;
     room.log.push(`${winner === 'blue' ? 'GOLD' : winner === 'red' ? 'BLACK' : winner.toUpperCase()} wins. ${reason}`);
@@ -1678,7 +1729,7 @@ function aiSingleTargetPromptForClue(room, team, targetWord, allowedClues = []) 
     ].join('\n');
 }
 
-async function requestOllamaJson(prompt, numPredict = 700, signal = undefined) {
+async function requestOllamaJson(prompt, numPredict = 220, signal = undefined) {
     const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: ollamaHeaders({'Content-Type': 'application/json'}),
@@ -1687,8 +1738,8 @@ async function requestOllamaJson(prompt, numPredict = 700, signal = undefined) {
             model: OLLAMA_MODEL,
             stream: false,
             format: 'json',
-            keep_alive: '10m',
-            options: {temperature: 0.2, top_p: 0.8, num_predict: numPredict},
+            keep_alive: '30m',
+            options: {temperature: 0.15, top_p: 0.75, num_predict: numPredict},
             messages: [
                 {
                     role: 'system',
@@ -1710,7 +1761,7 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
     const controller = new AbortController();
     const effectiveTimeoutMs = Math.max(1200, Math.min(AI_CLUE_TIMEOUT_MS, timeoutMs));
     const timer = setTimeout(() => controller.abort(), effectiveTimeoutMs);
-    const candidateCount = Math.min(AI_CLUE_CANDIDATES, mode === 'normal' ? AI_CLUE_CANDIDATES : 1);
+    const candidateCount = mode === 'normal' ? Math.min(AI_CLUE_CANDIDATES, 4) : 1;
     lastAiClueDebug = {
         at: new Date().toISOString(),
         team,
@@ -1733,7 +1784,7 @@ async function fetchOllamaClueCandidates(room, team, mode = 'normal', repairTarg
                 : mode === 'compact'
                     ? aiRetryPromptForClue(room, team)
                     : aiPromptForClues(room, team, candidateCount);
-        const numPredict = mode === 'normal' ? 700 : 220;
+        const numPredict = mode === 'normal' ? 240 : 120;
         const {content, candidates} = await requestOllamaJson(prompt, numPredict, controller.signal);
         lastAiClueDebug = {
             ...lastAiClueDebug,
@@ -1867,59 +1918,20 @@ function validOwnTargetWordsFromAiCandidate(room, team, candidate) {
 async function chooseAiBotClue(room, team) {
     const rejects = [];
     const attempts = [];
-    let candidates = [];
-    let valid = [];
-    const deadline = Date.now() + AI_CLUE_TIMEOUT_MS;
-    const remainingMs = () => Math.max(0, deadline - Date.now());
-
-    const scoreCandidates = batch => {
-        const seenCandidateKeys = new Set();
-        return batch
-            .map(candidate => validateAiClueCandidate(room, team, candidate, rejects))
-            .filter(Boolean)
-            .filter(candidate => {
-                const key = `${candidate.word}:${candidate.targets.map(c => c.word).sort().join('|')}`;
-                if (seenCandidateKeys.has(key)) return false;
-                seenCandidateKeys.add(key);
-                return true;
-            })
-            .sort((a, b) => b.targets.length - a.targets.length || b.score - a.score);
-    };
-
-    candidates = await fetchOllamaClueCandidates(room, team, 'normal', [], remainingMs());
+    const timeoutMs = Math.min(AI_CLUE_TIMEOUT_MS, AI_CLUE_RESPONSE_BUDGET_MS);
+    const candidates = await fetchOllamaClueCandidates(room, team, 'normal', [], timeoutMs);
     attempts.push({mode: 'normal', rawCandidates: candidates.length});
-    valid = scoreCandidates(candidates);
-
-    if (!valid.length && candidates.length && lastAiClueDebug?.stage !== 'failed' && remainingMs() > 1500) {
-        const repairTargets = candidates
-            .map(candidate => validOwnTargetWordsFromAiCandidate(room, team, candidate))
-            .filter(words => words.length)
-            .sort((a, b) => b.length - a.length)[0]?.slice(0, MAX_AI_CLUE_TARGETS) || [];
-        if (repairTargets.length) {
-            candidates = await fetchOllamaClueCandidates(room, team, 'repair', repairTargets, remainingMs());
-            attempts.push({mode: 'repair', rawCandidates: candidates.length, repairTargets});
-            valid = scoreCandidates(candidates);
-        }
-    }
-
-    if (!valid.length && lastAiClueDebug?.stage !== 'failed' && remainingMs() > 1500) {
-        candidates = await fetchOllamaClueCandidates(room, team, 'compact', [], remainingMs());
-        attempts.push({mode: 'compact', rawCandidates: candidates.length});
-        valid = scoreCandidates(candidates);
-    }
-
-    if (!valid.length && lastAiClueDebug?.stage !== 'failed' && remainingMs() > 1500) {
-        const rescueWords = shuffle(unrevealedOwnWords(room, team));
-        for (const targetWord of rescueWords) {
-            const allowedClues = clueCandidatesForTargetWord(room, team, targetWord);
-            if (!allowedClues.length) continue;
-            candidates = await fetchOllamaClueCandidates(room, team, 'single', [targetWord], remainingMs(), allowedClues);
-            attempts.push({mode: 'single', rawCandidates: candidates.length, targetWord, allowedClues});
-            valid = scoreCandidates(candidates)
-                .filter(candidate => candidate.targets.some(card => card.word === targetWord) && allowedClues.includes(candidate.word));
-            if (valid.length || lastAiClueDebug?.stage === 'failed' || remainingMs() <= 1500) break;
-        }
-    }
+    const seenCandidateKeys = new Set();
+    const valid = candidates
+        .map(candidate => validateAiClueCandidate(room, team, candidate, rejects))
+        .filter(Boolean)
+        .filter(candidate => {
+            const key = `${candidate.word}:${candidate.targets.map(c => c.word).sort().join('|')}`;
+            if (seenCandidateKeys.has(key)) return false;
+            seenCandidateKeys.add(key);
+            return true;
+        })
+        .sort((a, b) => b.targets.length - a.targets.length || b.score - a.score);
     const picked = valid[0] || null;
     lastAiClueDebug = {
         ...(lastAiClueDebug || {}),
@@ -2039,7 +2051,7 @@ function chooseBotClue(room, team) {
     return {word: fallback, groupKey: `fallback:${fallback}`, targets: [card], number: 1};
 }
 
-function applyConfirmedGuess(room, p, card) {
+function applyConfirmedGuess(room, p, card, options = {}) {
     card.revealed = true;
     card.revealedBy = p.name;
     card.revealedById = p.id;
@@ -2064,7 +2076,7 @@ function applyConfirmedGuess(room, p, card) {
     }
 
     if (card.color === 'neutral' || card.color !== team) {
-        switchTurn(room);
+        if (options.continueAfterWrong !== true) switchTurn(room);
         return;
     }
 
@@ -2074,8 +2086,20 @@ function applyConfirmedGuess(room, p, card) {
 }
 
 async function botGiveClue(room) {
-    if (!room?.singlePlayer || room.status !== 'waiting-clue' || room.winner) return;
+    if (!room?.singlePlayer || room.status !== 'waiting-clue' || room.winner || room.clue) return;
     const clueTeam = room.turn;
+    const clueRound = room.round;
+    const requestId = Number(room.singlePlayerAiRequestId || 0) + 1;
+    room.singlePlayerAiRequestId = requestId;
+    const requestIsCurrent = () =>
+        room.singlePlayer &&
+        !room.winner &&
+        room.status === 'waiting-clue' &&
+        !room.clue &&
+        room.turn === clueTeam &&
+        room.round === clueRound &&
+        room.singlePlayerAiRequestId === requestId;
+
     room.singlePlayerAiClueStatus = {
         state: 'requesting',
         team: clueTeam,
@@ -2084,12 +2108,14 @@ async function botGiveClue(room) {
         message: `Preparing ${clueTeam === 'blue' ? 'GOLD' : 'BLACK'} AI clue...`
     };
     emitRoom(room);
+
     let clue = null;
     if (AI_CLUES_ENABLED) {
-        clue = await chooseAiBotClue(room, room.turn);
+        clue = await chooseAiBotClue(room, clueTeam);
+        if (!requestIsCurrent()) return;
         if (!clue) {
             const aiDebugBeforeRescue = lastAiClueDebug;
-            clue = chooseBotClue(room, room.turn);
+            clue = chooseBotClue(room, clueTeam);
             if (clue) {
                 clue.aiRescue = true;
                 lastAiClueDebug = {
@@ -2105,16 +2131,19 @@ async function botGiveClue(room) {
             }
         }
     } else {
-        clue = chooseBotClue(room, room.turn);
+        clue = chooseBotClue(room, clueTeam);
     }
+
+    if (!requestIsCurrent()) return;
+
     if (!clue) {
         const message = AI_CLUES_ENABLED
-            ? `AI clue unavailable for ${room.turn === 'blue' ? 'GOLD' : 'BLACK'} turn. Check /api/ai-clue-status and Render logs.`
-            : `No local clue available for ${room.turn === 'blue' ? 'GOLD' : 'BLACK'} turn.`;
+            ? `AI clue unavailable for ${clueTeam === 'blue' ? 'GOLD' : 'BLACK'} turn. Check /api/ai-clue-status and server logs.`
+            : `No local clue available for ${clueTeam === 'blue' ? 'GOLD' : 'BLACK'} turn.`;
         room.singlePlayerAiClueStatus = {
             state: 'failed',
-            team: room.turn,
-            teamName: room.turn === 'blue' ? 'GOLD' : 'BLACK',
+            team: clueTeam,
+            teamName: clueTeam === 'blue' ? 'GOLD' : 'BLACK',
             at: Date.now(),
             message,
             debug: lastAiClueDebug
@@ -2124,10 +2153,11 @@ async function botGiveClue(room) {
         emitRoom(room);
         return;
     }
+
     room.singlePlayerAiClueStatus = {
         state: 'picked',
-        team: room.turn,
-        teamName: room.turn === 'blue' ? 'GOLD' : 'BLACK',
+        team: clueTeam,
+        teamName: clueTeam === 'blue' ? 'GOLD' : 'BLACK',
         at: Date.now(),
         clue: clue.word,
         number: clue.number,
@@ -2139,7 +2169,7 @@ async function botGiveClue(room) {
         ? {name: 'Ollama Oracle', character: 'oracle'}
         : clue.aiRescue
             ? {name: 'DSTY Rescue', character: 'oracle'}
-            : room.turn === 'blue'
+            : clueTeam === 'blue'
                 ? {name: 'DSTY Oracle', character: 'oracle'}
                 : {name: 'Bot Oracle', character: 'ninja'};
     room.clue = {
@@ -2147,85 +2177,157 @@ async function botGiveClue(room) {
         number: clue.number,
         by: giver?.name || 'DSTY Oracle',
         avatar: '',
-        team: room.turn,
+        team: clueTeam,
         targetIds: clue.targets.map(c => c.id),
         extraHint: false,
         at: Date.now()
     };
     room.singlePlayerUsedClues = room.singlePlayerUsedClues || {blue: [], red: []};
-    room.singlePlayerUsedClues[room.turn] = room.singlePlayerUsedClues[room.turn] || [];
-    if (!room.singlePlayerUsedClues[room.turn].includes(room.clue.word.toUpperCase())) {
-        room.singlePlayerUsedClues[room.turn].push(room.clue.word.toUpperCase());
+    room.singlePlayerUsedClues[clueTeam] = room.singlePlayerUsedClues[clueTeam] || [];
+    if (!room.singlePlayerUsedClues[clueTeam].includes(room.clue.word.toUpperCase())) {
+        room.singlePlayerUsedClues[clueTeam].push(room.clue.word.toUpperCase());
     }
     room.singlePlayerUsedClueGroups = room.singlePlayerUsedClueGroups || {blue: [], red: []};
-    room.singlePlayerUsedClueGroups[room.turn] = room.singlePlayerUsedClueGroups[room.turn] || [];
-    if (clue.groupKey && !room.singlePlayerUsedClueGroups[room.turn].includes(clue.groupKey)) {
-        room.singlePlayerUsedClueGroups[room.turn].push(clue.groupKey);
+    room.singlePlayerUsedClueGroups[clueTeam] = room.singlePlayerUsedClueGroups[clueTeam] || [];
+    if (clue.groupKey && !room.singlePlayerUsedClueGroups[clueTeam].includes(clue.groupKey)) {
+        room.singlePlayerUsedClueGroups[clueTeam].push(clue.groupKey);
     }
     rememberSinglePlayerClue({word: room.clue.word, groupKey: clue.groupKey});
     room.guessesThisTurn = 0;
     room.allowedGuesses = clue.number + 1;
+    room.singlePlayerBotMistakesThisTurn = 0;
+    room.singlePlayerBotBonusUsedThisTurn = false;
     room.status = 'guessing';
     room.votes = {};
     room.roundStartedAt = Date.now();
     room.hintRequested = null;
-    room.log.push(`HINT|${room.turn}|${room.clue.word.toUpperCase()}|${room.clue.number}|${room.clue.by}|${room.clue.avatar || ''}|${giver?.character || ''}`);
+    room.log.push(`HINT|${clueTeam}|${room.clue.word.toUpperCase()}|${room.clue.number}|${room.clue.by}|${room.clue.avatar || ''}|${giver?.character || ''}`);
     emitRoom(room);
     scheduleSinglePlayerBot(room);
 }
 
 function chooseBotGuess(room) {
+    if (!room?.clue || room.clue.team !== 'red' || !Array.isArray(room.clue.targetIds) || !room.clue.targetIds.length) return null;
     const unrevealed = room.board.filter(c => !c.revealed);
-    const clueTargets = new Set(Array.isArray(room.clue?.targetIds) ? room.clue.targetIds : []);
+    if (!unrevealed.length) return null;
+    const clueTargets = new Set(room.clue.targetIds);
     const intended = unrevealed.filter(c => c.color === 'red' && clueTargets.has(c.id));
-    const black = unrevealed.filter(c => c.color === 'red');
+    const ownMisses = unrevealed.filter(c => c.color === 'red' && !clueTargets.has(c.id));
     const neutral = unrevealed.filter(c => c.color === 'neutral');
     const wrongTeam = unrevealed.filter(c => c.color === 'blue');
     const danger = unrevealed.filter(c => c.color === 'assassin');
     const difficulty = ['easy', 'medium', 'extreme'].includes(room.singlePlayerDifficulty) ? room.singlePlayerDifficulty : 'medium';
+    const targetLimit = Math.max(1, Number(room.clue.number || clueTargets.size || 1));
+    const guesses = Number(room.guessesThisTurn || 0);
+    const mistakes = Number(room.singlePlayerBotMistakesThisTurn || 0);
+    const bonusUsed = room.singlePlayerBotBonusUsedThisTurn === true;
 
     if (difficulty === 'extreme') {
-        if (intended.length) return shuffle(intended)[0];
-        if (black.length) return shuffle(black)[0];
-        return shuffle(unrevealed)[0];
+        if (guesses >= targetLimit || !intended.length) return null;
+        const card = shuffle(intended)[0];
+        return {card, intended: true, bonus: false};
+    }
+
+    if (guesses >= targetLimit) {
+        if (mistakes < 1 || bonusUsed) return null;
+        const card = shuffle(unrevealed)[0];
+        return {card, intended: clueTargets.has(card.id), bonus: true};
     }
 
     const roll = Math.random();
     const profile = difficulty === 'easy'
-        ? {intended: .30, own: .50, neutral: .80, wrong: .96}
-        : {intended: .50, own: .68, neutral: .88, wrong: .98};
+        ? {intended: 0.42, ownMiss: 0.68, neutral: 0.86, wrong: 0.98}
+        : {intended: 0.68, ownMiss: 0.86, neutral: 0.95, wrong: 0.995};
 
-    if (roll < profile.intended && intended.length) return shuffle(intended)[0];
-    if (roll < profile.own && black.length) return shuffle(black)[0];
-    if (roll < profile.neutral && neutral.length) return shuffle(neutral)[0];
-    if (roll < profile.wrong && wrongTeam.length) return shuffle(wrongTeam)[0];
-    return shuffle(danger.length ? danger : unrevealed)[0];
+    let pool = [];
+    if (roll < profile.intended && intended.length) pool = intended;
+    else if (roll < profile.ownMiss && ownMisses.length) pool = ownMisses;
+    else if (roll < profile.neutral && neutral.length) pool = neutral;
+    else if (roll < profile.wrong && wrongTeam.length) pool = wrongTeam;
+    else if (danger.length) pool = danger;
+
+    if (!pool.length) {
+        pool = intended.length ? intended
+            : ownMisses.length ? ownMisses
+                : neutral.length ? neutral
+                    : wrongTeam.length ? wrongTeam
+                        : danger.length ? danger
+                            : unrevealed;
+    }
+
+    const card = shuffle(pool)[0];
+    return card ? {card, intended: clueTargets.has(card.id), bonus: false} : null;
 }
 
 function botGuess(room) {
     if (!room?.singlePlayer || room.status !== 'guessing' || room.turn !== 'red' || room.winner) return;
+    if (!room.clue || room.clue.team !== 'red' || !room.clue.word || !Number(room.clue.number) || !Array.isArray(room.clue.targetIds) || !room.clue.targetIds.length) return;
     const bot = room.players[SINGLE_BOT_IDS.blackBot];
-    const card = chooseBotGuess(room);
-    if (!bot || !card) return;
+    const choice = chooseBotGuess(room);
+    if (!bot) return;
+
+    if (!choice?.card) {
+        switchTurn(room);
+        emitRoom(room);
+        scheduleSinglePlayerBot(room);
+        return;
+    }
+
+    const card = choice.card;
+    const clueAt = room.clue.at;
+    const clueTargetIds = new Set(room.clue.targetIds);
     room.votes = {};
     room.votes[bot.id] = [card.id];
     emitRoom(room);
+
     room.botTimer = setTimeout(() => {
         if (!room.singlePlayer || room.status !== 'guessing' || room.turn !== 'red' || room.winner || card.revealed) return;
-        applyConfirmedGuess(room, bot, card);
+        if (!room.clue || room.clue.team !== 'red' || room.clue.at !== clueAt) return;
+
+        const difficulty = ['easy', 'medium', 'extreme'].includes(room.singlePlayerDifficulty) ? room.singlePlayerDifficulty : 'medium';
+        const targetLimit = Math.max(1, Number(room.clue.number || clueTargetIds.size || 1));
+        const wasMistake = !clueTargetIds.has(card.id);
+        if (wasMistake) room.singlePlayerBotMistakesThisTurn = Number(room.singlePlayerBotMistakesThisTurn || 0) + 1;
+        if (choice.bonus) room.singlePlayerBotBonusUsedThisTurn = true;
+
+        const continueAfterWrong =
+            difficulty !== 'extreme' &&
+            !choice.bonus &&
+            Number(room.guessesThisTurn || 0) + 1 <= targetLimit;
+
+        applyConfirmedGuess(room, bot, card, {continueAfterWrong});
+
+        if (room.status === 'guessing' && room.turn === 'red' && !room.winner) {
+            if (difficulty === 'extreme' && room.guessesThisTurn >= targetLimit) {
+                switchTurn(room);
+            } else if (difficulty !== 'extreme') {
+                const mistakes = Number(room.singlePlayerBotMistakesThisTurn || 0);
+                if (choice.bonus || (room.guessesThisTurn >= targetLimit && mistakes < 1)) switchTurn(room);
+            }
+        }
+
         emitRoom(room);
         scheduleSinglePlayerBot(room);
-    }, 850);
+    }, 700);
 }
 
 function scheduleSinglePlayerBot(room) {
     if (!room?.singlePlayer) return;
     if (room.botTimer) clearTimeout(room.botTimer);
+    room.botTimer = null;
     if (room.status === 'finished') return;
+
     if (room.status === 'waiting-clue') {
-        room.botTimer = setTimeout(() => botGiveClue(room), 650);
-    } else if (room.status === 'guessing' && room.turn === 'red') {
-        room.botTimer = setTimeout(() => botGuess(room), 1000 + Math.floor(Math.random() * 600));
+        if (room.clue) return;
+        room.botTimer = setTimeout(() => botGiveClue(room), 150);
+        return;
+    }
+
+    if (room.status === 'guessing' && room.turn === 'red') {
+        if (!room.clue || room.clue.team !== 'red' || !room.clue.word || !Number(room.clue.number) || !Array.isArray(room.clue.targetIds) || !room.clue.targetIds.length) return;
+        const clueAge = Date.now() - Number(room.clue.at || Date.now());
+        const waitForClue = Math.max(0, 2900 - clueAge);
+        room.botTimer = setTimeout(() => botGuess(room), waitForClue + 250 + Math.floor(Math.random() * 250));
     }
 }
 
@@ -3215,4 +3317,7 @@ function getPlayerBySocket(room, socketId) {
     return findPlayerBySocket(room, socketId);
 }
 
-server.listen(PORT, () => console.log(`Doola's Dynasty Code Names running on http://localhost:${PORT}`));
+server.listen(PORT, () => {
+    console.log(`Doola's Dynasty Code Names running on http://localhost:${PORT}`);
+    setTimeout(() => warmOllamaModel(true).catch(() => {}), 1000);
+});
