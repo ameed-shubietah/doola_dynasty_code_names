@@ -70,7 +70,6 @@ const rooms = new Map();
 
 
 const discordActivityRooms = new Map();
-const OFFLINE_SEAT_TTL_MS = 5000;
 const RECENT_SEAT_TTL_MS = 1000 * 60 * 30;
 
 function envBool(name, fallback = false) {
@@ -3287,21 +3286,11 @@ io.on('connection', socket => {
         if (!room) return;
         const p = findPlayerBySocket(room, socket.id);
         if (p) {
-            const offlinePlayerId = p.id;
             p.online = false;
             p.socketId = null;
             p.lastSeenAt = Date.now();
-            room.log.push(`${p.name} disconnected. The room stays alive and they can rejoin with code ${room.id}.`);
+            room.log.push(`${p.name} disconnected temporarily. Their seat stays reserved and they can rejoin with code ${room.id}.`);
             emitRoom(room);
-            setTimeout(() => {
-                const liveRoom = rooms.get(room.id) || room;
-                const latest = liveRoom.players?.[offlinePlayerId];
-                if (!latest || latest.online !== false) return;
-                rememberRecentSeat(liveRoom, latest);
-                delete liveRoom.votes?.[offlinePlayerId];
-                delete liveRoom.players[offlinePlayerId];
-                emitRoom(liveRoom);
-            }, OFFLINE_SEAT_TTL_MS);
         }
     });
 });
