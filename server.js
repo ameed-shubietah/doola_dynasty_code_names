@@ -59,6 +59,14 @@ app.post('/api/discord-token', async (req, res) => {
     }
 });
 
+app.use((req, res, next) => {
+    if (req.path === '/' || req.path.endsWith('.html') || req.path.endsWith('.js')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/ai-clue-status', async (_req, res) => {
     res.json(await checkOllamaReady());
@@ -70,6 +78,7 @@ const rooms = new Map();
 
 
 const discordActivityRooms = new Map();
+const discordSinglePlayerRooms = new Map();
 const OFFLINE_SEAT_TTL_MS = 5000;
 const SINGLE_PLAYER_OFFLINE_SEAT_TTL_MS = 1000 * 60 * 60 * 12;
 const RECENT_SEAT_TTL_MS = 1000 * 60 * 30;
@@ -641,6 +650,48 @@ function findRecentSeat(room, {playerKey = '', discordId = ''} = {}) {
         || null;
 }
 
+function normalizeDiscordId(value = '') {
+    return String(value || '').trim().replace(/[^0-9A-Za-z_-]/g, '').slice(0, 80);
+}
+
+function rememberDiscordSinglePlayerRoom(room, discordId = '') {
+    const id = normalizeDiscordId(discordId);
+    if (!room?.singlePlayer || !id) return;
+    discordSinglePlayerRooms.set(id, room.id);
+}
+
+function forgetDiscordSinglePlayerRoom(room, discordId = '') {
+    const id = normalizeDiscordId(discordId);
+    if (id && discordSinglePlayerRooms.get(id) === room?.id) discordSinglePlayerRooms.delete(id);
+    if (!room?.id) return;
+    for (const [userId, roomId] of discordSinglePlayerRooms.entries()) {
+        if (roomId === room.id && (!id || userId === id)) discordSinglePlayerRooms.delete(userId);
+    }
+}
+
+function findDiscordSinglePlayerRoom({roomId = '', discordId = '', playerKey = ''} = {}) {
+    const explicitId = String(roomId || '').trim().toUpperCase();
+    const cleanDiscordId = normalizeDiscordId(discordId);
+    const cleanPlayerKey = safePlayerKey(playerKey || '');
+    const explicitRoom = explicitId ? rooms.get(explicitId) : null;
+    if (explicitRoom?.singlePlayer) return explicitRoom;
+
+    const mappedRoomId = cleanDiscordId ? discordSinglePlayerRooms.get(cleanDiscordId) : '';
+    const mappedRoom = mappedRoomId ? rooms.get(mappedRoomId) : null;
+    if (mappedRoom?.singlePlayer) return mappedRoom;
+    if (mappedRoomId && !mappedRoom) discordSinglePlayerRooms.delete(cleanDiscordId);
+
+    for (const room of rooms.values()) {
+        if (!room?.singlePlayer) continue;
+        const players = Object.values(room.players || {});
+        if (cleanDiscordId && players.some(player => normalizeDiscordId(player.discordId) === cleanDiscordId)) return room;
+        if (playerKey && room.players?.[cleanPlayerKey]) return room;
+        const recent = findRecentSeat(room, {playerKey: cleanPlayerKey, discordId: cleanDiscordId});
+        if (recent) return room;
+    }
+    return null;
+}
+
 function roomLobbyInfo(room) {
     const players = Object.values(room.players || {});
     const online = players.filter(p => p.online !== false);
@@ -709,6 +760,7 @@ function publicRoom(room, forPlayerKey = null) {
         winner: room.winner,
         clue: publicClue(room, player),
         singlePlayer: !!room.singlePlayer,
+        singlePlayerDifficulty: room.singlePlayer ? room.singlePlayerDifficulty : undefined,
         language: room.language || 'en',
         aiClueStatus: room.singlePlayer ? (room.singlePlayerAiClueStatus || null) : null,
         points: counts(room),
@@ -2503,6 +2555,7 @@ io.on('connection', socket => {
     socket.on('createSinglePlayerRoom', async ({
                                                    name,
                                                    avatar = '',
+                                                   discordId = '',
                                                    character = 'raiden',
                                                    difficulty = 'medium',
                                                    language = 'en',
@@ -2535,7 +2588,7 @@ io.on('connection', socket => {
         const joined = joinRoom(socket, room, {
             name,
             avatar,
-            discordId: '',
+            discordId,
             team: 'blue',
             role: 'operative',
             character,
@@ -2547,6 +2600,7 @@ io.on('connection', socket => {
         });
         if (joined?.ok === false) return cb(joined);
         const human = room.players[socket.data.playerKey];
+        rememberDiscordSinglePlayerRoom(room, human?.discordId || discordId);
         addSinglePlayerBots(room, human?.character || character);
         room.log.push(`Single Player started: GOLD vs DSTY Bot (${room.singlePlayerDifficulty.toUpperCase()} mode).`);
         emitRoom(room);
@@ -2558,6 +2612,68 @@ io.on('connection', socket => {
             adminToken: room.adminToken,
             singlePlayer: true,
             difficulty: room.singlePlayerDifficulty
+        });
+    });
+
+    socket.on('resumeSinglePlayerRoom', ({
+                                                   roomId = '',
+                                                   discordId = '',
+                                                   name = '',
+                                                   avatar = '',
+                                                   character = 'raiden',
+                                                   playerKey = '',
+                                                   adminToken = '',
+                                                   language = 'en',
+                                                   arabicMode = false,
+                                                   restoreReason = ''
+                                               } = {}, cb = () => {
+    }) => {
+        const cleanDiscordId = normalizeDiscordId(discordId);
+        const room = findDiscordSinglePlayerRoom({roomId, discordId: cleanDiscordId, playerKey});
+        if (!room) return cb({ok: false, error: 'Single Player game not found.'});
+
+        const cleanPlayerKey = playerKey ? safePlayerKey(playerKey) : '';
+        const existing = Object.values(room.players || {}).find(player =>
+            player.id !== SINGLE_BOT_IDS.blackBot &&
+            ((cleanDiscordId && normalizeDiscordId(player.discordId) === cleanDiscordId) ||
+                (cleanPlayerKey && player.id === cleanPlayerKey))
+        );
+        const recent = existing ? null : findRecentSeat(room, {
+            playerKey: cleanPlayerKey,
+            discordId: cleanDiscordId
+        });
+        const resolvedKey = existing?.id || recent?.id || cleanPlayerKey || (cleanDiscordId ? safePlayerKey(`d_${cleanDiscordId}`) : '');
+        const resolvedName = name || existing?.name || recent?.name || 'Agent';
+        const resolvedAvatar = avatar || existing?.avatar || recent?.avatar || '';
+        const resolvedCharacter = character || existing?.character || recent?.character || 'raiden';
+        const resolvedDiscordId = cleanDiscordId || normalizeDiscordId(existing?.discordId || recent?.discordId || '');
+
+        const joined = joinRoom(socket, room, {
+            name: resolvedName,
+            avatar: resolvedAvatar,
+            discordId: resolvedDiscordId,
+            team: existing?.team || recent?.team || 'blue',
+            role: existing?.role || recent?.role || 'operative',
+            character: resolvedCharacter,
+            playerKey: resolvedKey,
+            adminToken: adminToken || (existing?.isAdmin || recent?.isAdmin ? room.adminToken : ''),
+            language,
+            arabicMode,
+            resume: true,
+            restoreReason
+        });
+        if (joined?.ok === false) return cb(joined);
+
+        const player = room.players[socket.data.playerKey];
+        rememberDiscordSinglePlayerRoom(room, player?.discordId || resolvedDiscordId);
+        cb({
+            ok: true,
+            roomId: room.id,
+            playerKey: socket.data.playerKey,
+            adminToken: player?.isAdmin ? room.adminToken : undefined,
+            singlePlayer: true,
+            difficulty: room.singlePlayerDifficulty,
+            roomState: publicRoom(room, socket.data.playerKey)
         });
     });
 
@@ -2667,7 +2783,10 @@ io.on('connection', socket => {
             roomId: room.id,
             playerKey: socket.data.playerKey,
             adminToken: forceAdmin ? room.adminToken : ((adminToken && adminToken === room.adminToken) ? room.adminToken : undefined),
-            activityScope: scopeKey || undefined
+            activityScope: scopeKey || undefined,
+            singlePlayer: !!room.singlePlayer,
+            difficulty: room.singlePlayer ? room.singlePlayerDifficulty : undefined,
+            roomState: room.singlePlayer ? publicRoom(room, socket.data.playerKey) : undefined
         });
     });
 
@@ -2717,6 +2836,7 @@ io.on('connection', socket => {
         }
 
         socket.data.playerKey = finalKey;
+        rememberDiscordSinglePlayerRoom(room, cleanDiscordId);
         cb({ok: true, playerKey: finalKey});
         io.to(socket.id).emit('identityKey', {playerKey: finalKey});
         emitRoom(room);
@@ -2919,6 +3039,7 @@ io.on('connection', socket => {
                 existing.isAdmin = true;
                 existing.adminToken = room.adminToken;
             }
+            rememberDiscordSinglePlayerRoom(room, existing.discordId);
 
             emitRoom(room);
             return {ok: true};
@@ -2941,6 +3062,7 @@ io.on('connection', socket => {
             isAdmin,
             adminToken: isAdmin ? room.adminToken : undefined
         };
+        rememberDiscordSinglePlayerRoom(room, discordId);
 
         emitRoom(room);
         return {ok: true};
@@ -3274,6 +3396,7 @@ io.on('connection', socket => {
         const p = getPlayerBySocket(room, socket.id);
         if (p) {
             room.log.push(`${p.name} left the table and returned to the lobby.`);
+            forgetDiscordSinglePlayerRoom(room, p.discordId);
             delete room.players[p.id];
             room.votes = room.votes || {};
             delete room.votes[p.id];
