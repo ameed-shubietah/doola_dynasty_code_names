@@ -1848,24 +1848,34 @@ function playerNameFromDiscord() {
 }
 
 const ACTIVITY_SEAT_STORAGE_KEY = 'cc_discordActivitySeat_v2';
+const DISCORD_SINGLE_PLAYER_SEAT_STORAGE_KEY = 'cc_discordSinglePlayerSeat_v1';
 const ACTIVITY_SEAT_MAX_AGE_MS = 1000 * 60 * 60 * 12;
 
 function discordScopeKey() {
     return discordActivityScopeId() || 'activity';
 }
 
-function readSavedDiscordActivitySeat() {
+function readSavedDiscordSeatByKey(key) {
     try {
-        const raw = localStorage.getItem(ACTIVITY_SEAT_STORAGE_KEY);
+        const raw = localStorage.getItem(key);
         if (!raw) return null;
         const seat = JSON.parse(raw);
         if (!seat || typeof seat !== 'object') return null;
         const savedAt = Number(seat.savedAt || 0);
-        if (!savedAt || Date.now() - savedAt > ACTIVITY_SEAT_MAX_AGE_MS) return null;
+        if (!savedAt || Date.now() - savedAt > ACTIVITY_SEAT_MAX_AGE_MS) {
+            localStorage.removeItem(key);
+            return null;
+        }
         return seat;
     } catch {
         return null;
     }
+}
+
+function readSavedDiscordActivitySeat() {
+    const singlePlayerSeat = readSavedDiscordSeatByKey(DISCORD_SINGLE_PLAYER_SEAT_STORAGE_KEY);
+    if (singlePlayerSeat?.singlePlayer) return singlePlayerSeat;
+    return readSavedDiscordSeatByKey(ACTIVITY_SEAT_STORAGE_KEY);
 }
 
 function saveDiscordActivitySeat(extra = {}) {
@@ -1890,6 +1900,11 @@ function saveDiscordActivitySeat(extra = {}) {
     };
     try {
         localStorage.setItem(ACTIVITY_SEAT_STORAGE_KEY, JSON.stringify(seat));
+        if (seat.singlePlayer) {
+            localStorage.setItem(DISCORD_SINGLE_PLAYER_SEAT_STORAGE_KEY, JSON.stringify(seat));
+        } else {
+            localStorage.removeItem(DISCORD_SINGLE_PLAYER_SEAT_STORAGE_KEY);
+        }
     } catch {
     }
 }
@@ -1897,6 +1912,7 @@ function saveDiscordActivitySeat(extra = {}) {
 function clearSavedDiscordActivitySeat() {
     try {
         localStorage.removeItem(ACTIVITY_SEAT_STORAGE_KEY);
+        localStorage.removeItem(DISCORD_SINGLE_PLAYER_SEAT_STORAGE_KEY);
     } catch {
     }
 }
@@ -2422,13 +2438,18 @@ function syncDiscordLanding() {
         applyDiscordNameToInput(true);
         renderDiscordIdentity();
     }
-    refreshDiscordLobbyPreview();
+    if (!readSavedDiscordActivitySeat()?.singlePlayer) refreshDiscordLobbyPreview();
     refreshLandingAdminControls();
     setJoinButtonsReady();
 }
 
 function getDiscordActivityRoomCode() {
     const explicitRoom = String(inviteRoom || '').trim().toUpperCase();
+    const saved = readSavedDiscordActivitySeat();
+
+    if (saved?.singlePlayer && saved.roomId) {
+        return String(saved.roomId).trim().toUpperCase();
+    }
 
     if (!expectsDiscordSharedScope()) {
         return explicitRoom || roomCodeFromSeed('local-discord-test');
@@ -2437,7 +2458,6 @@ function getDiscordActivityRoomCode() {
     const canonical = canonicalDiscordActivityRoomCode();
     if (canonical) return canonical;
 
-    const saved = readSavedDiscordActivitySeat();
     const currentScope = discordScopeKey();
     const sameScope = !saved?.scopeKey || saved.scopeKey === currentScope;
     if (saved?.roomId && sameScope) return String(saved.roomId).toUpperCase();
@@ -2730,7 +2750,8 @@ window.addEventListener('discordActivityReady', (event) => {
 
     syncDiscordLanding();
     if (discordActivityInfo?.enabled) {
-        refreshDiscordLobbyPreview(true);
+        const savedSeat = readSavedDiscordActivitySeat();
+        if (!savedSeat?.singlePlayer) refreshDiscordLobbyPreview(true);
         restoreDiscordActivitySeat('discord-ready', {force: true});
     }
 });
@@ -2754,28 +2775,26 @@ window.addEventListener('discordIdentityError', () => {
     setJoinButtonsReady();
 });
 
-window.addEventListener('pageshow', () => {
-    if (!socket.connected) socket.connect();
-    if (isDiscordActivity) {
-        refreshDiscordLobbyPreview(true);
-        restoreDiscordActivitySeat('pageshow', {force: true});
-    } else {
-        restoreLocalSeat('pageshow');
-    }
-});
-
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'visible') return;
+function restoreVisibleGame(reason = '') {
     if (!socket.connected) {
         socket.connect();
         return;
     }
     if (isDiscordActivity) {
-        refreshDiscordLobbyPreview(true);
-        restoreDiscordActivitySeat('visible', {force: true});
+        const savedSeat = readSavedDiscordActivitySeat();
+        if (!savedSeat?.singlePlayer) refreshDiscordLobbyPreview(true);
+        restoreDiscordActivitySeat(reason, {force: true});
     } else {
-        restoreLocalSeat('visible');
+        restoreLocalSeat(reason);
     }
+}
+
+window.addEventListener('pageshow', () => restoreVisibleGame('pageshow'));
+window.addEventListener('focus', () => restoreVisibleGame('focus'));
+window.addEventListener('online', () => restoreVisibleGame('online'));
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') restoreVisibleGame('visible');
 });
 
 
@@ -3361,7 +3380,8 @@ $('joinBtn').onclick = () => {
 socket.on('connect', () => {
     myId = playerKey;
     if (isDiscordActivity) {
-        refreshDiscordLobbyPreview(true);
+        const savedSeat = readSavedDiscordActivitySeat();
+        if (!savedSeat?.singlePlayer) refreshDiscordLobbyPreview(true);
         restoreDiscordActivitySeat('socket-connect', {force: true});
         return;
     }

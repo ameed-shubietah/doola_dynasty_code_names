@@ -71,6 +71,7 @@ const rooms = new Map();
 
 const discordActivityRooms = new Map();
 const OFFLINE_SEAT_TTL_MS = 5000;
+const SINGLE_PLAYER_OFFLINE_SEAT_TTL_MS = 1000 * 60 * 60 * 12;
 const RECENT_SEAT_TTL_MS = 1000 * 60 * 30;
 
 function envBool(name, fallback = false) {
@@ -2597,7 +2598,9 @@ io.on('connection', socket => {
             ok: true,
             roomId: room.id,
             playerKey: socket.data.playerKey,
-            adminToken: (adminToken && adminToken === room.adminToken) ? room.adminToken : undefined
+            adminToken: (adminToken && adminToken === room.adminToken) ? room.adminToken : undefined,
+            singlePlayer: !!room.singlePlayer,
+            difficulty: room.singlePlayer ? room.singlePlayerDifficulty : undefined
         });
     });
 
@@ -3293,6 +3296,9 @@ io.on('connection', socket => {
             p.lastSeenAt = Date.now();
             room.log.push(`${p.name} disconnected. They can return to the same game.`);
             emitRoom(room);
+            const offlineSeatTtl = room.singlePlayer
+                ? SINGLE_PLAYER_OFFLINE_SEAT_TTL_MS
+                : OFFLINE_SEAT_TTL_MS;
             setTimeout(() => {
                 const liveRoom = rooms.get(room.id) || room;
                 const latest = liveRoom.players?.[offlinePlayerId];
@@ -3301,7 +3307,7 @@ io.on('connection', socket => {
                 delete liveRoom.votes?.[offlinePlayerId];
                 delete liveRoom.players[offlinePlayerId];
                 emitRoom(liveRoom);
-            }, OFFLINE_SEAT_TTL_MS);
+            }, offlineSeatTtl);
         }
     });
 });
